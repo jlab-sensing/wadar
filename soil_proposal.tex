@@ -119,8 +119,13 @@ technology and related work.
     
 \section*{Overview of sensing techniques}
 
-There are three primary types of soil moisture sensors used in
-agriculture: tensiometers, granular matrix sensors, and volumetric
+The most accurate way to measure soil moisture is gravimetrically,
+where a soil sample is taken, weighed, allowed to dry (by oven or
+otherwise) and re-weighed~\cite{Noborio2001}. This process is
+time-intensive and requires phsyical removal of soil at the depth you
+wish to measure, so it is impractical for irrigation purposes. There
+are three primary types of practical soil moisture sensors used in
+agriculture: tensiometers, resistive sensors, and volumetric
 sensors~\cite{sensorTypes}.
 
 \subsubsection*{Tensiometers} Tensiometers measure soil water
@@ -136,14 +141,22 @@ adding water or removing air from the tube. Tensiometers also only
 operate when soils are relatively wet, and cannot be used when there
 is any risk of freezing temperatures.
 
-\subsubsection*{Granular matrix sensors (GMS)} Granular matrix sensors
-measure electrical resistance in a porous medium like ceramic. As
-water seeps into the porus medium, it reduces the electrical
-resistance. The ceramic in GMSes naturally filter out ions from
-fertilizer and salt, which would impact the resistance readings. GMSes
-cost similar to tensiometers, but take longer to respond, do not work
-well in very wet soil, and are more difficult to install. They do,
-however, require significantly less maintenance.
+\subsubsection*{Resistive sensors}
+Resistive sensors are among the cheapest sensors. These sensors have
+two probes in the soil and current passes through the soil between the
+probes. The moisture value is determined by measuring the
+resistance. DIY soil moisture kits, like the SparkFun~\cite{sparkfun}
+sensor, are usually resistive. Resistance-based sensors are the least
+accurate, and the probes corrode quickly~\cite{capVSres}. Granular
+Granular matrix sensors (GMS) are a variation on resistive
+sensors. They measure electrical resistance in a porous medium like
+ceramic. As water seeps into the porus medium, it reduces the
+electrical resistance. The ceramic in GMSes prevents probe decay and
+naturally filter out ions from fertilizer and salt, which improves the
+accuracy of the readings. GMSes cost similar to tensiometers, but take
+longer to respond, do not work well in very wet soil, and are more
+difficult to install. They do, however, require significantly less
+maintenance.
 
 \subsubsection*{Volumetric sensors}Volumetric sensors estimate
 $\frac{V_{water}}{V_{wet soil}}$, the ratio of the volume of the water
@@ -161,9 +174,32 @@ is the real component and $\varepsilon''$ is the complex.
 There are two main types of volumetric sensors: capacitive and time
 domain refelectometry (TDR). Capacitive sensors measure the charge
 time of a capacitor, which is a roughly linear function of
-$\varepsilon$~\cite{sensorOverview}...
+$\varepsilon$~\cite{sensorOverview}. Capacative sensors are much less
+prone to corrosion than resistive sensors, and are more accurate. For
+this reason, capacative sensors are available as commercial-grade soil
+moisture sensors. 
 
-TDR sensors...(explain relation to GPR)
+Time domain reflectometry (TDR) is another common method for measuring
+soil moisture that takes advantage of the frequency dependence of the
+dielectric permittivity. It measures the propagation time of EM waves
+by sending a pulse down a cable and into the soil probe and measuring
+how long it takes before the signal is reflected and returns. This is
+known as the \emph{time of flight}. This method of soil moisture
+measurement is very accurate, but the cheapest sensors are nearly
+\$1000 because they require generating wideband signals.
+
+A related technique uses ground penetrating radar (GPR) to calculate
+the time of flight. GPR is also wideband and costs thousands of
+dollars. Generally the equipment is large (~the size of a lawnmower)
+and needs to be dragged across the surface of the soil. This is a
+labor intensive process which may not always be possible in dense
+crops. Non-contact GPRs exist that can be attached to drones, but
+these have lower resolution and can only relaibly measure to a depth
+of about 10cm~\cite{gpr}.
+
+\subsubsection*{Novel soil moisture sensors}
+A number of recent efforts have explored ways to lower the cost of
+soil moisture sensors, but they suck...
 
 In 2017 researchers at Mircosoft Research figured out how to measure
 soil moisture using consumer-grade WiFi signals...
