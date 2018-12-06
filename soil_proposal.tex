@@ -116,7 +116,7 @@ deployability and maintainability of soil moisture sensors.
 
 In the next section we will give an overview of current sensing
 technology and related work.
-    
+
 \section*{Overview of sensing techniques}
 
 The most accurate way to measure soil moisture is gravimetrically,
@@ -267,16 +267,24 @@ moisture---that would require the still-expensive technology of ground
 penetrating radar. These cheap radars, however, could be paired with
 backscatter tags.
 
+TODO: add a figure
+
 Radars have the ability to accurately measure the ToF of the reflected
 signal, and the consumer-grade radars are ultra-wideband with a
 spectrum ranging from 3-7Ghz. This corresponds to a time resolution of
-0.15-0.33ns, which is sufficient for sensing soil moisture~\cite{}. It
-would also be possible to measure electrical conductivity (EC),
-another parameter that soil moisture sensors sometimes measure. EC is
-related to the salinity of the soil and is correlated strongly with
-crop health.
+0.15-0.33ns, which is sufficient for sensing soil moisture~\cite{}. We
+propose using the Walabot Developer UWB pulsed radar, which is readily
+commercially available and has a bandwidth of 6.7Ghz. This corresponds
+to a ToF resolution of 0.15ns. This radar is potentially already
+integrable with an Android smartphone\footnote{the Walabot DIY model
+  is compatible with Android smartphones, but does not allow
+  collection of raw samples. As per correspondence with their
+  engineering team, they are planning to release an Android SDK for
+  the developer in the future and may give us early access},
+and~\cite{} shows that it is well suited to being mounted on drones or
+autonomous robots for automated data collection. This would allow both
+small-holder farmers and large commercial farms to benefit.
 
-TODO: add a figure
 % One key challenge will be discerning the reflected backscatter
 % signal from reflections due to the soil. The high bandwidth of the
 % radars allows us to do a CDMA-inspired process introduced in
@@ -285,6 +293,7 @@ TODO: add a figure
 There are no commecially available backscatter tags currently designed
 for use with radar, but fortunately the open-source design for the
 HitchHike WiFi backscatter tags...
+
 
 \section*{Next steps}
 Now-early Jan: work with open-air tags and radar SDKs to get good ToF results
@@ -296,7 +305,11 @@ different soil types if possible), battery life (if applicable),
 March: write the paper, March 12 is Mobicom 2019 deadline
 
 \section*{Future work}
-EC
+EC  It
+might also be possible to measure electrical conductivity (EC),
+another parameter that soil moisture sensors sometimes measure. EC is
+related to the salinity of the soil and is correlated strongly with
+crop health.
 
 Environmental impact of tags
 
@@ -305,9 +318,63 @@ Leaf moisture
 Calibration
 
 \section*{Conclusion}
+Technology in agriculture is a relatively unexplored area, especially
+within the adademic EE and communications communities. This creates
+oppotunities for cross-disciplinary work and opens up a rich set of
+open problems with global impact. Using RF backscater to detect
+soil moisture is an interesting and useful application of backscatter
+and radar technologies, with multiple potential future works. We
+believe it will address the shortcomings of present sensing solutions,
+and will also be accessible to small and large farms alike.
 
 \bibliographystyle{amsplain}
 \begin{footnotesize}
-\bibliography{soil_proposal}
+  \bibliography{soil_proposal}
 \end{footnotesize}
+
+\section*{Appendix: Radar basics}
+RADAR (RAdio Detection And Ranging) is a well-developed technology
+with a history dating back to before World War II. Conceptually
+similar to echolocation, it uses the Time of Flight and angle of
+arrival of RF waves to calculate the distance of objects and their
+speed.
+
+Radar was originally used primarily in military contexts, but nowadays
+it is used to predict weather patterns, measure the speed of vehicles
+and other objects, assist autonomous vehicle navigation, and even
+monitoring human breathing.
+
+There are two primary types of radar waveforms: continuous wave and
+pulsed~\cite{Richards2010}. Continuous wave radars are transmitting
+and receiving at all times, while pulsed radars periodically trasmit a
+short-duration pulse and listen for the relections to come back.
+
+The most basic types of continuous wave radar use the doppler shift of
+moving targets to calculate their speed, and they are incapable of
+calulating the target distance, or \emph{range}. Frequency Modulated
+Continuous Wave (FMCW) is a variant that is capable of calulating
+range as well as speed. It periodically sweeps the transmit signal
+through a frequency range, and measures the frequency delta between
+the transmitted and received signal to calculate distance.
+
+Pulsed radars\footnote{Pulse radars are also sometimes called
+  pulse-doppler radars because they Doppler to measure the speed of
+  targets. Confusingly, basic CW radars are sometimes just called
+  Doppler radars because they too use Doppler to measure spped.} can
+very easily determine the range of a target by measuring the time that
+elapses between pulse transmission and the return reflection. They can
+also measure target speed. When the pulse width of the radar is very
+short, it is known as an impulse radar or Ultra Wideband (UWB)
+radar. Impulse radar needs to be wideband because of Fourier duality:
+pulses that are short in the time domain require wide bandwidth in the
+frequency domain. The bandwidth of a UWB radar typically ranges
+between 2 and 8 Ghz. Furthermore, the transmit power of UWB radars is
+usually regulated to be very low to avoid causing interference to
+other users on the same spectrum. This also makes UWB radar very
+difficult to detect, as the transmitted waveform looks like white
+noise. UWB radars are also popular because the low transmission power
+ensures that the signal is harmless to humans. The transmit power
+regulations also restrict the operating range of UWB radars to
+relatively short distances, typically $<25$m for consumer grade radars.
+
 \end{document}
