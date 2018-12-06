@@ -11,8 +11,8 @@
 }
 
 \title{Enabling Affordable Precision Agriculture by Sensing Soil Moisture Wirelessly}
-\author{Colleen Josephson\\Advised by:  Ranveer Chandra (Microsoft) and Sachin Katti (Stanford)}
-%\date{the FUTURE!!!}
+\author{Colleen Josephson\\Advised by:  Ranveer Chandra (Microsoft) and Sachin Katti (Stanford)\\\textbf{Do not forward}}
+
 \begin{document}
 \maketitle
 
@@ -184,7 +184,7 @@ soil moisture that takes advantage of the frequency dependence of the
 dielectric permittivity. It measures the propagation time of EM waves
 by sending a pulse down a cable and into the soil probe and measuring
 how long it takes before the signal is reflected and returns. This is
-known as the \emph{time of flight}. This method of soil moisture
+known as the \emph{time of flight}, or ToF. This method of soil moisture
 measurement is very accurate, but the cheapest sensors are nearly
 \$1000 because they require generating wideband signals.
 
@@ -199,21 +199,111 @@ of about 10cm~\cite{gpr}.
 
 \subsubsection*{Novel soil moisture sensors}
 A number of recent efforts have explored ways to lower the cost of
-soil moisture sensors, but they suck...
+soil moisture sensors. \cite{Hasan2013} and uses passive RFID tags to sense
+impedance changes caused by soil moisture, but their system requires a
+\$1000+ RFID reader, a free-air reference tag, and a delicate antenna
+needs to remain on the surface of the soil in order to collect the
+readings. \cite{Dey2016} measures the shift in resonance frequency of the
+scattering parameter (S-parameter). Their technique required the use
+of a vector network analyzer (VNA), so it would require a poentially
+costly custom reader. Both of the above approaches were only tested in
+an indoors laboratory environment, and they do not provide any
+comparisons to the 'ground truth' or an existing commercial sensor.
+
+\cite{Daskalakis2016} attaches a capacative sensor to an above-ground dipole
+antenna. The readings are collected using alow-cost software defined
+reader. The authors claim a cost of 6 Euro, which is the lowest-cost
+sensor that was actually deployed. However, this cost is without any
+weatherproofing, and a key tradeoff is a 4x decrease in resolution
+over commercial sensors.
+
 
 In 2017 researchers at Mircosoft Research figured out how to measure
-soil moisture using consumer-grade WiFi signals...
+soil moisture using consumer-grade WiFi signals. This system, called
+SMURF~\cite{smurf}, uses time of flight, so it has the accuracy benefits of
+TDR and GPR. However, in otder to use the relatively narrow bandwidth
+of WiFi it relies on the \emph{relative} time of flight, which is the
+difference in time of arrival between antennas in a MIMO system. This
+paper shows that the accuracy of TDR and FDR sensing is achievable
+with orders of magnitude lower cost, but the system is still difficult
+to deploy and maintain. It requires burying multiple WiFi antennas in
+the ground and connecting them via cable to an active receiver such as
+an Atheros WiFi card. Then, a different active transmitter must send
+packets to the antennas in the ground in order to collect the
+measurements. While an important stepping stone, this work is
+impractical for deploying at-scale on a farm.
 
 \section*{Proposed approach}
--extremely low cost of RFID
--maintainable because the sensors are expendable
--advantages of radar backscatter over WiFi
--multi-depth sensors for cheap
+How can the low-cost accuracy of SMURF and make it practical to deploy
+and use? The extemely low cost of backscatter tags (such as RFID) make
+it an attractive option to explore. Passive RFID tags can be purchased
+for as little as 7 cents~\cite{rfidcost}. The need to use a
+proprietary reader is eliminated with WiFi backscatter tags
+like~\cite{Zhang2017}~\cite{Zhang2016}. When the cost of the sensors
+is so low, the system becomes more maintanable because it is
+inexpensive to replace failing or broken sensors. Furthermore, the
+small form factor of backscatter tags makes them easier to embed in
+the soil, which makes it possible to take measurements at multiple
+depths per sensor site. It also opens up opportunities for novel
+deployment systems, such as attaching the tags to a soil auger.
+
+The same relative time of flight approach cannot be used, though,
+since the power savings and low cost of backscatter tags comes from
+the lack of an active receiver. Calculating accurate ToF from
+commodity WiFi devices is very difficult~\cite{Vasisht2015}, which is
+why SMURF uses relative ToF. It is potentially possible for a MIMO
+receiver to separate signals from multiple tags using the MUSIC
+algorithm~\cite{Soltanaghaei2018}~\cite{Kotaru2015}, but the
+significant challenges still remain to to get enough signal strength
+from the burried backscatter devices.
+
+WiFi is attractive because of its ubiquity and low cost, but
+consumer-grade RADAR systems are becoming increasingly affordable and
+accessible, which introduces exciting new sensing possibilities. There
+are multiple radar devices on the market compatible with Android
+phones~\cite{walabot}~\cite{omnipresense}, ranging from \$50-200. On their own,
+consumer-grade radar systems are incapable of sensing soil
+moisture---that would require the still-expensive technology of ground
+penetrating radar. These cheap radars, however, could be paired with
+backscatter tags.
+
+Radars have the ability to accurately measure the ToF of the reflected
+signal, and the consumer-grade radars are ultra-wideband with a
+spectrum ranging from 3-7Ghz. This corresponds to a time resolution of
+0.15-0.33ns, which is sufficient for sensing soil moisture~\cite{}. It
+would also be possible to measure electrical conductivity (EC),
+another parameter that soil moisture sensors sometimes measure. EC is
+related to the salinity of the soil and is correlated strongly with
+crop health.
+
+TODO: add a figure
+% One key challenge will be discerning the reflected backscatter
+% signal from reflections due to the soil. The high bandwidth of the
+% radars allows us to do a CDMA-inspired process introduced in
+% ~\cite{}.
+
+There are no commecially available backscatter tags currently designed
+for use with radar, but fortunately the open-source design for the
+HitchHike WiFi backscatter tags...
 
 \section*{Next steps}
+Now-early Jan: work with open-air tags and radar SDKs to get good ToF results
+
+February: embed the tags in soil and conduct soil moisture experiments
+(maximum soil depth, accuracy compared against commercial sensor (in
+different soil types if possible), battery life (if applicable),
+
+March: write the paper, March 12 is Mobicom 2019 deadline
+
 \section*{Future work}
+EC
+
 Environmental impact of tags
+
 Leaf moisture
+
+Calibration
+
 \section*{Conclusion}
 
 \bibliographystyle{amsplain}
