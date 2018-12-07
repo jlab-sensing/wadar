@@ -83,14 +83,14 @@ logger and power source ready for immediate use. Therefore some amount
 of setup labor is required for each sensor. Figure 1 shows a typical
 sensor and data logging system. Though the sensor is waterproof, the
 data logger (in this case an Arduino) needs to be waterproofed and
-powered. The soil moisture sensor needs to be burried, which requires
+powered. The soil moisture sensor needs to be buried, which requires
 digging a hole to the desired depth. This project also attaches solar
 panel to the battery pack, which requires mounting high enough to
 harvest sunlight, probably requiring a wooden or metal post. The
 laborious process of burying the sensor and mounting the solar panel
-would need to be repated for every sensor node on the
+would need to be repeated for every sensor node on the
 farm. Furthermore, the excess cables and bulky box also make the
-system easy to tangle in farm eqipment and tools. The sensor system
+system easy to tangle in farm equipment and tools. The sensor system
 would need to gently removed and re-deployed every time the field is
 tilled. This all adds up to a significant amount of manual labor to
 deploy and maintain the soil moisture sensors.
@@ -110,7 +110,7 @@ works have considered the issue of networking sensors in rural
 environments. For example, the 2015 Farmbeats project looks at the
 issue of sensor data collection and network access extensively, using
 TV whitespace technology to provide a wireless gateway from the field
-to the Inernet. Though solving this challenge is also important, the
+to the Internet. Though solving this challenge is also important, the
 focus of our research will be on reducing the cost and improving the
 deployability and maintainability of soil moisture sensors.
 
@@ -122,21 +122,21 @@ technology and related work.
 The most accurate way to measure soil moisture is gravimetrically,
 where a soil sample is taken, weighed, allowed to dry (by oven or
 otherwise) and re-weighed~\cite{Noborio2001}. This process is
-time-intensive and requires phsyical removal of soil at the depth you
+time-intensive and requires physical removal of soil at the depth you
 wish to measure, so it is impractical for irrigation purposes. There
 are three primary types of practical soil moisture sensors used in
 agriculture: tensiometers, resistive sensors, and volumetric
 sensors~\cite{sensorTypes}.
 
 \subsubsection*{Tensiometers} Tensiometers measure soil water
-tension. An air-free tube of water is attached to a porus tip, such as
+tension. An air-free tube of water is attached to a porous tip, such as
 ceramic. As water extracted from the soil by plants, the vacuum in the
 tube increases. When the soil is irrigated, the pressure decreases. A
 pressure sensor at the top of the tube is used to make the moisture
 measurements. The response time to moisture changes is typically 2-3
 hours. Tensiometers are slightly cheaper than the volumetric sensors
 discussed earlier, but still require a dedicated data
-logger/transmitter. They typcally require regular maintenance, such as
+logger/transmitter. They typically require regular maintenance, such as
 adding water or removing air from the tube. Tensiometers also only
 operate when soils are relatively wet, and cannot be used when there
 is any risk of freezing temperatures.
@@ -148,25 +148,24 @@ probes. The moisture value is determined by measuring the
 resistance. DIY soil moisture kits, like the SparkFun~\cite{sparkfun}
 sensor, are usually resistive. Resistance-based sensors are the least
 accurate, and the probes corrode quickly~\cite{capVSres}. Granular
-Granular matrix sensors (GMS) are a variation on resistive
-sensors. They measure electrical resistance in a porous medium like
-ceramic. As water seeps into the porus medium, it reduces the
-electrical resistance. The ceramic in GMSes prevents probe decay and
-naturally filter out ions from fertilizer and salt, which improves the
-accuracy of the readings. GMSes cost similar to tensiometers, but take
-longer to respond, do not work well in very wet soil, and are more
-difficult to install. They do, however, require significantly less
-maintenance.
+matrix sensors (GMS) are a variation on resistive sensors. They
+measure electrical resistance in a porous medium like ceramic. As
+water seeps into the porous medium, it reduces the electrical
+resistance. The ceramic in GMSes prevents probe decay and naturally
+filter out ions from fertilizer and salt, which improves the accuracy
+of the readings. GMSes cost similar to tensiometers, but take longer
+to respond, do not work well in very wet soil, and are more difficult
+to install. They do, however, require significantly less maintenance.
 
 \subsubsection*{Volumetric sensors}Volumetric sensors estimate
 $\frac{V_{water}}{V_{wet soil}}$, the ratio of the volume of the water
 to the volume of the soil plus the same volume of water. As the
-volumetric water content changes, the dilectric permittivity constant
+volumetric water content changes, the dielectric permittivity constant
 of the soil changes. Recall that dielectric permittivity,
 $\varepsilon$, is the ability of a substance to hold an electrical
-charge. The dielectric permittivty constant (also known as relative
+charge. The dielectric permittivity constant (also known as relative
 permittivity), $\varepsilon_r$, is the ratio of the permittivity of
-the stubstance to the permittivity of free space,
+the substance to the permittivity of free space,
 $\varepsilon_0$. Permittivity is often treated as a complex number:
 $\varepsilon = \varepsilon' + j\varepsilon ''$, where $\varepsilon '$
 is the real component and $\varepsilon''$ is the complex.
@@ -174,9 +173,9 @@ is the real component and $\varepsilon''$ is the complex.
 There are two main types of volumetric sensors: capacitive and time
 domain refelectometry (TDR). Capacitive sensors measure the charge
 time of a capacitor, which is a roughly linear function of
-$\varepsilon$~\cite{sensorOverview}. Capacative sensors are much less
+$\varepsilon$~\cite{sensorOverview}. Capacitive sensors are much less
 prone to corrosion than resistive sensors, and are more accurate. For
-this reason, capacative sensors are available as commercial-grade soil
+this reason, capacitive sensors are available as commercial-grade soil
 moisture sensors. 
 
 Time domain reflectometry (TDR) is another common method for measuring
@@ -194,7 +193,7 @@ dollars. Generally the equipment is large (~the size of a lawnmower)
 and needs to be dragged across the surface of the soil. This is a
 labor intensive process which may not always be possible in dense
 crops. Non-contact GPRs exist that can be attached to drones, but
-these have lower resolution and can only relaibly measure to a depth
+these have lower resolution and can only reliably measure to a depth
 of about 10cm~\cite{gpr}.
 
 \subsubsection*{Novel soil moisture sensors}
@@ -205,23 +204,23 @@ impedance changes caused by soil moisture, but their system requires a
 needs to remain on the surface of the soil in order to collect the
 readings. \cite{Dey2016} measures the shift in resonance frequency of the
 scattering parameter (S-parameter). Their technique required the use
-of a vector network analyzer (VNA), so it would require a poentially
+of a vector network analyzer (VNA), so it would require a potentially
 costly custom reader. Both of the above approaches were only tested in
 an indoors laboratory environment, and they do not provide any
 comparisons to the 'ground truth' or an existing commercial sensor.
 
-\cite{Daskalakis2016} attaches a capacative sensor to an above-ground dipole
-antenna. The readings are collected using alow-cost software defined
+\cite{Daskalakis2016} attaches a capacitive sensor to an above-ground dipole
+antenna. The readings are collected using a low-cost software defined
 reader. The authors claim a cost of 6 Euro, which is the lowest-cost
 sensor that was actually deployed. However, this cost is without any
 weatherproofing, and a key tradeoff is a 4x decrease in resolution
 over commercial sensors.
 
 
-In 2017 researchers at Mircosoft Research figured out how to measure
+In 2017 researchers at Microsoft Research figured out how to measure
 soil moisture using consumer-grade WiFi signals. This system, called
 SMURF~\cite{smurf}, uses time of flight, so it has the accuracy benefits of
-TDR and GPR. However, in otder to use the relatively narrow bandwidth
+TDR and GPR. However, in order to use the relatively narrow bandwidth
 of WiFi it relies on the \emph{relative} time of flight, which is the
 difference in time of arrival between antennas in a MIMO system. This
 paper shows that the accuracy of TDR and FDR sensing is achievable
@@ -235,12 +234,12 @@ impractical for deploying at-scale on a farm.
 
 \section*{Proposed approach}
 How can the low-cost accuracy of SMURF and make it practical to deploy
-and use? The extemely low cost of backscatter tags (such as RFID) make
+and use? The extremely low cost of backscatter tags (such as RFID) make
 it an attractive option to explore. Passive RFID tags can be purchased
 for as little as 7 cents~\cite{rfidcost}. The need to use a
 proprietary reader is eliminated with WiFi backscatter tags
 like~\cite{Zhang2017}~\cite{Zhang2016}. When the cost of the sensors
-is so low, the system becomes more maintanable because it is
+is so low, the system becomes more maintainable because it is
 inexpensive to replace failing or broken sensors. Furthermore, the
 small form factor of backscatter tags makes them easier to embed in
 the soil, which makes it possible to take measurements at multiple
@@ -255,7 +254,7 @@ why SMURF uses relative ToF. It is potentially possible for a MIMO
 receiver to separate signals from multiple tags using the MUSIC
 algorithm~\cite{Soltanaghaei2018}~\cite{Kotaru2015}, but the
 significant challenges still remain to to get enough signal strength
-from the burried backscatter devices.
+from the buried backscatter devices.
 
 WiFi is attractive because of its ubiquity and low cost, but
 consumer-grade RADAR systems are becoming increasingly affordable and
@@ -267,13 +266,20 @@ moisture---that would require the still-expensive technology of ground
 penetrating radar. These cheap radars, however, could be paired with
 backscatter tags.
 
-TODO: add a figure
+\begin{figure*}[h!]
+  \centering
+  \includegraphics[scale=0.4]{soil_moisture_diagram.png}\\
+  \caption{A potential deployment of a UWB RADAR backscatter soil
+    moisture sensing system, where the radar is connected to the
+    farmer's smartphone}
+\end{figure*}
 
 Radars have the ability to accurately measure the ToF of the reflected
 signal, and the consumer-grade radars are ultra-wideband with a
 spectrum ranging from 3-7Ghz. This corresponds to a time resolution of
-0.15-0.33ns, which is sufficient for sensing soil moisture~\cite{}. We
-propose using the Walabot Developer UWB pulsed radar, which is readily
+0.15-0.33ns, which is sufficient for sensing soil
+moisture\footnote{confirmation from Jian Ding needed}. We propose
+using the Walabot Developer UWB pulsed radar, which is readily
 commercially available and has a bandwidth of 6.7Ghz. This corresponds
 to a ToF resolution of 0.15ns. This radar is potentially already
 integrable with an Android smartphone\footnote{the Walabot DIY model
@@ -281,47 +287,78 @@ integrable with an Android smartphone\footnote{the Walabot DIY model
   collection of raw samples. As per correspondence with their
   engineering team, they are planning to release an Android SDK for
   the developer in the future and may give us early access},
-and~\cite{uwbThesis} shows that it is well suited to being mounted on drones or
-autonomous robots for automated data collection. This would allow both
-small-holder farmers and large commercial farms to benefit.
+and~\cite{uwbThesis} shows that it is well suited to being mounted on
+drones or autonomous robots for automated data collection. This would
+allow both small-holder farmers and large commercial farms to benefit.
 
-% One key challenge will be discerning the reflected backscatter
-% signal from reflections due to the soil. The high bandwidth of the
-% radars allows us to do a CDMA-inspired process introduced in
-% ~\cite{}.
+% The high bandwidth of the radars allows us to do a CDMA-inspired
+% process introduced in ~\cite{}.
 
-There are no commecially available backscatter tags currently designed
+There are no commercially available backscatter tags currently designed
 for use with radar, but fortunately the open-source design for the
-HitchHike WiFi backscatter tags...
+HitchHike WiFi backscatter tags may be compatible with some changes to
+the source code. This would eliminate the time needed to design,
+fabricate and test a new type of tag.
 
+One the tags are confirmed to be working with the radar above-ground,
+the next key challenge will be burying the tags and discerning the
+reflected backscatter signal from reflections due to the soil. This
+will also have implications for how far the tags can be buried, which
+indicates how deep in the soil moisture can be measured. The ideal
+maximum depth would be 1+ meters, as crops that grow on trees often
+benefit from moisture measurements at that depth. Depths of 10-30cm are
+more than sufficient for a number of non-tree crops, though.
 
 \section*{Next steps}
-Now-early Jan: work with open-air tags and radar SDKs to get good ToF results
-
-February: embed the tags in soil and conduct soil moisture experiments
-(maximum soil depth, accuracy compared against commercial sensor (in
-different soil types if possible), battery life (if applicable),
-
-March: write the paper, March 12 is Mobicom 2019 deadline
+\begin{itemize}
+\item Now---early January: work with open-air tags and radar SDKs to get
+  good ToF results, recruit student collaborators to assist with the
+  labor-intensive measurements once soil experiments begin
+\item Mid January---early February: embed the tags in soil and conduct
+  maximum soil depth experiments, confirming that the backscatter
+  signal can be discerned from reflections due to the soil
+\item February: conduct soil moisture experiments by measuring
+  permittivity and comparing against commercial sensor (in different
+  soil types if possible). Also quantify and improve tag battery life
+  (if applicable).
+\item March: wrap up results and write the paper, March 12 is the
+  Mobicom 2019 deadline
+\end{itemize}
 
 \section*{Future work}
-EC  It
-might also be possible to measure electrical conductivity (EC),
+\subsubsection*{Electrical Conductivity} It might also be possible for a
+backscatter system to measure electrical conductivity (EC), which is
 another parameter that soil moisture sensors sometimes measure. EC is
 related to the salinity of the soil and is correlated strongly with
 crop health.
 
-Environmental impact of tags
+\subsubsection*{Calibration} One current weakness with all sensors is the
+need to calibrate them to specific soil types. Is it possible to set
+easy-to-follow guidelines, or even to automatically detect and
+calibrate for the soil type? This would massively decrease the
+deployment and usage barriers.
 
-Leaf moisture
+\subsubsection*{Environmental impact of tags}
+How readily do the tags get detached and lost in the soil? How does
+this impact the growing environment, especially if the tags use
+batteries?
 
-Calibration
+\subsubsection*{Leaf moisture}
+Leaf moisture or leaf thickness is a more reliable measure of how much
+water a plant needs, but it is significantly more difficult to collect
+than soil moisture. The sensors without data loggers and
+communications are \$300 and are unwieldy and
+delicate. ~\cite{Wang2017} uses RFID tags to identify and measure
+liquids, and can even tell the difference between a vessel containing
+Coke and Pepsi. Could this be extended to measuring the leaf thickness
+or nutrient absorption of plants?
+
 
 \section*{Conclusion}
 Technology in agriculture is a relatively unexplored area, especially
-within the adademic EE and communications communities. This creates
-oppotunities for cross-disciplinary work and opens up a rich set of
-open problems with global impact. Using RF backscater to detect
+within the academic EE and communications communities. This creates
+opportunities for cross-disciplinary work and opens up a rich set of
+open problems with global impact. Using RF backscatter to detect
 soil moisture is an interesting and useful application of backscatter
 and radar technologies, with multiple potential future works. We
 believe it will address the shortcomings of present sensing solutions,
@@ -346,21 +383,21 @@ monitoring human breathing.
 
 There are two primary types of radar waveforms: continuous wave and
 pulsed~\cite{Richards2010}. Continuous wave radars are transmitting
-and receiving at all times, while pulsed radars periodically trasmit a
-short-duration pulse and listen for the relections to come back.
+and receiving at all times, while pulsed radars periodically transmit a
+short-duration pulse and listen for the reflections to come back.
 
-The most basic types of continuous wave radar use the doppler shift of
+The most basic types of continuous wave radar use the Doppler shift of
 moving targets to calculate their speed, and they are incapable of
-calulating the target distance, or \emph{range}. Frequency Modulated
-Continuous Wave (FMCW) is a variant that is capable of calulating
+calculating the target distance, or \emph{range}. Frequency Modulated
+Continuous Wave (FMCW) is a variant that is capable of calculating
 range as well as speed. It periodically sweeps the transmit signal
 through a frequency range, and measures the frequency delta between
 the transmitted and received signal to calculate distance.
 
 Pulsed radars\footnote{Pulse radars are also sometimes called
-  pulse-doppler radars because they Doppler to measure the speed of
+  pulse-Doppler radars because they Doppler to measure the speed of
   targets. Confusingly, basic CW radars are sometimes just called
-  Doppler radars because they too use Doppler to measure spped.} can
+  Doppler radars because they too use Doppler to measure speed.} can
 very easily determine the range of a target by measuring the time that
 elapses between pulse transmission and the return reflection. They can
 also measure target speed. When the pulse width of the radar is very
