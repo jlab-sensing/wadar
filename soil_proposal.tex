@@ -182,10 +182,12 @@ Time domain reflectometry (TDR) is another common method for measuring
 soil moisture that takes advantage of the frequency dependence of the
 dielectric permittivity. It measures the propagation time of EM waves
 by sending a pulse down a cable and into the soil probe and measuring
-how long it takes before the signal is reflected and returns. This is
-known as the \emph{time of flight}, or ToF. This method of soil moisture
-measurement is very accurate, but the cheapest sensors are nearly
-\$1000 because they require generating wideband signals.
+how long it takes before the signal is reflected and returns. We call
+this the \emph{time of flight}, or ToF. This method of soil moisture
+measurement generates wideband signals (100Mhz-3Ghz for agricultural
+grade) to ensure sufficient time resolution. Like capacitive sensors,
+the probes must maintain good contact with the soil for accurate
+measurements. The cost of a sensor is about \$1000.
 
 A related technique uses ground penetrating radar (GPR) to calculate
 the time of flight. GPR is also wideband and costs thousands of
@@ -219,18 +221,19 @@ over commercial sensors.
 
 In 2017 researchers at Microsoft Research figured out how to measure
 soil moisture using consumer-grade WiFi signals. This system, called
-SMURF~\cite{smurf}, uses time of flight, so it has the accuracy benefits of
-TDR and GPR. However, in order to use the relatively narrow bandwidth
-of WiFi it relies on the \emph{relative} time of flight, which is the
-difference in time of arrival between antennas in a MIMO system. This
-paper shows that the accuracy of TDR and FDR sensing is achievable
-with orders of magnitude lower cost, but the system is still difficult
-to deploy and maintain. It requires burying multiple WiFi antennas in
-the ground and connecting them via cable to an active receiver such as
-an Atheros WiFi card. Then, a different active transmitter must send
-packets to the antennas in the ground in order to collect the
-measurements. While an important stepping stone, this work is
-impractical for deploying at-scale on a farm.
+SMURF~\cite{smurf}, uses time of flight like TDR and GPR. However, in
+order to use the relatively narrow bandwidth of WiFi it relies on the
+\emph{relative} time of flight, which is the difference in time of
+arrival between antennas in a MIMO system. The system is still
+difficult to deploy and maintain because it requires burying multiple
+WiFi antennas in the ground and connecting them via cable to an active
+receiver such as an Atheros WiFi card. Then, a different active
+transmitter must send packets to the antennas in the ground in order
+to collect the measurements. The antennas are not as sensitive to soil
+contact as TDR and capacotive sensors, but the soil packing between
+antennas impacts the measurements. While SMURF is an important
+stepping stone, this work is impractical for deploying at-scale on a
+farm.
 
 \section*{Proposed approach}
 How can the low-cost accuracy of SMURF and make it practical to deploy
@@ -252,9 +255,10 @@ the lack of an active receiver. Calculating accurate ToF from
 commodity WiFi devices is very difficult~\cite{Vasisht2015}, which is
 why SMURF uses relative ToF. It is potentially possible for a MIMO
 receiver to separate signals from multiple tags using the MUSIC
-algorithm~\cite{Soltanaghaei2018}~\cite{Kotaru2015}, but the
-significant challenges still remain to to get enough signal strength
-from the buried backscatter devices.
+algorithm~\cite{Soltanaghaei2018}~\cite{Kotaru2015} and calculate the
+ToF delta between the multiple reflections, but significant challenges
+still remain to to get enough signal strength from the buried
+backscatter devices.
 
 WiFi is attractive because of its ubiquity and low cost, but
 consumer-grade RADAR systems are becoming increasingly affordable and
@@ -274,22 +278,33 @@ backscatter tags.
     farmer's smartphone}
 \end{figure*}
 
-Radars have the ability to accurately measure the ToF of the reflected
-signal, and the consumer-grade radars are ultra-wideband with a
-spectrum ranging from 3-7Ghz. This corresponds to a time resolution of
-0.15-0.33ns, which is sufficient for sensing soil
-moisture~\cite{smurf}. We propose using the Walabot Developer UWB
-pulsed radar, which is readily commercially available and has a
-bandwidth of 6.7Ghz. This corresponds to a ToF resolution of
-0.15ns. This radar is potentially already integrable with an Android
-smartphone\footnote{the Walabot DIY model is compatible with Android
-  smartphones, but does not allow collection of raw samples. As per
-  correspondence with their engineering team, they are planning to
-  release an Android SDK for the developer in the future and may give
-  us early access}, and~\cite{uwbThesis} shows that it is well suited
-to being mounted on drones or autonomous robots for automated data
-collection. This would allow both small-holder farmers and large
-commercial farms to benefit.
+Consumer-grade ultra-wideband Radars have the ability to accurately
+measure the ToF of reflected signals. UWB radars typically have a
+bandwidth of 3-7Ghz. This corresponds to a time resolution of
+0.15-0.33ns. SMURF requires about 0.1ns ToF resolution. For
+comparison, agricultural TDR sensors range from 100Mhz to
+3Ghz~\cite{Pelletier2012} which leads to a resolution of at most
+0.33ns. A radar-based approach could potentially have improved ToF
+resolution by using the phase of the reflected signal. The ToF for a
+ranging radar is calculated by converting the incoming samples back to
+the time domain and measuring the time delta between peaks. Thus the
+time resolution is determined bythe sharpness of the impulses (to
+ensure do not overlap). This is assuming that the sampling rate for
+incoming reflections is the Nyquist frequency of the pulse
+bandwidth). The phase of the signal allows us to get finer-grained
+
+%% We propose using the Walabot
+%% Developer UWB pulsed radar, which is readily commercially available
+%% and has a bandwidth of 6.7Ghz. This corresponds to a ToF resolution of
+%% 0.15ns. This radar is potentially already integrable with an Android
+%% smartphone\footnote{the Walabot DIY model is compatible with Android
+%%   smartphones, but does not allow collection of raw samples. As per
+%%   correspondence with their engineering team, they are planning to
+%%   release an Android SDK for the developer in the future and may give
+%%   us early access}, and~\cite{uwbThesis} shows that it is well suited
+%% to being mounted on drones or autonomous robots for automated data
+%% collection. This would allow both small-holder farmers and large
+%% commercial farms to benefit.
 
 % The high bandwidth of the radars allows us to do a CDMA-inspired
 % process introduced in ~\cite{}.
