@@ -230,7 +230,7 @@ WiFi antennas in the ground and connecting them via cable to an active
 receiver such as an Atheros WiFi card. Then, a different active
 transmitter must send packets to the antennas in the ground in order
 to collect the measurements. The antennas are not as sensitive to soil
-contact as TDR and capacotive sensors, but the soil packing between
+contact as TDR and capacitive sensors, but the soil packing between
 antennas impacts the measurements. While SMURF is an important
 stepping stone, this work is impractical for deploying at-scale on a
 farm.
@@ -284,45 +284,51 @@ bandwidth of 3-7Ghz. This corresponds to a time resolution of
 0.15-0.33ns. SMURF requires about 0.1ns ToF resolution. For
 comparison, agricultural TDR sensors range from 100Mhz to
 3Ghz~\cite{Pelletier2012} which leads to a resolution of at most
-0.33ns. A radar-based approach could potentially have improved ToF
-resolution by using the phase of the reflected signal. The ToF for a
-ranging radar is calculated by converting the incoming samples back to
-the time domain and measuring the time delta between peaks. Thus the
-time resolution is determined bythe sharpness of the impulses (to
-ensure do not overlap). This is assuming that the sampling rate for
-incoming reflections is the Nyquist frequency of the pulse
-bandwidth). The phase of the signal allows us to get finer-grained
-
-%% We propose using the Walabot
-%% Developer UWB pulsed radar, which is readily commercially available
-%% and has a bandwidth of 6.7Ghz. This corresponds to a ToF resolution of
-%% 0.15ns. This radar is potentially already integrable with an Android
-%% smartphone\footnote{the Walabot DIY model is compatible with Android
-%%   smartphones, but does not allow collection of raw samples. As per
-%%   correspondence with their engineering team, they are planning to
-%%   release an Android SDK for the developer in the future and may give
-%%   us early access}, and~\cite{uwbThesis} shows that it is well suited
-%% to being mounted on drones or autonomous robots for automated data
-%% collection. This would allow both small-holder farmers and large
-%% commercial farms to benefit.
+0.33ns. The ToF for a ranging radar is calculated by converting the
+incoming samples back to the time domain and measuring the time delta
+between peaks. Thus the sharper the peaks, the finer the possible
+time resolution. A radar-based approach could potentially have
+improved ToF resolution by using the phase of the reflected signal in
+addition to the usual ranging estimate technique. The time delta
+between the peaks would be a coarse estimate, and the phase of the
+signal a fine tuning.
 
 % The high bandwidth of the radars allows us to do a CDMA-inspired
 % process introduced in ~\cite{}.
 
-There are no commercially available backscatter tags currently designed
-for use with radar, but fortunately the open-source design for the
-HitchHike WiFi backscatter tags may be compatible with some changes to
-the source code. This would eliminate the time needed to design,
-fabricate and test a new type of tag.
+There are no commercially available backscatter tags currently
+designed for use with radar, but fortunately the open-source design
+for the HitchHike WiFi backscatter tags are compatible once the RF
+switch is changed to match the bandwidth that the radar operates on.
 
 One the tags are confirmed to be working with the radar above-ground,
 the next key challenge will be burying the tags and discerning the
-reflected backscatter signal from reflections due to the soil. This
-will also have implications for how far the tags can be buried, which
-indicates how deep in the soil moisture can be measured. The ideal
+reflected backscatter signal from reflections due to the soil. One
+possible approach is to toggle the backscatter tag at a relatively low
+frequency, 100-500Hz. To the radar, this makes the tag look like it is
+in motion, which makes the backscatter signal easy to pick out when
+the rest of the environment is stationary. This clever approach was
+designed by a labmate and is under review with no preprint.
+
+The ability to isolate the backscatter signal from other reflections
+also has implications for how far the tags can be buried. The ideal
 maximum depth would be 1+ meters, as crops that grow on trees often
-benefit from moisture measurements at that depth. Depths of 10-30cm are
-more than sufficient for a number of non-tree crops, though.
+benefit from moisture measurements at that depth. Depths of 10-30cm
+are more than sufficient for a number of non-tree crops, though.
+
+For the radar, a few low cost options are available. One is the
+Walabot Developer UWB pulsed radar, which is readily commercially
+available and has a bandwidth of 6.7Ghz. This corresponds to a ToF
+resolution of 0.15ns. ~\cite{uwbThesis} shows that it is well suited
+to being mounted on drones or autonomous robots for automated data
+collection. This would allow both small-holder farmers and large
+commercial farms to benefit. However, the frame rate supported by the
+SDK may be too low. The documentation is sparse, so experiments are
+needed.
+
+The XeThru X4 radar series is another good option. The frame rate is
+definitely sufficient to isolate a backscatter toggle between
+100-500hz, but the bandwidth is more narrow at 2.5Ghz. 
 
 \section*{Next steps}
 \begin{itemize}
