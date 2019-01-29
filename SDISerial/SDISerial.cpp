@@ -119,6 +119,24 @@ static const DELAY_TABLE PROGMEM table[] =
 //  { 300,      4759,       9523,      9523,   9520,   },
 };
 
+#elif F_CPU == 180000000
+
+static const DELAY_TABLE PROGMEM table[] =
+{
+  //  baud    rxcenter    rxintra    rxstop  tx
+//  { 115200,   3,          21,        21,     18,     },
+//  { 57600,    20,         43,        43,     41,     },
+//  { 38400,    37,         73,        73,     70,     },
+//  { 31250,    45,         89,        89,     88,     },
+//  { 28800,    46,         98,        98,     95,     },
+//  { 19200,    71,         148,       148,    145,    },
+//  { 14400,    96,         197,       197,    194,    },
+//  { 9600,     146,        297,       297,    294,    },
+//  { 4800,     296,        595,       595,    592,    },
+//  { 2400,     592,        1189,      1189,   1186,   },
+  { 1200,     10706,       21425,      21425,   21422,   },
+//  { 300,      4759,       9523,      9523,   9520,   },
+};
 const int XMIT_START_ADJUSTMENT = 6;
 
 #else
@@ -167,18 +185,10 @@ int NumberOfSetBits(uint32_t i)
 
 
 /* static */ 
-inline void SDISerial::tunedDelay(uint16_t delay) { 
-  uint8_t tmp=0;
-
-  asm volatile("sbiw    %0, 0x01 \n\t"
-    "ldi %1, 0xFF \n\t"
-    "cpi %A0, 0xFF \n\t"
-    "cpc %B0, %1 \n\t"
-    "brne .-10 \n\t"
-    : "+w" (delay), "+a" (tmp)
-    : "0" (delay)
-    );
+inline void SDISerial::tunedDelay(uint16_t t) { 
+  delay(t);
 }
+
 // This function sets the current object as the "listening"
 // one and returns true if it replaces another 
 bool SDISerial::listen()
@@ -432,8 +442,6 @@ void SDISerial::begin()
    _rx_delay_intrabit = pgm_read_word(&table[0].rx_delay_intrabit);
    _rx_delay_stopbit = pgm_read_word(&table[0].rx_delay_stopbit);
    _tx_delay = pgm_read_word(&table[0].tx_delay);
-   
-  
   
 
   // Set up RX interrupts, 
