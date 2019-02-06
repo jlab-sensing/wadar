@@ -29,8 +29,11 @@ The latest version of this library can always be found at
 http://arduiniana.org.
 */
 
-#include "inttypes.h"
-#include "Stream.h"
+#ifndef SoftwareSerial_h
+#define SoftwareSerial_h
+
+#include <inttypes.h>
+#include <Stream.h>
 
 /******************************************************************************
 * Definitions
@@ -208,3 +211,4 @@ public:
 #undef abs
 #undef round
 
+#endif
