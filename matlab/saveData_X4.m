@@ -180,22 +180,43 @@ function saveData_X4(profile, varargin)
         clear radar frame
     end
     
-    figure(1); imagesc(db(abs(fft(frameTot,i,2))))
     a = (db(abs(fft(frameTot,i,2))));
+    Fs =  23.328*10e9; %as per XeThru X4 user manual
+    % show image of the fourier transform of IQ time domain samples 
+    % For matrices, the fft operation is applied to each column. 
+    figure(1); im = imagesc(a);
+    %TODO: label axes better
+    title(sprintf('Radar response across all freqs'))
+    ylabel('Range bin (5.08cm increments)')
+    xlabel('Frame no.');
     [~,maxRangeIndex] = max(a(:,1)); 
     figure(2); plot(a(maxRangeIndex,:));
+    title(sprintf('???'))
     figure(3); imagesc(db(abs(fft(diff(frameTot,[],2),i,2))))
-
+    title(sprintf('Radar response across all freqs, w/ highlight(?)'))
+    ylabel('Range bin (5.08cm increments)')
+    xlabel('Frame no.');
   
       if options.('savePath')
         % load a saved file
         fprintf('Saving output to %s...\n',options.('savePath'))
-        save(sprintf(options.('savePath')+'expData%s.mat',datestr(now,30)),'frameTot','timeTot')
+        save(sprintf(options.('savePath')+'expData%s.mat',datestr(now,30)),'maxTime','frameTot','timeTot')
       end
 
     %% plot
-    figure(5); plot(a(11:20,:)')
-    figure(6); plot(a(:,2561)')
-    % figure(6); plot(a(:,25600)')
-    % figure(6); plot(a(:,255994)')
+    %plot only bins 11-20 (like figures 1 and 3, but not in db and no imsc call)
+    figure(5); plot(a(11:20,:)') 
+    title(sprintf('Radar response, bins 11-20'))
+    ylabel('Magnitude')
+    xlabel('Frame no.');
+    f = 106.4; %frequency of interest in Hz
+    % TODO: temporary!
+    maxTime = 10;
+    % resolution = (FrameStop- FrameStart)/181; %cm
+    resolution = 5.08; %cm
+    figure(6); plot(resolution*[1:size(a)],a(:,f*maxTime + 1)')
+    title(sprintf('Radar response for f = %f',f))
+    ylabel('Magnitude (dB)')
+    xlabel('Range (cm)');
+    % figure(6); plot(a(:,2561)')
 end
