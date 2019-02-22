@@ -184,11 +184,12 @@ function saveData_X4(profile, varargin)
     Fs =  23.328*10e9; %as per XeThru X4 user manual
     % show image of the fourier transform of IQ time domain samples 
     % For matrices, the fft operation is applied to each column. 
-    figure(1); im = imagesc(a);
+    size(a)
+    figure(1); im = imagesc(a);%imagesc(a(:,1:i/2));
     %TODO: label axes better
     title(sprintf('Radar response across all freqs'))
     ylabel('Range bin (5.08cm increments)')
-    xlabel('Frame no.');
+    xlabel('10x freq in Hz, (0 to 200');
     [~,maxRangeIndex] = max(a(:,1)); 
     figure(2); plot(a(maxRangeIndex,:));
     title(sprintf('???'))
