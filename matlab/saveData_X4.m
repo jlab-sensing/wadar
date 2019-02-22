@@ -14,7 +14,7 @@
 % Usage examples:
 %   saveData_X4('colleen', 'savePath', '/foo/name.m')
 %       Loads profile 'colleen' and saves data in the folder '/foo'       
-%   saveData_X4('brad', 'readFile', '/bar/run2.mat', 'os', 'linux')
+%   saveData_X4('brad', 'readFile', '/bar/run2.mat')
 %       Loads profile 'brad' and loads previously saved data from run2.mat.
 %       If 'savePath' isn't specified, no output data will be saved.
 %
@@ -184,7 +184,6 @@ function saveData_X4(profile, varargin)
     Fs =  23.328*10e9; %as per XeThru X4 user manual
     % show image of the fourier transform of IQ time domain samples 
     % For matrices, the fft operation is applied to each column. 
-    size(a)
     figure(1); im = imagesc(a);%imagesc(a(:,1:i/2));
     %TODO: label axes better
     title(sprintf('Radar response across all freqs'))
@@ -201,7 +200,7 @@ function saveData_X4(profile, varargin)
       if options.('savePath')
         % load a saved file
         fprintf('Saving output to %s...\n',options.('savePath'))
-        save(sprintf(options.('savePath')+'expData%s.mat',datestr(now,30)),'maxTime','frameTot','timeTot')
+        save(sprintf(strcat(options.('savePath'),'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot')
       end
 
     %% plot
