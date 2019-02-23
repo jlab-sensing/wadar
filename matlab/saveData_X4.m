@@ -54,7 +54,7 @@ function saveData_X4(profile, varargin)
     end
     
     % Input parameters
-    COM = '/dev/tty/ACM0';
+    COM = '/dev/ttyACM0';
     FPS = 400; %500;
     dataType = 'bb';
 
