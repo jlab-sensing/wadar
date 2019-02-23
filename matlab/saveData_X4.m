@@ -63,8 +63,8 @@ function saveData_X4(profile, varargin)
     DACmin = 949;
     DACmax = 1100;
     Iterations = 16;
-    FrameStart = 0.2; % meters.
-    FrameStop = 9.4; % meters.
+    FrameStart = 0.1; % meters.
+    FrameStop = 9.0; % meters.
     % default values for FrameStart and FrameStop are 0.2 m and 9.4 m.
 
     if options.('readFile')
@@ -198,8 +198,10 @@ function saveData_X4(profile, varargin)
     
       if options.('savePath')
         % load a saved file
-        fprintf('Saving output to %s...\n',options.('savePath'))
-        save(sprintf(strcat(options.('savePath'),'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot')
+        if FPS_est > 50
+            fprintf('Saving output to %s...\n',options.('savePath'))
+            save(sprintf(strcat(options.('savePath'),'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot')
+        end
       end
 
     %% plot
@@ -210,7 +212,6 @@ function saveData_X4(profile, varargin)
     xlabel('Frame no.');
     f = 106.4; %frequency of interest in Hz
     % TODO: temporary!
-    maxTime = 10;
     % resolution = (FrameStop- FrameStart)/181; %cm
     resolution = 5.08; %cm
     figure(6); plot(resolution*[1:size(a)],a(:,f*maxTime + 1)')
