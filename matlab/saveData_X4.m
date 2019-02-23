@@ -6,7 +6,7 @@
 % Required args:
 %   profile: string, profile name to load
 %       To create a profile, save your path variables to a .mat file, e.g.
-%       save('colleen.mat', 'moduleConnectorPath', 'includePath', 'libPath', )
+%       save('colleen.mat', 'moduleConnectorPath', 'includePath', 'libPath')
 %       where 'libPath' and such are previously defined path strings
 %
 % Optional positional args passed as pairs of'name', 'value'
@@ -21,7 +21,7 @@
 
 function saveData_X4(profile, varargin)
     whos;
-    fprintf('Running profile %s...', profile)
+    fprintf('Running profile %s...\n', profile)
     
     load(sprintf('%s.mat',profile));
     
@@ -30,20 +30,6 @@ function saveData_X4(profile, varargin)
     catch
 
     end
-
-    % add paths defined in profile
-    addpath(moduleConnectorPath);
-    addpath(includePath);
-    addpath(libPath);
-    
-    clc
-    close all
-    %clear
-    
-
-    % Load the library
-    Lib = ModuleConnector.Library;
-    Lib.libfunctions
 
     % Parse varargs
     options = struct('readFile','','savePath','');
@@ -68,7 +54,7 @@ function saveData_X4(profile, varargin)
     end
     
     % Input parameters
-    COM = '/dev/tty/su';
+    COM = '/dev/tty/ACM0';
     FPS = 400; %500;
     dataType = 'bb';
 
@@ -81,16 +67,27 @@ function saveData_X4(profile, varargin)
     FrameStop = 9.4; % meters.
     % default values for FrameStart and FrameStop are 0.2 m and 9.4 m.
 
-
-    % Create BasicRadarClassX4 object
-    radar = BasicRadarClassX4(COM,FPS,dataType); %WTF is this
-
     if options.('readFile')
         % load a saved file
         fprintf('Loading saved data from %s...\n',options.('readFile'))
         load(options.('readFile'))
         i = length(frameTot);
     else
+        % add paths defined in profile
+        addpath(moduleConnectorPath);
+        addpath(includePath);
+        addpath(libPath);
+    
+        clc
+        close all
+        %clear
+    
+        % Load the library
+        Lib = ModuleConnector.Library;
+        Lib.libfunctions
+        % Create BasicRadarClassX4 object
+        radar = BasicRadarClassX4(COM,FPS,dataType); %WTF is this
+        
         % otherwise, get frames from radar
         radar.open();
 
@@ -186,17 +183,19 @@ function saveData_X4(profile, varargin)
     % For matrices, the fft operation is applied to each column. 
     figure(1); im = imagesc(a);%imagesc(a(:,1:i/2));
     %TODO: label axes better
+    xticklabels({'50','100','150','200','250','300','350'})
     title(sprintf('Radar response across all freqs'))
     ylabel('Range bin (5.08cm increments)')
-    xlabel('10x freq in Hz, (0 to 200');
+    xlabel('Doppler freq (Hz)');
     [~,maxRangeIndex] = max(a(:,1)); 
     figure(2); plot(a(maxRangeIndex,:));
     title(sprintf('???'))
     figure(3); imagesc(db(abs(fft(diff(frameTot,[],2),i,2))))
     title(sprintf('Radar response across all freqs, w/ highlight(?)'))
     ylabel('Range bin (5.08cm increments)')
-    xlabel('Frame no.');
-  
+    xlabel('Doppler freq (Hz)');    
+    xticklabels({'50','100','150','200','250','300','350'})
+    
       if options.('savePath')
         % load a saved file
         fprintf('Saving output to %s...\n',options.('savePath'))
