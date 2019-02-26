@@ -20,10 +20,11 @@
 %
 
 function saveData_X4(profile, varargin)
-    whos;
+    whos; %TODO: delete this?
+    close all;
     fprintf('Running profile %s...\n', profile)
     
-    load(sprintf('%s.mat',profile));
+    load(sprintf('%s.mat',profile), 'moduleConnectorPath', 'includePath', 'libPath', 'COM', 'ALTCOM');
 
     % Parse varargs
     options = struct('readFile','','savePath','');
@@ -63,7 +64,7 @@ function saveData_X4(profile, varargin)
     if options.('readFile')
         % load a saved file
         fprintf('Loading saved data from %s...\n',options.('readFile'))
-        load(options.('readFile'))
+        load(options.('readFile'));
         i = length(frameTot);
     else
         % add paths defined in profile
@@ -214,13 +215,34 @@ function saveData_X4(profile, varargin)
     title(sprintf('Radar response, bins 11-20'))
     ylabel('Magnitude')
     xlabel('Frame no.');
-    f = 106.4; %frequency of interest in Hz
+    f = 106.1; %frequency of interest in Hz
     % TODO: temporary!
     % resolution = (FrameStop- FrameStart)/181; %cm
     resolution = 5.08; %cm
-    figure(6); plot(resolution*[1:size(a)],a(:,f*maxTime + 1)')
+    fig  = figure(6); 
+    ax = axes('Parent',fig,'position',[0.13 0.39  0.77 0.54]);
+    plt = plot(resolution*[1:size(a)],a(:,f*maxTime + 1)');
     title(sprintf('Radar response for f = %f',f))
     ylabel('Magnitude (dB)')
     xlabel('Range (cm)');
-    % figure(6); plot(a(:,2561)')
+    ylim([-90 -25]);
+    b = uicontrol('Parent',fig,'Style','slider','Position',[81,55,419,23],...
+              'value',f, 'min',0, 'max',FPS,'SliderStep',[0.0025 0.10]);
+    bgcolor = fig.Color;
+    bl1 = uicontrol('Parent',fig,'Style','text','Position',[50,55,23,23],...
+                'String','0','BackgroundColor',bgcolor);
+    bl2 = uicontrol('Parent',fig,'Style','text','Position',[500,55,30,23],...
+                'String','400','BackgroundColor',bgcolor);
+    bl3 = uicontrol('Parent',fig,'Style','text','Position',[200,22,150,23],...
+                'String','Doppler frequency','BackgroundColor',bgcolor);
+    function slider(es,ed) 
+        plt.YData =  a(:,round(es.Value)*maxTime + 1)';
+        title(sprintf('Radar response for f = %f',round(es.Value)))
+    end
+    b.Callback = @slider;
+    while ishandle(fig)
+        pause(0.01)
+        drawnow
+    end 
+    
 end
