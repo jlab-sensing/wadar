@@ -13,7 +13,7 @@
 % 
 % Usage examples:
 %   saveData_X4('colleen', 'savePath', '/foo/name.m')
-%       Loads profile 'colleen' and saves data in the folder '/foo'       
+%   ls    Loads profile 'colleen' and saves data in the folder '/foo'       
 %   saveData_X4('brad', 'readFile', '/bar/run2.mat')
 %       Loads profile 'brad' and loads previously saved data from run2.mat.
 %       If 'savePath' isn't specified, no output data will be saved.
@@ -24,12 +24,6 @@ function saveData_X4(profile, varargin)
     fprintf('Running profile %s...\n', profile)
     
     load(sprintf('%s.mat',profile));
-    
-    try
-        radar.close();
-    catch
-
-    end
 
     % Parse varargs
     options = struct('readFile','','savePath','');
@@ -54,7 +48,6 @@ function saveData_X4(profile, varargin)
     end
     
     % Input parameters
-    COM = '/dev/ttyACM0';
     FPS = 400; %500;
     dataType = 'bb';
 
@@ -63,8 +56,8 @@ function saveData_X4(profile, varargin)
     DACmin = 949;
     DACmax = 1100;
     Iterations = 16;
-    FrameStart = 0.1; % meters.
-    FrameStop = 9.0; % meters.
+    FrameStart = 0.2; % meters.
+    FrameStop = 9.4; % meters.
     % default values for FrameStart and FrameStop are 0.2 m and 9.4 m.
 
     if options.('readFile')
@@ -84,28 +77,39 @@ function saveData_X4(profile, varargin)
     
         % Load the library
         Lib = ModuleConnector.Library;
-        Lib.libfunctions
-        % Create BasicRadarClassX4 object
-        radar = BasicRadarClassX4(COM,FPS,dataType); %WTF is this
+        %Lib.libfunctions
         
-        % otherwise, get frames from radar
-        radar.open();
-
-        % Use X4M300 interface to attempt to set sensor mode XEP (manual).
-        app = radar.mc.get_x4m300();
-
-        app.set_sensor_mode('stop');
-        try
-            app.set_sensor_mode('XEP');
-        catch
-            % Unable to set sensor mode. Assume only running XEP FW.
+        % % Initialize radar.
+        open = 0; 
+        while ~open
+            try 
+                [radar, app] = startRadar(COM,FPS,dataType);
+                radar.init();
+                radar.close();
+            catch ME
+                if endsWith(ME.message,'verify COM-port and check the logs')
+                    try 
+                        [radar, app] = startRadar(ALTCOM,FPS,dataType);
+                        radar.init();
+                    catch
+                    end
+                else
+                    try
+                        [radar, app] = startRadar(COM,FPS,dataType);
+                        radar.init();
+                    catch
+                    end
+                end
+            end
+            try 
+               radar.radarInstance.x4driver_set_pulsesperstep(PPS);
+               open = 1;
+            catch
+            end
         end
-
-        % Initialize radar.
-        radar.init();
+      
 
         % Configure X4 chip.
-        radar.radarInstance.x4driver_set_pulsesperstep(PPS);
         radar.radarInstance.x4driver_set_dac_min(DACmin);
         radar.radarInstance.x4driver_set_dac_max(DACmax);
         radar.radarInstance.x4driver_set_iterations(Iterations);
