@@ -164,7 +164,7 @@ function saveData_X4(profile, varargin)
 
         % Stop streaming.
         radar.stop();
-
+        % TODO: why???
         frameTot = frameTot(:,1:i);
         timeTot = timeTot(:,1:i);
           % Output short summary report.
@@ -211,17 +211,51 @@ function saveData_X4(profile, varargin)
 
     %% plot
     %plot only bins 11-20 (like figures 1 and 3, but not in db and no imsc call)
-    figure(5); plot(a(11:20,:)') 
+    figure(4); plot(a(11:20,:)') 
     title(sprintf('Radar response, bins 11-20'))
     ylabel('Magnitude')
     xlabel('Frame no.');
     f = 106.1; %frequency of interest in Hz
+    %frameTotCell{iRx} = frameTot;
+    %timeTotCell{iRx} = timeTot;
+    freqIndSave = [809 1063 1871 2125 2933 3187]; % frequencies for 106hz
+    fftSpeedDim = fft(frameTot,[],2);
+    limitedFftMat = fftSpeedDim(:,freqIndSave);
+    % for 106 Hz
+    dopplerIndExpected = 1063;
+    cdma_sig_way6 = sign(sin(2*pi*(dopplerIndExpected-1)*(0:size(frameTot,2)-1)/size(frameTot,2) + 1e-8));
+    cdma_sig_way7 = (sin(2*pi*(dopplerIndExpected-1)*(0:size(frameTot,2)-1)/size(frameTot,2) + 1e-8));
+    cdma_sig_way8 = (cos(2*pi*(dopplerIndExpected-1)*(0:size(frameTot,2)-1)/size(frameTot,2) + 1e-8));
+    cdma_sig_rep = repmat(cdma_sig_way6, size(frameTot,1), 1);
+    correlatedFrame = sum(frameTot.*cdma_sig_rep,2);
+    cdma_sig_rep_sin = repmat(cdma_sig_way7, size(frameTot,1), 1);
+    correlatedFrame_sin = sum(frameTot.*cdma_sig_rep_sin,2);
+    cdma_sig_rep_cos = repmat(cdma_sig_way8, size(frameTot,1), 1);
+    correlatedFrame_cos = sum(frameTot.*cdma_sig_rep_cos,2);
+    
+    dopplerIndExpected = 1061;%25600;
+    shiftRadTot = linspace(-0.3*pi, 2.3*pi, 197); %where does 197 come from?
+    radarDataOversampleForMaxIdx = zeros(size(frameTot,1), length(shiftRadTot));
+    for iAngShift = 1:length(shiftRadTot)
+        cdma_sig = sign(sin(2*pi*(dopplerIndExpected-1)*(0:size(frameTot,2)-1)/size(frameTot,2) + shiftRadTot(iAngShift)));
+        correlatedFrameTmp = frameTot*cdma_sig.'; %sum(frameTot.*cdma_sig_rep,2);
+        radarDataOversampleForMaxIdx(:,iAngShift) = correlatedFrameTmp;
+    end
+    %radarDataOversampleForMaxIdxAllRx{iRx} = radarDataOversampleForMaxIdx;
+    
+    % % % plotting figure with correlation with optimal CDMA code
+    rangeBinConsiderAll = 16;%[16 12 12 12 13]; % ???
+    radarIqCorrelated =  radarDataOversampleForMaxIdx; %radarDataOversampleForMaxIdxAllRx{iRx};
+    [~,timeShiftConsider] = max(abs(radarIqCorrelated(rangeBinConsiderAll,:)));
+    radarDataConsider = radarDataOversampleForMaxIdx(:,timeShiftConsider);
+    figure(5); plot(abs(radarDataConsider)); hold on; plot(abs(radarDataOversampleForMaxIdx(:,1))); hold off; title(sprintf('plot ???'));
+    
     % TODO: temporary!
     % resolution = (FrameStop- FrameStart)/181; %cm
     resolution = 5.08; %cm
     fig  = figure(6); 
     ax = axes('Parent',fig,'position',[0.13 0.39  0.77 0.54]);
-    plt = plot(resolution*[1:size(a)],a(:,f*maxTime + 1)');
+    plt = plot(20+resolution*[0:size(a)-1],a(:,f*maxTime + 1)');
     title(sprintf('Radar response for f = %f',f))
     ylabel('Magnitude (dB)')
     xlabel('Range (cm)');
