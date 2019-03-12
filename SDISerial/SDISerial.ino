@@ -3,8 +3,7 @@
  
 #define INPUT_SIZE 30
 #define NUMSAMPLES 5
-#define DATA_PIN 2
-#define INVERTED 1
+#define DATA_PIN 13
  
 int sensorDelay = 1000;
 char* samples; 
