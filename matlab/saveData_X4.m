@@ -20,6 +20,7 @@
 %
 
 function saveData_X4(profile, varargin)
+    maxTime = 300;
     whos; %TODO: delete this?
     close all;
     fprintf('Running profile %s...\n', profile)
@@ -128,7 +129,6 @@ function saveData_X4(profile, varargin)
         tspent = toc(tstart);
 
         i = 0;
-        maxTime = 10;
         % frameTot = zeros(181, FPS*maxTime);
         while (tspent < maxTime)
             % Peek message data float
@@ -221,13 +221,17 @@ function saveData_X4(profile, varargin)
     resolution = 5.08; %cm
     fig  = figure(6); 
     ax = axes('Parent',fig,'position',[0.13 0.39  0.77 0.54]);
+    %tag23 = a(:,f*maxTime + 1)';
+    load('tagOn.mat','tag23');
     plt = plot(resolution*[1:size(a)],a(:,f*maxTime + 1)');
+    hold on
+    plot(resolution*[1:size(a)],tag23)
     title(sprintf('Radar response for f = %f',f))
     ylabel('Magnitude (dB)')
     xlabel('Range (cm)');
     ylim([-90 -25]);
     b = uicontrol('Parent',fig,'Style','slider','Position',[81,55,419,23],...
-              'value',f, 'min',0, 'max',FPS,'SliderStep',[0.0025 0.10]);
+              'value',f, 'min',0, 'max',FPS,'SliderStep',[0.00025 0.10]);
     bgcolor = fig.Color;
     bl1 = uicontrol('Parent',fig,'Style','text','Position',[50,55,23,23],...
                 'String','0','BackgroundColor',bgcolor);
@@ -236,8 +240,8 @@ function saveData_X4(profile, varargin)
     bl3 = uicontrol('Parent',fig,'Style','text','Position',[200,22,150,23],...
                 'String','Doppler frequency','BackgroundColor',bgcolor);
     function slider(es,ed) 
-        plt.YData =  a(:,round(es.Value)*maxTime + 1)';
-        title(sprintf('Radar response for f = %f',round(es.Value)))
+        plt.YData =  a(:,round(es.Value*maxTime) + 1)';
+        title(sprintf('Radar response for f = %f',es.Value))
     end
     b.Callback = @slider;
     while ishandle(fig)
