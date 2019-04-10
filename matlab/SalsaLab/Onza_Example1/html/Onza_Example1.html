@@ -1,0 +1,447 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Onza_Example1</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-11-29"><meta name="DC.source" content="Onza_Example1.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">%%------------Onza Example1 - For data viewing and logging---------------%%</span>
+<span class="comment">%</span>
+<span class="comment">% Important Input Arguments for tuning:</span>
+<span class="comment">%   Variables     = radar parameter settings</span>
+<span class="comment">%   bufferLen     = the number of radar frames to collect</span>
+<span class="comment">%</span>
+<span class="comment">% Important Output Variables:</span>
+<span class="comment">%   radarSettings = struct of common, tunable radar settings</span>
+<span class="comment">%   rawFrame      = matrix of raw radar data (time/distance bins vs. radar frames and amplitude is in DAC counter values)</span>
+<span class="comment">%   scaledFrame   = maxtrix of scaled radar data (time/distance bins vs. radar frames and amplitude scaled to volts using normalizeX4.m)</span>
+<span class="comment">%   FPS           = final data acquisition speed in frames per second (system platform, OS, connection, and processing dependent)</span>
+<span class="comment">%</span>
+
+<span class="comment">% Housekeeping</span>
+clear;
+close <span class="string">all</span>;
+
+<span class="comment">% Speed of light</span>
+c = 2.99792458e8;
+
+<span class="comment">% -------------------------------------------------------------------------</span>
+<span class="comment">% Set Radar Variables</span>
+<span class="comment">% -------------------------------------------------------------------------</span>
+Variables = containers.Map;                                 <span class="comment">% stored in container map</span>
+
+<span class="comment">% Common Variables between all platforms</span>
+Variables(<span class="string">'PPS'</span>) = 10;                                      <span class="comment">% set PulsesPerStep, amplitude averaging</span>
+Variables(<span class="string">'Iterations'</span>) = 20;                               <span class="comment">% set Iterations, frame averaging</span>
+Variables(<span class="string">'DACStep'</span>) = 0;                                   <span class="comment">% set DACStepFine (2^Int = DACStep, so 0-3 = 1, 2, 4, or 8)</span>
+Variables(<span class="string">'DACMax'</span>) = 2047;                                 <span class="comment">% set DACMax, &lt; 2048</span>
+Variables(<span class="string">'DACMin'</span>) = 0;                                    <span class="comment">% set DACMin, &gt;= 0</span>
+Variables(<span class="string">'SampleDelay'</span>) = 0;                               <span class="comment">% start distance integer, every increase by 1 is ~0.6 meters increase</span>
+Variables(<span class="string">'FrameStitch'</span>) = 1;                               <span class="comment">% number of frames to stitch together or concatenate</span>
+Variables(<span class="string">'TxRegion'</span>) = 3;                                  <span class="comment">% 3 =&gt; ETSI/FCC Region, CF = 7.290 GHz; 4 =&gt; KCC/FCC Region, CF = 8.748 GHz</span>
+
+<span class="comment">% -------------------------------------------------------------------------</span>
+<span class="comment">% Initialize Radar Connection</span>
+<span class="comment">% -------------------------------------------------------------------------</span>
+<span class="comment">% Create the radar object</span>
+radar = radarWrapper(<span class="string">'192.168.7.2'</span>);    <span class="comment">% Connect via USB, otherwise specify correct IP address</span>
+
+<span class="comment">% Set Chip Type</span>
+radar.SetChipType(<span class="string">'X4'</span>);
+
+<span class="comment">% Open a connection to the radar module</span>
+radar.Open(<span class="string">'X4'</span>);
+
+<span class="comment">% -------------------------------------------------------------------------</span>
+<span class="comment">% Update Variables</span>
+<span class="comment">% -------------------------------------------------------------------------</span>
+keys = Variables.keys;
+vals = Variables.values;
+<span class="keyword">for</span> n = 1:Variables.length
+    <span class="comment">% Creat radarSettings struct and print to screen</span>
+    <span class="keyword">if</span> ischar(vals{n})
+        <span class="comment">% Print Registers values</span>
+        fprintf(<span class="string">'Setting %s to %s\n'</span>, keys{n}, vals{n});
+
+        <span class="comment">% Print settings to struct =&gt; char to double</span>
+        eval([<span class="string">'radarSettings.'</span> keys{n} <span class="string">' = str2double(vals{n});'</span>]);
+    <span class="keyword">else</span>
+        <span class="comment">% Print Registers values</span>
+        fprintf(<span class="string">'Setting %s to %d\n'</span>, keys{n}, vals{n});
+
+        <span class="comment">% Print settings to struct as double</span>
+        eval([<span class="string">'radarSettings.'</span> keys{n} <span class="string">' = vals{n};'</span>]);
+    <span class="keyword">end</span>
+
+    <span class="comment">% Update Register values</span>
+    radar.TryUpdateChip(keys{n}, vals{n});
+<span class="keyword">end</span>
+
+<span class="comment">% -------------------------------------------------------------------------</span>
+<span class="comment">% Read Variables</span>
+<span class="comment">% -------------------------------------------------------------------------</span>
+
+<span class="comment">% Determine the length of the radar signals, # of samplers (length of signal)</span>
+frameSize = radar.Item(<span class="string">'SamplersPerFrame'</span>);                             <span class="comment">% grab FrameSize, in SamplersPerFrame</span>
+
+<span class="comment">% Get the measured sampling rate (assumes calibration was run...)</span>
+samplingRate = radar.Item(<span class="string">'SamplingRate'</span>);                              <span class="comment">% grab Sampling Rate</span>
+
+<span class="comment">% Get the measured sampling rate (assumes calibration was run...)</span>
+sampleDelay = radar.Item(<span class="string">'SampleDelay'</span>);                                <span class="comment">% grab SampleDelay, aka StartDistance</span>
+
+<span class="comment">% Grab the Pulse Repition Frequency</span>
+prf = radar.Item(<span class="string">'PRF'</span>);                                                <span class="comment">% grab PRF, Hz</span>
+
+<span class="comment">% Get the true (2^n) DACStep Value (only on a Get...)</span>
+dacStep = radar.Item(<span class="string">'DACStep'</span>);
+
+<span class="comment">% Compute the sample resolution based on the measured sampling rate</span>
+resolution = c / samplingRate / 2;
+
+<span class="comment">% Add to radarSettings Variable</span>
+radarSettings.SamplersPerFrame = frameSize;
+radarSettings.SamplingRate = samplingRate;
+radarSettings.Resolution = resolution;
+radarSettings.SampleDelay = sampleDelay;
+radarSettings.StartDistance = sampleDelay * c / 2;
+radarSettings.PRF = prf;
+radarSettings.DACStep = dacStep;
+
+<span class="comment">% Tx Region Settings</span>
+<span class="keyword">if</span> radarSettings.TxRegion == 3;
+    radarSettings.TxRegionStr = <span class="string">'EU/US'</span>;
+    radarSettings.TxRegionCf = 7.29;
+<span class="keyword">elseif</span> radarSettings.TxRegion == 4;
+    radarSettings.TxRegionStr = <span class="string">'KCC/US'</span>;
+    radarSettings.TxRegionCf = 8.748;
+<span class="keyword">end</span>
+
+<span class="comment">%%------------------------Plotting Setup---------------------------------%%</span>
+<span class="comment">% Frequency Variables</span>
+frame = nan(1, frameSize);                                                                                                      <span class="comment">% single frame allocation</span>
+Nf = frameSize;                                                                                                                 <span class="comment">% fft frame size for zero padding</span>
+timeVector = (0:frameSize - 1) / samplingRate + sampleDelay;                                                                    <span class="comment">% time vector</span>
+
+<span class="comment">% Print specs</span>
+fprintf(<span class="string">'\nStart Time(Distance) = %3.3f ns(%3.1f mm)\n'</span>, sampleDelay * 1e9, radarSettings.StartDistance * 1e3);                 <span class="comment">% print start distance</span>
+fprintf(<span class="string">'Resolution           = %3.3f mm\n'</span>, resolution * 1e3);                                                                 <span class="comment">% print resolution</span>
+fprintf(<span class="string">'Sampling Rate        = %3.3f GS/s\n'</span>, samplingRate / 1e9);                                                             <span class="comment">% print sampling rate</span>
+fprintf(<span class="string">'Tx Region(%d)         = %0.3f GHz (%s)\n'</span>, radarSettings.TxRegion, radarSettings.TxRegionCf, radarSettings.TxRegionStr); <span class="comment">% print sampling rate</span>
+
+<span class="comment">% Set up time plot signal</span>
+h_fig = figure; h_ax = gca;
+h1 = plot(h_ax, 1:frameSize, frame);
+title(h_ax, <span class="string">'radar time waveform'</span>);
+xlabel(h_ax, <span class="string">'time [ns]'</span>);
+ylabel(h_ax, <span class="string">'amplitude [v]'</span>);
+xlim(h_ax, [timeVector(1) timeVector(frameSize)] * 1e9);
+grid(h_ax, <span class="string">'on'</span>);
+
+<span class="comment">% Allocation</span>
+bufferLen = 200;
+rawFrame = nan(frameSize, bufferLen);
+scaledFrame = nan(frameSize, bufferLen);
+
+<span class="comment">% Start timer</span>
+tic;
+
+<span class="comment">% Loop for bufferLen times</span>
+<span class="keyword">for</span> i = 1:bufferLen
+    <span class="keyword">if</span> ishandle(h_fig)
+        <span class="comment">% Get Frame</span>
+        counterValueFrame = radar.GetFrameRawDouble;                                                        <span class="comment">% Get frame raw</span>
+        normalVoltFrame = normalizeX4(counterValueFrame, radarSettings, true);                              <span class="comment">% Normalize and Scale signal, according to Rx = 1.2V</span>
+
+        <span class="comment">% Save data</span>
+        rawFrame(:, i) = counterValueFrame;
+        scaledFrame(:, i) = normalVoltFrame;
+
+        <span class="comment">% Find Vpmax/Vpmin for scaling</span>
+        VpMax = max(normalVoltFrame);
+        VpMin = min(normalVoltFrame);
+        <span class="keyword">if</span> mod(i, 50) == 0
+            <span class="comment">% Scale every 50 frames</span>
+            ylim(h_ax, [VpMin*1.5 VpMax*1.5]);                                                              <span class="comment">% scale appropriately</span>
+        <span class="keyword">end</span>
+
+        <span class="comment">% Plot data</span>
+        title(h_ax, sprintf(<span class="string">'radar time waveform, tx region(%d) = %0.3f GHz (%s)'</span>,<span class="keyword">...</span>
+                            radarSettings.TxRegion, radarSettings.TxRegionCf, radarSettings.TxRegionStr));  <span class="comment">% set plot title</span>
+        set(h1, <span class="string">'xdata'</span>, timeVector * 1e9, <span class="string">'ydata'</span>, normalVoltFrame);                                       <span class="comment">% time waveform (in millivolts)</span>
+        drawnow;
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% Show Frames Per Second (FPS)</span>
+FPS = i / toc;
+fprintf(<span class="string">'FPS = %2.2f\n'</span>, FPS);
+
+<span class="comment">% Close the connection to the radar</span>
+fprintf(<span class="string">'Closing X4 connections...\n'</span>);
+radar.Close();
+</pre><pre class="codeoutput">Starting Connector Program on the BBB:
+sshPath
+/root/FlatEarth/MatlabConnector2/matlabConnector -p 8192 -c 1
+Connector Started w/ PID listed below
+4500
+Starting Connector Program on the BBB:
+sshPath
+/root/FlatEarth/MatlabConnector2/matlabConnector -p 8192 -c 2
+Connector Started w/ PID listed below
+4516
+Setting DACMax to 2047
+Setting DACMin to 0
+Setting DACStep to 0
+Setting FrameStitch to 1
+Setting Iterations to 20
+Setting PPS to 10
+Setting SampleDelay to 0
+Setting TxRegion to 3
+
+Start Time(Distance) = 0.000 ns(0.0 mm)
+Resolution           = 6.426 mm
+Sampling Rate        = 23.328 GS/s
+Tx Region(3)         = 7.290 GHz (EU/US)
+FPS = 22.26
+Closing X4 connections...
+</pre><img vspace="5" hspace="5" src="Onza_Example1_01.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHOnza Example1 - For data viewing and loggingREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-%%
+% 
+% Important Input Arguments for tuning:
+%   Variables     = radar parameter settings
+%   bufferLen     = the number of radar frames to collect
+%
+% Important Output Variables:
+%   radarSettings = struct of common, tunable radar settings
+%   rawFrame      = matrix of raw radar data (time/distance bins vs. radar frames and amplitude is in DAC counter values)     
+%   scaledFrame   = maxtrix of scaled radar data (time/distance bins vs. radar frames and amplitude scaled to volts using normalizeX4.m)
+%   FPS           = final data acquisition speed in frames per second (system platform, OS, connection, and processing dependent)
+%
+
+% Housekeeping
+clear;
+close all;
+
+% Speed of light
+c = 2.99792458e8;
+
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+% Set Radar Variables
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+Variables = containers.Map;                                 % stored in container map
+
+% Common Variables between all platforms
+Variables('PPS') = 10;                                      % set PulsesPerStep, amplitude averaging
+Variables('Iterations') = 20;                               % set Iterations, frame averaging
+Variables('DACStep') = 0;                                   % set DACStepFine (2^Int = DACStep, so 0-3 = 1, 2, 4, or 8)
+Variables('DACMax') = 2047;                                 % set DACMax, < 2048
+Variables('DACMin') = 0;                                    % set DACMin, >= 0
+Variables('SampleDelay') = 0;                               % start distance integer, every increase by 1 is ~0.6 meters increase
+Variables('FrameStitch') = 1;                               % number of frames to stitch together or concatenate
+Variables('TxRegion') = 3;                                  % 3 => ETSI/FCC Region, CF = 7.290 GHz; 4 => KCC/FCC Region, CF = 8.748 GHz
+
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+% Initialize Radar Connection
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH- 
+% Create the radar object
+radar = radarWrapper('192.168.7.2');    % Connect via USB, otherwise specify correct IP address 
+
+% Set Chip Type
+radar.SetChipType('X4');
+
+% Open a connection to the radar module
+radar.Open('X4');
+
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+% Update Variables
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+keys = Variables.keys;
+vals = Variables.values;
+for n = 1:Variables.length
+    % Creat radarSettings struct and print to screen
+    if ischar(vals{n})
+        % Print Registers values
+        fprintf('Setting %s to %s\n', keys{n}, vals{n});
+        
+        % Print settings to struct => char to double
+        eval(['radarSettings.' keys{n} ' = str2double(vals{n});']);
+    else
+        % Print Registers values
+        fprintf('Setting %s to %d\n', keys{n}, vals{n});
+        
+        % Print settings to struct as double
+        eval(['radarSettings.' keys{n} ' = vals{n};']);
+    end
+    
+    % Update Register values
+    radar.TryUpdateChip(keys{n}, vals{n});
+end
+
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+% Read Variables
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+
+% Determine the length of the radar signals, # of samplers (length of signal)
+frameSize = radar.Item('SamplersPerFrame');                             % grab FrameSize, in SamplersPerFrame
+
+% Get the measured sampling rate (assumes calibration was run...)
+samplingRate = radar.Item('SamplingRate');                              % grab Sampling Rate
+
+% Get the measured sampling rate (assumes calibration was run...)
+sampleDelay = radar.Item('SampleDelay');                                % grab SampleDelay, aka StartDistance
+
+% Grab the Pulse Repition Frequency
+prf = radar.Item('PRF');                                                % grab PRF, Hz
+
+% Get the true (2^n) DACStep Value (only on a Get...)
+dacStep = radar.Item('DACStep');
+
+% Compute the sample resolution based on the measured sampling rate
+resolution = c / samplingRate / 2;
+
+% Add to radarSettings Variable
+radarSettings.SamplersPerFrame = frameSize;
+radarSettings.SamplingRate = samplingRate;
+radarSettings.Resolution = resolution;
+radarSettings.SampleDelay = sampleDelay;
+radarSettings.StartDistance = sampleDelay * c / 2;
+radarSettings.PRF = prf;
+radarSettings.DACStep = dacStep;
+
+% Tx Region Settings
+if radarSettings.TxRegion == 3;
+    radarSettings.TxRegionStr = 'EU/US';
+    radarSettings.TxRegionCf = 7.29;
+elseif radarSettings.TxRegion == 4;
+    radarSettings.TxRegionStr = 'KCC/US';
+    radarSettings.TxRegionCf = 8.748;
+end
+    
+%%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHPlotting SetupREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-%%
+% Frequency Variables                                           
+frame = nan(1, frameSize);                                                                                                      % single frame allocation
+Nf = frameSize;                                                                                                                 % fft frame size for zero padding
+timeVector = (0:frameSize - 1) / samplingRate + sampleDelay;                                                                    % time vector
+
+% Print specs
+fprintf('\nStart Time(Distance) = %3.3f ns(%3.1f mm)\n', sampleDelay * 1e9, radarSettings.StartDistance * 1e3);                 % print start distance
+fprintf('Resolution           = %3.3f mm\n', resolution * 1e3);                                                                 % print resolution
+fprintf('Sampling Rate        = %3.3f GS/s\n', samplingRate / 1e9);                                                             % print sampling rate
+fprintf('Tx Region(%d)         = %0.3f GHz (%s)\n', radarSettings.TxRegion, radarSettings.TxRegionCf, radarSettings.TxRegionStr); % print sampling rate
+
+% Set up time plot signal
+h_fig = figure; h_ax = gca;
+h1 = plot(h_ax, 1:frameSize, frame);
+title(h_ax, 'radar time waveform');
+xlabel(h_ax, 'time [ns]');
+ylabel(h_ax, 'amplitude [v]');
+xlim(h_ax, [timeVector(1) timeVector(frameSize)] * 1e9);
+grid(h_ax, 'on');
+
+% Allocation
+bufferLen = 200;
+rawFrame = nan(frameSize, bufferLen);
+scaledFrame = nan(frameSize, bufferLen);
+
+% Start timer
+tic; 
+     
+% Loop for bufferLen times
+for i = 1:bufferLen 
+    if ishandle(h_fig)
+        % Get Frame
+        counterValueFrame = radar.GetFrameRawDouble;                                                        % Get frame raw
+        normalVoltFrame = normalizeX4(counterValueFrame, radarSettings, true);                              % Normalize and Scale signal, according to Rx = 1.2V
+
+        % Save data
+        rawFrame(:, i) = counterValueFrame;
+        scaledFrame(:, i) = normalVoltFrame;
+
+        % Find Vpmax/Vpmin for scaling
+        VpMax = max(normalVoltFrame);
+        VpMin = min(normalVoltFrame);
+        if mod(i, 50) == 0
+            % Scale every 50 frames
+            ylim(h_ax, [VpMin*1.5 VpMax*1.5]);                                                              % scale appropriately
+        end
+
+        % Plot data
+        title(h_ax, sprintf('radar time waveform, tx region(%d) = %0.3f GHz (%s)',...
+                            radarSettings.TxRegion, radarSettings.TxRegionCf, radarSettings.TxRegionStr));  % set plot title        
+        set(h1, 'xdata', timeVector * 1e9, 'ydata', normalVoltFrame);                                       % time waveform (in millivolts)
+        drawnow;
+    end
+end
+    
+% Show Frames Per Second (FPS)
+FPS = i / toc;
+fprintf('FPS = %2.2f\n', FPS);
+
+% Close the connection to the radar
+fprintf('Closing X4 connections...\n');
+radar.Close();
+##### SOURCE END #####
+--></body></html>

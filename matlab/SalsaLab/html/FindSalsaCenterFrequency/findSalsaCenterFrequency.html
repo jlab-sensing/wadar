@@ -1,0 +1,185 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Salsa: Find Center Frequency App --HELP</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-01-12"><meta name="DC.source" content="FindSalsaCenterFreqAppHelp.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Salsa: Find Center Frequency App --HELP</h1><!--introduction--><p><i>Salsa: FindCenterFreqApp</i> is for measuring and calculating the center frequency of a Salsa Radar Development Kit. Copyright 2016 <a href="http://www.flatearthinc.com">FlatEarth Inc.</a></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Description</a></li><li><a href="#2">Setup</a></li><li><a href="#3">Connection</a></li><li><a href="#4">Operation &amp; Output</a></li></ul></div><h2>Description<a name="1"></a></h2><p>Ascertaining the center frequency and bandwidth of the operating pulse at a given temperature can be advantageous for, among other things, accurate and robust Digital Down-Conversion (DDC). Furthermore, because FlatEarth has implemented a frequency <i>fine-tune</i> feature with respect to the Ancho Kit - by providing control of the transmitter voltage rail - the center frequency can deviate substantially from the advertised value. This App allows the user to investigate the frequency <i>fine-tune</i> granularity, coupled with pulse generator control over the desired temperature range.</p><h2>Setup<a name="2"></a></h2><p>The most accurate physical setup to measure center frequency and bandwidth is using a <i>loopback</i> cable configuration with a set amount of attenuation. Both the Ancho and Cayenne flavors should be used with a minimum attenuation of 30 dB, and a cable no shorter than 12 inches (30 cm).</p><p><img vspace="5" hspace="5" src="loopback.PNG" alt=""> </p><div><ol><li>Loop the transmitter to the receiver using a cable, with appropriate frequncy response and the specified length, while also inserting the attenuation in-line.</li><li>Power-on the BBB and Salsa Kit and begin to take measurements.</li></ol></div><p><i>Alternate Setups:</i> The center frequency and bandwidth can also be measured with a pseudo-monostatic antenna configuration (dual antennas, one for TX and one for RX, but small separation with respect to the target), but this depends on the side-lobe configuration of the antennas and if enough leakage can be detected for an accurate measurement. Depending on the isolation, at certain frequencies or pulse generators, there may not be enough leakage energy in the direct pulse for an accurate measurement. Finally, if a user was to separate the antennas more by lengthing the cable and point them directly at each other, i.e. boresight to boresight, then an accurate measurement could be obtained.</p><h2>Connection<a name="3"></a></h2><p>Connect to the radar using the default USB virtual port, 192.168.7.2, or specify an IP address to use via Ethernet (Insert Cat5e cable into RJ-45 jack on the BBB and reboot so DHCP server assigns the BBB a unique IP address. If the USB cable is still attached for power purposes, SSH into the BBB and type <i>"ifconfig"</i> to discover the assigned Ethernet IP address.) Easily open or close the radar connection with the labeled push buttons.</p><p>Also, the proper Cape type must be chosen <b>BEFORE</b> the radar is <i>"Opened"</i>, as some radar register settings are unique to the cape type. Choose either <i>Ancho</i> or <i>Cayenne</i>; only one can be choosen at a time and the default is <i>Ancho</i>. If the wrong cape type is chosen, an error like the following might be thrown: <i>Most likely, Cape choice differs from physically installed radar cape, try again...</i></p><p><img vspace="5" hspace="5" src="help1_connect_capeType.PNG" alt=""> </p><p>The radar always performs a calibration immediately after connection to accurately calculate all the internal delays and sampling frequency for absolute and accurate ranging operation. The App alerts the user when calibration is finished and enables all the remaining operation buttons. Note: Calibration time is ~2 secs for both the <i>Ancho</i> and <i>Cayenne</i>.</p><p><img vspace="5" hspace="5" src="help2_calibration.PNG" alt=""> </p><h2>Operation &amp; Output<a name="4"></a></h2><p>Once the radar has been open and finished calibration, the App automatically begins calculating center frequency and bandwidth of the radar frame. The top screen provides a plot of the time <i>RF Waveform</i> overlaid with the <i>Envelope</i>, calculated using the DDC. The real-time Peak-to-Peak Voltage (Vpp) is printed on the upper plot. The lower plot provides the approximate Power Spectral Density (PSD) in dBm/Hz, calculated using the Fast Fourier Transform (FFT). The real-time Center Frequency (CF) and Bandwidth (BW) is printed on the lower plot.</p><p><img vspace="5" hspace="5" src="help3_run_Ancho.PNG" alt=""> </p><p>There are two controls that affect the operating center frequency (more specifically, two for the <i>Ancho</i> and one for the <i>Cayenne</i> as there is no frequency <i>fine-tune</i> on the <i>Cayenne</i>), one control for bandwidth selection, and one control used for centering the pulse and best viewing.</p><div><ol><li>Pulse Generator Selector: 0-9 (<i>Ancho</i>) or slow, nominal, or fast (<i>Cayenne</i>)</li><li>TX Voltage Slider: 0.9-1.25 Volts (<i>Ancho</i> only, lower voltage reduces the center frequency but also decreases transmit power and higher voltage increases center frequency as well as transmit power)</li><li>Bandwidth Selector: Calculates 3 dB or 10 dB bandwidth</li><li>OffsetDistanceFromReference Slider: Shifts the <i>OffsetDistanceFromReference</i> radar register for optimal viewing of the desired pulse. The <i>OffsetDistanceFromReference</i>, also refered to as the <i>Start Distance</i>, is a time delay in meters equal to the disparity between the antenna phase center location and the desired "start measuring" or "start listening" location.</li></ol></div><p><img vspace="5" hspace="5" src="help4_run_Ancho.PNG" alt=""> </p><p>Finally, adjust the <i>OffsetDistanceFromReference</i> Slider to center the pulse, then change the <i>Pulse Generator</i> and adjust the <i>TX Voltage</i> Slider to see how they independently adjust the center frequency and bandwidth of the pulse. Choose the appropriate <i>Bandwidth</i> selector for the desired bandwidth measurement, 3 dB or 10 dB.</p><p><b>NOTE:</b> If a clean pulse is not within the viewing frame, then severe degradation of the center frequency and bandwidth calculations with occur. Most likely, only noise will be measured so the output will be incorrect.</p><p><img vspace="5" hspace="5" src="help5_noPulse.PNG" alt=""> </p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Salsa: Find Center Frequency App REPLACE_WITH_DASH_DASHHELP
+% _Salsa: FindCenterFreqApp_ is for measuring and calculating the center
+% frequency of a Salsa Radar Development Kit.
+% Copyright 2016 <http://www.flatearthinc.com FlatEarth Inc.>
+%% Description
+% Ascertaining the center frequency and bandwidth of the operating pulse at
+% a given temperature can be advantageous for, among other things, accurate
+% and robust Digital Down-Conversion (DDC). Furthermore, because FlatEarth
+% has implemented a frequency _fine-tune_ feature with respect to the Ancho
+% Kit - by providing control of the transmitter voltage rail - the center
+% frequency can deviate substantially from the advertised value. This App
+% allows the user to investigate the frequency _fine-tune_ granularity,
+% coupled with pulse generator control over the desired temperature range.
+%
+%% Setup
+% The most accurate physical setup to measure center frequency and
+% bandwidth is using a _loopback_ cable configuration with a set amount of
+% attenuation. Both the Ancho and Cayenne flavors should be used with a
+% minimum attenuation of 30 dB, and a cable no shorter than 12 inches (30
+% cm).
+% 
+% <<loopback.PNG>>
+% 
+% # Loop the transmitter to the receiver using a cable, with appropriate
+% frequncy response and the specified length, while also inserting the
+% attenuation in-line.
+% # Power-on the BBB and Salsa Kit and begin to take measurements.
+% 
+% _Alternate Setups:_ The center frequency and bandwidth can also be
+% measured with a pseudo-monostatic antenna configuration (dual antennas,
+% one for TX and one for RX, but small separation with respect to the
+% target), but this depends on the side-lobe configuration of the antennas
+% and if enough leakage can be detected for an accurate measurement.
+% Depending on the isolation, at certain frequencies or pulse generators,
+% there may not be enough leakage energy in the direct pulse for an
+% accurate measurement. Finally, if a user was to separate the antennas
+% more by lengthing the cable and point them directly at each other, i.e.
+% boresight to boresight, then an accurate measurement could be obtained.
+%
+%% Connection
+% Connect to the radar using the default USB virtual port, 192.168.7.2, or
+% specify an IP address to use via Ethernet (Insert Cat5e cable into RJ-45
+% jack on the BBB and reboot so DHCP server assigns the BBB a unique IP
+% address. If the USB cable is still attached for power purposes, SSH into
+% the BBB and type _"ifconfig"_ to discover the assigned Ethernet IP
+% address.) Easily open or close the radar connection with the labeled push
+% buttons.
+%
+% Also, the proper Cape type must be chosen *BEFORE* the radar is
+% _"Opened"_, as some radar register settings are unique to the cape type.
+% Choose either _Ancho_ or _Cayenne_; only one can be choosen at a time and
+% the default is _Ancho_. If the wrong cape type is chosen, an error like
+% the following might be thrown: _Most likely, Cape choice differs from
+% physically installed radar cape, try again..._
+% 
+% <<help1_connect_capeType.PNG>>
+%
+% The radar always performs a calibration immediately after connection to
+% accurately calculate all the internal delays and sampling frequency for
+% absolute and accurate ranging operation. The App alerts the user when
+% calibration is finished and enables all the remaining operation buttons.
+% Note: Calibration time is ~2 secs for both the _Ancho_ and _Cayenne_.
+%
+% <<help2_calibration.PNG>>
+% 
+%% Operation & Output
+% Once the radar has been open and finished calibration, the App
+% automatically begins calculating center frequency and bandwidth of the
+% radar frame. The top screen provides a plot of the time _RF Waveform_
+% overlaid with the _Envelope_, calculated using the DDC. The real-time
+% Peak-to-Peak Voltage (Vpp) is printed on the upper plot. The lower plot
+% provides the approximate Power Spectral Density (PSD) in dBm/Hz,
+% calculated using the Fast Fourier Transform (FFT). The real-time Center
+% Frequency (CF) and Bandwidth (BW) is printed on the lower plot.
+%
+% <<help3_run_Ancho.PNG>>
+% 
+% There are two controls that affect the operating center frequency (more
+% specifically, two for the _Ancho_ and one for the _Cayenne_ as there is
+% no frequency _fine-tune_ on the _Cayenne_), one control for bandwidth
+% selection, and one control used for centering the pulse and best viewing.
+%
+% # Pulse Generator Selector: 0-9 (_Ancho_) or slow, nominal, or fast
+% (_Cayenne_)
+% # TX Voltage Slider: 0.9-1.25 Volts (_Ancho_ only, lower voltage reduces
+% the center frequency but also decreases transmit power and higher voltage
+% increases center frequency as well as transmit power)
+% # Bandwidth Selector: Calculates 3 dB or 10 dB bandwidth
+% # OffsetDistanceFromReference Slider: Shifts the
+% _OffsetDistanceFromReference_ radar register for optimal viewing of the
+% desired pulse. The _OffsetDistanceFromReference_, also refered to as the
+% _Start Distance_, is a time delay in meters equal to the disparity
+% between the antenna phase center location and the desired "start
+% measuring" or "start listening" location.
+%
+% <<help4_run_Ancho.PNG>>
+% 
+% Finally, adjust the _OffsetDistanceFromReference_ Slider to center the
+% pulse, then change the _Pulse Generator_ and adjust the _TX Voltage_
+% Slider to see how they independently adjust the center frequency and
+% bandwidth of the pulse. Choose the appropriate _Bandwidth_ selector for
+% the desired bandwidth measurement, 3 dB or 10 dB.
+%
+% *NOTE:* If a clean pulse is not within the viewing frame, then severe
+% degradation of the center frequency and bandwidth calculations with
+% occur. Most likely, only noise will be measured so the output will be
+% incorrect.
+%
+% <<help5_noPulse.PNG>>
+% 
+
+
+
+##### SOURCE END #####
+--></body></html>
