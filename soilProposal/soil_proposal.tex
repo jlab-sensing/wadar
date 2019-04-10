@@ -308,7 +308,7 @@ possible approach is to toggle the backscatter tag at a relatively low
 frequency, 100-500Hz. To the radar, this makes the tag look like it is
 in motion, which makes the backscatter signal easy to pick out when
 the rest of the environment is stationary. This clever approach was
-designed by a labmate and is under review with no preprint.
+designed by a labmate and is under review with no preprint. It is discussed in detail in an appendix.
 
 The ability to isolate the backscatter signal from other reflections
 also has implications for how far the tags can be buried. The ideal
@@ -329,6 +329,8 @@ needed.
 The XeThru X4 radar series is another good option. The frame rate is
 definitely sufficient to isolate a backscatter toggle between
 100-500hz, but the bandwidth is more narrow at 2.5Ghz. 
+
+\subsection*{}
 
 \section*{Next steps}
 \begin{itemize}
@@ -390,7 +392,7 @@ and will also be accessible to small and large farms alike.
   \bibliography{soil_proposal}
 \end{footnotesize}
 
-\section*{Appendix: Radar basics}
+\section*{Appendix: Radar}
 RADAR (RAdio Detection And Ranging) is a well-developed technology
 with a history dating back to before World War II. Conceptually
 similar to echolocation, it uses the Time of Flight and angle of
@@ -423,7 +425,14 @@ very easily determine the range of a target by measuring the time that
 elapses between pulse transmission and the return reflection. They can
 also measure target speed. When the pulse width of the radar is very
 short, it is known as an impulse radar or Ultra Wideband (UWB)
-radar. Impulse radar needs to be wideband because of Fourier duality:
+radar. UWB radars were enabled by a key circuits discovery in 1994:
+the single-shot transient digitizer~\cite{}. This device is capable of
+high speed, high accuracy digitization of very short pulses of enegry
+(< 5ns). This allowed for the construction of a significantly cheaper
+and smaller radar transceiver that digitizes incoming RF and
+correlates it with the transmitted pulse samples. 
+
+Impulse radar needs to be wideband because of Fourier duality:
 pulses that are short in the time domain require wide bandwidth in the
 frequency domain. The bandwidth of a UWB radar typically ranges
 between 2 and 8 Ghz. Furthermore, the transmit power of UWB radars is
@@ -433,7 +442,23 @@ difficult to detect, as the transmitted waveform looks like white
 noise. UWB radars are also popular because the low transmission power
 ensures that the signal is harmless to humans. The transmit power
 regulations also restrict the operating range of UWB radars to
-relatively short distances, typically $<25$m for consumer grade radars.
+relatively short distances, typically $<25$m for consumer grade
+radars.
+
+A modern radar operates using \emph{frames}, which is the samples from
+a single sweep across the radar's sensing area. The array of data
+returned has one complex sample per \emph{range bin}. Each range bin
+corresponds to a range of possible distances from the radar. For
+example, if the radar resolution is 5cm, the magnitude of the sample
+from the 10th range bin would correspond to an object that is 45-50cm
+away from the radar.
+
+Let the transmitted impulse be represented by $p(t)$, and the received
+frame represented by $f(n)$. The digitized frame can be written as
+
+\begin{equation}
+f[n] = \sum\limits_{k=1}^K \alpha p(nT - 2d_k/c)  
+\end{equation}
 
 The \emph{dynamic range} of a radar...We need to find the dynamic
 range of the radar (ADC bits)
@@ -511,5 +536,10 @@ our sensor will be accurate within 0.05$cm^3/cm^3$.
 11.0              & 0.2020                                                      
 \end{tabular}
 \end{table}
+
+The next key question is, how do we pick out the weak backscatter
+signal against other reflections?
+
+
 
 \end{document}
