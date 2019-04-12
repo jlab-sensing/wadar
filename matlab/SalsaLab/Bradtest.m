@@ -3,8 +3,14 @@
 % demo application.
 %
 % Copyright Flat Earth Inc. 2016
+clc; 
+clear all;
+close all;
 
-%%Create the radar object
+%% Specify the savepath
+savepath = '/home/bradley/Documents/research/radar/matlab/AnchoData/'; 
+
+%% Create the radar object
 radar = radarWrapper('192.168.7.2');        %USB Cable
 %radar = radarWrapper('192.168.7.2', 1)      %USB Cable -- Force a software update
 %radar = radarWrapper('192.168.0.198');      %Ethernet IP Address example
@@ -16,11 +22,18 @@ modules = radar.ConnectedModules;
 radar.Open(modules{1});
 
 %% Set some register values (common radarlib3 settings)
-radar.TryUpdateChip('Iterations','50');
-radar.TryUpdateChip('DACMin','0');
-radar.TryUpdateChip('DACMax','8191');
-radar.TryUpdateChip('DACStep','4');
-radar.TryUpdateChip('PulsesPerStep','16');
+% radar.TryUpdateChip('Iterations','50');
+% radar.TryUpdateChip('DACMin','0');
+% radar.TryUpdateChip('DACMax','8191');
+% radar.TryUpdateChip('DACStep','4');
+% radar.TryUpdateChip('PulsesPerStep','16');
+% radar.TryUpdateChip('FrameStitch','1');
+
+radar.TryUpdateChip('Iterations','16');
+radar.TryUpdateChip('DACMin','3800');
+radar.TryUpdateChip('DACMax','4900');
+radar.TryUpdateChip('DACStep','8');
+radar.TryUpdateChip('PulsesPerStep','8');
 radar.TryUpdateChip('FrameStitch','1');
 
 %% Set some radar cape specific settings
@@ -63,21 +76,42 @@ samplers = radar.Item('SamplersPerFrame');
 % cdf = radar.getCDF();
 
 %% Collect a bunch of raw frames and compute the average FPS
-tic;
-t1=toc;
+timeStart = tic;
 subplot(1,1,1);
-plotTime = 20;      %Run the plot for this many seconds
-fpsFrames = 0;      %Number of frames collected in the time period
 clutter = zeros(1,samplers);
+
+% Loop for desired time 
+fpsMax = 500; %maximum expected fps
+maxTime = 10;  
+
+i=1; 
 while (1)
-    fpsFrames= fpsFrames+1;
-    newFrame1 = double(radar.GetFrameRaw);
-    plot(newFrame1)
-    drawnow
-    if (toc>plotTime)
-        break
+    newFrame1 = radar.GetFrameNormalizedDouble;
+    newFrame1 = newFrame1'; %column vector 
+    %plot(newFrame1)
+    %drawnow
+    
+    if (i==1)
+        frameTot = zeros(size(newFrame1,1), fpsMax * maxTime);
+        timeTot = zeros(1, fpsMax * maxTime); 
     end
     
+    frameTot(:,i) = newFrame1; 
+    timeTot(i) = toc(timeStart);
+    
+    if (toc(timeStart) > maxTime)
+        break
+    end
+    i = i + 1;
 end
-t2=toc;
-FPS_RAW = fpsFrames/(t2-t1)
+frameTot = frameTot(:,1:i); 
+timeTot = timeTot(:,1:i); 
+timeElapsed = timeTot(end); 
+
+timeTot = toc; 
+fpsRaw = size(frameTot,2)/(timeElapsed)
+
+%save the data
+fprintf('Saving output to %s...\n',savepath)
+save(sprintf(strcat(savepath,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot')
+    
