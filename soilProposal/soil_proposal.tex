@@ -445,20 +445,68 @@ regulations also restrict the operating range of UWB radars to
 relatively short distances, typically $<25$m for consumer grade
 radars.
 
-A modern radar operates using \emph{frames}, which is the samples from
-a single sweep across the radar's sensing area. The array of data
-returned has one complex sample per \emph{range bin}. Each range bin
-corresponds to a range of possible distances from the radar. For
-example, if the radar resolution is 5cm, the magnitude of the sample
-from the 10th range bin would correspond to an object that is 45-50cm
-away from the radar.
+%% \begin{figure*}[h!]
+%%   \centering
+%%   \includegraphics[scale=0.5]{radarDiagram.png}\\
+%%   \caption{Transceiver of the X4 radar~\cite{X4datasheet}}
+%%   \label{fig:radarDiagram}
+%% \end{figure*}
+
+%% Figure~\ref{fig:radarDiagram} is a diagram of the X4 impulse radar
+%% transceiver. 
+
+A modern radar operates using \emph{frames}, which is the set of
+samples from a single sweep across the radar's sensing area. Once
+converted to baseband, the frame has one complex sample per
+\emph{range bin}. Each range bin corresponds to a range of possible
+distances from the radar. For example, if the radar resolution is 5cm,
+the magnitude of the sample from the 10th range bin would correspond
+to an object that is 45-50cm away from the radar.
 
 Let the transmitted impulse be represented by $p(t)$, and the received
-frame represented by $f(n)$. The digitized frame can be written as
+sigal by $r(t)$. Then, digitized sample for the $n$th range bin can be
+written as
 
 \begin{equation}
-f[n] = \sum\limits_{k=1}^K \alpha p(nT - 2d_k/c)  
+r[n] = \alpha p(nT - \tau)  
 \end{equation}
+
+Where $T$ is the sampling period\footnote{this is also the duration of
+  the transmitted impulse}, $\alpha$ is the complex attenuation and
+$d_k$ is the distance of the range bin in meters. Time of flight,
+$\tau_k = 2d_k/c$, is the time for a radar impulse to travel to an object and
+then reflect back again. 
+
+For simplicity we have assumed that there is only one reflector per
+range bin, but if there are multiple reflectors then the resulting
+sample will be the linear combination of the $k$ reflectors:
+
+\begin{equation}
+r[n] = \sum\limits_{k=1}^K \alpha_k p(nT - \tau_k)  
+\end{equation}
+
+Because pulse-based radars transmit at a regular interval (known as a
+PRI), they can be used to obtain the speed of moving objects. If an
+object is moving at a constant speed of $v$ m/s, then every frame the
+time of flight changes by $2v\Delta/c$ where $\Delta$ is the PRI.
+
+This change in the time-domain ToF corresponds to a change in phase in
+the frequency domain. Although the phase changes for each frequency
+within the bandwidth of the impulse, we can simplify the math by using
+only the radar's center frequency $f_c$\footnote{This approximation is
+  only valid for signals where the bandwidth of the signal is small
+  compared to the center frequency. The X4 has a 2Ghz bandwidth
+  centered at 8Ghz, so this assumption is somewhat valid but may not
+  be for other radars}. Then, the value for the $n$th bin in the $m$th
+frame will be
+
+
+\begin{equation}
+r_m[n] =  \alpha p(nT - \tau)e^{-j4\pi v \Delta(m-1)/\lambda}  
+\end{equation}
+
+where $\lambda$ is the wavelength of the radar center frequency,
+$f_c$.
 
 The \emph{dynamic range} of a radar...We need to find the dynamic
 range of the radar (ADC bits)
