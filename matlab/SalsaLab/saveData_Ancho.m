@@ -68,9 +68,10 @@ function saveData_Ancho(fileStr, saveOption)
         iterations = radar.Item('Iterations');
         offsetdistance = radar.Item('OffsetDistanceFromReference');
         samplers = radar.Item('SamplersPerFrame');
+        pgen = radar.Item('PGSelect');
         
-        resolution = radar.SamplerResolution
-        range = linspace(0, samplers * resolution, samplers)
+        resolution = radar.SamplerResolution;
+        range = linspace(0, samplers * resolution, samplers);
 
         % Get the CDF
         % cdf = radar.getCDF();
@@ -78,9 +79,9 @@ function saveData_Ancho(fileStr, saveOption)
         %Collect frames for desired amount of time 
         %subplot(1,1,1);
         fpsMax = 500; %Should be > maximum possible fps
-        maxTime = 5; %desired runtime 
+        maxTime = 10; %desired runtime 
 
-        frameCount=1; 
+        frameCount = 1; 
         timeStart = tic;
          
         while (1)
@@ -108,10 +109,15 @@ function saveData_Ancho(fileStr, saveOption)
         %Truncate zero-entries (no data) 
         frameTot = frameTot(:,1:frameCount); 
         timeTot = timeTot(1:frameCount); 
+        
+        %Calculate fps 
+        timeElapsed = timeTot(end);
+        fpsRaw = size(frameTot,2)/(timeElapsed);
+        disp(['Estimated FPS: ' num2str(fpsRaw)]);
 
         %save the raw data
-        %fprintf('Saving output to %s...\n',path)
-        %save(sprintf(strcat(path,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot')
+        fprintf('Saving output to %s...\n',fileStr)
+        save(sprintf(strcat(fileStr,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot', 'fpsRaw')
         
         disp(['Read ' num2str(frameCount) ' frames']); 
     
@@ -122,16 +128,16 @@ function saveData_Ancho(fileStr, saveOption)
     end
 
     %% Post Processing  
-    %Calculate fps 
-    timeElapsed = timeTot(end);
-    fpsRaw = size(frameTot,2)/(timeElapsed);
-    disp(['Estimated FPS: ' num2str(fpsRaw)]);
     
-    %Baseband Conversion???
+    %Baseband Conversion
+    frameTot_bb = zeros(size(frameTot)); 
+    for i = 1:size(frameTot,1)
+        fs_hz = 39e9; 
+        frameTot_bb(i,:) = NoveldaDDC(frameTot(i,:), 'X2', pgen, fs_hz); 
+    end
 
     %FFT of signal for each bin
     framesFFT = db(abs(fft(frameTot,frameCount,2)));
-    Fs = fpsRaw; %average FPS approximates sampling rate, assuming consistent time between samples
     
     %% Plotting 
     %Figure 1: FFT for each bin
