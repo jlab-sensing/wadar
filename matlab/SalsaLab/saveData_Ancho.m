@@ -1,121 +1,144 @@
 % Based off Ancho Example 1 test and Xethru XEP_X4_plot_frame.m
 
-% usage: 
+% usage: displays newly acquired or previous radar frame data
 
-% Brad's current savePath: savepath = '/home/bradley/Documents/research/radar/matlab/AnchoData/'
+% Required args: 
+% string to specify path to load or save data 
+% bool to specify whether to load or save data 
 
-function saveData_Ancho(savePath)
+% example 1: saveData_Ancho('/home/bradley/Documents/research/radar/matlab/AnchoData/', 1)
+% captures frames for user-specified amount of time and displays data 
+
+% example 2: saveData_Ancho('/home/bradley/Documents/research/radar/matlab/AnchoData/switchoff_openair_10s.mat', 0)
+% loads frameTot, timeTot, and maxTime from .mat file and displays data
+
+function saveData_Ancho(fileStr, saveOption)
     close all;
+    clc;
+    
+    %% Get Data
+    if (saveOption == 1) %Collect New Data
+        % Create the radar object
+        radar = radarWrapper('192.168.7.2');        %USB Cable
+        %radar = radarWrapper('192.168.7.2', 1)      %USB Cable -- Force a software update
+        %radar = radarWrapper('192.168.0.198');      %Ethernet IP Address example
 
-    %% Create the radar object
-    radar = radarWrapper('192.168.7.2');        %USB Cable
-    %radar = radarWrapper('192.168.7.2', 1)      %USB Cable -- Force a software update
-    %radar = radarWrapper('192.168.0.198');      %Ethernet IP Address example
+        % Get a list of the connected modules
+        modules = radar.ConnectedModules;
 
-    %% Get a list of the connected modules
-    modules = radar.ConnectedModules;
+        % Open a connection to the radar module
+        radar.Open(modules{1});
 
-    %% Open a connection to the radar module
-    radar.Open(modules{1});
+        % Set some register values 
+        % Default settings: (common radarlib3 settings)
+        % radar.TryUpdateChip('Iterations','50');
+        % radar.TryUpdateChip('DACMin','0');
+        % radar.TryUpdateChip('DACMax','8191');
+        % radar.TryUpdateChip('DACStep','4');ans
+        % radar.TryUpdateChip('PulsesPerStep','16');
+        % radar.TryUpdateChip('FrameStitch','1');
 
-    %% Set some register values 
-    % Default settings: (common radarlib3 settings)
-    % radar.TryUpdateChip('Iterations','50');
-    % radar.TryUpdateChip('DACMin','0');
-    % radar.TryUpdateChip('DACMax','8191');
-    % radar.TryUpdateChip('DACStep','4');ans
-    % radar.TryUpdateChip('PulsesPerStep','16');
-    % radar.TryUpdateChip('FrameStitch','1');
+        % Settings from Justin @ flatearthinc
+        radar.TryUpdateChip('Iterations','16');
+        radar.TryUpdateChip('DACMin','3800');
+        radar.TryUpdateChip('DACMax','4900');
+        radar.TryUpdateChip('DACStep','8');
+        radar.TryUpdateChip('PulsesPerStep','8');
+        radar.TryUpdateChip('FrameStitch','1');
 
-    % Settings from Justin @ flatearthinc
-    radar.TryUpdateChip('Iterations','16');
-    radar.TryUpdateChip('DACMin','3800');
-    radar.TryUpdateChip('DACMax','4900');
-    radar.TryUpdateChip('DACStep','8');
-    radar.TryUpdateChip('PulsesPerStep','8');
-    radar.TryUpdateChip('FrameStitch','1');
+        % Set some Ancho-specific radarlib3 settings 
+        radar.TryUpdateChip('PGSelect', 0);
+        radar.SetVoltage(1.2);
 
-    %% Set some Ancho-specific radarlib3 settings 
-    radar.TryUpdateChip('PGSelect', 7);
-    radar.SetVoltage(1.2);
+        % Calibrate the radar module
+        tic
+        result = radar.ExecuteAction('MeasureAll');
+        toc
 
-    %% Calibrate the radar module
-    tic
-    result = radar.ExecuteAction('MeasureAll');
-    toc
+        % Now set the OffsetDistanceFromReference and/or SampleDelayToReference 
+        % NOTE -- these requires a calibration first!
 
-    %% Now set the OffsetDistanceFromReference and/or SampleDelayToReference 
-    % NOTE -- these requires a calibration first!
+        % Set the SampleDelayToReference (a value effected by antenna/cable choice)
+        radar.TryUpdateChip('SampleDelayToReference',3.687e-9); % Ancho
 
-    % Set the SampleDelayToReference (a value effected by antenna/cable choice)
-    radar.TryUpdateChip('SampleDelayToReference',3.687e-9); % Ancho
+        % Set the OffsetDistanceFromReference (frame begins at this distance from the reference)
+        radar.TryUpdateChip('OffsetDistanceFromReference', 0.0);
 
-    % Set the OffsetDistanceFromReference (frame begins at this distance from the reference)
-    radar.TryUpdateChip('OffsetDistanceFromReference', 0.0);
+        % Get some radar values
+        iterations = radar.Item('Iterations');
+        offsetdistance = radar.Item('OffsetDistanceFromReference');
+        samplers = radar.Item('SamplersPerFrame');
+        pgen = radar.Item('PGSelect');
+        CF = NoveldaChipParams('X2', pgen, '4mm');
+        
+        resolution = radar.SamplerResolution;
+        range = linspace(0, samplers * resolution, samplers);
 
-    %% Get some register values
-    iterations = radar.Item('Iterations');
-    offsetdistance = radar.Item('OffsetDistanceFromReference');
-    samplers = radar.Item('SamplersPerFrame');
+        % Get the CDF
+        % cdf = radar.getCDF();
+        
+        %Collect frames for desired amount of time 
+        %subplot(1,1,1);
+        fpsMax = 500; %Should be > maximum possible fps
+        maxTime = 5; %desired runtime 
 
-    %% Get the CDF
-    % cdf = radar.getCDF();
+        frameCount = 1; 
+        timeStart = tic;
+         
+        while (1)
+            newFrame1 = radar.GetFrameRaw;
+            newFrame1 = newFrame1'; %column vector 
 
-    %% Collect a bunch of raw frames and compute the average FPS
-    %subplot(1,1,1);
+            %plot(newFrame1)
+            %drawnow
+            
+            if (frameCount==1)
+                frameTot = zeros(size(newFrame1,1), fpsMax * maxTime);
+                timeTot = zeros(1, fpsMax * maxTime); 
+            end
 
-    % Loop for desired time 
-    fpsMax = 500; %maximum expected fps
-    maxTime = 5;  
+            frameTot(:,frameCount) = newFrame1; 
+            timeTot(frameCount) = toc(timeStart);
 
-    i=1; 
-    timeStart = tic;
-    while (1)
-        %Get normalized radar frame 
-        newFrame1 = radar.GetFrameNormalizedDouble;
-        newFrame1 = newFrame1'; %column vector 
+            if (toc(timeStart) > maxTime)
+                break
+            end
 
-        %Plot radar frame 
-        %plot(newFrame1)
-        %drawnow
-
-        %On first iteration, initialize matrix to store frames and times
-        if (i==1)
-            frameTot = zeros(size(newFrame1,1), fpsMax * maxTime);
-            timeTot = zeros(1, fpsMax * maxTime); 
+            frameCount = frameCount + 1;
         end
 
-        %Store frame and time data
-        frameTot(:,i) = newFrame1; 
-        timeTot(i) = toc(timeStart);
+        %Truncate zero-entries (no data) 
+        frameTot = frameTot(:,1:frameCount); 
+        timeTot = timeTot(1:frameCount); 
+        
+        %Calculate fps 
+        timeElapsed = timeTot(end);
+        fpsRaw = size(frameTot,2)/(timeElapsed);
+        disp(['Estimated FPS: ' num2str(fpsRaw)]);
 
-        %Exit if maxTime is exceeded
-        if (toc(timeStart) > maxTime)
-            break
-        end
-
-        i = i + 1;
+        %save the raw data
+        %fprintf('Saving output to %s...\n',fileStr)
+        %save(sprintf(strcat(fileStr,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot', 'fpsRaw')
+        
+        disp(['Read ' num2str(frameCount) ' frames']); 
+    
+    else %Load Data
+        pgen = 7; 
+        fprintf('Loading saved data from %s...\n', fileStr)
+        load(fileStr);
+        frameCount = length(frameTot);
     end
-    
-    %Get rid of non-data entries 
-    frameTot = frameTot(:,1:i); 
-    timeTot = timeTot(1:i); 
-    timeElapsed = timeTot(end);
-    
-    %Calculate FPS 
-    fpsRaw = size(frameTot,2)/(timeElapsed);
-    
-    %save the raw data
-    %fprintf('Saving output to %s...\n',savePath)
-    %save(sprintf(strcat(savepath,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot')
 
     %% Post Processing  
-    %TO-DO- Edit this description 
-    %frameTot((end/2 + 1):end, 1:i) =  1i* frameTot((end/2 + 1):end, 1:i);
     
+    %Baseband Conversion
+    frameTot_bb = zeros(size(frameTot)); 
+    for i = 1:frameCount
+        frameTot_bb(:,i) = NoveldaDDC(frameTot(:,i), 'X2', pgen, 39e9); 
+    end
+
     %FFT of signal for each bin
-    framesFFT = db(abs(fft(frameTot,i,2)));
-    Fs = fpsRaw; %average FPS approximates the frame sampling rate
+    framesFFT = db(abs(fft(frameTot_bb,frameCount,2)));
     
     %% Plotting 
     %Figure 1: FFT for each bin
@@ -128,20 +151,22 @@ function saveData_Ancho(savePath)
     [~,maxRangeIndex] = max(framesFFT(:,1)); 
     figure(2); plot(framesFFT(maxRangeIndex,:));
     title(sprintf('Radar response of bin %i across all frequencies', maxRangeIndex)); 
+    ylabel('Magnitude (dB)'); 
+    xlabel('Frequency (units?)');
     
     %Figure 3: ???
-    framesDiff = diff(frameTot,[],2); 
-    figure(3); imagesc(db(abs(fft(framesDiff,(i-1),2)))); 
+    framesDiff = diff(frameTot_bb,[],2); 
+    figure(3); imagesc(db(abs(fft(framesDiff,(frameCount-1),2)))); 
     title('Differential radar response across all frequencies');
     ylabel('Range bin');
     xlabel('Frequency (units?)'); 
     
     %Figure 4: FFT plot for bins ranging from firstBin to lastBin 
-    firstBin = 11;
-    lastBin = 20; 
+    firstBin = 210;
+    lastBin = 220; 
     figure(4); plot(framesFFT(firstBin:lastBin,:)') 
     title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))
-    ylabel('Magnitude')
+    ylabel('Magnitude (dB)')
     xlabel('Frequency (units?)');
 end
 
