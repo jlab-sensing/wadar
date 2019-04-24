@@ -20,7 +20,7 @@
 %
 
 function saveData_X4(profile, varargin)
-    maxTime = 300;
+    maxTime = 10;
     whos; %TODO: delete this?
     close all;
     fprintf('Running profile %s...\n', profile)
@@ -211,21 +211,21 @@ function saveData_X4(profile, varargin)
 
     %% plot
     %plot only bins 11-20 (like figures 1 and 3, but not in db and no imsc call)
-    figure(5); plot(a(11:20,:)') 
+    figure(5); plot(a(11:30,:)') 
     title(sprintf('Radar response, bins 11-20'))
     ylabel('Magnitude')
     xlabel('Frame no.');
-    f = 106.1; %frequency of interest in Hz
+    f = 125; %frequency of interest in Hz
     % TODO: temporary!
     % resolution = (FrameStop- FrameStart)/181; %cm
     resolution = 5.08; %cm
     fig  = figure(6); 
     ax = axes('Parent',fig,'position',[0.13 0.39  0.77 0.54]);
     %tag23 = a(:,f*maxTime + 1)';
-    load('tagOn.mat','tag23');
+    %load('tagOn.mat','tag23');
     plt = plot(resolution*[1:size(a)],a(:,f*maxTime + 1)');
     hold on
-    plot(resolution*[1:size(a)],tag23)
+    %plot(resolution*[1:size(a)],tag23)
     title(sprintf('Radar response for f = %f',f))
     ylabel('Magnitude (dB)')
     xlabel('Range (cm)');

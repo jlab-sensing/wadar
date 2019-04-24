@@ -47,7 +47,10 @@ function saveData_Ancho(fileStr, saveOption)
         radar.TryUpdateChip('DACStep','8');
         radar.TryUpdateChip('PulsesPerStep','8');
         radar.TryUpdateChip('FrameStitch','1');
-
+        % Changing PRF: PRFDivide divides the default
+        % 100Mhz PRF. So setting  to 2 yields PRF = 50Mhz
+        radar.TryUpdateChip('PRFDivide','6');
+        
         % Set some Ancho-specific radarlib3 settings 
         radar.TryUpdateChip('PGSelect', pgen);
         radar.SetVoltage(1.2);
@@ -150,7 +153,7 @@ function saveData_Ancho(fileStr, saveOption)
     xticklabels(xticks); 
     
     %Figure 2: FFT of bin with largest DC response???
-    [~,maxRangeIndex] = max(framesFFT(:,1)); 
+    [~,maxRangeIndex] = max(framesFFT(:,222)); 
     figure(2); plot(framesFFT(maxRangeIndex,:));
     title(sprintf('Radar response of bin %i across all frequencies', maxRangeIndex)); 
     ylabel('Magnitude (dB)'); 
@@ -166,8 +169,8 @@ function saveData_Ancho(fileStr, saveOption)
     xticklabels(xticks); 
     
     %Figure 4: FFT plot for bins ranging from firstBin to lastBin 
-    firstBin = 210;
-    lastBin = 220; 
+    firstBin = 220;
+    lastBin = 240; 
     figure(4); plot(framesFFT(firstBin:lastBin,:)') 
     title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))
     ylabel('Magnitude (dB)')
