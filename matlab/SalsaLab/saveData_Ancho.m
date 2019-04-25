@@ -16,7 +16,6 @@ function saveData_Ancho(fileStr, saveOption)
     close all;
     clc;
     
-    pgen = 0; 
     fs_hz = 39e9; 
     %% Get Data
     if (saveOption == 1) %Collect New Data
@@ -52,6 +51,7 @@ function saveData_Ancho(fileStr, saveOption)
         radar.TryUpdateChip('PRFDivide','6');
         
         % Set some Ancho-specific radarlib3 settings 
+        pgen = 0; 
         radar.TryUpdateChip('PGSelect', pgen);
         radar.SetVoltage(1.2);
 
@@ -77,9 +77,6 @@ function saveData_Ancho(fileStr, saveOption)
         
         resolution = radar.SamplerResolution;
         range = linspace(0, samplers * resolution, samplers);
-
-        % Get the CDF
-        % cdf = radar.getCDF();
         
         %Collect frames for desired amount of time 
         %subplot(1,1,1);
@@ -90,7 +87,7 @@ function saveData_Ancho(fileStr, saveOption)
         timeStart = tic;
          
         while (1)
-            newFrame1 = radar.GetFrameRaw;
+            newFrame1 = radar.GetFrameNormalizedDouble;
             newFrame1 = newFrame1'; %column vector 
 
             %plot(newFrame1)
@@ -149,24 +146,21 @@ function saveData_Ancho(fileStr, saveOption)
     figure(1); im = imagesc(framesFFT);
     title('Radar response across all frequencies'); 
     ylabel('Range bin'); 
-    xlabel('Frequency (hz)');
-    xticklabels(xticks); 
+    xlabel('Frequency');
     
     %Figure 2: FFT of bin with largest DC response???
     [~,maxRangeIndex] = max(framesFFT(:,222)); 
     figure(2); plot(framesFFT(maxRangeIndex,:));
     title(sprintf('Radar response of bin %i across all frequencies', maxRangeIndex)); 
     ylabel('Magnitude (dB)'); 
-    xlabel('Frequency (hz)');
-    xticklabels(xticks); 
+    xlabel('Frequency');
     
     %Figure 3: ???
     framesDiff = diff(frameTot_bb,[],2); 
     figure(3); imagesc(db(abs(fft(framesDiff,(frameCount-1),2)))); 
     title('Differential radar response across all frequencies');
     ylabel('Range bin');
-    xlabel('Frequency (hz)'); 
-    xticklabels(xticks); 
+    xlabel('Frequency'); 
     
     %Figure 4: FFT plot for bins ranging from firstBin to lastBin 
     firstBin = 220;
@@ -174,7 +168,6 @@ function saveData_Ancho(fileStr, saveOption)
     figure(4); plot(framesFFT(firstBin:lastBin,:)') 
     title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))
     ylabel('Magnitude (dB)')
-    xlabel('Frequency (hz)');
-    xticklabels(xticks); 
+    xlabel('Frequency');
 end
 
