@@ -478,8 +478,9 @@ $\tau_k = 2d_k/c$, is the time for a radar impulse to travel to an object and
 then reflect back again. 
 
 For simplicity we have assumed that there is only one reflector per
-range bin, but if there are multiple reflectors then the resulting
-sample will be the linear combination of the $k$ reflectors:
+range bin, but in reality there are multiple reflections in a range
+bin. Then the resulting sample will be the linear combination of the
+$k$ reflectors:
 
 \begin{equation}
 r[n] = \sum\limits_{k=1}^K \alpha_k p(nT - \tau_k)  
@@ -491,22 +492,47 @@ object is moving at a constant speed of $v$ m/s, then every frame the
 time of flight changes by $2v\Delta/c$ where $\Delta$ is the PRI.
 
 This change in the time-domain ToF corresponds to a change in phase in
-the frequency domain. Although the phase changes for each frequency
-within the bandwidth of the impulse, we can simplify the math by using
-only the radar's center frequency $f_c$\footnote{This approximation is
-  only valid for signals where the bandwidth of the signal is small
-  compared to the center frequency. The X4 has a 2Ghz bandwidth
-  centered at 8Ghz, so this assumption is somewhat valid but may not
-  be for other radars}. Then, the value for the $n$th bin in the $m$th
-frame will be
+the frequency domain: $\phi_k = 2\pi f (2v_k\Delta/c)$. Although the phase
+changes for each frequency within the bandwidth of the impulse, we can
+simplify the math by using only the radar's center frequency
+$f_c$\footnote{This approximation is only valid for signals where the
+  bandwidth of the signal is small compared to the center
+  frequency. The X4 has a 2Ghz bandwidth centered at 8Ghz, so this
+  assumption is somewhat valid but may not be for other radars}. Then,
+the value for the $n$th bin in the $m$th frame will be
 
 
 \begin{equation}
-r_m[n] =  \alpha p(nT - \tau)e^{-j4\pi v \Delta(m-1)/\lambda}  
+r_m[n] =  \sum\limits_{k=1}^K \alpha_k p(nT - \tau_k)e^{-j2\pi  \frac{2 v_k \Delta(m-1)}{\lambda}}  
+\label{eq:timedomain}
 \end{equation}
 
 where $\lambda$ is the wavelength of the radar center frequency,
 $f_c$.
+
+Note how similar Eq.~\ref{eq:timedomain} is to the discrete Fourier transform,
+
+\begin{equation}
+F_k = \sum\limits_{k=1}^{N-1} f_n e^{\frac{-j2\pi}{N}kn}
+\end{equation}
+
+If we apply a 1-D inverse Fourier transform to each range bin across a
+collection of P pulses, we get a \emph{range Doppler image} which
+tells us the speed of moving objects:
+
+\begin{equation}
+R[n,s] = \sum\limits_{i=1}^{P} r_m[n] e^{-j2\pi\frac{(i-1)(s-1)}{P}}
+
+\label{eq:rangedoppler}\end{equation}
+
+In Eq~\ref{eq:rangedoppler} above, $s$ is the Doppler bin and $n$ is
+the range bin and $P$ is the total number of pulses transmitted over
+the collection time. 
+
+The figure below shows an example Range Doppler plot....we can see
+that there is a bright spot at .... in this way we can discern the
+signal from our backscatter tag from the signals due to other
+reflectors.
 
 The \emph{dynamic range} of a radar...We need to find the dynamic
 range of the radar (ADC bits)
