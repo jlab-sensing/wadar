@@ -16,6 +16,7 @@ function saveData_Ancho(fileStr, saveOption)
     close all;
     clc;
     
+    fs_hz = 39e9; 
     %% Get Data
     if (saveOption == 1) %Collect New Data
         % Create the radar object
@@ -45,9 +46,13 @@ function saveData_Ancho(fileStr, saveOption)
         radar.TryUpdateChip('DACStep','8');
         radar.TryUpdateChip('PulsesPerStep','8');
         radar.TryUpdateChip('FrameStitch','1');
-
+        % Changing PRF: PRFDivide divides the default
+        % 100Mhz PRF. So setting  to 2 yields PRF = 50Mhz
+        radar.TryUpdateChip('PRFDivide','6');
+        
         % Set some Ancho-specific radarlib3 settings 
-        radar.TryUpdateChip('PGSelect', 0);
+        pgen = 0; 
+        radar.TryUpdateChip('PGSelect', pgen);
         radar.SetVoltage(1.2);
 
         % Calibrate the radar module
@@ -68,14 +73,10 @@ function saveData_Ancho(fileStr, saveOption)
         iterations = radar.Item('Iterations');
         offsetdistance = radar.Item('OffsetDistanceFromReference');
         samplers = radar.Item('SamplersPerFrame');
-        pgen = radar.Item('PGSelect');
-        CF = NoveldaChipParams('X2', pgen, '4mm');
+        [fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz] = NoveldaChipParams('X2', pgen, '4mm');
         
         resolution = radar.SamplerResolution;
         range = linspace(0, samplers * resolution, samplers);
-
-        % Get the CDF
-        % cdf = radar.getCDF();
         
         %Collect frames for desired amount of time 
         %subplot(1,1,1);
@@ -86,7 +87,7 @@ function saveData_Ancho(fileStr, saveOption)
         timeStart = tic;
          
         while (1)
-            newFrame1 = radar.GetFrameRaw;
+            newFrame1 = radar.GetFrameNormalizedDouble;
             newFrame1 = newFrame1'; %column vector 
 
             %plot(newFrame1)
@@ -113,17 +114,16 @@ function saveData_Ancho(fileStr, saveOption)
         
         %Calculate fps 
         timeElapsed = timeTot(end);
-        fpsRaw = size(frameTot,2)/(timeElapsed);
-        disp(['Estimated FPS: ' num2str(fpsRaw)]);
+        fps = size(frameTot,2)/(timeElapsed);
+        disp(['Estimated FPS: ' num2str(fps)]);
 
         %save the raw data
         %fprintf('Saving output to %s...\n',fileStr)
-        %save(sprintf(strcat(fileStr,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot', 'fpsRaw')
+        %save(sprintf(strcat(fileStr,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot','fpsRaw','pgen')
         
         disp(['Read ' num2str(frameCount) ' frames']); 
     
     else %Load Data
-        pgen = 7; 
         fprintf('Loading saved data from %s...\n', fileStr)
         load(fileStr);
         frameCount = length(frameTot);
@@ -134,39 +134,40 @@ function saveData_Ancho(fileStr, saveOption)
     %Baseband Conversion
     frameTot_bb = zeros(size(frameTot)); 
     for i = 1:frameCount
-        frameTot_bb(:,i) = NoveldaDDC(frameTot(:,i), 'X2', pgen, 39e9); 
+        frameTot_bb(:,i) = NoveldaDDC(frameTot(:,i), 'X2', pgen, fs_hz); 
     end
 
     %FFT of signal for each bin
     framesFFT = db(abs(fft(frameTot_bb,frameCount,2)));
     
     %% Plotting 
+    
     %Figure 1: FFT for each bin
     figure(1); im = imagesc(framesFFT);
     title('Radar response across all frequencies'); 
     ylabel('Range bin'); 
-    xlabel('Frequency (units?)');
+    xlabel('Frequency');
     
     %Figure 2: FFT of bin with largest DC response???
-    [~,maxRangeIndex] = max(framesFFT(:,1)); 
+    [~,maxRangeIndex] = max(framesFFT(:,222)); 
     figure(2); plot(framesFFT(maxRangeIndex,:));
     title(sprintf('Radar response of bin %i across all frequencies', maxRangeIndex)); 
     ylabel('Magnitude (dB)'); 
-    xlabel('Frequency (units?)');
+    xlabel('Frequency');
     
     %Figure 3: ???
     framesDiff = diff(frameTot_bb,[],2); 
     figure(3); imagesc(db(abs(fft(framesDiff,(frameCount-1),2)))); 
     title('Differential radar response across all frequencies');
     ylabel('Range bin');
-    xlabel('Frequency (units?)'); 
+    xlabel('Frequency'); 
     
     %Figure 4: FFT plot for bins ranging from firstBin to lastBin 
-    firstBin = 210;
-    lastBin = 220; 
+    firstBin = 220;
+    lastBin = 240; 
     figure(4); plot(framesFFT(firstBin:lastBin,:)') 
     title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))
     ylabel('Magnitude (dB)')
-    xlabel('Frequency (units?)');
+    xlabel('Frequency');
 end
 
