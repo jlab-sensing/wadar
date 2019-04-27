@@ -48,7 +48,7 @@ function saveData_Ancho(fileStr, saveOption)
         radar.TryUpdateChip('FrameStitch','1');
         % Changing PRF: PRFDivide divides the default
         % 100Mhz PRF. So setting  to 2 yields PRF = 50Mhz
-        radar.TryUpdateChip('PRFDivide','6');
+        %radar.TryUpdateChip('PRFDivide','6');
         
         % Set some Ancho-specific radarlib3 settings 
         pgen = 0; 
@@ -79,33 +79,35 @@ function saveData_Ancho(fileStr, saveOption)
         range = linspace(0, samplers * resolution, samplers);
         
         %Collect frames for desired amount of time 
-        %subplot(1,1,1);
-        fpsMax = 500; %Should be > maximum possible fps
-        maxTime = 5; %desired runtime 
-
-        frameCount = 1; 
+        fpsTarget = 200; 
+        tSample = 1 / fpsTarget; 
+        maxTime = 10; %desired runtime 
+        maxFrames = fpsTarget * maxTime + 1; 
+        
+        frameCount = 0; 
         timeStart = tic;
          
         while (1)
             newFrame1 = radar.GetFrameNormalizedDouble;
             newFrame1 = newFrame1'; %column vector 
-
-            %plot(newFrame1)
-            %drawnow
             
-            if (frameCount==1)
-                frameTot = zeros(size(newFrame1,1), fpsMax * maxTime);
-                timeTot = zeros(1, fpsMax * maxTime); 
+            if (frameCount==0)
+                frameTot = zeros(size(newFrame1,1), maxFrames);
+                timeTot = zeros(1, maxFrames); 
+            end
+            
+            if (toc(timeStart) >= maxTime)
+                break
+            end
+            
+            while (toc(timeStart) < frameCount * tSample)
+                %wait 
             end
 
+            frameCount = frameCount + 1; 
             frameTot(:,frameCount) = newFrame1; 
             timeTot(frameCount) = toc(timeStart);
 
-            if (toc(timeStart) > maxTime)
-                break
-            end
-
-            frameCount = frameCount + 1;
         end
 
         %Truncate zero-entries (no data) 
@@ -114,7 +116,7 @@ function saveData_Ancho(fileStr, saveOption)
         
         %Calculate fps 
         timeElapsed = timeTot(end);
-        fps = size(frameTot,2)/(timeElapsed);
+        fps = (size(frameTot,2) - 1)/(timeElapsed);
         disp(['Estimated FPS: ' num2str(fps)]);
 
         %save the raw data
@@ -128,6 +130,19 @@ function saveData_Ancho(fileStr, saveOption)
         load(fileStr);
         frameCount = length(frameTot);
     end
+    
+%     timeDif = zeros(1, length(frameTot)- 1); 
+%     for i = 1:length(frameTot)-1
+%         tDelta = timeTot(i+1) - timeTot(i); 
+%         if (tDelta < 0)
+%             disp('i'); 
+%         end
+%         timeDif(i) = tDelta; 
+%     end
+%     timeDif = timeDif - (1/fps); 
+%     figure(5); 
+%     hist(timeDif, 10)
+%     sum(abs(timeDif < .005)) / length(timeDif)
 
     %% Post Processing  
     
