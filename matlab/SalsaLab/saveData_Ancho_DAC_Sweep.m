@@ -84,65 +84,64 @@ function saveData_Ancho(fileStr, saveOption)
         maxTime = 10; %desired runtime 
         maxFrames = fpsTarget * maxTime + 1; 
         
-        frameCount = 0; 
-        timeStart = tic;
-         
-        while (1)
-            newFrame1 = radar.GetFrameNormalizedDouble;
-            newFrame1 = newFrame1'; %column vector 
+        
+        % DAC Sweep Settings 
+        dacRange = 2^7; 
+        dacEnd = 2^13; 
+        
+        %for dacMin = 0:dacRange:(2^13 - dacRange) %full sweep
+        %for dacMin = (dacEnd/4):dacRange:(3*dacEnd/4)-dacRange %half sweep (centered)
+        for dacMin = (3*dacEnd/8):dacRange:(5*dacEnd/8 - dacRange)
+            radar.TryUpdateChip('DACMin',dacMin);
+            radar.TryUpdateChip('DACMax',dacMin + (dacRange - 1));
             
-            if (frameCount==0)
-                frameTot = zeros(size(newFrame1,1), maxFrames);
-                timeTot = zeros(1, maxFrames); 
-            end
-            
-            if (toc(timeStart) >= maxTime)
-                break
-            end
-            
-            while (toc(timeStart) < frameCount * tSample)
-                %wait 
+            frameCount = 0; 
+            timeStart = tic;
+            while (1)
+                if (frameCount==0)
+                    frameTot = zeros(samplers, maxFrames);
+                    timeTot = zeros(1, maxFrames); 
+                end
+
+                if (toc(timeStart) >= maxTime)
+                    break
+                end
+
+                while (toc(timeStart) < frameCount * tSample)
+                    %wait 
+                end
+
+                frameCount = frameCount + 1;
+
+                timeTot(frameCount) = toc(timeStart);
+
+                newFrame1 = radar.GetFrameNormalizedDouble;
+                newFrame1 = newFrame1'; %column vector 
+                frameTot(:,frameCount) = newFrame1; 
             end
 
-            frameCount = frameCount + 1; 
-            frameTot(:,frameCount) = newFrame1; 
-            timeTot(frameCount) = toc(timeStart);
+            %Truncate zero-entries (no data) 
+            frameTot = frameTot(:,1:frameCount);
+            timeTot = timeTot(1:frameCount); 
+            timeTot = timeTot - timeTot(1); %t0 = 0
 
+            %Calculate fps 
+            timeElapsed = timeTot(end);
+            fps = (size(frameTot,2) - 1)/(timeElapsed);
+            disp(['Estimated FPS: ' num2str(fps)]);
+
+            %save the raw data
+            fprintf('Saving output to %s...\n',fileStr)
+            save(sprintf(strcat(fileStr,'%i.mat'),dacMin),'maxTime','frameTot','timeTot','fps','pgen')
+
+            disp(['Read ' num2str(frameCount) ' frames']); 
         end
-
-        %Truncate zero-entries (no data) 
-        frameTot = frameTot(:,1:frameCount); 
-        timeTot = timeTot(1:frameCount); 
-        
-        %Calculate fps 
-        timeElapsed = timeTot(end);
-        fps = (size(frameTot,2) - 1)/(timeElapsed);
-        disp(['Estimated FPS: ' num2str(fps)]);
-
-        %save the raw data
-        %fprintf('Saving output to %s...\n',fileStr)
-        %save(sprintf(strcat(fileStr,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot','fpsRaw','pgen')
-        
-        disp(['Read ' num2str(frameCount) ' frames']); 
     
     else %Load Data
         fprintf('Loading saved data from %s...\n', fileStr)
         load(fileStr);
         frameCount = length(frameTot);
     end
-    
-%     timeDif = zeros(1, length(frameTot)- 1); 
-%     for i = 1:length(frameTot)-1
-%         tDelta = timeTot(i+1) - timeTot(i); 
-%         if (tDelta < 0)
-%             disp('i'); 
-%         end
-%         timeDif(i) = tDelta; 
-%     end
-%     timeDif = timeDif - (1/fps); 
-%     figure(5); 
-%     hist(timeDif, 10)
-%     sum(abs(timeDif < .005)) / length(timeDif)
 
     %% Post Processing  
     
@@ -184,5 +183,6 @@ function saveData_Ancho(fileStr, saveOption)
     title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))
     ylabel('Magnitude (dB)')
     xlabel('Frequency');
+    
 end
 
