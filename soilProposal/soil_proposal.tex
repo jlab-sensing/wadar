@@ -196,7 +196,7 @@ and needs to be dragged across the surface of the soil. This is a
 labor intensive process which may not always be possible in dense
 crops. Non-contact GPRs exist that can be attached to drones, but
 these have lower resolution and can only reliably measure to a depth
-of about 10cm~\cite{gpr}.
+of about 10cm~\cite{gprEdaphic}.
 
 \subsubsection*{Novel soil moisture sensors}
 A number of recent efforts have explored ways to lower the cost of
@@ -488,14 +488,15 @@ object is moving at a constant speed of $v$ m/s, then every frame the
 time of flight changes by $2v\Delta/c$ where $\Delta$ is the PRI.
 
 This change in the time-domain ToF corresponds to a change in phase in
-the frequency domain: $\phi_k = 2\pi f (2v_k\Delta/c)$. Although the phase
-changes for each frequency within the bandwidth of the impulse, we can
-simplify the math by using only the radar's center frequency
+the frequency domain: $\phi_k = 2\pi f (2v_k\Delta/c)$. Although the
+phase changes for each frequency within the bandwidth of the impulse,
+we can simplify the math by using only the radar's center frequency
 $f_c$\footnote{This approximation is only valid for signals where the
   bandwidth of the signal is small compared to the center
   frequency. The X4 has a 2Ghz bandwidth centered at 8Ghz, so this
-  assumption is somewhat valid but may not be for other radars}. Then,
-the value for the $n$th bin in the $m$th frame will be
+  assumption is somewhat valid but may not be for other radars. I
+  asked Dustin Schroeder about this issue, and he suggests
+  TODO}. Then, the value for the $n$th bin in the $m$th frame will be
 
 
 \begin{equation}
@@ -513,7 +514,7 @@ F_k = \sum\limits_{k=1}^{N-1} f_n e^{\frac{-j2\pi}{N}kn}
 \end{equation}
 
 If we apply a 1-D inverse Fourier transform to each range bin across a
-collection of P pulses, we get a \emph{range Doppler image} which
+collection of P pulses, we get a \emph{range-Doppler image} which
 tells us the speed of moving objects:
 
 \begin{equation}
@@ -532,13 +533,18 @@ the collection time.
   \label{figure:rdplot}
 \end{figure}
 
-Figure~\ref{figure:rdplot} shows an example Range Doppler plot. We can
+Figure~\ref{figure:rdplot} shows an example range-Doppler plot. We can
 see that there are bright spots at 212 and 293 Hz. This plot is a 10
 second capture where the radar is pointed at antennas that are
 grounded and ungrounded at those frequencies. If there are no other
 fast-moving objects in the radar's field of view, we can use this
 property to discern the signal from our backscatter tag from the
 signals due to other reflectors.
+
+We simply use the built-in FFT function of MATLAB, but there are a
+number of more sophisticated techniques to improve results. More
+details on range-Doppler formation can be found
+in~\cite{rangeDoppler}.
 
 \subsubsection*{Signal attenuation}
 
@@ -558,9 +564,61 @@ the incoming signal by $N$, then the backscatter signal needs to be at
 least $1/N$ of the quantization unit in an ideal case (no noise). If
 there is noise, then the signal needs to be one bin louder.
 
-The path loss of wet soil is another key factor in how deep we can
-bury the tag....
+Then, knowing this minimum volume we could use the penetration depth
+(or a related metric, path loss) to estimate the maximum
+depth. Penetration depth measures how deep electromagnetic radiation
+can penetrate into a material. It is defined as the depth at which the
+intensity of the radiation inside the material falls to $1/e$ (about
+37\%) of its original value at the surface. The penetration depth
+depends on the center frequency, and it is typically found in
+lookup-tables. Unfortunately, the penetration depth of damp soil is
+not well studied. There is one ITU study that has penetration depths
+of wet and dry soil as a function of
+frequency~\cite{penetrationDepth}, but they do not provide details on
+the soil type or moisture level(s).
 
+Path loss, $L$, is the reduction in power density (attenuation) of an
+electromagnetic wave as it propagates through space. Linear path loss
+is the ratio of transmit power to receive power~\cite{goldsmith}. Path
+loss is the linear path loss expressed in dB. In the simplified path
+loss model, a material or environment is associated with a \emph{path
+  loss exponent}, $\gamma$:
+
+\begin{equation}
+  L = 10\log_{10}(d)^\gamma + C
+\end{equation}
+
+In the equation above, $d$ is the distance between the TX and RX in
+meters and $C$ is a constant accounting for things like antenna
+characteristics. Path loss values typically range from 2-6, with 2
+being the path loss of free space. Like penetration depth, the path
+loss of soil is also not well studied. However, we expect that the
+loss for damp soil will be significantly higher than 6.
+
+Given how inexact our knowledge is of the path loss and/or penetration
+depth of potting soil, these bounds are not especially
+useful. Therefore our approach was to experimentally determine SNR vs
+soil depth for various moisture levels. 
+
+\subsubsection*{Improving SNR}
+Given the low-SNR nature of backscatter, it is worth investigating
+radar configurations and post-processing techniques that can improve
+our SNR.
+
+Different models of radar have different receive chains, which
+informs how the signal is digitized and what the operator can do to to
+isolate weak signals. The receive chain has an LNA followed by a
+sampling/ADC system. The X4 radar (and possibly the X2) uses a
+technique called Swept Threshold sampling~\cite{sweptThreshold}. Most
+models of radar let the user adjust the DAC settings, which impacts
+the maximum and minimum accepted input voltage, and also the
+quantization step size. Having low DAC mins and maxes with a small
+quantization step size may allow us to target low-SNR signals.
+
+As far as post-processing, a few UWB radar applications use SVD-based
+clutter removal to improve the signal strength
+~\cite{uw~bRange}~\cite{svdClutter}. These techniques may be worth
+investigating.
 
 \section*{Soil equations}
 Time of flight, $\tau$, meaures the \emph{apparent dielectric
