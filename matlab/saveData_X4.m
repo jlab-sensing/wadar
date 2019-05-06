@@ -20,7 +20,7 @@
 %
 
 function saveData_X4(profile, varargin)
-    maxTime = 300;
+    maxTime = 300; %multiple of 10
     whos; %TODO: delete this?
     close all;
     fprintf('Running profile %s...\n', profile)
@@ -123,45 +123,60 @@ function saveData_X4(profile, varargin)
 
         % Start streaming and subscribe to message_data_float.
         % Start the radar three times so that we get valid data
-        radar.start();
-
-        tstart = tic;
-        tspent = toc(tstart);
 
         i = 0;
+        time = 0;
         % frameTot = zeros(181, FPS*maxTime);
-        while (tspent < maxTime)
-            % Peek message data float
-            numPackets = radar.bufferSize();
-            if numPackets > 0
-                i = i+1;
-                % Get 181x1 frame (uses read_message_data_float)
-                [frame, ctr] = radar.GetFrameNormalized();
-
-                % timestamp for each collected frame
-                if i == 1
-                    timeTot = zeros(1, FPS*maxTime); 
-                end
-                timeTot(i) = toc(tstart);
-
-                if i == 1
-                    numBins = length(frame);
-                    numBins = numBins/2;
-                    binLength = (frameStop-frameStart)/(numBins-1);
-                    rangeVec = (0:numBins-1)*binLength + frameStart;
-                end
-
-                frame = frame(1:end/2) + 1i*frame(end/2 + 1:end);
-
-                if i == 1
-                   frameTot = zeros(size(frame,1), FPS*maxTime);
-                end
-                frameTot(:,i) = frame;
-            end
-
+        for j = 1:(maxTime/10)
+            radar.start();
+            tstart = tic;
             tspent = toc(tstart);
+            while (tspent < 10)
+                % Peek message data float
+                numPackets = radar.bufferSize();
+                if numPackets > 0
+                    i = i+1;
+                    % Get 181x1 frame (uses read_message_data_float)
+                    [frame, ctr] = radar.GetFrameNormalized();
+
+                    % timestamp for each collected frame
+                    if i == 1
+                        timeTot = zeros(1, FPS*maxTime); 
+                    end
+                    timeTot(i) = toc(tstart);
+
+                    if i == 1
+                        numBins = length(frame);
+                        numBins = numBins/2;
+                        binLength = (frameStop-frameStart)/(numBins-1);
+                        rangeVec = (0:numBins-1)*binLength + frameStart;
+                    end
+
+                    frame = frame(1:end/2) + 1i*frame(end/2 + 1:end);
+
+                    if i == 1
+                       frameTot = zeros(size(frame,1), FPS*maxTime);
+                    end
+                    frameTot(:,i) = frame;
+                end
+
+                tspent = toc(tstart);
+            end
+            time = time + tspent;
+            time
+            a = (db(abs(fft(frameTot,i,2))));
+            figure(5);plot(a(11:20,:)')
+            title(sprintf('Radar response, bins 11-20 at %i s',j*10))
+            ylabel('Magnitude')
+            xlabel('Frame no.');
+            drawnow
+            j*10
+            %pause(0)
+            radar.stop();
         end
 
+        time
+        
         % Stop streaming.
         radar.stop();
 
@@ -171,7 +186,7 @@ function saveData_X4(profile, varargin)
         framesRead = i;
         totFramesFromChip = ctr;
 
-        FPS_est = framesRead/tspent;
+        FPS_est = framesRead/time;
 
         framesDropped = ctr-i;
 
@@ -182,7 +197,7 @@ function saveData_X4(profile, varargin)
         clear radar frame
     end
     
-    a = (db(abs(fft(frameTot,i,2))));
+    % a = (db(abs(fft(frameTot,i,2))));
     Fs =  23.328*10e9; %as per XeThru X4 user manual
     % show image of the fourier transform of IQ time domain samples 
     % For matrices, the fft operation is applied to each column. 
@@ -222,10 +237,10 @@ function saveData_X4(profile, varargin)
     fig  = figure(6); 
     ax = axes('Parent',fig,'position',[0.13 0.39  0.77 0.54]);
     %tag23 = a(:,f*maxTime + 1)';
-    load('tagOn.mat','tag23');
-    plt = plot(resolution*[1:size(a)],a(:,f*maxTime + 1)');
-    hold on
-    plot(resolution*[1:size(a)],tag23)
+    %load('tagOn.mat','tag23');
+    plt = plot(a(:,f*maxTime + 1)');
+    %hold on
+    %plot(resolution*[1:size(a)],tag23)
     title(sprintf('Radar response for f = %f',f))
     ylabel('Magnitude (dB)')
     xlabel('Range (cm)');
