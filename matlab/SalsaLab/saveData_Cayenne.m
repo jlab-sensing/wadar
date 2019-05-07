@@ -1,4 +1,4 @@
-% Based off Ancho Example 1 test and Xethru XEP_X4_plot_frame.m
+% Based off Cayenne Example 1 test and Xethru XEP_X4_plot_frame.m
 
 % usage: displays newly acquired or previous radar frame data
 
@@ -6,23 +6,20 @@
 % string to specify path to load or save data 
 % bool to specify whether to load or save data 
 
-% example 1: saveData_Ancho('/home/bradley/Documents/research/radar/matlab/AnchoData/', 1)
+% example 1: saveData_Cayenne('/home/bradley/Documents/research/radar/matlab/CayenneData/', 1)
 % captures frames for user-specified amount of time and displays data 
 
-% example 2: saveData_Ancho('/home/bradley/Documents/research/radar/matlab/AnchoData/switchoff_openair_10s.mat', 0)
+% example 2: saveData_Cayenne('/home/bradley/Documents/research/radar/matlab/CayenneData/switchoff_openair_10s.mat', 0)
 % loads frameTot, timeTot, and maxTime from .mat file and displays data
 
-function saveData_Ancho(fileStr, saveOption)
+function saveData_Cayenne(fileStr, saveOption)
     close all;
-    clc;
     
     fs_hz = 39e9; 
     %% Get Data
     if (saveOption == 1) %Collect New Data
         % Create the radar object
         radar = radarWrapper('192.168.7.2');        %USB Cable
-        %radar = radarWrapper('192.168.7.2', 1)      %USB Cable -- Force a software update
-        %radar = radarWrapper('192.168.0.198');      %Ethernet IP Address example
 
         % Get a list of the connected modules
         modules = radar.ConnectedModules;
@@ -32,27 +29,22 @@ function saveData_Ancho(fileStr, saveOption)
 
         % Set some register values 
         % Default settings: (common radarlib3 settings)
-        % radar.TryUpdateChip('Iterations','50');
-        % radar.TryUpdateChip('DACMin','0');
-        % radar.TryUpdateChip('DACMax','8191');
-        % radar.TryUpdateChip('DACStep','4');ans
-        % radar.TryUpdateChip('PulsesPerStep','16');
-        % radar.TryUpdateChip('FrameStitch','1');
-
-        % Settings from Justin @ flatearthinc
         radar.TryUpdateChip('Iterations','16');
-        radar.TryUpdateChip('DACMin','4100');
-        radar.TryUpdateChip('DACMax','4700');
+        radar.TryUpdateChip('DACMin','3800');
+        radar.TryUpdateChip('DACMax','4900');
         radar.TryUpdateChip('DACStep','8');
         radar.TryUpdateChip('PulsesPerStep','8');
         radar.TryUpdateChip('FrameStitch','1');
+
         % Changing PRF: PRFDivide divides the default
         % 100Mhz PRF. So setting  to 2 yields PRF = 50Mhz
         %radar.TryUpdateChip('PRFDivide','6');
         
         % Set some Cayenne-specific radarlib3 settings (comment out if not using Cayenne)
-        radar.TryUpdateChip('PulseGen', '4.3GHz');
-        radar.TryUpdateChip('SamplingRate', 0);
+        pgen = 0; %0,1,2
+        radar.TryUpdateChip('PulseGen', '4.3GHz'); %1.5GHz, 4.3GHz 
+        radar.TryUpdateChip('PulseGenFineTune', pgen); 
+        radar.TryUpdateChip('SamplingRate', 0); %0 for 26 ps
 
         % Calibrate the radar module
         tic
@@ -72,7 +64,7 @@ function saveData_Ancho(fileStr, saveOption)
         iterations = radar.Item('Iterations');
         offsetdistance = radar.Item('OffsetDistanceFromReference');
         samplers = radar.Item('SamplersPerFrame');
-        [fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz] = NoveldaChipParams('X2', pgen, '4mm');
+        [fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz] = NoveldaChipParams('X1-IPG0', pgen, '4mm')
         
         resolution = radar.SamplerResolution;
         range = linspace(0, samplers * resolution, samplers);
@@ -148,7 +140,7 @@ function saveData_Ancho(fileStr, saveOption)
     %Baseband Conversion
     frameTot_bb = zeros(size(frameTot)); 
     for i = 1:frameCount
-        frameTot_bb(:,i) = NoveldaDDC(frameTot(:,i), 'X2', pgen, fs_hz); 
+        frameTot_bb(:,i) = NoveldaDDC(frameTot(:,i), 'X1-IPG0', pgen, fs_hz, fc); 
     end
 
     %FFT of signal for each bin

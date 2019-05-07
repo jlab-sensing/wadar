@@ -86,12 +86,13 @@ function saveData_Ancho(fileStr, saveOption)
         
         
         % DAC Sweep Settings 
-        dacRange = 2^7; 
+        dacSpacing = 100; 
+        dacRange = 2^9; 
         dacEnd = 2^13; 
         
         %for dacMin = 0:dacRange:(2^13 - dacRange) %full sweep
         %for dacMin = (dacEnd/4):dacRange:(3*dacEnd/4)-dacRange %half sweep (centered)
-        for dacMin = (3*dacEnd/8):dacRange:(5*dacEnd/8 - dacRange)
+        for dacMin = linspace(3500, 3500 + 15*dacSpacing, 16); 
             radar.TryUpdateChip('DACMin',dacMin);
             radar.TryUpdateChip('DACMax',dacMin + (dacRange - 1));
             
