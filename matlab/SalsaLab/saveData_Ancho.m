@@ -51,9 +51,10 @@ function saveData_Ancho(fileStr, saveOption)
         %radar.TryUpdateChip('PRFDivide','6');
         
         % Set some Cayenne-specific radarlib3 settings (comment out if not using Cayenne)
-        radar.TryUpdateChip('PulseGen', '4.3GHz');
-        radar.TryUpdateChip('SamplingRate', 0);
-
+        pgen = 0; 
+        radar.TryUpdateChip('PGSelect', pgen);
+        radar.SetVoltage(1.2);
+        
         % Calibrate the radar module
         tic
         result = radar.ExecuteAction('MeasureAll');
@@ -63,7 +64,7 @@ function saveData_Ancho(fileStr, saveOption)
         % NOTE -- these requires a calibration first!
 
         % Set the SampleDelayToReference (a value effected by antenna/cable choice)
-        radar.TryUpdateChip('SampleDelayToReference',1.5e-9);   % Cayenne
+        radar.TryUpdateChip('SampleDelayToReference',3.687e-9); % Ancho
 
         % Set the OffsetDistanceFromReference (frame begins at this distance from the reference)
         radar.TryUpdateChip('OffsetDistanceFromReference', 0.0);
