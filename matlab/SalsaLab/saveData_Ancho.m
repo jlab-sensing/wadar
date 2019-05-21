@@ -86,7 +86,7 @@ function saveData_Ancho(fileStr, saveOption)
         
         frameCount = 0; 
         timeStart = tic;
-         
+          
         while (1)
             newFrame1 = radar.GetFrameNormalizedDouble;
             newFrame1 = newFrame1'; %column vector 
@@ -120,15 +120,76 @@ function saveData_Ancho(fileStr, saveOption)
         disp(['Estimated FPS: ' num2str(fps)]);
 
         %save the raw data
-        %fprintf('Saving output to %s...\n',fileStr)
-        %save(sprintf(strcat(fileStr,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot','fpsRaw','pgen')
+        fprintf('Saving output to %s...\n',fileStr)
+        save(sprintf(strcat(fileStr,'expData%s.mat'),datestr(now,30)),'maxTime','frameTot','timeTot','fps','pgen')
         
         disp(['Read ' num2str(frameCount) ' frames']); 
     
     else %Load Data
         fprintf('Loading saved data from %s...\n', fileStr)
-        load(fileStr);
-        frameCount = length(frameTot);
+        %load(fileStr);
+        FRAME_LOGGER_MAGIC_NUM = hex2dec('FEFE00A2');
+        fid = fopen(fileStr,'r');
+        % Check the magic#
+        magic = fread(fid,1,'uint32');
+        if magic ~= FRAME_LOGGER_MAGIC_NUM
+            fprintf("Wrong data format: %s!\n", dataLogFile);
+            fclose(dataLog);
+            return;
+        end
+        % Next are the sweep controller settings
+        iterations = fread(fid,1,'int');
+        pps = fread(fid,1,'int');
+        dacMin = fread(fid,1,'int');
+        dacMax = fread(fid,1,'int');
+        dacStep = fread(fid,1,'int');
+
+        % The measured sampling rate is next
+        samplesPerSecond = fread(fid,1,'float');
+        % The NVA6201 specific settings are next
+        pgen = fread(fid,1,'int');
+        % The frame offset, reference delay
+        offsetDistance = fread(fid,1,'float');
+        sampleDelayToReference = fread(fid,1,'float');
+        % Next is the #samplers in a frame
+        numberOfSamplers = fread(fid,1,'int');
+        % Determine #frames in capture
+        numFrames = fread(fid,1,'int');
+        numRuns = fread(fid,1,'int');
+        frameRate = fread(fid,1,'int');
+
+        times = zeros(numFrames,1);
+        frameTot = zeros(numberOfSamplers, numFrames);
+        for f = 1:numFrames
+            % Get the offsetDistance (???) NOTE: it says offset distance in the 
+            % FlatEarth code, not sure why stored in temperature variable
+            temp = fread(fid, 1, 'float');
+            % TODO: figure out what is going on here. Uncommenting causes the code
+            % to fail. Is it offsetDistance or temp? Why would temp always be 1?
+            %if temp ~= 1 
+            %    fprintf("File read error: offsetDistance != 1\n");
+            %        fclose(fid);
+            %return
+            %end
+            %time = fread(fid, 1, 'float');
+            %times(f,:) = time;
+            % Get a radar frame
+            frame = fread(fid, numberOfSamplers, 'uint32');
+            if size(frame,1) ~= numberOfSamplers
+                fprintf("File read error: data frame wrong size!");
+            end
+            % Do the DAC normalization
+            scaled = double(frame)/(1.0*pps*iterations)*dacStep + dacMin; 
+            frameTot(:,f) = scaled; 
+        end
+        fpsEst = fread(fid, 1, 'float');
+        [A,count] = fread(fid);
+        fclose(fid);
+        if count ~= 0
+            fprintf("FILE READ ERROR: data remains! Check that file format matches read code\n")
+            return
+        end
+        frameCount = size(frameTot,2);
     end
     
 %     timeDif = zeros(1, length(frameTot)- 1); 
@@ -155,31 +216,31 @@ function saveData_Ancho(fileStr, saveOption)
     %FFT of signal for each bin
     framesFFT = db(abs(fft(frameTot_bb,frameCount,2)));
     
-    %% Plotting 
-    
-    %Figure 1: FFT for each bin
-    figure(1); im = imagesc(framesFFT);
-    title('Radar response across all frequencies'); 
-    ylabel('Range bin'); 
-    xlabel('Frequency');
-    
-    %Figure 2: FFT of bin with largest DC response???
-    [~,maxRangeIndex] = max(framesFFT(:,222)); 
-    figure(2); plot(framesFFT(maxRangeIndex,:));
-    title(sprintf('Radar response of bin %i across all frequencies', maxRangeIndex)); 
-    ylabel('Magnitude (dB)'); 
-    xlabel('Frequency');
-    
-    %Figure 3: ???
-    framesDiff = diff(frameTot_bb,[],2); 
-    figure(3); imagesc(db(abs(fft(framesDiff,(frameCount-1),2)))); 
-    title('Differential radar response across all frequencies');
-    ylabel('Range bin');
-    xlabel('Frequency'); 
-    
+%     %% Plotting 
+%     
+%     %Figure 1: FFT for each bin
+%     figure(1); im = imagesc(framesFFT);
+%     title('Radar response across all frequencies'); 
+%     ylabel('Range bin'); 
+%     xlabel('Frequency');
+%     
+%     %Figure 2: FFT of bin with largest DC response???
+%     [~,maxRangeIndex] = max(framesFFT(:,222)); 
+%     figure(2); plot(framesFFT(maxRangeIndex,:));
+%     title(sprintf('Radar response of bin %i across all frequencies', maxRangeIndex)); 
+%     ylabel('Magnitude (dB)'); 
+%     xlabel('Frequency');
+%     
+%     %Figure 3: ???
+%     framesDiff = diff(frameTot_bb,[],2); 
+%     figure(3); imagesc(db(abs(fft(framesDiff,(frameCount-1),2)))); 
+%     title('Differential radar response across all frequencies');
+%     ylabel('Range bin');
+%     xlabel('Frequency'); 
+%     
     %Figure 4: FFT plot for bins ranging from firstBin to lastBin 
-    firstBin = 220;
-    lastBin = 240; 
+    firstBin = 200;
+    lastBin = 256; 
     figure(4); plot(framesFFT(firstBin:lastBin,:)') 
     title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))
     ylabel('Magnitude (dB)')

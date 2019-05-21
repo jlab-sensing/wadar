@@ -59,6 +59,7 @@ function saveData_X4(profile, varargin)
     DACmax = 1100;
     Iterations = 16;
     FrameStart = 0.2; % meters.
+    OffsetDistance = FrameStart-0.86/8;
     FrameStop = 9.4; % meters.
     % default values for FrameStart and FrameStop are 0.2 m and 9.4 m.
 
@@ -181,23 +182,24 @@ function saveData_X4(profile, varargin)
         radar.close();
         clear radar frame
     end
-    
-    a = (db(abs(fft(frameTot,i,2))));
-    Fs =  23.328*10e9; %as per XeThru X4 user manual
+    FT = fft(frameTot,i,2);
+    a = (db(abs(FT)));
+    Fs =  23.328*10^9; %as per XeThru X4 user manual
+    sample_resolution = ((0.5 * 299792458) / Fs)*8;    
     % show image of the fourier transform of IQ time domain samples 
     % For matrices, the fft operation is applied to each column. 
     figure(1); im = imagesc(a);%imagesc(a(:,1:i/2));
     %TODO: label axes better
     xticklabels({'50','100','150','200','250','300','350'})
     title(sprintf('Radar response across all freqs'))
-    ylabel('Range bin (5.08cm increments)')
+    ylabel('Range bin (5.14cm increments)')
     xlabel('Doppler freq (Hz)');
     [~,maxRangeIndex] = max(a(:,1)); 
     figure(2); plot(a(maxRangeIndex,:));
     title(sprintf('???'))
     figure(3); imagesc(db(abs(fft(diff(frameTot,[],2),i,2))))
     title(sprintf('Radar response across all freqs, w/ highlight(?)'))
-    ylabel('Range bin (5.08cm increments)')
+    ylabel('Range bin (5.13cm increments)')
     xlabel('Doppler freq (Hz)');    
     xticklabels({'50','100','150','200','250','300','350'})
     
@@ -215,21 +217,19 @@ function saveData_X4(profile, varargin)
     title(sprintf('Radar response, bins 11-20'))
     ylabel('Magnitude')
     xlabel('Frame no.');
-    f = 125; %frequency of interest in Hz
-    % TODO: temporary!
-    % resolution = (FrameStop- FrameStart)/181; %cm
-    resolution = 5.08; %cm
+    f = 100; %frequency of interest in Hz
     fig  = figure(6); 
     ax = axes('Parent',fig,'position',[0.13 0.39  0.77 0.54]);
     %tag23 = a(:,f*maxTime + 1)';
     %load('tagOn.mat','tag23');
-    plt = plot(resolution*[1:size(a)],a(:,f*maxTime + 1)');
+    plt = plot(sample_resolution*[0:size(a)-1]-0.18,a(:,f*maxTime + 1)');
+    %plt = plot(a(:,f*maxTime + 1)');
     hold on
     %plot(resolution*[1:size(a)],tag23)
     title(sprintf('Radar response for f = %f',f))
     ylabel('Magnitude (dB)')
-    xlabel('Range (cm)');
-    ylim([-90 -25]);
+    xlabel('Range (m)');
+    ylim([-90 10]);
     b = uicontrol('Parent',fig,'Style','slider','Position',[81,55,419,23],...
               'value',f, 'min',0, 'max',FPS,'SliderStep',[0.00025 0.10]);
     bgcolor = fig.Color;

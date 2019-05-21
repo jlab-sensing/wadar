@@ -70,9 +70,9 @@ function saveData_Cayenne(fileStr, saveOption)
         range = linspace(0, samplers * resolution, samplers);
         
         %Collect frames for desired amount of time 
-        fpsTarget = 200; 
+        fpsTarget = 150; 
         tSample = 1 / fpsTarget; 
-        maxTime = 10; %desired runtime 
+        maxTime = 20; %desired runtime 
         maxFrames = fpsTarget * maxTime + 1; 
         
         frameCount = 0; 
