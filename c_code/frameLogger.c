@@ -558,6 +558,7 @@ int main(int argc, char **argv)
 
   // Free memory allocated for radar signals
   free (radarFrames);
+  free (timedelta);
   //free (radarScaled);
 
   return 0;
