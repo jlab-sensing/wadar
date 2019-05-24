@@ -185,28 +185,28 @@ function saveData_Ancho(fileStr, saveOption)
     %FFT of signal for each bin
     framesFFT = db(abs(fft(frameTot_bb,frameCount,2)));
     
-%     %% Plotting 
-%     
-%     %Figure 1: FFT for each bin
-%     figure(1); im = imagesc(framesFFT);
-%     title('Radar response across all frequencies'); 
-%     ylabel('Range bin'); 
-%     xlabel('Frequency');
-%     
-%     %Figure 2: FFT of bin with largest DC response???
-%     [~,maxRangeIndex] = max(framesFFT(:,222)); 
-%     figure(2); plot(framesFFT(maxRangeIndex,:));
-%     title(sprintf('Radar response of bin %i across all frequencies', maxRangeIndex)); 
-%     ylabel('Magnitude (dB)'); 
-%     xlabel('Frequency');
-%     
-%     %Figure 3: ???
-%     framesDiff = diff(frameTot_bb,[],2); 
-%     figure(3); imagesc(db(abs(fft(framesDiff,(frameCount-1),2)))); 
-%     title('Differential radar response across all frequencies');
-%     ylabel('Range bin');
-%     xlabel('Frequency'); 
-%     
+    %% Plotting 
+    
+    %Figure 1: FFT for each bin
+    figure(1); im = imagesc(framesFFT);
+    title('Radar response across all frequencies'); 
+    ylabel('Range bin'); 
+    xlabel('Frequency');
+    
+    %Figure 2: FFT of bin with largest DC response???
+    [~,maxRangeIndex] = max(framesFFT(:,222)); 
+    figure(2); plot(framesFFT(maxRangeIndex,:));
+    title(sprintf('Radar response of bin %i across all frequencies', maxRangeIndex)); 
+    ylabel('Magnitude (dB)'); 
+    xlabel('Frequency');
+    
+    %Figure 3: ???
+    framesDiff = diff(frameTot_bb,[],2); 
+    figure(3); imagesc(db(abs(fft(framesDiff,(frameCount-1),2)))); 
+    title('Differential radar response across all frequencies');
+    ylabel('Range bin');
+    xlabel('Frequency'); 
+    
     %Figure 4: FFT plot for bins ranging from firstBin to lastBin 
     firstBin = 200;
     lastBin = 256; 
@@ -220,4 +220,6 @@ function saveData_Ancho(fileStr, saveOption)
     end
     sum(abs(delta-1/frameRate))
 end
+
+
 
