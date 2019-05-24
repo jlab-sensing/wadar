@@ -158,52 +158,21 @@ function saveData_Ancho(fileStr, saveOption)
         numRuns = fread(fid,1,'int');
         frameRate = fread(fid,1,'int');
 
-        times = zeros(numFrames,1);
-        frameTot = zeros(numberOfSamplers, numFrames);
-        for f = 1:numFrames
-            % Get the offsetDistance (???) NOTE: it says offset distance in the 
-            % FlatEarth code, not sure why stored in temperature variable
-            temp = fread(fid, 1, 'float');
-            % TODO: figure out what is going on here. Uncommenting causes the code
-            % to fail. Is it offsetDistance or temp? Why would temp always be 1?
-            %if temp ~= 1 
-            %    fprintf("File read error: offsetDistance != 1\n");
-            %        fclose(fid);
-            %return
-            %end
-            %time = fread(fid, 1, 'float');
-            %times(f,:) = time;
-            % Get a radar frame
-            frame = fread(fid, numberOfSamplers, 'uint32');
-            if size(frame,1) ~= numberOfSamplers
-                fprintf("File read error: data frame wrong size!");
-            end
-            % Do the DAC normalization
-            scaled = double(frame)/(1.0*pps*iterations)*dacStep + dacMin; 
-            frameTot(:,f) = scaled; 
-        end
+        times = fread(fid, numFrames, 'double');
+        frameTot = fread(fid, numFrames*numberOfSamplers, 'uint32');
+        % Do the DAC normalization
+        frameTot = double(frameTot)/(1.0*pps*iterations)*dacStep + dacMin;
+        frameTot = reshape(frameTot, numberOfSamplers, numFrames);
+
         fpsEst = fread(fid, 1, 'float');
         [A,count] = fread(fid);
         fclose(fid);
         if count ~= 0
-            fprintf("FILE READ ERROR: data remains! Check that file format matches read code\n")
+            fprintf("FILE READ ERROR: %i data remains! Check that file format matches read code\n",count)
             return
         end
         frameCount = size(frameTot,2);
     end
-    
-%     timeDif = zeros(1, length(frameTot)- 1); 
-%     for i = 1:length(frameTot)-1
-%         tDelta = timeTot(i+1) - timeTot(i); 
-%         if (tDelta < 0)
-%             disp('i'); 
-%         end
-%         timeDif(i) = tDelta; 
-%     end
-%     timeDif = timeDif - (1/fps); 
-%     figure(5); 
-%     hist(timeDif, 10)
-%     sum(abs(timeDif < .005)) / length(timeDif)
 
     %% Post Processing  
     
@@ -245,5 +214,10 @@ function saveData_Ancho(fileStr, saveOption)
     title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))
     ylabel('Magnitude (dB)')
     xlabel('Frequency');
+    delta = zeros(length(times)-1, 1);
+    for i=length(times)-1:-1:1
+        delta(i) = times(i+1)-times(i);
+    end
+    sum(abs(delta-1/frameRate))
 end
 
