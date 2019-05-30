@@ -60,6 +60,7 @@
   -d [delay]            - Specify processing delay in microseconds
   -r [runs]             - Specify number of runs to perform
   -f [framerate]        - Specify framerate
+  -t [type]             - Specify type Ancho or Cayenne
   @endverbatim
 
   Example user session:
@@ -120,6 +121,7 @@
 
 // SalsaLib include
 #include "anchoHelper.h"
+#include "cayenneHelper.h"
 #include "radarHelper.h"
 #include "radarDSP.h"
 
@@ -167,7 +169,7 @@ void Usage();
 // -----------------------------------------------------------------------------
 
 // Connection string used when connecting to the radar
-static char *radarConnectionStr = "BeagleBone!SPI device: 0!FE_Salsa!NVA6201";
+static char *radarConnectionStr = "";
 
 // Number of samplers we want
 static int numberOfSamplers;
@@ -196,6 +198,7 @@ void Usage()
   printf(" -%c %-18s - %-40s\n", 'd', "[delay]", "Specify processing delay in microseconds");
   printf(" -%c %-18s - %-40s\n", 'r', "[runs]", "Specify number of runs to perform");
   printf(" %-c %-18s - %-40s\n", 'f', "[framerate]", "Specify framerate");
+  printf(" %-c %-18s - %-40s\n", 't', "[type]", "Specify radar type, Ancho or Cayenne");
 }
 
 /* Returns the number of milliseconds elapsed */
@@ -249,23 +252,29 @@ int main(int argc, char **argv)
   int dacMin;
   int dacMax;
   int dacStep;
-  int pgSelect;
-  float offsetDistance;
-  float sampleDelayToReference;
-  float temperature;
-  
+  int pulseGenFineTune;
+  int samplingRate;
+  int clkDivider;
+  //int pgSelect;
+  //float offsetDistance;
+  //float sampleDelayToReference;
+  //float temperature;
+
   // Radar values which effect distance estimation
   double samplesPerSecond;
 
   // Pointers to input/output files
-  const char *inFile_stage1 = "stage1.json";
-  const char *inFile_stage2 = "stage2.json";
+  const char *inFile_stage1 = NULL;
+  const char *inFile_stage2 = NULL;
   const char *settingsFile = NULL;
   const char *dataLogFile = NULL;
 
   // Pointer to datalog file
   FILE *dataLog;
 
+  //type of radar
+  bool radarSpecified = false;
+  bool isAncho = true;
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -273,7 +282,7 @@ int main(int argc, char **argv)
   //
   // Process command-line arguments
   //
-  while ((c = getopt(argc, argv, "gs:l:n:d:r:f:")) != -1) {
+  while ((c = getopt(argc, argv, "gs:l:n:d:r:f:t:")) != -1) {
     switch (c) {
     /* Enable Gnuplot of radar data */
     case 'g':
@@ -331,10 +340,32 @@ int main(int argc, char **argv)
       }
       break;
 
+    case 't':
+      if (optarg[0] == 'a' || optarg[0] == 'A') {
+        radarSpecified = true;
+        isAncho = true;
+        radarConnectionStr = "BeagleBone!SPI device: 0!FE_Salsa!NVA6201";
+        inFile_stage1 = "stage1Ancho.json";
+        inFile_stage2 = "stage2Ancho.json";
+
+      } else if (optarg[0] == 'c' || optarg[0] == 'C') {
+        radarSpecified = true;
+        isAncho = false;
+        radarConnectionStr = "BeagleBone!SPI device: 0!FE_Salsa!NVA6100";
+        inFile_stage1 = "stage1Cayenne.json";
+        inFile_stage2 = "stage2Cayenne.json";
+      }
+      break;
+
     default:
       Usage();
       exit(0);
     }
+  }
+
+  if (!radarSpecified) {
+    printf("No radar type specified....Exiting the program....\n");
+    exit(0);
   }
 
 
@@ -378,12 +409,12 @@ int main(int argc, char **argv)
 
 
   // Turn ON the Red LED
-  anchoHelper_setLED(LED_Red, 1);
+  isAncho ? anchoHelper_setLED(LED_Red, 1) : cayenneHelper_setLED(LED_Red, 1);
 
   // Turn OFF the other LEDs
-  anchoHelper_setLED(LED_Blue,   0);
-  anchoHelper_setLED(LED_Green0, 0);
-  anchoHelper_setLED(LED_Green1, 0);
+  isAncho ? anchoHelper_setLED(LED_Blue,   0) : cayenneHelper_setLED(LED_Blue,   0);
+  isAncho ? anchoHelper_setLED(LED_Green0, 0) : cayenneHelper_setLED(LED_Green0, 0);
+  isAncho ? anchoHelper_setLED(LED_Green1, 0) : cayenneHelper_setLED(LED_Green1, 0);
 
   // Determine the number of samplers in the radar frame
   numberOfSamplers = getIntValueByName(rh, "SamplersPerFrame");
@@ -394,10 +425,14 @@ int main(int argc, char **argv)
   dacMin = getIntValueByName(rh, "DACMin");
   dacMax = getIntValueByName(rh, "DACMax");
   dacStep = getIntValueByName(rh, "DACStep");
-  pgSelect = getIntValueByName(rh, "PGSelect");
   samplesPerSecond = getFloatValueByName(rh, "SamplesPerSecond");
-  offsetDistance = getFloatValueByName(rh, "OffsetDistanceFromReference");
-  sampleDelayToReference = getFloatValueByName(rh, "SampleDelayToReference");
+  pulseGenFineTune = getIntValueByName(rh, "PulseGenFineTune");
+  samplingRate = getIntValueByName(rh, "SamplingRate");
+  clkDivider = getIntValueByName(rh, "ClkDivider");
+  //pgSelect = getIntValueByName(rh, "PGSelect");
+  //samplesPerSecond = getFloatValueByName(rh, "SamplesPerSecond");
+  //offsetDistance = getFloatValueByName(rh, "OffsetDistanceFromReference");
+  //sampleDelayToReference = getFloatValueByName(rh, "SampleDelayToReference");
 
   //
   // Allocate memory for signal storage
@@ -432,7 +467,7 @@ int main(int argc, char **argv)
 
 
   // Turn ON the Red LED
-  anchoHelper_setLED(LED_Red, 1);
+  isAncho ? anchoHelper_setLED(LED_Red, 1) : cayenneHelper_setLED(LED_Red, 1);
 
   //
   // Run radar loop N times
@@ -470,10 +505,14 @@ int main(int argc, char **argv)
       fwrite(&dacMin, sizeof (int), 1, dataLog);
       fwrite(&dacMax, sizeof (int), 1, dataLog);
       fwrite(&dacStep, sizeof (int), 1, dataLog);
-      fwrite(&samplesPerSecond, sizeof (float), 1, dataLog);
-      fwrite(&pgSelect, sizeof (int), 1, dataLog);
-      fwrite(&offsetDistance, sizeof (float), 1, dataLog);
-      fwrite(&sampleDelayToReference, sizeof (float), 1, dataLog);
+      fwrite(&samplesPerSecond, sizeof (double), 1, dataLog);
+      fwrite(&pulseGenFineTune, sizeof (int), 1, dataLog);
+      fwrite(&samplingRate, sizeof (int), 1, dataLog);
+      fwrite(&clkDivider, sizeof (int), 1, dataLog);
+      //fwrite(&samplesPerSecond, sizeof (float), 1, dataLog);
+      //fwrite(&pgSelect, sizeof (int), 1, dataLog);
+      //fwrite(&offsetDistance, sizeof (float), 1, dataLog);
+      //fwrite(&sampleDelayToReference, sizeof (float), 1, dataLog);
       fwrite(&numberOfSamplers, sizeof (int), 1, dataLog);
       fwrite(&numTrials, sizeof (int), 1, dataLog);
       fwrite(&numRuns, sizeof (int), 1, dataLog);
@@ -496,12 +535,12 @@ int main(int argc, char **argv)
         return 1;
       }
       // Read the current temperature
-      anchoHelper_readTemp(&temperature);
+      //isAncho ? anchoHelper_readTemp(&temperature) : cayenneHelper_readTemp(&temperature);
 
       //Wait as needed to control frameRate
       /* clock_gettime(CLOCKID, &now); */
       /* ms_wait = (t+1) * 1000.0/frameRate - ms_diff(&now, &start); */
-      
+
       /* struct timespec timer; */
       /* timer.tv_sec = 0; */
       /* timer.tv_nsec = (long)((ms_wait) * 1000000); */
@@ -517,13 +556,13 @@ int main(int argc, char **argv)
 	clock_gettime(CLOCKID, &now);
 	ms_wait = (t+1) * 1000.0/frameRate - ms_diff(&now, &start);
       } while (ms_wait > 0);
-	
+
     }
 
     //frames per second
     fpsEst = numTrials/(ms_diff(&now, &start)/1000.0);
     fprintf(stderr, "estimated fps: %f\n", fpsEst);
-    
+
     if (saveDataLogFile) {
       //fwrite(&temperature, sizeof (float), 1, dataLog);
         fwrite(timedelta, sizeof(double), numTrials, dataLog);
