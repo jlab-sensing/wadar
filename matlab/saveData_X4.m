@@ -213,10 +213,10 @@ function saveData_X4(profile, varargin)
 
     %% plot
     %plot only bins 11-20 (like figures 1 and 3, but not in db and no imsc call)
-    figure(5); plot(a(11:30,:)') 
-    title(sprintf('Radar response, bins 11-20'))
-    ylabel('Magnitude')
-    xlabel('Frame no.');
+    figure(5); plot(([1:size(frameTot,2)]/size(frameTot,2))*(size(frameTot,2)/maxTime),a(11:20,:)') 
+    title(sprintf('Radar response FFT'))
+    ylabel('Magnitude (dB)')
+    xlabel('Frequency (Hz)');
     f = 100; %frequency of interest in Hz
     fig  = figure(6); 
     ax = axes('Parent',fig,'position',[0.13 0.39  0.77 0.54]);
