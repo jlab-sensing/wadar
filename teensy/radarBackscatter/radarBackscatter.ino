@@ -13,7 +13,7 @@ void setup() {
 
 void loop() {
   // Toggle RF between On and Off at 93.75 Hz
-  if (count >= 5000) {
+  if (count >= 6250) {
     digitalWrite(3, (RF) ? HIGH : LOW);
     RF = !RF;
     //Serial.println(RF);

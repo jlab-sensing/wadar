@@ -22,6 +22,7 @@ LDFLAGS=-Llib -Llib/arm-linux-gnueabihf -L$(SALSA_LIB_DIR) \
 -lcluttermap \
 -lradarHelper \
 -lcayenneHelper \
+-lchipotleHelper \
 -lanchoHelper
 
 all: frameLogger.o frameViewer.o temp_test.o
@@ -32,8 +33,8 @@ all: frameLogger.o frameViewer.o temp_test.o
 frameLogger.o: frameLogger.c
 	$(CC) -lrt -std=gnu99 -Wall -g -O3 $(CFLAGS) -c frameLogger.c $(LDFLAGS)
 
-frameLoggerCayenne.o: frameLoggerCayenne.c
-	$(CC) -lrt -std=gnu99 -Wall -g -O3 $(CFLAGS) -c frameLoggerCayenne.c $(LDFLAGS)
+frameLoggerChipotle.o: frameLoggerChipotle.c
+	$(CC) -lrt -std=gnu99 -Wall -g -O3 $(CFLAGS) -c frameLoggerChipotle.c $(LDFLAGS)
 
 frameViewer.o: frameViewer.c
 	$(CC) -lrt -std=gnu99 -Wall -g -O3 $(CFLAGS) -c frameViewer.c $(LDFLAGS)
@@ -43,7 +44,7 @@ temp_test.o: temp_test.c
 
 clean:
 	rm -rf *.o
-	rm frameLoggerCayenne
+	rm frameLoggerChipotle
 	rm frameLogger
 	rm frameViewer
 	rm readTemp

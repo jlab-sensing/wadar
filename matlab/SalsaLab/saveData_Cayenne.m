@@ -210,7 +210,7 @@ function saveData_Cayenne(fileStr, saveOption)
     xlabel('Frequency'); 
     
     %Figure 4: FFT plot for bins ranging from firstBin to lastBin 
-    firstBin = 175;
+    firstBin = 22;
     lastBin = 512; 
     figure(4); plot(framesFFT(firstBin:lastBin,:)') 
     title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))

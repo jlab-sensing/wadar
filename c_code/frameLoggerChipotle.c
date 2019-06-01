@@ -362,6 +362,9 @@ int main(int argc, char **argv)
   status = radarHelper_doAction(rh, "MeasureAll");
   if (status) return 1;
 
+  // Set the low frequency pulse generator
+  setIntValueByName(rh, "PulseGen", 1);
+  
   //
   // Configure the radar using the Stage 2 configuration JSON file
   //
@@ -381,12 +384,12 @@ int main(int argc, char **argv)
 
 
   // Turn ON the Red LED
-  cayenneHelper_setLED(LED_Red, 1);
+  chipotleHelper_setLED(LED_Red, 1);
 
   // Turn OFF the other LEDs
-  cayenneHelper_setLED(LED_Blue,   0);
-  cayenneHelper_setLED(LED_Green0, 0);
-  cayenneHelper_setLED(LED_Green1, 0);
+  chipotleHelper_setLED(LED_Blue,   0);
+  chipotleHelper_setLED(LED_Green0, 0);
+  chipotleHelper_setLED(LED_Green1, 0);
 
   // Determine the number of samplers in the radar frame
   numberOfSamplers = getIntValueByName(rh, "SamplersPerFrame");
@@ -439,7 +442,7 @@ int main(int argc, char **argv)
 
 
   // Turn ON the Red LED
-  cayenneHelper_setLED(LED_Red, 1);
+  chipotleHelper_setLED(LED_Red, 1);
 
   //
   // Run radar loop N times
@@ -507,7 +510,7 @@ int main(int argc, char **argv)
         return 1;
       }
       // Read the current temperature
-      //cayenneHelper_readTemp(&temperature);
+      //chipotleHelper_readTemp(&temperature);
 
       //Wait as needed to control frameRate
       /* clock_gettime(CLOCKID, &now); */
