@@ -252,13 +252,15 @@ int main(int argc, char **argv)
   int dacMin;
   int dacMax;
   int dacStep;
-  int pulseGenFineTune;
+
+  int pgSelect; //Ancho...
+  float offsetDistance;
+  float sampleDelayToReference;
+  float temperature;
+
+  int pulseGenFineTune; //Cayenne...
   int samplingRate;
   int clkDivider;
-  //int pgSelect;
-  //float offsetDistance;
-  //float sampleDelayToReference;
-  //float temperature;
 
   // Radar values which effect distance estimation
   double samplesPerSecond;
@@ -426,13 +428,17 @@ int main(int argc, char **argv)
   dacMax = getIntValueByName(rh, "DACMax");
   dacStep = getIntValueByName(rh, "DACStep");
   samplesPerSecond = getFloatValueByName(rh, "SamplesPerSecond");
-  pulseGenFineTune = getIntValueByName(rh, "PulseGenFineTune");
-  samplingRate = getIntValueByName(rh, "SamplingRate");
-  clkDivider = getIntValueByName(rh, "ClkDivider");
-  //pgSelect = getIntValueByName(rh, "PGSelect");
-  //samplesPerSecond = getFloatValueByName(rh, "SamplesPerSecond");
-  //offsetDistance = getFloatValueByName(rh, "OffsetDistanceFromReference");
-  //sampleDelayToReference = getFloatValueByName(rh, "SampleDelayToReference");
+
+  if (isAncho) {
+    pgSelect = getIntValueByName(rh, "PGSelect");
+    samplesPerSecond = getFloatValueByName(rh, "SamplesPerSecond");
+    offsetDistance = getFloatValueByName(rh, "OffsetDistanceFromReference");
+    sampleDelayToReference = getFloatValueByName(rh, "SampleDelayToReference");
+  } else {
+    pulseGenFineTune = getIntValueByName(rh, "PulseGenFineTune");
+    samplingRate = getIntValueByName(rh, "SamplingRate");
+    clkDivider = getIntValueByName(rh, "ClkDivider");
+  }
 
   //
   // Allocate memory for signal storage
@@ -505,20 +511,23 @@ int main(int argc, char **argv)
       fwrite(&dacMin, sizeof (int), 1, dataLog);
       fwrite(&dacMax, sizeof (int), 1, dataLog);
       fwrite(&dacStep, sizeof (int), 1, dataLog);
-      fwrite(&samplesPerSecond, sizeof (double), 1, dataLog);
-      fwrite(&pulseGenFineTune, sizeof (int), 1, dataLog);
-      fwrite(&samplingRate, sizeof (int), 1, dataLog);
-      fwrite(&clkDivider, sizeof (int), 1, dataLog);
-      //fwrite(&samplesPerSecond, sizeof (float), 1, dataLog);
-      //fwrite(&pgSelect, sizeof (int), 1, dataLog);
-      //fwrite(&offsetDistance, sizeof (float), 1, dataLog);
-      //fwrite(&sampleDelayToReference, sizeof (float), 1, dataLog);
+      fwrite(&isAncho, sizeof (bool), 1, dataLog);
+      if (isAncho) {
+        fwrite(&samplesPerSecond, sizeof (float), 1, dataLog);
+        fwrite(&pgSelect, sizeof (int), 1, dataLog);
+        fwrite(&offsetDistance, sizeof (float), 1, dataLog);
+        fwrite(&sampleDelayToReference, sizeof (float), 1, dataLog);
+      } else {
+        fwrite(&samplesPerSecond, sizeof (double), 1, dataLog);
+        fwrite(&pulseGenFineTune, sizeof (int), 1, dataLog);
+        fwrite(&samplingRate, sizeof (int), 1, dataLog);
+        fwrite(&clkDivider, sizeof (int), 1, dataLog);
+      }
       fwrite(&numberOfSamplers, sizeof (int), 1, dataLog);
       fwrite(&numTrials, sizeof (int), 1, dataLog);
       fwrite(&numRuns, sizeof (int), 1, dataLog);
       fwrite(&frameRate, sizeof (int), 1, dataLog);
     }
-
 
     struct timespec now, start, tstart = {0};
     double ms_wait;
