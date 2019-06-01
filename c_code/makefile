@@ -49,3 +49,6 @@ clean:
 	rm frameViewer
 	rm readTemp
 
+deploy:
+	scp frameLogger root@192.168.7.2:~/FlatEarth/Demos/Common/FrameLogger
+	scp frameLoggerChipotle root@192.168.7.2:~/FlatEarth/Demos/Chipotle/FrameLogger 
