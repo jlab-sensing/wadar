@@ -277,7 +277,7 @@ xlabel('Frequency');
 
 % Figure 4: FFT plot for bins ranging from firstBin to lastBin 
 % TODO: Add ancho vs cayenne 
-firstBin = 220;
+firstBin = 110;
 lastBin = 240; 
 figure(4); plot(framesFFT(firstBin:lastBin,:)') 
 title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))

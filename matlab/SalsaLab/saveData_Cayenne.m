@@ -181,7 +181,8 @@ function saveData_Cayenne(fileStr, saveOption)
     %Baseband Conversion
     frameTot_bb = zeros(size(frameTot)); 
     for i = 1:frameCount
-        frameTot_bb(:,i) = NoveldaDDC(frameTot(:,i), 'X2', pgen, fs_hz); 
+        %TODO: check IPG0 vs IPG1
+        frameTot_bb(:,i) = NoveldaDDC(frameTot(:,i), 'X1-IPG0', pgen, fs_hz); 
     end
 
     %FFT of signal for each bin
@@ -210,7 +211,7 @@ function saveData_Cayenne(fileStr, saveOption)
     xlabel('Frequency'); 
     
     %Figure 4: FFT plot for bins ranging from firstBin to lastBin 
-    firstBin = 22;
+    firstBin = 300;
     lastBin = 512; 
     figure(4); plot(framesFFT(firstBin:lastBin,:)') 
     title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))
