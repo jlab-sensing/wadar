@@ -60,7 +60,7 @@
   -d [delay]            - Specify processing delay in microseconds
   -r [runs]             - Specify number of runs to perform
   -f [framerate]        - Specify framerate
-  -t [type]             - Specify type Ancho or Cayenne
+  -t [type]             - Specify type Ancho or Cayenne or Chipotle
   @endverbatim
 
   Example user session:
@@ -122,6 +122,7 @@
 // SalsaLib include
 #include "anchoHelper.h"
 #include "cayenneHelper.h"
+#include "chipotleHelper.h"
 #include "radarHelper.h"
 #include "radarDSP.h"
 
@@ -163,6 +164,7 @@
 // -----------------------------------------------------------------------------
 
 void Usage();
+void LEDHelper(int radarType, SalsaLED led, int value);
 
 // -----------------------------------------------------------------------------
 // Variables
@@ -198,7 +200,23 @@ void Usage()
   printf(" -%c %-18s - %-40s\n", 'd', "[delay]", "Specify processing delay in microseconds");
   printf(" -%c %-18s - %-40s\n", 'r', "[runs]", "Specify number of runs to perform");
   printf(" %-c %-18s - %-40s\n", 'f', "[framerate]", "Specify framerate");
-  printf(" %-c %-18s - %-40s\n", 't', "[type]", "Specify radar type, Ancho or Cayenne");
+  printf(" %-c %-18s - %-40s\n", 't', "[type]", "Specify radar type, Ancho, Cayenne, or Chipotle");
+}
+
+void LEDHelper(int radarType, SalsaLED led, int value)
+{
+  switch (radarType)
+  {
+    case 2:
+      anchoHelper_setLED(led, value);
+      break;
+    case 11:
+      chipotleHelper_setLED(led,value);
+      break;
+    case 10:
+      cayenneHelper_setLED(led, value);
+      break;
+  }
 }
 
 /* Returns the number of milliseconds elapsed */
@@ -258,7 +276,7 @@ int main(int argc, char **argv)
   float sampleDelayToReference;
   float temperature;
 
-  int pulseGenFineTune; //Cayenne...
+  int pulseGenFineTune; //Cayenne or Chipotle...
   int samplingRate;
   int clkDivider;
 
@@ -275,8 +293,7 @@ int main(int argc, char **argv)
   FILE *dataLog;
 
   //type of radar
-  bool radarSpecified = false;
-  bool isAncho = true;
+  int radarType = -1; //2 for X2, 10 for X1-Cayenne, 11 for X1-Chipotle
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -344,18 +361,23 @@ int main(int argc, char **argv)
 
     case 't':
       if (optarg[0] == 'a' || optarg[0] == 'A') {
-        radarSpecified = true;
-        isAncho = true;
+        radarType = 2;
         radarConnectionStr = "BeagleBone!SPI device: 0!FE_Salsa!NVA6201";
         inFile_stage1 = "stage1Ancho.json";
         inFile_stage2 = "stage2Ancho.json";
 
       } else if (optarg[0] == 'c' || optarg[0] == 'C') {
-        radarSpecified = true;
-        isAncho = false;
         radarConnectionStr = "BeagleBone!SPI device: 0!FE_Salsa!NVA6100";
-        inFile_stage1 = "stage1Cayenne.json";
-        inFile_stage2 = "stage2Cayenne.json";
+
+        if (optarg[1] == 'h' || optarg[1] == 'H') {
+          radarType = 11;
+          inFile_stage1 = "stage1Chipotle.json";
+          inFile_stage2 = "stage2Chipotle.json";
+        } else {
+          radarType = 10;
+          inFile_stage1 = "stage1Cayenne.json";
+          inFile_stage2 = "stage2Cayenne.json";
+        }
       }
       break;
 
@@ -365,7 +387,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (!radarSpecified) {
+  if (radarType == -1) {
     printf("No radar type specified....Exiting the program....\n");
     exit(0);
   }
@@ -392,6 +414,11 @@ int main(int argc, char **argv)
   status = radarHelper_doAction(rh, "MeasureAll");
   if (status) return 1;
 
+  // Set the low frequency pulse generator
+  if (radarType == 11) {
+    setIntValueByName(rh, "PulseGen", 1);
+  }
+
   //
   // Configure the radar using the Stage 2 configuration JSON file
   //
@@ -411,12 +438,12 @@ int main(int argc, char **argv)
 
 
   // Turn ON the Red LED
-  isAncho ? anchoHelper_setLED(LED_Red, 1) : cayenneHelper_setLED(LED_Red, 1);
+  LEDHelper(radarType, LED_Red, 1);
 
   // Turn OFF the other LEDs
-  isAncho ? anchoHelper_setLED(LED_Blue,   0) : cayenneHelper_setLED(LED_Blue,   0);
-  isAncho ? anchoHelper_setLED(LED_Green0, 0) : cayenneHelper_setLED(LED_Green0, 0);
-  isAncho ? anchoHelper_setLED(LED_Green1, 0) : cayenneHelper_setLED(LED_Green1, 0);
+  LEDHelper(radarType, LED_Blue, 0);
+  LEDHelper(radarType, LED_Green0, 0);
+  LEDHelper(radarType, LED_Green1, 0);
 
   // Determine the number of samplers in the radar frame
   numberOfSamplers = getIntValueByName(rh, "SamplersPerFrame");
@@ -429,7 +456,7 @@ int main(int argc, char **argv)
   dacStep = getIntValueByName(rh, "DACStep");
   samplesPerSecond = getFloatValueByName(rh, "SamplesPerSecond");
 
-  if (isAncho) {
+  if (radarType == 2) {
     pgSelect = getIntValueByName(rh, "PGSelect");
     samplesPerSecond = getFloatValueByName(rh, "SamplesPerSecond");
     offsetDistance = getFloatValueByName(rh, "OffsetDistanceFromReference");
@@ -473,7 +500,7 @@ int main(int argc, char **argv)
 
 
   // Turn ON the Red LED
-  isAncho ? anchoHelper_setLED(LED_Red, 1) : cayenneHelper_setLED(LED_Red, 1);
+  LEDHelper(radarType, LED_Red, 1);
 
   //
   // Run radar loop N times
@@ -511,8 +538,8 @@ int main(int argc, char **argv)
       fwrite(&dacMin, sizeof (int), 1, dataLog);
       fwrite(&dacMax, sizeof (int), 1, dataLog);
       fwrite(&dacStep, sizeof (int), 1, dataLog);
-      fwrite(&isAncho, sizeof (bool), 1, dataLog);
-      if (isAncho) {
+      fwrite(&radarType, sizeof (int), 1, dataLog);
+      if (radarType == 2) {
         fwrite(&samplesPerSecond, sizeof (float), 1, dataLog);
         fwrite(&pgSelect, sizeof (int), 1, dataLog);
         fwrite(&offsetDistance, sizeof (float), 1, dataLog);
