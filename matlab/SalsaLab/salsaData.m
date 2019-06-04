@@ -6,7 +6,7 @@
 % OPTIONAL ARGS:
 % file string: string to specify path to load or save data 
     % required if isDataCaptured == 0
-% radar type: Ancho or Cayenne
+% radar type: Ancho or Cayenne or Chipotle 
     % required if isDataCaptured == 1
 
 % EXAMPLE 1: Capture and display data from Ancho, with save
@@ -20,28 +20,28 @@
 
 function salsaMain(isDataCaptured, varargin)
 %% Process arguments 
-radarType = 'default'; 
+userRadarType = -1; 
 savePath = 'default'; 
 fileName = 'default'; 
 
 if isDataCaptured == 1
     for i = 1:length(varargin)
         arg = varargin{i}; 
-        if (strcmp(lower(arg),'ancho') || strcmp(lower(arg),'cayenne'))
-            radarType = lower(arg);
+        if (strcmp(lower(arg),'ancho') || strcmp(lower(arg),'cayenne') || strcmp(lower(arg),'chipotle'))
+            userRadarType = lower(arg);
         else
             savePath = arg; 
         end
     end
         
-    if ~(strcmp(radarType,'ancho') || strcmp(radarType,'cayenne'))
+    if ~(strcmp(userRadarType,'ancho') || strcmp(userRadarType,'cayenne') || strcmp(userRadarType,'chipotle'))
             error('Invalid radar type')
     end
     
 else 
     for i = 1:length(varargin)
         arg = varargin{i}; 
-        if (strcmp(lower(arg),'ancho') || strcmp(lower(arg),'cayenne'))
+        if (strcmp(lower(arg),'ancho') || strcmp(lower(arg),'cayenne') || strcmp(lower(arg),'chipotle'))
             % Do not update radar type to load data
         else 
             fileName = arg; 
@@ -78,23 +78,25 @@ if  isDataCaptured == 0 % load
         dacStep = fread(fid,1,'int');
 
         % The radar type is next 
-        isAncho = fread(fid,1,'bool'); 
-        if isAncho
-            % The measured sampling rate is next
-            samplesPerSecond = fread(fid,1,'float');
-            % The NVA6201 specific settings are next
-            pgen = fread(fid,1,'int');
-            % The frame offset, reference delay
-            offsetDistance = fread(fid,1,'float');
-            sampleDelayToReference = fread(fid,1,'float');
-        else
-            % The measured sampling rate is next
-            samplesPerSecond = fread(fid,1,'double');
-            % The NVA6201 specific settings are next
-            pgen = fread(fid,1,'int');
-            samplingRate = fread(fid,1,'int');
-            clkDivider = fread(fid,1,'int');
+        radarType = fread(fid,1,'int'); 
+        switch radarType
+            case 2
+                % The measured sampling rate is next
+                samplesPerSecond = fread(fid,1,'float');
+                % The NVA6201 specific settings are next
+                pgen = fread(fid,1,'int');
+                % The frame offset, reference delay
+                offsetDistance = fread(fid,1,'float');
+                sampleDelayToReference = fread(fid,1,'float');
+            otherwise 
+                % The measured sampling rate is next
+                samplesPerSecond = fread(fid,1,'double');
+                % The NVA6201 specific settings are next
+                pgen = fread(fid,1,'int');
+                samplingRate = fread(fid,1,'int');
+                clkDivider = fread(fid,1,'int');
         end
+ 
         % Next is the #samplers in a frame
         numberOfSamplers = fread(fid,1,'int');
         % Determine #frames in capture
@@ -118,10 +120,12 @@ if  isDataCaptured == 0 % load
         frameCount = size(frameTot,2);
     end
     
-    if isAncho
+    if radarType == 2
         radarSpecifier = "X2"; 
-    else
+    elseif radarType == 10
         radarSpecifier = "X1-IPG0"; 
+    else 
+        radarSpecifier = "X1-IPG1"; 
     end
     
     [fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz] = NoveldaChipParams(radarSpecifier, pgen,'4mm');
