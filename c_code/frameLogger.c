@@ -434,11 +434,6 @@ int main(int argc, char **argv)
   if (status) return 1;
 
   //
-  // Remove existing files from directory
-  //
-  system("exec rm -r ../data/*");
-
-  //
   // Save radar settings to file (optional)
   //
 
@@ -613,6 +608,8 @@ int main(int argc, char **argv)
     fprintf(stderr, "estimated fps: %f\n", fpsEst);
 
     if (saveDataLogFile) {
+        //remove capture data from previous runs
+        system("exec rm -r ../data/*");
         //fwrite(&temperature, sizeof (float), 1, dataLog);
         fwrite(timedelta, sizeof(double), numTrials, dataLog);
         fwrite(radarFrames, sizeof (uint32_t), numberOfSamplers*numTrials, dataLog);
