@@ -528,8 +528,11 @@ int main(int argc, char **argv)
     //
     char nameBuffer[50];
     if (saveDataLogFile) {
-      sprintf(nameBuffer, "%s%d", dataLogFile, runNum);
+      //remove capture data from previous runs
+      system("exec rm -r ../data/*");
 
+
+      sprintf(nameBuffer, "%s%d", dataLogFile, runNum);
       dataLog = fopen(nameBuffer, "wb");
       if (!dataLog) {
         fprintf(stderr, "Unable to open %s!\n", dataLogFile);
@@ -608,8 +611,6 @@ int main(int argc, char **argv)
     fprintf(stderr, "estimated fps: %f\n", fpsEst);
 
     if (saveDataLogFile) {
-        //remove capture data from previous runs
-        system("exec rm -r ../data/*");
         //fwrite(&temperature, sizeof (float), 1, dataLog);
         fwrite(timedelta, sizeof(double), numTrials, dataLog);
         fwrite(radarFrames, sizeof (uint32_t), numberOfSamplers*numTrials, dataLog);
@@ -618,7 +619,7 @@ int main(int argc, char **argv)
         //copy datalog to host computer
         if (copyPath != NULL) {
           char copyBuffer[150];
-          sprintf(copyBuffer, "exec scp ~/FlatEarth/Demos/Common/data/%s %s", nameBuffer, copyPath);
+          sprintf(copyBuffer, "exec scp %s %s", nameBuffer, copyPath);
           printf("Copying data to host computer...\n");
           system(copyBuffer);
         }
