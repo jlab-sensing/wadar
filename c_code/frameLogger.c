@@ -6,7 +6,7 @@
   words, this is a tool to help log radar frames for post-processing.
 
   ## Hardware Setup ##
-  Using a BeagleBone Black + Ancho cape + (user cables and antennas)
+  Using a BeagleBone Black + Salsa cape + (user cables and antennas)
 
   ## Demonstration Code ##
   The data log is organized as:
@@ -61,6 +61,7 @@
   -r [runs]             - Specify number of runs to perform
   -f [framerate]        - Specify framerate
   -t [type]             - Specify type Ancho or Cayenne or Chipotle
+  -c [copyPath]             - Directory on computer to transfer the files to
   @endverbatim
 
   Example user session:
@@ -118,6 +119,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
+#include <dirent.h>
 
 // SalsaLib include
 #include "anchoHelper.h"
@@ -201,6 +203,7 @@ void Usage()
   printf(" -%c %-18s - %-40s\n", 'r', "[runs]", "Specify number of runs to perform");
   printf(" %-c %-18s - %-40s\n", 'f', "[framerate]", "Specify framerate");
   printf(" %-c %-18s - %-40s\n", 't', "[type]", "Specify radar type, Ancho, Cayenne, or Chipotle");
+  printf(" -%c %-18s - %-40s\n", 'c', "[copyPath]", "Directory on computer to transfer the files to");
 }
 
 void LEDHelper(int radarType, SalsaLED led, int value)
@@ -288,6 +291,7 @@ int main(int argc, char **argv)
   const char *inFile_stage2 = NULL;
   const char *settingsFile = NULL;
   const char *dataLogFile = NULL;
+  const char *copyPath = NULL;
 
   // Pointer to datalog file
   FILE *dataLog;
@@ -301,7 +305,7 @@ int main(int argc, char **argv)
   //
   // Process command-line arguments
   //
-  while ((c = getopt(argc, argv, "gs:l:n:d:r:f:t:")) != -1) {
+  while ((c = getopt(argc, argv, "gs:l:n:d:r:f:t:c:")) != -1) {
     switch (c) {
     /* Enable Gnuplot of radar data */
     case 'g':
@@ -381,6 +385,10 @@ int main(int argc, char **argv)
       }
       break;
 
+    case 'c':
+      copyPath = optarg;
+      break;
+
     default:
       Usage();
       exit(0);
@@ -426,13 +434,18 @@ int main(int argc, char **argv)
   if (status) return 1;
 
   //
+  // Remove existing files from directory
+  //
+  system("exec rm -r ../data/*");
+
+  //
   // Save radar settings to file (optional)
   //
+
   if (saveSettingsFile) {
     status = radarHelper_saveConfigToFile(rh, settingsFile);
     if (status) return 1;
   }
-
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -518,8 +531,8 @@ int main(int argc, char **argv)
     //
     // Setup datalog (if necessary)
     //
+    char nameBuffer[50];
     if (saveDataLogFile) {
-      char nameBuffer[50];
       sprintf(nameBuffer, "%s%d", dataLogFile, runNum);
 
       dataLog = fopen(nameBuffer, "wb");
@@ -600,10 +613,18 @@ int main(int argc, char **argv)
     fprintf(stderr, "estimated fps: %f\n", fpsEst);
 
     if (saveDataLogFile) {
-      //fwrite(&temperature, sizeof (float), 1, dataLog);
+        //fwrite(&temperature, sizeof (float), 1, dataLog);
         fwrite(timedelta, sizeof(double), numTrials, dataLog);
         fwrite(radarFrames, sizeof (uint32_t), numberOfSamplers*numTrials, dataLog);
-	fwrite(&fpsEst, sizeof (float), 1, dataLog);
+	      fwrite(&fpsEst, sizeof (float), 1, dataLog);
+
+        //copy datalog to host computer
+        if (copyPath != NULL) {
+          char copyBuffer[150];
+          sprintf(copyBuffer, "exec scp ~/FlatEarth/Demos/Common/data/%s %s", nameBuffer, copyPath);
+          printf("Copying data to host computer...\n");
+          system(copyBuffer);
+        }
     }
 
     // Decrement run counter
@@ -635,6 +656,9 @@ int main(int argc, char **argv)
   free (radarFrames);
   free (timedelta);
   //free (radarScaled);
+
+  //kill the radar screen used to run this program
+  system("exec pkill radar");
 
   return 0;
 }
