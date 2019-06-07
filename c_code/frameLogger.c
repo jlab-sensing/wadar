@@ -531,7 +531,6 @@ int main(int argc, char **argv)
       //remove capture data from previous runs
       system("exec rm -r ../data/*");
 
-
       sprintf(nameBuffer, "%s%d", dataLogFile, runNum);
       dataLog = fopen(nameBuffer, "wb");
       if (!dataLog) {
@@ -616,6 +615,9 @@ int main(int argc, char **argv)
         fwrite(radarFrames, sizeof (uint32_t), numberOfSamplers*numTrials, dataLog);
 	      fwrite(&fpsEst, sizeof (float), 1, dataLog);
 
+        // Close the dataLog if necessary
+        fclose(dataLog); 
+
         //copy datalog to host computer
         if (copyPath != NULL) {
           char copyBuffer[150];
@@ -639,11 +641,6 @@ int main(int argc, char **argv)
   // Close the Gnuplot pipe if necessary
   if (showGnuPlot) {
     pclose(gnuplotPipe);
-  }
-
-  // Close the dataLog if necessary
-  if (saveDataLogFile) {
-    fclose(dataLog);
   }
 
   // Close radar connection
