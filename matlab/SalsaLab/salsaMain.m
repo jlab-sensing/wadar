@@ -13,7 +13,7 @@
 
 function salsaMain(isDataCaptured, varargin)
 %% Process arguments 
-radarType = -1; 
+radarType = 'default'; 
 fullDataPath = 'default'; 
 localDataPath = 'default'; 
 
@@ -35,6 +35,10 @@ end
 
 if (strcmp(fullDataPath, 'default'))
     error('No file name provided to load data from')
+end
+
+if (strcmp(radarType, 'default'))
+    error('Please specify a valid radar type')
 end
 
 k = strfind(fullDataPath, '/'); %get directory name from full data path by searching for first /

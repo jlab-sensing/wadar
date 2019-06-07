@@ -166,7 +166,7 @@
 // -----------------------------------------------------------------------------
 
 void Usage();
-void LEDHelper(int radarType, SalsaLED led, int value);
+void LEDHelper(int radarSpecifier, SalsaLED led, int value);
 
 // -----------------------------------------------------------------------------
 // Variables
@@ -206,9 +206,9 @@ void Usage()
   printf(" -%c %-18s - %-40s\n", 'c', "[copyPath]", "Directory on computer to transfer the files to");
 }
 
-void LEDHelper(int radarType, SalsaLED led, int value)
+void LEDHelper(int radarSpecifier, SalsaLED led, int value)
 {
-  switch (radarType)
+  switch (radarSpecifier)
   {
     case 2:
       anchoHelper_setLED(led, value);
@@ -297,7 +297,7 @@ int main(int argc, char **argv)
   FILE *dataLog;
 
   //type of radar
-  int radarType = -1; //2 for X2, 10 for X1-Cayenne, 11 for X1-Chipotle
+  int radarSpecifier = -1; //2 for X2, 10 for X1-Cayenne, 11 for X1-Chipotle
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -365,7 +365,7 @@ int main(int argc, char **argv)
 
     case 't':
       if (optarg[0] == 'a' || optarg[0] == 'A') {
-        radarType = 2;
+        radarSpecifier = 2;
         radarConnectionStr = "BeagleBone!SPI device: 0!FE_Salsa!NVA6201";
         inFile_stage1 = "stage1Ancho.json";
         inFile_stage2 = "stage2Ancho.json";
@@ -374,11 +374,11 @@ int main(int argc, char **argv)
         radarConnectionStr = "BeagleBone!SPI device: 0!FE_Salsa!NVA6100";
 
         if (optarg[1] == 'h' || optarg[1] == 'H') {
-          radarType = 11;
+          radarSpecifier = 11;
           inFile_stage1 = "stage1Chipotle.json";
           inFile_stage2 = "stage2Chipotle.json";
         } else {
-          radarType = 10;
+          radarSpecifier = 10;
           inFile_stage1 = "stage1Cayenne.json";
           inFile_stage2 = "stage2Cayenne.json";
         }
@@ -395,7 +395,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (radarType == -1) {
+  if (radarSpecifier == -1) {
     printf("No radar type specified....Exiting the program....\n");
     exit(0);
   }
@@ -423,7 +423,7 @@ int main(int argc, char **argv)
   if (status) return 1;
 
   // Set the low frequency pulse generator
-  if (radarType == 11) {
+  if (radarSpecifier == 11) {
     setIntValueByName(rh, "PulseGen", 1);
   }
 
@@ -438,6 +438,7 @@ int main(int argc, char **argv)
   //
 
   if (saveSettingsFile) {
+    //system("exec rm -r ../data/*");
     status = radarHelper_saveConfigToFile(rh, settingsFile);
     if (status) return 1;
   }
@@ -446,12 +447,12 @@ int main(int argc, char **argv)
 
 
   // Turn ON the Red LED
-  LEDHelper(radarType, LED_Red, 1);
+  LEDHelper(radarSpecifier, LED_Red, 1);
 
   // Turn OFF the other LEDs
-  LEDHelper(radarType, LED_Blue, 0);
-  LEDHelper(radarType, LED_Green0, 0);
-  LEDHelper(radarType, LED_Green1, 0);
+  LEDHelper(radarSpecifier, LED_Blue, 0);
+  LEDHelper(radarSpecifier, LED_Green0, 0);
+  LEDHelper(radarSpecifier, LED_Green1, 0);
 
   // Determine the number of samplers in the radar frame
   numberOfSamplers = getIntValueByName(rh, "SamplersPerFrame");
@@ -464,7 +465,7 @@ int main(int argc, char **argv)
   dacStep = getIntValueByName(rh, "DACStep");
   samplesPerSecond = getFloatValueByName(rh, "SamplesPerSecond");
 
-  if (radarType == 2) {
+  if (radarSpecifier == 2) {
     pgSelect = getIntValueByName(rh, "PGSelect");
     samplesPerSecond = getFloatValueByName(rh, "SamplesPerSecond");
     offsetDistance = getFloatValueByName(rh, "OffsetDistanceFromReference");
@@ -508,7 +509,7 @@ int main(int argc, char **argv)
 
 
   // Turn ON the Red LED
-  LEDHelper(radarType, LED_Red, 1);
+  LEDHelper(radarSpecifier, LED_Red, 1);
 
   //
   // Run radar loop N times
@@ -548,8 +549,8 @@ int main(int argc, char **argv)
       fwrite(&dacMin, sizeof (int), 1, dataLog);
       fwrite(&dacMax, sizeof (int), 1, dataLog);
       fwrite(&dacStep, sizeof (int), 1, dataLog);
-      fwrite(&radarType, sizeof (int), 1, dataLog);
-      if (radarType == 2) {
+      fwrite(&radarSpecifier, sizeof (int), 1, dataLog);
+      if (radarSpecifier == 2) {
         fwrite(&samplesPerSecond, sizeof (float), 1, dataLog);
         fwrite(&pgSelect, sizeof (int), 1, dataLog);
         fwrite(&offsetDistance, sizeof (float), 1, dataLog);
@@ -599,10 +600,9 @@ int main(int argc, char **argv)
       /* } */
 
       do {
-	clock_gettime(CLOCKID, &now);
-	ms_wait = (t+1) * 1000.0/frameRate - ms_diff(&now, &start);
+	       clock_gettime(CLOCKID, &now);
+	        ms_wait = (t+1) * 1000.0/frameRate - ms_diff(&now, &start);
       } while (ms_wait > 0);
-
     }
 
     //frames per second
@@ -616,7 +616,7 @@ int main(int argc, char **argv)
 	      fwrite(&fpsEst, sizeof (float), 1, dataLog);
 
         // Close the dataLog if necessary
-        fclose(dataLog); 
+        fclose(dataLog);
 
         //copy datalog to host computer
         if (copyPath != NULL) {
@@ -652,8 +652,9 @@ int main(int argc, char **argv)
   free (timedelta);
   //free (radarScaled);
 
-  //kill the radar screen used to run this program
+  //kill the radar screen and empty the data folder
   system("exec pkill radar");
+  system("exec rm -r ../data/*");
 
   return 0;
 }
