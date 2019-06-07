@@ -1,6 +1,6 @@
 function salsaPlot(frameTot_bb, framesFFT)
 
-frameCount = size(frameTot_bb, 2); 
+numFrames = size(frameTot_bb, 2); 
 
 % Figure 1: FFT for each bin
 figure(1); im = imagesc(framesFFT);
@@ -17,7 +17,7 @@ xlabel('Frequency');
 
 % Figure 3: ???
 framesDiff = diff(frameTot_bb,[],2); 
-figure(3); imagesc(db(abs(fft(framesDiff,(frameCount-1),2)))); 
+figure(3); imagesc(db(abs(fft(framesDiff,(numFrames-1),2)))); 
 title('Differential radar response across all frequencies');
 ylabel('Range bin');
 xlabel('Frequency'); 

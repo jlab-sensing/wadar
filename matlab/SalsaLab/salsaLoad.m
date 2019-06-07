@@ -1,8 +1,11 @@
-%TODO: output a useful summary .txt or similar file with capture info 
-%(be sure to delete old files)
-% OR return the parameters that are needed using the function return
+% TODO: (optional) - output a useful summary of parameters (e.g. in text or .mat file)...
+% this could be done instead of returning pgen, fs_hz, etc.
 
-function [frameTot pgen fs_hz] = salsaLoad(fileName, radarSpecifier) 
+% USAGE: Load radar data from a binary file (captured from frameLogger.c on BBB)
+% REQUIRED ARGS: 
+% fileName
+% chipSet
+function [frameTot pgen fs_hz] = salsaLoad(fileName, chipSet) 
 
 fprintf('Loading saved data from %s...\n', fileName)
 
@@ -15,6 +18,7 @@ if magic ~= FRAME_LOGGER_MAGIC_NUM
     fclose(dataLog);
     return;
 end
+
 % Next are the sweep controller settings
 iterations = fread(fid,1,'int');
 pps = fread(fid,1,'int');
@@ -23,19 +27,19 @@ dacMax = fread(fid,1,'int');
 dacStep = fread(fid,1,'int');
 
 % The radar type is next 
-radarType = fread(fid,1,'int'); 
-switch radarType
+radarSpecifier = fread(fid,1,'int'); % 2 for X2 (Ancho), 10 for X1-IPGO (Cayenne), 11 for X1-IPG1 (Chipotle)
+switch radarSpecifier
     case 2
         % The measured sampling rate is next
-        samplesPerSecond = fread(fid,1,'float');
-        % The NVA6201 specific settings are next
+        samplesPerSecond = fread(fid,1,'float'); %float
+        % The radarSpecifier-specific settings are next
         pgen = fread(fid,1,'int');
         offsetDistance = fread(fid,1,'float');
         sampleDelayToReference = fread(fid,1,'float');
     otherwise 
         % The measured sampling rate is next
-        samplesPerSecond = fread(fid,1,'double');
-        % The NVA6201 specific settings are next
+        samplesPerSecond = fread(fid,1,'double'); %double
+        % The radarSpecifier-specific settings are next
         pgen = fread(fid,1,'int');
         samplingRate = fread(fid,1,'int');
         clkDivider = fread(fid,1,'int');
@@ -43,27 +47,31 @@ end
 
 % Next is the #samplers in a frame
 numberOfSamplers = fread(fid,1,'int');
-% Determine #frames in capture
+% Determine #frames and #runs in capture
 numFrames = fread(fid,1,'int');
 numRuns = fread(fid,1,'int');
+% Next is the frames per second 
 frameRate = fread(fid,1,'int');
-
+% Next is an array of time data
 times = fread(fid, numFrames, 'double');
+% Here are the radar frames 
 frameTot = fread(fid, numFrames*numberOfSamplers, 'uint32');
 % Do the DAC normalization
 frameTot = double(frameTot)/(1.0*pps*iterations)*dacStep + dacMin;
 frameTot = reshape(frameTot, numberOfSamplers, numFrames);
 
+% Estimated FPS (good to check against frameRate)
 fpsEst = fread(fid, 1, 'float');
+
+% TODO - insert comment here
 [A,count] = fread(fid);
 fclose(fid);
 if count ~= 0
     fprintf("FILE READ ERROR: %i data remains! Check that file format matches read code\n",count)
     return
 end
-frameCount = size(frameTot,2);
 
-[fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz] = NoveldaChipParams(radarSpecifier, pgen,'4mm');
-timeTot = (numFrames - 1) / frameRate; 
+% Calculate some useful radar parameters that can be returned if needed
+[fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz] = NoveldaChipParams(chipSet, pgen,'4mm');
 
 end
