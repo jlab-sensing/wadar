@@ -25,7 +25,7 @@ The software is compatible with any Unix-based OS such as OSX 10.X or Linux. We 
 - gnuplot, to compile graphs
 - latex to compile written documents (optional)
 
-*Below is an overview of the directory structure. There are additional README files within most of the subdirectories.*
+### Below is an overview of the directory structure. There are additional README files within most of the subdirectories.
 
 backscatterTag: code for the radar backscatter tag prototype
 
