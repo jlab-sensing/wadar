@@ -1,8 +1,10 @@
 # Radar Soil Sensing Project
 ## TODO: cross-compiler for OSX
 
+## Introduction
 The sensing system consists of four main components: the backscatter tag, the radar, the matlab code that processes the radar signal, and the teros12 commercial sensor that we use to verify the radar measurements. 
 
+## Dependencies
 The software is compatible with any Unix-based OS such as OSX 10.X or Linux. We have the following additional software dependencies:
 - a recent MATLAB release 
 - RNDIS and FTDI drivers for ethernet and serial over USB to communicate with the radar
