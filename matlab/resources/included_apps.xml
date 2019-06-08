@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<includedApps>
+
+  <includedApp identifier="fafc17fc-f73f-47d3-b4e9-f2e2819c177a" name="FindSalsaCenterFrequencyApp"/>
+
+  <includedApp identifier="724c2e00-321f-429b-a68d-1c9000bdd386" name="FindSalsaSampleDelayApp"/>
+
+  <includedApp identifier="7e7a48eb-e978-4c36-af5b-42786f0759a5" name="SalsaScopeApp"/>
+
+  <includedApp identifier="8a8439ec-2782-4431-b24e-4a755c7cfcb9" name="SalsaScopeApp_V2"/>
+
+</includedApps>

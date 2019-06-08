@@ -1,0 +1,246 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>test</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-03"><meta name="DC.source" content="test.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Get a list of the connected modules</a></li><li><a href="#3">Open a connection to the radar module</a></li><li><a href="#4">Calibrate the radar module</a></li><li><a href="#5">Get some register values</a></li><li><a href="#6">Set some register values</a></li><li><a href="#7">Check that it set the value for the iterations value by re-reading it</a></li><li><a href="#8">Collect a bunch of raw frames and compute the average FPS</a></li><li><a href="#9">Collect and time normalized radar frame FPS rates</a></li><li><a href="#10">Plot the resulting frames for both RAW and normalized radar frames</a></li></ul></div><pre class="codeinput"><span class="comment">% This script initializes the radar and collects and displays radar frames</span>
+<span class="comment">% as a BScan plot.  There is not processing or clutter removal in this</span>
+<span class="comment">% demo application.</span>
+<span class="comment">%</span>
+<span class="comment">% Copyright Flat Earth Inc. 2015</span>
+
+
+<span class="comment">%%Create the radar object</span>
+<span class="comment">% radar = radarWrapper('192.168.7.2');        %USB Cable</span>
+<span class="comment">% radar = radarWrapper('192.168.7.2',1)     %Force a software update</span>
+radar = radarWrapper(<span class="string">'192.168.0.198'</span>);    <span class="comment">%Ethernet IP Address example</span>
+<span class="comment">% radar = radarWrapper('192.168.10.7');    %Ethernet IP Address example</span>
+</pre><pre class="codeoutput">connector started
+</pre><h2>Get a list of the connected modules<a name="2"></a></h2><pre class="codeinput">modules = radar.ConnectedModules;
+</pre><h2>Open a connection to the radar module<a name="3"></a></h2><pre class="codeinput">radar.Open(modules{1});
+</pre><h2>Calibrate the radar module<a name="4"></a></h2><p>tic result = radar.ExecuteAction('MeasureAll'); toc</p><h2>Get some register values<a name="5"></a></h2><pre class="codeinput">IterationsDefaultValue = radar.Item(<span class="string">'Iterations'</span>)
+offsetdistance = radar.Item(<span class="string">'OffsetDistanceFromReference'</span>)
+samplers = radar.Item(<span class="string">'SamplersPerFrame'</span>);
+</pre><pre class="codeoutput">
+IterationsDefaultValue =
+
+    10
+
+
+offsetdistance =
+
+   0.200000000000000
+
+</pre><h2>Set some register values<a name="6"></a></h2><pre class="codeinput">radar.TryUpdateChip(<span class="string">'SampleDelayToReference'</span>,2.9e-9);
+radar.TryUpdateChip(<span class="string">'Iterations'</span>,<span class="string">'50'</span>);
+radar.TryUpdateChip(<span class="string">'DACMin'</span>,<span class="string">'0'</span>);
+radar.TryUpdateChip(<span class="string">'DACMax'</span>,<span class="string">'8191'</span>);
+radar.TryUpdateChip(<span class="string">'DACStep'</span>,<span class="string">'4'</span>);
+radar.TryUpdateChip(<span class="string">'PulsesPerStep'</span>,<span class="string">'16'</span>);
+<span class="comment">% radar.TryUpdateChip('FrameStitch','4');</span>
+</pre><h2>Check that it set the value for the iterations value by re-reading it<a name="7"></a></h2><pre class="codeinput">IterationsSetValue = radar.Item(<span class="string">'Iterations'</span>)
+</pre><pre class="codeoutput">
+IterationsSetValue =
+
+    50
+
+</pre><h2>Collect a bunch of raw frames and compute the average FPS<a name="8"></a></h2><pre class="codeinput">tic;
+t1=toc;
+subplot(1,1,1)
+plotTime = 5;      <span class="comment">%Run the plot for this many seconds</span>
+fpsFrames = 0;      <span class="comment">%Number of frames collected in the time period</span>
+<span class="keyword">while</span> (1)
+    fpsFrames= fpsFrames+1;
+    newFrame1 = radar.GetFrameRaw;
+    plot(newFrame1)
+    drawnow
+    <span class="keyword">if</span> (toc&gt;plotTime)
+        <span class="keyword">break</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+t2=toc;
+FPS_RAW = fpsFrames/(t2-t1)
+</pre><pre class="codeoutput">
+FPS_RAW =
+
+  28.740596601085439
+
+</pre><img vspace="5" hspace="5" src="test_01.png" alt=""> <h2>Collect and time normalized radar frame FPS rates<a name="9"></a></h2><pre class="codeinput">tic;
+t1=toc;
+subplot(1,1,1)
+plotTime = 5;      <span class="comment">%Run the plot for this many seconds</span>
+fpsFrames = 0;      <span class="comment">%Number of frames collected in the time period</span>
+<span class="keyword">while</span> (1)
+    fpsFrames= fpsFrames+1;
+    newFrame2 = radar.GetFrameNormalizedDouble;
+    plot(newFrame2)
+    drawnow
+    <span class="keyword">if</span> (toc&gt;plotTime)
+        <span class="keyword">break</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+t2=toc;
+FPS_NORMALIZED = fpsFrames/(t2-t1)
+</pre><pre class="codeoutput">
+FPS_NORMALIZED =
+
+  30.376277199036384
+
+</pre><img vspace="5" hspace="5" src="test_02.png" alt=""> <h2>Plot the resulting frames for both RAW and normalized radar frames<a name="10"></a></h2><pre class="codeinput">subplot(1,2,1)
+plot(newFrame1)
+title(<span class="string">'Raw Frame'</span>)
+subplot(1,2,2)
+plot(newFrame2)
+title(<span class="string">'Normalized Frame'</span>)
+</pre><img vspace="5" hspace="5" src="test_03.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% This script initializes the radar and collects and displays radar frames
+% as a BScan plot.  There is not processing or clutter removal in this
+% demo application.
+%
+% Copyright Flat Earth Inc. 2015
+
+
+%%Create the radar object
+% radar = radarWrapper('192.168.7.2');        %USB Cable
+% radar = radarWrapper('192.168.7.2',1)     %Force a software update
+radar = radarWrapper('192.168.0.198');    %Ethernet IP Address example
+% radar = radarWrapper('192.168.10.7');    %Ethernet IP Address example
+
+%% Get a list of the connected modules
+modules = radar.ConnectedModules;
+
+%% Open a connection to the radar module
+radar.Open(modules{1});
+
+%% Calibrate the radar module
+% tic
+% result = radar.ExecuteAction('MeasureAll');
+% toc
+
+%% Get some register values
+IterationsDefaultValue = radar.Item('Iterations')
+offsetdistance = radar.Item('OffsetDistanceFromReference')
+samplers = radar.Item('SamplersPerFrame');
+
+%% Set some register values
+radar.TryUpdateChip('SampleDelayToReference',2.9e-9);
+radar.TryUpdateChip('Iterations','50');
+radar.TryUpdateChip('DACMin','0');
+radar.TryUpdateChip('DACMax','8191');
+radar.TryUpdateChip('DACStep','4');
+radar.TryUpdateChip('PulsesPerStep','16');
+% radar.TryUpdateChip('FrameStitch','4');
+
+%% Check that it set the value for the iterations value by re-reading it
+IterationsSetValue = radar.Item('Iterations')
+
+%% Collect a bunch of raw frames and compute the average FPS
+tic;
+t1=toc;
+subplot(1,1,1)
+plotTime = 5;      %Run the plot for this many seconds
+fpsFrames = 0;      %Number of frames collected in the time period
+while (1)
+    fpsFrames= fpsFrames+1;
+    newFrame1 = radar.GetFrameRaw;
+    plot(newFrame1)
+    drawnow
+    if (toc>plotTime)
+        break
+    end
+end
+t2=toc;
+FPS_RAW = fpsFrames/(t2-t1)
+
+%% Collect and time normalized radar frame FPS rates
+tic;
+t1=toc;
+subplot(1,1,1)
+plotTime = 5;      %Run the plot for this many seconds
+fpsFrames = 0;      %Number of frames collected in the time period
+while (1)
+    fpsFrames= fpsFrames+1;
+    newFrame2 = radar.GetFrameNormalizedDouble;
+    plot(newFrame2)
+    drawnow
+    if (toc>plotTime)
+        break
+    end
+end
+t2=toc;
+FPS_NORMALIZED = fpsFrames/(t2-t1)
+
+%% Plot the resulting frames for both RAW and normalized radar frames
+subplot(1,2,1)
+plot(newFrame1)
+title('Raw Frame')
+subplot(1,2,2)
+plot(newFrame2)
+title('Normalized Frame')
+
+##### SOURCE END #####
+--></body></html>

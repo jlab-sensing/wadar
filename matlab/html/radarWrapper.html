@@ -1,0 +1,405 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <link rel="stylesheet" href="file:///C:/Program Files/MATLAB/R2015a/toolbox/matlab/helptools/private/helpwin.css">
+      <title>MATLAB File Help: radarWrapper</title>
+   </head>
+   <body>
+      <!--Single-page help-->
+      <table border="0" cellspacing="0" width="100%">
+         <tbody><tr class="subheader">
+            <td class="headertitle">MATLAB File Help: radarWrapper</td>
+            <td class="subheader-left"><a href="matlab:edit radarWrapper">View code for radarWrapper</a></td>
+            <td class="subheader-right"><a href="matlab:doc">Default Topics</a></td>
+         </tr>
+      </tbody></table>
+      <div class="title">radarWrapper</div>
+      <div class="helptext"><pre><!--helptext -->  This is a Matlab wrapper function which allows for Flat Earth Salsa Radar
+  modules to be easily accessed from within the matlab enviroment.
+ 
+  This module can be called without parameters to connect to the radar
+  module over the USB interface with default username and password,
+  over an ethernet connection (recomended for better perfomance) by
+  also passing in an IP address.
+ 
+  Efforts have been made to make this nearly compatible with Novelda's
+  .NET RadarLib library functions to ease porting of functions that
+  were developed using earlier development boards, but 1:1
+  functionality is not guaranteed.
+ 
+  Useage:
+  obj = <span class="helptopic">radarWrapper</span>()
+  obj = <span class="helptopic">radarWrapper</span>(ipAddress)
+  obj = <span class="helptopic">radarWrapper</span>(ipAddress, updateConnector)
+  obj = <span class="helptopic">radarWrapper</span>(ipAddress, username, password)
+  obj = <span class="helptopic">radarWrapper</span>(ipAddress, username, password, updateConnector)
+ 
+  Copyright Flat Earth Inc. 2015-2016</pre></div><!--after help --><!--demo--><div class="footerlinktitle">Published output in the Help browser</div><div class="footerlink">
+       <a href="matlab:showdemo radarWrapper">showdemo radarWrapper</a>
+</div>
+      <!--Class-->
+      <div class="sectiontitle">Class Details</div>
+      <table class="class-details">
+         <tbody><tr>
+            <td class="class-detail-label">Superclasses</td>
+            <td><a href="matlab:doc('handle')">handle</a></td>
+         </tr>
+         <tr>
+            <td class="class-detail-label">Sealed</td>
+            <td>false</td>
+         </tr>
+         <tr>
+            <td class="class-detail-label">Construct on load</td>
+            <td>false</td>
+         </tr>
+      </tbody></table>
+      <!--Constructors-->
+      <div class="sectiontitle"><a name="constructors"></a>Constructor Summary
+      </div>
+      <table class="summary-list">
+         <tbody><tr class="summary-item">
+            <td class="name"><a href="matlab:doc('radarWrapper.radarWrapper')">radarWrapper</a></td>
+            <td class="m-help">This is a Matlab wrapper function which allows for Flat Earth Salsa Radar&nbsp;</td>
+         </tr>
+      </tbody></table>
+      <!--Properties-->
+      <div class="sectiontitle"><a name="properties"></a>Property Summary
+      </div>
+      <table class="summary-list">
+         <tbody><tr class="summary-item">
+            <td class="name"><a href="matlab:doc('radarWrapper.Actions')">Actions</a></td>
+            <td class="m-help">&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:doc('radarWrapper.LibraryVersion')">LibraryVersion</a></td>
+            <td class="m-help">Version Info&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:doc('radarWrapper.Registers')">Registers</a></td>
+            <td class="m-help">&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:doc('radarWrapper.isOpen')">isOpen</a></td>
+            <td class="m-help">Is there a radar connection open at the moment&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:doc('radarWrapper.numSamplers')">numSamplers</a></td>
+            <td class="m-help">Global Radar Parameters&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="name"><a href="matlab:doc('radarWrapper.objectCounter')">objectCounter</a></td>
+            <td class="m-help">Unused but for compadibility&nbsp;</td>
+         </tr>
+      </tbody></table>
+      <!--Methods-->
+      <div class="sectiontitle"><a name="methods"></a>Method Summary
+      </div>
+      <table class="summary-list">
+         <tbody><tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.Close')">Close</a></td>
+            <td class="m-help">Closes an open radar handle object, but the connection&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.ConnectedModules')">ConnectedModules</a></td>
+            <td class="m-help">List the radar modules connection strings&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.ConnectorVersion')">ConnectorVersion</a></td>
+            <td class="m-help">&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.ExcecuteAction')">ExcecuteAction</a></td>
+            <td class="m-help">Request a RadarLib "action" be run on the radar&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.ExecuteAction')">ExecuteAction</a></td>
+            <td class="m-help">Request a RadarLib "action" be run on the radar&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.GetFrameNormalizedDouble')">GetFrameNormalizedDouble</a></td>
+            <td class="m-help">Get a radar frame that has been&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.GetFrameRaw')">GetFrameRaw</a></td>
+            <td class="m-help">Get a complete radar frame in raw count values.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.GetFrameRawDouble')">GetFrameRawDouble</a></td>
+            <td class="m-help">&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.GetTemperature')">GetTemperature</a></td>
+            <td class="m-help">Get the temperature from a sensor next to the radar chip in&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.Item')">Item</a></td>
+            <td class="m-help">Get a register value from the chip from its name&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.LibraryError')">LibraryError</a></td>
+            <td class="m-help">Get the message from the last error that occured&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.ListActions')">ListActions</a></td>
+            <td class="m-help">ListVariables Get a list of all the actions supported on the&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.ListVariables')">ListVariables</a></td>
+            <td class="m-help">Get a list of all the variables supported on the&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.NVA_CreateHandle')">NVA_CreateHandle</a></td>
+            <td class="m-help">CreateHandle Creates a handle to a radar object prior to&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.OffsetDistance')">OffsetDistance</a></td>
+            <td class="m-help">Get the set OffsetDistanceFromReference&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.Open')">Open</a></td>
+            <td class="m-help">Opens a connection to a radar module such that it can be&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.RegisterRead')">RegisterRead</a></td>
+            <td class="m-help">Read a register based on its address (decimal)&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.ResetAllVariablesToDefault')">ResetAllVariablesToDefault</a></td>
+            <td class="m-help">&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.SamplerResolution')">SamplerResolution</a></td>
+            <td class="m-help">Get the measured sampler resolution on the&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.SamplersPerFrame')">SamplersPerFrame</a></td>
+            <td class="m-help">Get the number of samplers for the radar with&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.SelectCape')">SelectCape</a></td>
+            <td class="m-help">This function will select the ANCHO cape based on&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.SetVoltage')">SetVoltage</a></td>
+            <td class="m-help">Set the voltage of into the transmit pin on the&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.TryUpdateChip')">TryUpdateChip</a></td>
+            <td class="m-help">Updates a register value on the chip&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.addlistener')">addlistener</a></td>
+            <td class="m-help">Add listener for event.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.delete')">delete</a></td>
+            <td class="m-help">Deletes a radar handle&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.eq')">eq</a></td>
+            <td class="m-help">== (EQ)   Test handle equality.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.findobj')">findobj</a></td>
+            <td class="m-help">Find objects matching specified conditions.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.findprop')">findprop</a></td>
+            <td class="m-help">Find property of MATLAB handle object.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.ge')">ge</a></td>
+            <td class="m-help">&gt;= (GE)   Greater than or equal relation for handles.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.getCDF')">getCDF</a></td>
+            <td class="m-help">get the cdf from the radar chip&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.getEnumItems')">getEnumItems</a></td>
+            <td class="m-help">Get a list of all the enumerations for an&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.gt')">gt</a></td>
+            <td class="m-help">&gt; (GT)   Greater than relation for handles.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">Sealed 
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.isvalid')">isvalid</a></td>
+            <td class="m-help">Test handle validity.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.le')">le</a></td>
+            <td class="m-help">&lt;= (LE)   Less than or equal relation for handles.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.lt')">lt</a></td>
+            <td class="m-help">&lt; (LT)   Less than relation for handles.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.ne')">ne</a></td>
+            <td class="m-help">~= (NE)   Not equal relation for handles.&nbsp;</td>
+         </tr>
+         <tr class="summary-item">
+            <td class="attributes">
+               &nbsp;
+               
+            </td>
+            <td class="name"><a href="matlab:doc('radarWrapper.notify')">notify</a></td>
+            <td class="m-help">Notify listeners of event.&nbsp;</td>
+         </tr>
+      </tbody></table>
+      <!--Events-->
+      <div class="sectiontitle"><a name="events"></a>Event Summary
+      </div>
+      <table class="summary-list">
+         <tbody><tr class="summary-item">
+            <td class="name"><a href="matlab:doc('radarWrapper.ObjectBeingDestroyed')">ObjectBeingDestroyed</a></td>
+            <td class="m-help">Notifies listeners that a particular object has been destroyed.&nbsp;</td>
+         </tr>
+      </tbody></table>
+   
+</body></html>

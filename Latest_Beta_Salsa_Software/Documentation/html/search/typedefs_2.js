@@ -1,7 +1,0 @@
-var searchData=
-[
-  ['salsapacket',['SalsaPacket',['../salsa_comm_8h.html#aeb04d6faaca426d5991d4dde8af67ce7',1,'salsaComm.h']]],
-  ['salsapacket_5ft',['SalsaPacket_t',['../salsa_comm_8h.html#adbc2b59a37446adf2790b6669ee7886e',1,'salsaComm.h']]],
-  ['salsaviewer',['SalsaViewer',['../salsa_viewer_8h.html#a64e214fe47f01848e4a6b948087b6013',1,'salsaViewer.h']]],
-  ['serverinfo',['ServerInfo',['../_desktop___ancho_2_doppler_demo_2radar_client_8h.html#a933b09febeb8b4f2bdf4d4b4a122f3a7',1,'ServerInfo():&#160;radarClient.h'],['../_desktop___ancho_2_radar_client_2radar_client_8h.html#a933b09febeb8b4f2bdf4d4b4a122f3a7',1,'ServerInfo():&#160;radarClient.h'],['../_desktop___cayenne_2_doppler_demo_2radar_client_8h.html#a933b09febeb8b4f2bdf4d4b4a122f3a7',1,'ServerInfo():&#160;radarClient.h'],['../_desktop___cayenne_2_radar_client_2radar_client_8h.html#a933b09febeb8b4f2bdf4d4b4a122f3a7',1,'ServerInfo():&#160;radarClient.h'],['../_desktop___chipotle_2_doppler_demo_2radar_client_8h.html#a933b09febeb8b4f2bdf4d4b4a122f3a7',1,'ServerInfo():&#160;radarClient.h'],['../_desktop___chipotle_2_radar_client_2radar_client_8h.html#a933b09febeb8b4f2bdf4d4b4a122f3a7',1,'ServerInfo():&#160;radarClient.h'],['../_desktop___jalapeno_2_doppler_demo_2radar_client_8h.html#a933b09febeb8b4f2bdf4d4b4a122f3a7',1,'ServerInfo():&#160;radarClient.h'],['../_desktop___jalapeno_2_radar_client_2radar_client_8h.html#a933b09febeb8b4f2bdf4d4b4a122f3a7',1,'ServerInfo():&#160;radarClient.h']]]
-];
