@@ -1,7 +1,8 @@
 # Target Compiler
 #CC=gcc
 #CC=gcc-linaro-6.5.0-2018.12-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc
-CC=gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc
+#CC=gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc
+CC=arm-mac-linux-gnueabihf/bin/arm-mac-linux-gnueabihf-gcc
 
 # Relative paths in this dll project
 NOVELDA_INC_DIR=usr/include/novelda

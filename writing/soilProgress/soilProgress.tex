@@ -332,14 +332,43 @@ are more than sufficient for a number of non-tree crops, though.
 
 
 \section*{Next steps}
+
 \begin{itemize}
-\item Evaluate X1, X2 and X4 in their maximum depth for both wet and dry soil
-\item Figure out how to accurately measure ToF  
-\item Conduct soil moisture experiments by measuring
-  permittivity and comparing against commercial sensor (in different
-  soil types if possible). Also quantify and improve tag battery life
-  (if applicable).
-\item June: present preliminary results at Platform Lab retreat
+\item June 8-23:
+\begin{itemize}
+\item Prepare for REU arrival:
+\begin{itemize}
+\item Generate OSX cross-compilation binaries
+\item Test and improve unified MATLAB/C code
+\item Write documentation
+\item Clean up lab space, prepare two desks
+\end{itemize}
+\item Reverse engineer Teros 12 calibrated equation to use radar
+  measurement as input
+\end{itemize}
+
+\item June 24-30:
+\begin{itemize}
+\item Figure out how to accurately measure ToF using Chipotle (X1
+  1.5Ghz) phase
+\item Get data for SNR vs soil moisture with Chipotle and tag buried 1
+  ft (REUs can do this)
+\item Conduct soil moisture experiments by measuring permittivity and
+  comparing against commercial sensor, and ideally oven (REUs can help
+  with this)
+\end{itemize}
+\item July
+\begin{itemize}
+\item Design and manufacture a smaller version of the prototype
+  evaluate the relative ToF design. (Can we do this with a 2nd
+  ``large'' prototype in a bigger soil bin instead?). Also quantify
+  anticipated tag battery life.
+\item Calibrate Teros sensor on Farm soil (REUs can do this)
+\item Take detailed laboratory soil measurements in both potting soil
+  and Farm soil
+\item Do in-situ measurements on Farm
+\end{itemize}
+\item August: submit research paper, present results at MSR
 \end{itemize}
 
 \section*{Future work}
@@ -383,7 +412,7 @@ and will also be accessible to small and large farms alike.
 
 \bibliographystyle{amsplain}
 \begin{footnotesize}
-  \bibliography{soil_proposal}
+  \bibliography{soilProgress}
 \end{footnotesize}
 
 \section*{Appendix: Radar}
@@ -688,4 +717,6 @@ our sensor will be accurate within 0.05$cm^3/cm^3$.
 \end{tabular}
 \end{table}
 
+\subsection*{Calibrations}
+TODO: add details on Teros 12 calibration results
 \end{document}
