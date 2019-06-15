@@ -29,15 +29,10 @@ The software is compatible with any Unix-based OS such as OSX 10.X or Linux. We 
 
 ### Below is an overview of the directory structure. There are additional README files within most of the subdirectories.
 
-backscatterTag: code for the radar backscatter tag prototype
-
-FlatEarth: code that runs on the Flat Earth Ancho, Cayenne and Chipotle radars
-
-legacy: old code that is no longer used
-
-matlab: matlab code, mainly for interfacing with the radar
-
-teros: code for interfacing with the Teros12 commercial soil sensor
-
-writing: latex files for papers, gnuplot and dat files for graphs
+- backscatterTag: code for the radar backscatter tag prototype
+- FlatEarth: code that runs on the Flat Earth Ancho, Cayenne and Chipotle radars
+- legacy: old code that is no longer used
+- matlab: matlab code, mainly for interfacing with the radar
+- teros: code for interfacing with the Teros12 commercial soil sensor
+- writing: latex files for papers, gnuplot and dat files for graphs
 
