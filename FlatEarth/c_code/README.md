@@ -1,53 +1,50 @@
 ### INTRO
 
-frameLogger.c is the source code for a capture program that runs
-locally on the BBB. This code was developed because it allows us to
-capture frames faster and at a more even frame rate than using the
-MATLAB connector.
+frameLogger.c is the source code for a capture program that runs locally on the BBB. This code was developed because it allows us to capture frames faster and at a more even frame rate than using the MATLAB connector.
+
+### PREREQUISITES 
+
+Before compiling the code, make sure that the BBB can access your computer via ssh. This is so it can copy radar captures to your local machine for live processing. On OSX you'll need to turn on Remote Login within the Sharing section of System Preferences. Then, you need to allow publickey authentication from the BBB. To do so, edit or create this file on your Mac: `~/.ssh/authorized_keys`. Then add this line:
+
+`from="192.168.7.2" ssh-rsa AAA...sshkeyjibberish...`
+
+Everything after `from"192.168.7.2"` is the contents of the id_rsa.pub file on the BBB, which is located in the `~/.ssh` directory. So ssh into the BBB and copy that file's contents into your authorized_keys folder. 
+
+Then test that you can ssh into your computer FROM the BBB by doing `ssh <your_username>@192.168.7.1` *while you are already ssh'd into the BBB*. You should get a response like this:
+
+`Last login: Wed Jun 19 15:55:06 2019 from 192.168.7.2
+DN0a24a1e6:~ cjoseph$ `
 
 ### COMPILATION 
 
-To compile the code locally, run 'make frameLogger' in this
-directory. It will use the linaro cross-compiler to generate an
-arm-compatible binary.
-
-To compile the code on the BBB, copy the source file over to the BBB
-to this directory:
-
-/home/root/FlatEarth/Demos/Ancho/FrameLogger2
-
-Then run 'make frameLogger' in that directory.
-
-### INSTALLATION 
-
-If you compiled the code on the BBB, the installation is
-complete. Proceed to the USAGE section.
-
-If you ran the compiler locally, you need to copy the generated
-frameLogger binary over to the BBB in the directory
-/home/root/FlatEarth/Demos/Ancho/FrameLogger2.
+To compile the code, run 'make frameLogger' in this directory. It will use the linaro cross-compiler to generate an
+arm-compatible binary. Then run `make deploy` to copy the code over to the BBB (the radar needs to be plugged in to your computer).
 
 ### USAGE 
 
-Detailed usage instructions are available in the source code. Here is
-an example command:
+To run the code locally on the BBB, ssh in to root@192.168.7.2 and cd to `/root/FlatEarth/Demos/Common/FrameLogger`
 
-./frameLogger -s ../data/captureSettings -l ../data/captureData -r 3 -n 2000 -f 200
+Here is an example usage:
+
+`./frameLogger -s ../data/captureSettings -l ../data/captureData -n 2000 -r 3 -f 200 -t cayenne -c cjoseph@192.168.7.1:/Users/cjoseph/Documents/research/radar/matlab/data`
 
 -s provides the path to the capture settings folder
 -l is the path and file prefix for the capture dump
--r is the number of runs, which dictates the number of dumps
 -n is the number of frames per run
+-r is the number of runs, which dictates the number of dumps
 -f is the frame rate
+-t is the type of the radar (cayenne, ancho, chipotle)
+-c is the copy path, the directory on a local or remote computer to transfer the files to
 
 The above command will produce 3 different 10-second captures at
 200fps and dump them into the data directory. The dump format is
 binary.
+
+More detailed usage instructions are available in the source code. 
 
 To ensure that the code runs at the most even possible frame rate, you
 can prefix the program execution with `ionice -c 1 -n 0 nice -n -20`.
 
 ### POST-PROCESSING
 
-To process the capture data, copy the data files to a computer with
-MATLAB and use the saveData_Ancho.m file to read in the files.
+You can run the frameLogger to generate the capture and post-process using MATLAB later, or you can use the MATLAB wrapper, `salsaMain.m`, to capture and process the files simultaneously. Instructions for both methods are in this repository's matlab directory.

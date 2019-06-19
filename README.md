@@ -1,5 +1,4 @@
 # Radar Soil Sensing Project
-## TODO: cross-compiler for OSX
 
 ## Introduction
 The sensing system consists of four main components: the backscatter tag, the radar, the matlab code that processes the radar signal, and the teros12 commercial sensor that we use to verify the radar measurements. 
@@ -36,6 +35,35 @@ The software is compatible with any Unix-based OS such as OSX 10.X or Linux. We 
 - gnuplot, to compile graphs
 - latex to compile written documents (optional)
 
+## Structure
+
+The software for this system is divided into three key subsystems: radar software, backscatter software and commercial sensor software. 
+
+The software for the backscatter tag and commercial sensor are pretty simple, basically just arduino files. You probably will not need to modify these very often.
+
+The software for the radar is more complicated. The radars we use have two hardware components: the radar chip itself, and a Beagle Bone Black embedded linux board (BBB for short). We bought them from FlatEarth Sensing, and they named the radar development kit 'Chips and Salsa'; the chips refer to the radar chip and the salsa refers to their software library that collects data from the chip. Also worth mentioning is that the radars are all named after a type of pepper (ancho, cayenne and chipotle). Guess they like Mexican food.
+
+The 'Salsa' software runs on the BBB. We have a modified version of some of their frameLogger code that we use to get our data, its in `/FlatEarth/c_code`. The BBB is a resource constrained device, so to get the maximum possible frame rate we do all the radar processing using MATLAB on a different device. That code lives in the matlab directory.
+
+## Getting started
+
+- Make sure all the prerequisites are installed
+- Make sure you can access the radar via `ssh root@192.168.7.2`.
+- Go to the FlatEarth/c_code directory and make sure you can compile the frameLogger code and that it runs on the radar
+- Go to the matlab directory and test that the salsaMain.m code works (check out Example 1 in the code comments at the top)
+
+Congrats, you've successfully done a radar capture and processed it!
+
+- Test with the tag
+
+  Attach the radar to it's mount and point it towards the backscatter tag.  For best results, make sure the radar is between 20 and 50cm away from the top of the tag and that it's not underground for this initial test. In the plots, make sure you see a big peak when the tag is on and no peak when the tag is off. 
+  
+  IMPORTANT: some of the antennas have very strong polarization, so if you don't see any peak when the tag is on try rotating either the radar or the tag by 90 degrees. Also make sure you understand the radiation pattern of the type of antenna that is attached to the radar to ensure the direction of maximum gain is pointed towards the tag.
+  
+- Try out the soil_moisture.m program
+  
+  Now you can try burying the tag and using soil_moisture.m to compare the results against the commercial sensor. More detailed instructions coming soon (TODO).
+  
 ### Below is an overview of the directory structure. There are additional README files within most of the subdirectories.
 
 - backscatterTag: code for the radar backscatter tag prototype
