@@ -11,7 +11,16 @@ The software is compatible with any Unix-based OS such as OSX 10.X or Linux. We 
   	
    For OSX radar, install the network and serial drivers in step 2 of this site: http://beagleboard.org/getting-started. You might get an error about the developer being unknown, this is expected and the software is fine to install. To get around it, find the package(s) in finder and then ctrl-click on them and select open. 
 
-   After installing, reboot and test by plugging in the radar, then opening command line and executing `ssh root@192.168.7.2`. You should be logged in to a terminal as root@beaglebone.
+   After installing, reboot and test by plugging in the radar, then opening command line and executing `ssh root@192.168.7.2`. You should be logged in to a terminal as root@beaglebone. You may get a warning like this, especially if you have tried a few different radars:
+   
+   `@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`  
+   `@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @`  
+   `@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`  
+   
+   This just means that you have SSH'd into another device that has used the same internal IP address. To solve this problem, use the terminal to edit this file: `/Users/<your_username>/.ssh/config` (create it if it doesn't exist). Add these two lines:
+   
+   `Host 192.168.7.2`  
+   `  StrictHostKeyChecking no`  
 
    To test the serial connection, minicom is recommended. You may need to install homebrew to do this if you don’t have it already: `brew install minicom`. Then, once minicom is installed, test the connection by doing `minicom -D /dev/tty.usbmodem<XXXX>`. Fill in the XXXX with the appropriate device number. You can find it by using the terminal to look in the  /dev directory and grepping for /tty.usbmodem. Minicom will open, and it will display a message like this:  
    `Welcome to minicom 2.7.1`  
