@@ -6,7 +6,7 @@ The sensing system consists of four main components: the backscatter tag, the ra
 
 ## Dependencies
 The software is compatible with any Unix-based OS such as OSX 10.X or Linux. We have the following additional software dependencies:
-- a recent MATLAB release 
+- a recent MATLAB release ([here](https://drive.google.com/drive/u/1/folders/1ysOlEd1t2GFOKYOxBg3uzE3v5n-13ok5) is our group network MATLAB license if you don't already have one)
 - RNDIS and FTDI drivers for ethernet and serial over USB to communicate with the radar
   	
    For OSX radar, install the network and serial drivers in step 2 of this site: http://beagleboard.org/getting-started. You might get an error about the developer being unknown, this is expected and the software is fine to install. To get around it, find the package(s) in finder and then ctrl-click on them and select open. 
