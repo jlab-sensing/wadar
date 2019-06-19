@@ -43,7 +43,7 @@ The software for the backscatter tag and commercial sensor are pretty simple, ba
 
 The software for the radar is more complicated. The radars we use have two hardware components: the radar chip itself, and a Beagle Bone Black embedded linux board (BBB for short). We bought them from FlatEarth Sensing, and they named the radar development kit 'Chips and Salsa'; the chips refer to the radar chip and the salsa refers to their software library that collects data from the chip. Also worth mentioning is that the radars are all named after a type of pepper (ancho, cayenne and chipotle). Guess they like Mexican food.
 
-The 'Salsa' software runs on the BBB. We have a modified version of some of their frameLogger code that we use to get our data, it's in `/FlatEarth/c_code`. The BBB is a resource constrained device, so to get the maximum possible frame rate we do all the radar processing using MATLAB on a different device. That code lives in the matlab directory.
+The 'Salsa' software runs on the BBB. We have a modified version of some of their frameLogger code that we use to get our data, its in `/FlatEarth/c_code`. The BBB is a resource constrained device, so to get the maximum possible frame rate we do all the radar processing using MATLAB on a different device. That code lives in the matlab directory.
 
 ## Getting started
 
