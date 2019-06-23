@@ -12,3 +12,5 @@ This MATLAB code interfaces with the radar(s), mostly FlatEarth libraries or dem
 - salsaPlot.m: loads radar data from a binary file (captured from frameLogger.c on BBB)
 - salsaLoad.m: makes plots from processed radar data (usually called by salsaMain)
 - soil_moisture.m: code to convert Teros 12 RAW measurements and radar bin measurements to soil moisture
+
+The rest of the files/directories are FlatEarth example code and such.
