@@ -10,7 +10,7 @@ t=((airSoilBins-airBins+d/resolution)*resolution)/c; %seconds
 radar_perm = ((c*t)/d)^2
 teros_perm = ((2.887e-9)*RAW^3-(2.080e-5)*RAW^2+(5.276e-2)*RAW-43.39)^2
 
-%TODO: adapt teros eqns to be used with EC instead of RAW
+%TODO: adapt teros eqns to be used with Perm instead of RAW
 teros_calibrated = (1.059e-9)*RAW^3 - (8.088e-6)*RAW^2 + (2.066e-2)*RAW - 1.727e1 %calibrated by us
 teros_potting =   (6.771e-10)*RAW^3 - (5.105e-6)*RAW^2 + (1.302e-2)*RAW - 10.848 %from p. 8 of teros 12 manual
 radar_topp = (4.3e-6)*radar_perm^3 - (5.5e-4)*radar_perm^2 + (2.92e-2)*radar_perm - 5.3e-2
