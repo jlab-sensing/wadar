@@ -4,7 +4,7 @@ resolution =  0.004; %0.003790984152165;
 airBins = 215; % number of bins from the radar to the un-burried tag
 airSoilBins = (240+240+239)/3.0; % number of bins from the radar to the burried tag
 RAW = 2345;  %RAW teros12 measurement
-d=0.055; %meters
+d=0.055; % meters sensor is buried underground
 t=((airSoilBins-airBins+d/resolution)*resolution)/c; %seconds
 
 radar_perm = ((c*t)/d)^2
