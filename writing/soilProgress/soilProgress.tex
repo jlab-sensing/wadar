@@ -330,6 +330,32 @@ are more than sufficient for a number of non-tree crops, though.
 %% definitely sufficient to isolate a backscatter toggle between
 %% 100-500hz, but the bandwidth is more narrow at 2.5Ghz. 
 
+\section*{Preliminary results} 
+
+\subsection*{SNR vs depth}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[scale=0.75]{../graphs/snr.png}\\
+  \caption{SNR vs soil depth for 3 different radar center frequencies
+    using bag-damp potting soil. Need to repeat this experiment in
+    wetter soil, up to saturation.}
+  \label{figure:depth}
+\end{figure}
+
+\subsection*{Soil moisture}
+
+TODO: fix figure location
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[scale=0.75]{../graphs/vwc.png}\\
+  \caption{VWC according both to Teros 12 and our radar
+    system. Calculated using the Topp equation. We used the Cayenne
+    radar and the tag was buried at a depth of 7cm. Need to repeat
+    this experiemnt with tag burried at 1ft (possibly requires the
+    Chipotle) and include wetter soild levels (up to saturation).}
+  \label{figure:moisture}
+\end{figure}
 
 \section*{Next steps}
 
@@ -630,6 +656,21 @@ depth of potting soil, these bounds are not especially
 useful. Therefore our approach was to experimentally determine SNR vs
 soil depth for various moisture levels. 
 
+\subsection*{SNR}
+
+keith says to anticipate a question about how the accuracy of the soil
+sensor measurement will depend on the SNR
+
+Range measuring error is inversely proportional to the square root of
+the SNR, so the lower the SNR the higher the error will be. However,
+the measurement error is also proportional to the range bin so the
+smaller the range bins the smaller the error. The range bins in our
+radar are pretty small, they correspond to 1/10 to 1/20 ns, which is
+equivalent to about 0.01-0.03cm3/cm3 in VWC ambiguity (again
+comparable to a commercial sensor). In short, the smaller the range
+bins the more tolerance the system has for low SNRs.
+
+
 \subsubsection*{Improving SNR}
 Given the low-SNR nature of backscatter, it is worth investigating
 radar configurations and post-processing techniques that can improve
@@ -718,5 +759,33 @@ our sensor will be accurate within 0.05$cm^3/cm^3$.
 \end{table}
 
 \subsection*{Calibrations}
-TODO: add details on Teros 12 calibration results
+During winter 2019 we performed calibration method B (specified in the
+Teros 12 manual) on Vigoro potting soil. Figure~\ref{figure:calib}
+shows that our custom calibration more closely tracks the actual
+volumetric soil moisture (measured with an oven). The average error
+for the Meter-supplied spotting soil equation is $0.066 cm^3/cm^3$,
+which is actually more than twice the manual's claimed accuracy for a
+generic caibration ($0.03 cm^3/cm^3$). However, our custom calibration
+has an error of $0.29cm^3/cm^3$, which is much better.
+
+\begin{figure*}[h!]
+  \centering
+  \includegraphics[scale=0.8]{teros12calib.png}\\
+  \caption{A comparison of the Meter-supplied potting soil equation vs our custom calibration}
+  \label{figure:calib}
+\end{figure*}
+
+
+\subsubsection*{Custom calibration equation:}
+\begin{equation*}
+\theta = (1.059\times 10^{-9})RAW^3 - (8.088\times 10^{-6})RAW^2 + (2.066\times 10^{-2})RAW - 17.27
+\end{equation*}
+
+Where $RAW$ is the raw Teros 12 sensor reading for soil moisture
+
+\subsubsection*{Meter soilless media (e.g. potting soil) equation:}
+\begin{equation*}
+\theta =   (6.771\times 10^{-10})RAW^3 - (5.105\times 10^{-6})RAW^2 + (1.302\times 10^{-2})RAW - 10.848
+\end{equation*}
+
 \end{document}
