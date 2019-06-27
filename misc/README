@@ -1,0 +1,10 @@
+rshutdown is a bash script to properly shut down the radar. To use it:
+
+- Make sure /usr/sbin is in your path (you can check this by executing
+`echo $PATH`
+
+- As sudo copy the rshutdown file to the /usr/sbin directory. 
+
+You should now be able to execute rshutdown from any directory in the
+terminal. The command takes a few seconds, it is done when it prints
+out, "Radar shutdown complete!".

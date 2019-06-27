@@ -1,0 +1,5 @@
+#!/bin/bash
+
+ssh -t root@192.168.7.2 "shutdown -h now"
+
+echo "Radar shutdown complete!"
