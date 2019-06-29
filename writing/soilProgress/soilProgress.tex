@@ -332,47 +332,175 @@ are more than sufficient for a number of non-tree crops, though.
 
 \section*{Preliminary results} 
 
+We used an Analog Devices HMC1118LP3D switch evaluation kit, a 5-18
+Ghz Vivaldi antenna from WA5VJB, and a teensy microcontroller that
+acts as a programmable oscillators. The system is enclosed in a
+locking plastic food storage box to provide water resistance. Future
+prototypes will need to be fully waterproof.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[scale=0.25]{prototype.png}\\
+  \caption{An early water-resistant prototype of the backscatter tag}
+  \label{figure:prototype}
+\end{figure}
+
+We used this tag plus a combination of Novelda XM03 and Flat Earth
+Ancho/Cayenne/Chipotle radar development kits to perform preliminary
+experiments on SNR vs tag depth and VWC estimations. 
+
+The XM03 kit contains an X4 radar chip centered at 7.29GHz, the Ancho (X2)
+is centered at 5.2Ghz, the Cayenne (X1) is centered at 4.3Ghz and the
+Chipotle (X1) is centered at 1.5Ghz.
+
 \subsection*{SNR vs depth}
+
+We performed these experiments with the XM03, Ancho and Chipotle
+radars. The Chipotle radar reaches a depth of 30cm ($\sim 1$ft), which is on
+par with our minimum-viable depth goal. We need to repeat this
+experiment for a variety of different soil wetness levels.
+
 \begin{figure}[h!]
   \centering
   \includegraphics[scale=0.75]{../graphs/snr.png}\\
   \caption{SNR vs soil depth for 3 different radar center frequencies
-    using bag-damp potting soil. Need to repeat this experiment in
-    wetter soil, up to saturation.}
+    using damp potting soil.}
   \label{figure:depth}
 \end{figure}
 
 \subsection*{Soil moisture}
 
-TODO: fix figure location
+This experiment used the Cayenne radar, which is centered at 4.3Ghz.
+The tag was buried at a depth of 7cm. The Cayenne has a small enough
+range resolution ($\sim 4$mm) that we don't need to use phase
+information to increase the ToF accuracy. However, due to the center
+frequency it does not penetrate the soil as well as the Chipotle
+radar. 
 
 \begin{figure}[h!]
   \centering
   \includegraphics[scale=0.75]{../graphs/vwc.png}\\
-  \caption{VWC according both to Teros 12 and our radar
-    system. Calculated using the Topp equation. We used the Cayenne
-    radar and the tag was buried at a depth of 7cm. Need to repeat
-    this experiemnt with tag burried at 1ft (possibly requires the
-    Chipotle) and include wetter soild levels (up to saturation).}
+  \caption{VWC was calculated using the Topp equation}
   \label{figure:moisture}
 \end{figure}
 
+We need to repeat this experiemnt with tag burried at 1ft,
+which likely requires using the Chipotle radar. This radar has larger
+range bins ($\sim 8$mm), so we would need to use phase data to get
+accurate enough ToF. We also need to take more measurements on the
+wetter side of the soil spectrum, up to saturation.
+
+The average difference between the VWC calculated by our sensor and
+the commercial sensor is 0.005$cm^3/cm^3$. This suggests that our
+sensor is about as accurate as a commercial sensor. Though these
+results are promising, we still need to compare them against a
+ground-truth oven-based measurement. We also need to adapt our
+calibrated equations to use the radar data so we can compare
+calibrated results instead of just Topp equation results (currently
+the calibrated equations are solved only for RAW Teros 12
+measurements). Finally, we should perform the experiments on at least
+one additional type of soil besides potting soil. We are planning to
+collect soil from the Stanford Educational Farm, which is an
+actively-producing vegetable and flower field located on
+campus. Ideally we will also perform \emph{in sutu} measurements on
+the field itself.
+
 \section*{Next steps}
 
-\begin{itemize}
-\item June 8-23:
-\begin{itemize}
-\item Prepare for REU arrival:
-\begin{itemize}
-\item Generate OSX cross-compilation binaries
-\item Test and improve unified MATLAB/C code
-\item Write documentation
-\item Clean up lab space, prepare two desks
-\end{itemize}
-\item Reverse engineer Teros 12 calibrated equation to use radar
-  measurement as input
-\end{itemize}
+A core limitation we noticed during the preliminary experiments is
+that the accuracy of the radar results depends heavily on how
+accurately we can measure the depth of the soil on top of the tag. If
+we can measure the depth to within about half a centemeter, the
+results are good. Knowing the depth of the soil in this much detail is
+feasible in a controlled environment, but it poses a major limitation
+for use in a real farm field.
 
+To avoid this problem, we can instead bury a sensor device that is
+made of two tags separated vertically by a known distance (see
+Fig.~\ref{figure:newTag}). Then we can measure the absolute ToF for
+each of the two tags and calculate the delta between the two. This
+relative ToF allows us to estimate the moisture of the soil
+\emph{between} the two tags. Because the distance between the tags is
+fixed, only major changes to the soil environment will introduce
+significant measurement error (e.g. flooding or tilling causing the
+sensor to rotate or deform).
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[scale=0.75]{newTag.png}\\
+  \caption{TODO: make this image}
+  \label{figure:newTag}
+\end{figure}
+
+Unfortunately, we think our current prototype is too large for this
+kind of setup. Because of how big it is, it will be difficult to
+design a rigid attachmemt system for two of them, and they would also
+not fit in our current indoors soil bins. Therefore we must choose
+between three paths forward for the summer:
+
+\begin{enumerate}
+\item Continue taking measurements with the existing prototype and
+  then fabricate the proposed two-tag system afterwards and redo the
+  same experiemnts.
+\begin{itemize}
+\item Pros: 
+\begin{itemize}
+\item we will get important results sooner
+\item if the preliminary results were a fluke, we can rethink our approach (fail fast)
+\end{itemize}
+\item Cons:
+\begin{itemize}
+\item the experiments will be more difficult to perform
+\item duplicated work (two redundant sets of experiments, two
+  different sets of software and hardware to debug)
+\end{itemize}
+\end{itemize}
+\item Design and fabricate a PCB-based version of the prototype, then
+  continue taking measurements.
+\begin{itemize}
+\item Pros:
+\begin{itemize}
+\item This will be the most impressive version of a prototype to submit
+\item Only one set of experiments to perform
+\item We will be able to relatively accurately predict the tag's useful lifetime
+\end{itemize}
+\item Cons:
+\begin{itemize}
+\item None of the authors have ever fabricated a PCB before
+\item The oscillation frequencies of the tag will need to be frozen
+\item PCB is more difficult to debug
+\end{itemize}
+\end{itemize}
+\item Design a new stopgap prototype that uses a wideband chip antenna
+  instead of the Vivaldi antenna, then continue taking measurements.
+\begin{itemize}
+\item Pros: 
+\begin{itemize}
+\item Only one set of experiments to perform
+\item Using a chip antenna will more accurately reflect the performance of any eventual product
+\item The time investment for this design is (probably significantly) less than designing a PCB
+\item We will probably need to evaluate the efficacy of chip antennas and waterproof enclosures before submitting a PCB design anyway
+\end{itemize}
+\item Cons: 
+\begin{itemize}
+\item if the preliminary results were a fluke, we will have wasted some time building this prototype
+\end{itemize}
+\end{itemize}
+\end{enumerate}
+
+The final approach is the most promising, because it allows us to test
+the two-tag system soonest and also at low cost (no PCB manufacuring
+run necessary). Furthermore, instead of struggling to do absolute ToF
+measurements, I believe we can simply use the relative phases between
+the tags. However, we may need to calculate and compensate for
+hardward-specific offsets\footnote{How noticable does the offset have
+  to be before we need to compensate for it? How fixed is the offset
+  (how strong is the dependence on environmental factors like
+  temperature? can we calibrate once per tag? can we calibrate once
+  and apply the same compensation to any tags using the same
+  design?}. Therefore we propose the following schedule TODO:
+
+\begin{itemize}
 \item June 24-30:
 \begin{itemize}
 \item Figure out how to accurately measure ToF using Chipotle (X1
