@@ -3,6 +3,8 @@
 
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{subcaption}
+
 \hypersetup{
    colorlinks,
    linkcolor={red!50!black},
@@ -272,10 +274,9 @@ backscatter tags.
 
 \begin{figure*}[h!]
   \centering
-  \includegraphics[scale=0.4]{soil_moisture_diagram.png}\\
-  \caption{A potential deployment of a UWB RADAR backscatter soil
-    moisture sensing system, where the radar is connected to the
-    farmer's smartphone}
+  \includegraphics[scale=0.25]{soil_moisture_diagram.png}\\
+  \caption{A potential UWB RADAR backscatter soil moisture sensing
+    system}
 \end{figure*}
 
 Consumer-grade ultra-wideband Radars have the ability to accurately
@@ -416,8 +417,8 @@ feasible in a controlled environment, but it poses a major limitation
 for use in a real farm field.
 
 To avoid this problem, we can instead bury a sensor device that is
-made of two tags separated vertically by a known distance (see
-Fig.~\ref{figure:newTag}). Then we can measure the absolute ToF for
+made of two or more tags separated vertically by a known distance (see
+Fig.~\ref{figure:multiTag}). Then we can measure the absolute ToF for
 each of the two tags and calculate the delta between the two. This
 relative ToF allows us to estimate the moisture of the soil
 \emph{between} the two tags. Because the distance between the tags is
@@ -425,12 +426,26 @@ fixed, only major changes to the soil environment will introduce
 significant measurement error (e.g. flooding or tilling causing the
 sensor to rotate or deform).
 
-\begin{figure}[h!]
+
+\begin{figure*}
+  \hspace*{-0.8cm}
+  \begin{minipage}[b]{0.55\textwidth}
+    \centering
+    \includegraphics[scale=0.38]{multiTag.png}\\
+    \subcaption{Overview of a system with three tags}
+  \end{minipage}%                                                                                           
+\begin{minipage}[b]{0.55\textwidth}
   \centering
-  \includegraphics[scale=0.75]{newTag.png}\\
-  \caption{TODO: make this image}
-  \label{figure:newTag}
-\end{figure}
+  \includegraphics[scale=0.25]{multiTagCloseup.png}\\
+  \subcaption{Close-up of proposed design with two tags}
+\end{minipage}%                                                                                           
+\caption{The proposed multi-tag system. In (a), the radar is connected
+  to the farmer's smartphone for gathering measurements. In (b) two
+  tags are rigidly attached, which keeps the inter-tag distances,
+  $d_s$ and $d_h$ fixed.}
+\label{figure:multiTag}
+\end{figure*}
+
 
 Unfortunately, we think our current prototype is too large for this
 kind of setup. Because of how big it is, it will be difficult to
@@ -498,31 +513,38 @@ hardward-specific offsets\footnote{How noticable does the offset have
   (how strong is the dependence on environmental factors like
   temperature? can we calibrate once per tag? can we calibrate once
   and apply the same compensation to any tags using the same
-  design?}. Therefore we propose the following schedule TODO:
+  design?}. Therefore we propose the following schedule:
 
 \begin{itemize}
-\item June 24-30:
-\begin{itemize}
-\item Figure out how to accurately measure ToF using Chipotle (X1
-  1.5Ghz) phase
-\item Get data for SNR vs soil moisture with Chipotle and tag buried 1
-  ft (REUs can do this)
-\item Conduct soil moisture experiments by measuring permittivity and
-  comparing against commercial sensor, and ideally oven (REUs can help
-  with this)
+\item July 1-14:
+  \begin{itemize}
+  \item Get data for SNR vs soil moisture with Chipotle and tag buried 1
+    ft (REUs can do this)
+  \item Work with antenna experts to find an appropriate small
+    form-factor antenna. Will likely need to be custom.
+  \item Purchase an appropriately sized waterproof enclosure and
+    figure out how to rigidly attach two of them
+  \item Using existing antennas, accurately measure relative ToF in
+    open air using Chipotle (X1 1.5Ghz) phase
+  \end{itemize}
+  
+\item July 15-28:
+  \begin{itemize}
+  \item Conduct soil moisture experiments with revised prototype,
+    measuring permittivity and comparing against commercial sensor and
+    oven (REUs can help with this)
+  \item Calibrate Teros sensor on Farm soil (REUs could do this)
+  \item Redo moisture experiments with Farm soil (this may extend into
+    August depending on how long making the new prototypes takes)
 \end{itemize}
-\item July
+
+\item August
 \begin{itemize}
-\item Design and manufacture a smaller version of the prototype
-  evaluate the relative ToF design. (Can we do this with a 2nd
-  ``large'' prototype in a bigger soil bin instead?). Also quantify
-  anticipated tag battery life.
-\item Calibrate Teros sensor on Farm soil (REUs can do this)
-\item Take detailed laboratory soil measurements in both potting soil
-  and Farm soil
+\item Quantify anticipated tag battery life.
 \item Do in-situ measurements on Farm
+\item Write Mobicom or NSDI research paper
 \end{itemize}
-\item August: submit research paper, present results at MSR
+\item September: present results at MSR
 \end{itemize}
 
 \section*{Future work}
