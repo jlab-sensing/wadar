@@ -29,7 +29,7 @@ void loop() {
     while (strlen(samples) < 5) {
       samples = get_measurement();  
     }
-    Serial.print("samples: ");
+    Serial.print("samples(EC/RD/ST): ");
     Serial.println(samples);
   }
 }
