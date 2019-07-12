@@ -11,6 +11,8 @@
 
 function salsaMain(captureData, varargin)
 %% Process arguments
+close all
+
 radarType = 'default';
 fullDataPath = 'default'; %path from BBB's perspective (see Example 1)
 localDataPath = 'default'; %path from computer's perspective (no IP address included)
@@ -76,9 +78,84 @@ if captureData == 1
     pattern = strcat(captureName, '[0-9]+'); %name of file followed by a run number
     for i = 1:length(existingFiles)
         if regexp(existingFiles(i).name, pattern) %file already exists
-            error('File name in use. Change file name or remove existing files');
+            fprintf('File name in use.\n');
+            
+            overwrite = lower(input('Would you like to overwrite the file (Y/N)?: ', 's'));
+            while (~strcmp(overwrite, 'y') && ~strcmp(overwrite, 'n'))
+                overwrite = lower(input('Please input ''Y'' or ''N'': ', 's'));
+            end
+            
+            if strcmp(overwrite, 'y')
+                for j = 1:length(existingFiles)
+                    %Delete all matching files, now we can procede to
+                    %writing files.
+                    if regexp(existingFiles(j).name, pattern)
+                        delete(fullfile(localDataPath, existingFiles(j).name));
+                    end
+                end
+            else
+                error('Change file name or remove existing files.');
+            end
+            break %Only want to go through this on first occurence of file match!!!
+            
+            
         end
     end
+    
+    
+    %Connection check
+    fprintf('\nPlease wait. Verifying radar connection...\n')
+    checkcmd = sprintf('ping -c 3 192.168.7.2');
+    [checkstatus, checkcmdout] = system(checkcmd);
+    if checkstatus ~= 0 
+        fprintf('\n')
+        msg = 'Connection failed. Please check the connection to the radar.';
+        error(msg)
+    else
+        fprintf('Connection successful!\n')
+    end
+    
+    %Framelogger check: 1 second capture
+    %Name is captureName.check1
+    checkoptions = sprintf('-s ../data/captureSettings -l ../data/%s.check -n %d -r 1 -f %d -t %s -c %s', ...
+        captureName, frameRate, frameRate, radarType, fullDataPath);
+    checkcommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', checkoptions);
+    [status,~] = system(checkcommand);
+    fprintf('\nPlease wait. Verifying framelogger captures...\n');
+    pause(5); %5 seconds to transfer files
+    checkFile = dir(fullfile(localDataPath, strcat(captureName, '.check1')));
+    checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '.check1', '.md5')));
+    if (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
+        error('There is a data transfer issue. Please verify your capture settings and scp directory.')
+    end
+    fileName = checkFile(1).name;
+    md5Name = checkmd5File(1).name;
+    
+    
+    md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
+    [status, cmdout] = system(md5command);
+    localchecksum = char(strsplit(cmdout));
+    localchecksum = lower(strtrim(localchecksum(4,:)));
+    
+    md5checksum = fileread(fullfile(localDataPath, md5Name));
+    md5checksum = char(strsplit(md5checksum));
+    md5checksum = lower(md5checksum(1,:));
+    
+    %Avoid overwriting data file
+    delete(fullfile(localDataPath, strcat(captureName, '.check1')));
+    delete(fullfile(localDataPath, strcat(captureName, '.check1', '.md5')));
+    
+    if (~strcmp(localchecksum, md5checksum))
+        fprintf('Failure on framelogger check.\n', runCount);
+        fprintf('Local checksum is %s.\n', localchecksum);
+        fprintf('BBB checksum is %s.\n', md5checksum);
+        error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
+    else
+        fprintf('Framelogger successful!\n\n')
+    end
+    
+    
+    
     
     % Start the capture
     if runs == -1
@@ -91,17 +168,13 @@ if captureData == 1
     end
     %textoptions = ' 2>&1 ~/log.txt';
     command = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', options);
-    % TODO : understand what the '&' is doing. It is necessary to include this to allow
-    % MATLAB to continue execution before the C program ends
+    % The '&' is necessary to include this to allow MATLAB to continue execution before the C program ends
     
     [status,~] = system(command);
     
     
 end
 
-% TODO: add ssh timeout, check for status
-% TODO: check ssh validity: ssh into radar, scp file into matlab directory,
-% check it exists
 % TODO: check validity of user directory
 % TODO: ssh into radar, run framelogger for short time, redirect output to
 % file (check for cayenne, ancho, chipotle)
@@ -111,24 +184,13 @@ end
 frameTot = [];
 runCount = 1;
 
-% if status ~= 0
-%     fprintf('There is a problem with the linux command.\n')
-%     exit
-% end
-
 myFig = figure;
 button = uicontrol('Parent',myFig,...
     'Style','togglebutton',...
     'String','STOP');
 button.HandleVisibility = 'off';
-%button = uicontrol('Style', 'togglebutton', 'String', 'STOP');
-
 addlistener(button,'Value','PostSet',...
     @stopbutton);
-%el = addlistener(uicontrol, 'Value', 'PostSet', @stopbutton);
-
-% button.Style = 'togglebutton';
-% button.String = 'STOP';
 
 while (runCount <= runs) || (runs == -1)
     if button.Value == 1
@@ -136,13 +198,41 @@ while (runCount <= runs) || (runs == -1)
     end
     %this will detect when a capture named captureName followed by runCount appears
     captureFile = dir(fullfile(localDataPath, strcat(captureName, string(runCount))));
-    if length(captureFile) == 1
-        
-        % make sure file is completely copied onto computer
-        pause(1); %TODO : change this to a checksum
+    md5File = dir(fullfile(localDataPath, strcat(captureName, string(runCount), '.md5')));
+    
+    if length(md5File) == 1 && length(captureFile) == 1
         
         % Add new frames to existing frames
         fileName = captureFile(1).name;
+        md5Name = md5File(1).name;
+        
+        %Get correct string in cmdout
+        %Format is: MD5 (filename) = checksum
+        md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
+        [status, cmdout] = system(md5command);
+        %Split into strings (cell array) and convert to char
+        localchecksum = char(strsplit(cmdout));
+        %Trim whitespace at end and put in lowercase
+        localchecksum = lower(strtrim(localchecksum(4,:)));
+                
+        %Get correct string in file 
+        %Format is: checksum filename (cell array type)
+        md5checksum = fileread(fullfile(localDataPath, md5Name));
+        %Separates into strings and converts to appropriate type
+        md5checksum = char(strsplit(md5checksum));
+        %Gets only checksum (not filename) and puts in lowercase
+        md5checksum = lower(md5checksum(1,:));
+        
+        if (~strcmp(localchecksum, md5checksum))
+            killcommand = sprintf('ssh root@192.168.7.2 "pkill frame"'); %Kills processes with "frame" in name
+            [status,~] = system(killcommand);
+
+            fprintf('\nRun number is #%d.\n', runCount);
+            fprintf('Local checksum is %s.\n', localchecksum);
+            fprintf('BBB checksum is %s.\n', md5checksum);
+            error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
+        end
+        
         [newFrames pgen fs_hz] = salsaLoad(fullfile(localDataPath,fileName), chipSet);
         frameTot = [frameTot newFrames];
         frameWindow = frameTot;
@@ -175,17 +265,16 @@ while (runCount <= runs) || (runs == -1)
         
         runCount = runCount + 1;
     end
-    
-    pause(1); %wait 1 second
+    pause(1)
 end
 
-fprintf('Done!\n')
+fprintf('\nDone!\n')
 end
 
 
 function stopbutton(hObject, eventdata)
-command = sprintf('ssh root@192.168.7.2 "pkill frame"'); %Kills processes with "frame" in name
-[status,~] = system(command);
+killcommand = sprintf('ssh root@192.168.7.2 "pkill frame"'); %Kills processes with "frame" in name
+[status,~] = system(killcommand);
 fprintf('Stopping...\n')
 
 eventdata.AffectedObject.Value = 1;
