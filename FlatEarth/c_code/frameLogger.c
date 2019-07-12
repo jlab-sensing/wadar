@@ -620,10 +620,28 @@ int main(int argc, char **argv)
 
         //copy datalog to host computer
         if (copyPath != NULL) {
+          //Create file labeled name.md5
+          char md5file[50];
+          sprintf(md5file, "%s.md5", nameBuffer);
+          char md5cmd[150];
+          //Create md5 on BBB
+          sprintf(md5cmd, "exec md5sum %s > %s", nameBuffer, md5file);
+          system(md5cmd);
+
+
+          //Send data to host
           char copyBuffer[150];
           sprintf(copyBuffer, "exec scp %s %s", nameBuffer, copyPath);
           printf("Copying data to host computer...\n");
           system(copyBuffer);
+
+          //Send md5 file to host
+          char md5copyBuffer[150];
+          sprintf(md5copyBuffer, "exec scp %s %s", md5file, copyPath);
+          printf("Copying md5 hash to host computer...\n");
+          system(md5copyBuffer);
+
+
         }
     }
 
