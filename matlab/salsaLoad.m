@@ -5,7 +5,7 @@
 % REQUIRED ARGS: 
 % fileName
 % chipSet
-function [frameTot pgen fs_hz] = salsaLoad(fileName, chipSet) 
+function [frameTot pgen fs_hz chipSet] = salsaLoad(fileName) 
 
 fprintf('Loading saved data from %s...\n', fileName)
 
@@ -30,19 +30,31 @@ dacStep = fread(fid,1,'int');
 radarSpecifier = fread(fid,1,'int'); % 2 for X2 (Ancho), 10 for X1-IPGO (Cayenne), 11 for X1-IPG1 (Chipotle)
 switch radarSpecifier
     case 2
+        chipSet = "X2";
         % The measured sampling rate is next
         samplesPerSecond = fread(fid,1,'float'); %float
         % The radarSpecifier-specific settings are next
         pgen = fread(fid,1,'int');
         offsetDistance = fread(fid,1,'float');
         sampleDelayToReference = fread(fid,1,'float');
-    otherwise 
+    
+    case 10 
+        chipSet = "X1-IPGO";
         % The measured sampling rate is next
         samplesPerSecond = fread(fid,1,'double'); %double
         % The radarSpecifier-specific settings are next
         pgen = fread(fid,1,'int');
         samplingRate = fread(fid,1,'int');
         clkDivider = fread(fid,1,'int');
+    case 11 
+        chipSet = "X1-IPG1";
+        % The measured sampling rate is next
+        samplesPerSecond = fread(fid,1,'double'); %double
+        % The radarSpecifier-specific settings are next
+        pgen = fread(fid,1,'int');
+        samplingRate = fread(fid,1,'int');
+        clkDivider = fread(fid,1,'int');
+        
 end
 
 % Next is the #samplers in a frame
@@ -70,7 +82,6 @@ if count ~= 0
     fprintf("FILE READ ERROR: %i data remains! Check that file format matches read code\n",count)
     return
 end
-
 % Calculate some useful radar parameters that can be returned if needed
 [fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz] = NoveldaChipParams(chipSet, pgen,'4mm');
 
