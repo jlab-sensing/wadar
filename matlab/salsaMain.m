@@ -13,7 +13,9 @@ function salsaMain(captureData, varargin)
 %% Process arguments
 close all
 
-radarType = 'default';
+if(captureData == true)
+    radarType = 'default';
+end
 fullDataPath = 'default'; %path from BBB's perspective (see Example 1)
 localDataPath = 'default'; %path from computer's perspective (no IP address included)
 
@@ -48,7 +50,7 @@ if (strcmp(fullDataPath, 'default'))
     error('No file name provided to load data from')
 end
 
-if (strcmp(radarType, 'default'))
+if (captureData == true && strcmp(radarType, 'default'))
     error('Please specify a valid radar type')
 end
 
@@ -57,7 +59,7 @@ captureName = input('Enter a name for the data file: ', 's');
 
 
 %% Specify parameters
-numTrials = 2000;
+numTrials = 12000;
 %runs = 3;  Removed to specify user input
 frameRate = 200; % frames per sec
 
@@ -67,6 +69,47 @@ while runs ~= -1 && runs < 1
     runs = input('Please enter -1 or an integer number greater than zero: ');
 end
 
+noiseRemoval = 0;
+if captureData == 0
+    subtract = lower(input('Do you have a noise file for spectral removal (Y/N)?: ', 's'));
+    while (~strcmp(subtract, 'y') && ~strcmp(subtract, 'n'))
+        subtract = lower(input('Please input ''Y'' or ''N'': ', 's'));
+    end
+    
+    %Put noise files in same place as where data is
+    if strcmp(subtract, 'y')
+        noiseRemoval = 1;
+        noiseName = input('Enter the name of the noise file(s): ', 's');
+        existingFiles = dir(localDataPath);
+        subtractpattern = strcat(noiseName, '[0-9]+');
+        noiseCount = 0;
+        noiseFFT  = [];
+        for index = 1:length(existingFiles)
+            condition1 = regexp(existingFiles(index).name, subtractpattern);
+            condition2 = isempty(regexp(existingFiles(index).name, 'md5')); %Avoids getting md5 files
+            condition = condition1 & condition2;
+            if condition
+                noiseCount = noiseCount + 1; %Number of noise files
+                noisefile = existingFiles(index).name;
+                
+                [noiseFrames, pgen, fs_hz, chipSet] = salsaLoad(fullfile(localDataPath,noisefile));
+                noiseFrameCount = size(noiseFrames, 2);
+                noiseFrame_bb = zeros(size(noiseFrames));
+                for i = 1:noiseFrameCount
+                    noiseFrame_bb(:,i) = NoveldaDDC(noiseFrames(:,i), chipSet, pgen, fs_hz);
+                end
+                noiseframesFFT = fft(noiseFrame_bb,noiseFrameCount,2);
+                noiseFFT(:,:,noiseCount) = noiseframesFFT; %Creates 3D matrix of noise captures
+            end
+        end
+        if noiseCount == 0
+            fprintf('No noise files found. Continuing...\n\n')
+            noiseRemoval = 0;
+        else
+            noiseFFT = mean(noiseFFT,3); %Gets mean of noise
+        end
+    end
+end
 %% Capture Data
 
 %TODO - make a function to generate and copy JSON file over to BBB
@@ -136,10 +179,12 @@ if captureData == 1
     [status, cmdout] = system(md5command);
     localchecksum = char(strsplit(cmdout));
     localchecksum = lower(strtrim(localchecksum(4,:)));
+    localchecksum = deblank(localchecksum);
     
     md5checksum = fileread(fullfile(localDataPath, md5Name));
     md5checksum = char(strsplit(md5checksum));
     md5checksum = lower(md5checksum(1,:));
+    md5checksum = deblank(localchecksum);
     
     %Avoid overwriting data file
     delete(fullfile(localDataPath, strcat(captureName, '.check1')));
@@ -175,17 +220,14 @@ if captureData == 1
     
 end
 
-% TODO: check validity of user directory
-% TODO: ssh into radar, run framelogger for short time, redirect output to
-% file (check for cayenne, ancho, chipotle)
 % TODO: make dft of 3 10-sec capture similar to 30-sec capture, compare
 
 %% Load and display Data
 frameTot = [];
 runCount = 1;
 
-myFig = figure;
-button = uicontrol('Parent',myFig,...
+genFig = figure;
+button = uicontrol('Parent',genFig,...
     'Style','togglebutton',...
     'String','STOP');
 button.HandleVisibility = 'off';
@@ -212,16 +254,19 @@ while (runCount <= runs) || (runs == -1)
         [status, cmdout] = system(md5command);
         %Split into strings (cell array) and convert to char
         localchecksum = char(strsplit(cmdout));
-        %Trim whitespace at end and put in lowercase
-        localchecksum = lower(strtrim(localchecksum(4,:)));
+        %Trim whitespace at end and put in lowercase and removes trailing
+        %blank sspace 
+        localchecksum = deblank(lower(strtrim(localchecksum(4,:))));
                 
         %Get correct string in file 
         %Format is: checksum filename (cell array type)
         md5checksum = fileread(fullfile(localDataPath, md5Name));
         %Separates into strings and converts to appropriate type
         md5checksum = char(strsplit(md5checksum));
-        %Gets only checksum (not filename) and puts in lowercase
-        md5checksum = lower(md5checksum(1,:));
+        %Gets only checksum (not filename) and puts in lowercase and
+        %removes trailing blank space
+        md5checksum = deblank(lower(md5checksum(1,:)));
+        
         
         if (~strcmp(localchecksum, md5checksum))
             killcommand = sprintf('ssh root@192.168.7.2 "pkill frame"'); %Kills processes with "frame" in name
@@ -233,7 +278,7 @@ while (runCount <= runs) || (runs == -1)
             error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
         end
         
-        [newFrames pgen fs_hz] = salsaLoad(fullfile(localDataPath,fileName), chipSet);
+        [newFrames pgen fs_hz chipSet] = salsaLoad(fullfile(localDataPath,fileName));
         frameTot = [frameTot newFrames];
         frameWindow = frameTot;
         %Getting only last 10 captures to avoid DDC and FFT slowdown,
@@ -252,7 +297,51 @@ while (runCount <= runs) || (runs == -1)
         end
         
         % FFT of signal for each bin
-        framesFFT = db(abs(fft(frameWindow_bb,frameCount,2)));
+        framesFFT = fft(frameWindow_bb,frameCount,2);
+        %Would like to use framesFFT for noiseRemoval, but matrix gets
+        %bigger, how do we fix this???
+        framesFFT = db(abs(framesFFT));
+        
+        %TODO: Put this after first figure plot
+        %TODO: Figure out how to open figs side by side
+        %TODO: Figure out where to put the plotting
+        if noiseRemoval
+            
+            %TODO: Get only last run, this needs to be fixed
+            newFrameCount = size(newFrames, 2);
+            newFrames_bb = zeros(size(newFrames));
+            for i = 1:newFrameCount
+                newFrames_bb(:,i) = NoveldaDDC(newFrames(:,i), chipSet, pgen, fs_hz);
+            end
+            onFramesFFT = fft(newFrames_bb, newFrameCount,2);
+            
+            
+            PSDon = onFramesFFT.*conj(onFramesFFT); %PSD of Signal + Noise
+            PSDoff = noiseFFT.*conj(noiseFFT);
+            PSD = PSDon - 1.*PSDoff;
+            PSD(PSD<0) = 0; %No negative values
+            
+            firstBin = 1;
+            lastBin = 512;
+            
+            if runCount == 1
+                PSDFig = figure;
+            end
+            figure(PSDFig) %Switch to PSD figure
+            clf
+            hold on
+            plot(PSDon(firstBin:lastBin,4800)', '-b')
+            plot(PSDoff(firstBin:lastBin, 4800)', ':k');
+            plot(PSD(firstBin:lastBin, 4800)', '-r') %Gets PSD only at 80 Hz.
+            legend('Signal + Noise', 'Noise', 'Signal (Spectral Subtraction)')
+            xlim([firstBin lastBin])
+            str = strcat('PSD at 80 Hz Bin, Run #', num2str(runCount));
+            title(str)
+            hold off
+            figure(genFig) %Switch back to general figure
+        end
+        
+        
         
         if button.Value ~= 1
             if runCount ~= 1
