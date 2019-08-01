@@ -841,6 +841,46 @@ clutter removal to improve the signal strength
 ~\cite{uw~bRange}~\cite{svdClutter}. These techniques may be worth
 investigating.
 
+\section*{Signal processing}
+The output of the X1 and X2 radars for a single frame is N doubles,
+where N is the number of samplers that the radar contains. These data are
+modulated RF samples, centered around the radar carrier center frequency
+$f_c$.
+
+The unmodulated data are centered around zero and called
+\emph{baseband} samples. One common way of modulating signals is to
+vary the amplitude of phase-shifted sinusoids that are oscillating at
+the carrier frequency. If the phase difference between two sinusoids
+is 90 degrees ($\pi/2$ radians), (e.g. the sine and cosine wave), then
+these two signals are said to be in quadrature. Conventionally, cosine
+is considered to be \emph{in phase}, or I, and sine is
+\emph{quadrature phase}, or Q. I represents the amplitude of the
+in-phase component of a baseband singal, and Q is the amplitude of the
+quadrature phase component.
+
+\subsection*{Digital downconversion}
+Digital downconversion is the process of converting received RF
+singals back down to baseband. It has three steps:
+
+\begin{enumerate}
+\item frequency shifting the RF signal
+\item filtering the shifted signal
+\item (optionally) downsampling the data 
+
+The frequency shifting is done by mixing the RF signal with local
+oscillator (LO) signals in quadrature, i.e. multiplying the the
+samples by sine and cosine oscillating at the carrier
+frequency. Conventionally, this turns the real-valued RF sample into a
+complex number with the real-part being the in-phase I component and
+the complex part being the quadtarture-phase Q component:
+
+\begin{equation*}
+b = s(cos(2\pi f_c t)+ jsin(2 \pi f_c t)) 
+\end{equation*}
+
+\end{enumerate}
+
+
 \section*{Soil equations}
 Time of flight, $\tau$, meaures the \emph{apparent dielectric
   constant} $K_a$, which is a function of
