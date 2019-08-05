@@ -11,24 +11,28 @@
 
 function salsaMain(captureData, varargin)
 %% Process arguments
-close all
-
+%close all
+numTrials = 20000;
+frameRate = 200; % frames per sec
+% TODO - (optional) - since all varargin arguments are required, the function could take
+% in 3 arguments instead of using 1 required arg and varargin. But this
+% format allows for optional inputs to be added later
 if(captureData == true)
     radarType = 'default';
 end
 fullDataPath = 'default'; %path from BBB's perspective (see Example 1)
 localDataPath = 'default'; %path from computer's perspective (no IP address included)
-
-% TODO - (optional) - since all varargin arguments are required, the function could take
-% in 3 arguments instead of using 1 required arg and varargin. But this
-% format allows for optional inputs to be added later
 for i = 1:length(varargin)
     arg = varargin{i};
     % TODO : (optional) - having both radarType AND chipSet is a bit redundant.
     % If consolidated to just chipSet, change C code to expect args matching form of chipSet
+    startRange = 300;
+    endRange = 512;
     if strcmp(lower(arg),'ancho')
         radarType = 'ancho';
         chipSet = "X2";
+        startRange = 110;
+        endRange = 240;
     elseif strcmp(lower(arg), 'cayenne')
         radarType = 'cayenne';
         chipSet = "X1-IPG0";
@@ -44,6 +48,7 @@ for i = 1:length(varargin)
     end
 end
 
+%% Specify parameters
 % Check for good inputs
 % TODO : (optional) check to make sure the specified path is valid
 if (strcmp(fullDataPath, 'default'))
@@ -58,10 +63,6 @@ end
 captureName = input('Enter a name for the data file: ', 's');
 
 
-%% Specify parameters
-numTrials = 12000;
-%runs = 3;  Removed to specify user input
-frameRate = 200; % frames per sec
 
 runs = input('Enter number of desired runs (-1 for indefinite): ');
 runs = floor(runs);
@@ -157,6 +158,12 @@ if captureData == 1
     else
         fprintf('Connection successful!\n')
     end
+    
+    % Kill any zombie captures
+    killcommand = sprintf('ssh root@192.168.7.2 "pkill frame"'); %Kills processes with "frame" in name
+    [status,~] = system(killcommand);
+    fprintf('Status...\n')
+    status
     
     %Framelogger check: 1 second capture
     %Name is captureName.check1
@@ -278,7 +285,7 @@ while (runCount <= runs) || (runs == -1)
             error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
         end
         
-        [newFrames pgen fs_hz chipSet] = salsaLoad(fullfile(localDataPath,fileName));
+        [newFrames pgen fs_hz chipSet timeDeltas] = salsaLoad(fullfile(localDataPath,fileName));
         frameTot = [frameTot newFrames];
         frameWindow = frameTot;
         %Getting only last 10 captures to avoid DDC and FFT slowdown,
@@ -347,7 +354,8 @@ while (runCount <= runs) || (runs == -1)
             if runCount ~= 1
                 clf
             end
-            salsaPlot(frameWindow_bb, framesFFT, runCount);
+            
+            salsaPlot(frameWindow_bb, framesFFT, runCount, startRange, endRange);
         else
             break;
         end
