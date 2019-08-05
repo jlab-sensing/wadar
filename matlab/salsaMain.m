@@ -311,7 +311,7 @@ while (runCount <= runs) || (runs == -1)
         
         %TODO: Put this after first figure plot
         %TODO: Figure out how to open figs side by side
-        %TODO: Figure out where to put the plotting
+        %TODO: Move plotting into Salsa Plot
         if noiseRemoval
             
             %TODO: Get only last run, this needs to be fixed
@@ -337,9 +337,10 @@ while (runCount <= runs) || (runs == -1)
             figure(PSDFig) %Switch to PSD figure
             clf
             hold on
-            plot(PSDon(firstBin:lastBin,4800)', '-b')
-            plot(PSDoff(firstBin:lastBin, 4800)', ':k');
-            plot(PSD(firstBin:lastBin, 4800)', '-r') %Gets PSD only at 80 Hz.
+            fbin = 4800;
+            plot(PSDon(firstBin:lastBin,fbin)', '-b')
+            plot(PSDoff(firstBin:lastBin, fbin)', ':k');
+            plot(PSD(firstBin:lastBin, fbin)', '-r') %Gets PSD only at 80 Hz.
             legend('Signal + Noise', 'Noise', 'Signal (Spectral Subtraction)')
             xlim([firstBin lastBin])
             str = strcat('PSD at 80 Hz Bin, Run #', num2str(runCount));
