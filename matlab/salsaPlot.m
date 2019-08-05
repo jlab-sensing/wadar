@@ -1,4 +1,4 @@
-function salsaPlot(frameTot_bb, framesFFT, runCount)
+function salsaPlot(frameTot_bb, framesFFT, runCount, startRange, endRange)
 
 numFrames = size(frameTot_bb, 2); 
 
@@ -32,10 +32,8 @@ xlabel('Frequency');
 % Figure 4: FFT plot for bins ranging from firstBin to lastBin 
 % TODO: Add ancho vs cayenne 
 subplot(2,2,4);
-firstBin = 110;
-lastBin = 240; 
-plot(framesFFT(firstBin:lastBin,:)') 
-title(sprintf('Radar response, bins %i-%i', firstBin, lastBin))
+plot(framesFFT(startRange:endRange,:)') 
+title(sprintf('Radar response, bins %i-%i', startRange, endRange))
 ylabel('Magnitude (dB)')
 xlabel('Frequency');
 
