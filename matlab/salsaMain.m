@@ -11,7 +11,6 @@
 
 function salsaMain(captureData, varargin)
 %% Process arguments
-close all
 
 if(captureData == true)
     radarType = 'default';
@@ -56,7 +55,10 @@ end
 
 % user specifies a name for the captures
 captureName = input('Enter a name for the data file: ', 's');
-
+%Avoids going over in buffers
+while length(captureName) > 32
+    captureName = input('Please enter a shorter name (max 32 characters): ', 's');
+end
 
 %% Specify parameters
 numTrials = 12000;
@@ -204,14 +206,13 @@ if captureData == 1
     
     % Start the capture
     if runs == -1
-        %Hardcoding 1000 runs (~160 minutes)
+        %Hardcoding 1000 runs
         options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 1000 -f %d -t %s -c %s', ...
             captureName, numTrials, frameRate, radarType, fullDataPath);
     else
         options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s', ...
             captureName, numTrials, runs, frameRate, radarType, fullDataPath);
     end
-    %textoptions = ' 2>&1 ~/log.txt';
     command = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', options);
     % The '&' is necessary to include this to allow MATLAB to continue execution before the C program ends
     
@@ -220,13 +221,13 @@ if captureData == 1
     
 end
 
-% TODO: make dft of 3 10-sec capture similar to 30-sec capture, compare
-
 %% Load and display Data
 frameTot = [];
 runCount = 1;
 
 genFig = figure;
+pos1 = get(gcf,'Position');
+set(gcf,'Position', pos1 - [pos1(3)/2,0,0,0]);
 button = uicontrol('Parent',genFig,...
     'Style','togglebutton',...
     'String','STOP');
@@ -301,10 +302,18 @@ while (runCount <= runs) || (runs == -1)
         %Would like to use framesFFT for noiseRemoval, but matrix gets
         %bigger, how do we fix this???
         framesFFT = db(abs(framesFFT));
+               
+        if button.Value ~= 1
+            if runCount ~= 1
+                clf
+            end
+            salsaPlot(frameWindow_bb, framesFFT, runCount);
+        else
+            break;
+        end
         
-        %TODO: Put this after first figure plot
-        %TODO: Figure out how to open figs side by side
-        %TODO: Figure out where to put the plotting
+        %TODO: Modify salsaPlot to take in BOTH figures and plot
+        %appropriately
         if noiseRemoval
             
             %TODO: Get only last run, this needs to be fixed
@@ -326,6 +335,8 @@ while (runCount <= runs) || (runs == -1)
             
             if runCount == 1
                 PSDFig = figure;
+                pos2 = get(gcf,'Position');
+                set(gcf,'Position', pos2 + [pos1(3)/2,0,0,0]);
             end
             figure(PSDFig) %Switch to PSD figure
             clf
@@ -339,17 +350,6 @@ while (runCount <= runs) || (runs == -1)
             title(str)
             hold off
             figure(genFig) %Switch back to general figure
-        end
-        
-        
-        
-        if button.Value ~= 1
-            if runCount ~= 1
-                clf
-            end
-            salsaPlot(frameWindow_bb, framesFFT, runCount);
-        else
-            break;
         end
         
         runCount = runCount + 1;
