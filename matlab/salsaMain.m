@@ -11,7 +11,12 @@
 
 function salsaMain(captureData, varargin)
 %% Process arguments
-
+%close all
+numTrials = 20000;
+frameRate = 200; % frames per sec
+% TODO - (optional) - since all varargin arguments are required, the function could take
+% in 3 arguments instead of using 1 required arg and varargin. But this
+% format allows for optional inputs to be added later
 if(captureData == true)
     radarType = 'default';
 end
@@ -25,9 +30,13 @@ for i = 1:length(varargin)
     arg = varargin{i};
     % TODO : (optional) - having both radarType AND chipSet is a bit redundant.
     % If consolidated to just chipSet, change C code to expect args matching form of chipSet
+    startRange = 300;
+    endRange = 512;
     if strcmp(lower(arg),'ancho')
         radarType = 'ancho';
         chipSet = "X2";
+        startRange = 110;
+        endRange = 240;
     elseif strcmp(lower(arg), 'cayenne')
         radarType = 'cayenne';
         chipSet = "X1-IPG0";
@@ -42,6 +51,7 @@ for i = 1:length(varargin)
         localDataPath = fullDataPath(k:end);
     end
 end
+
 
 % Check for good inputs
 % TODO : (optional) check to make sure the specified path is valid
@@ -60,10 +70,7 @@ while length(captureName) > 32
     captureName = input('Please enter a shorter name (max 32 characters): ', 's');
 end
 
-%% Specify parameters
-numTrials = 12000;
-%runs = 3;  Removed to specify user input
-frameRate = 200; % frames per sec
+
 
 runs = input('Enter number of desired runs (-1 for indefinite): ');
 runs = floor(runs);
@@ -206,13 +213,14 @@ if captureData == 1
     
     % Start the capture
     if runs == -1
-        %Hardcoding 1000 runs
+        %Hardcoding 1000 runs (~160 minutes)
         options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 1000 -f %d -t %s -c %s', ...
             captureName, numTrials, frameRate, radarType, fullDataPath);
     else
         options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s', ...
             captureName, numTrials, runs, frameRate, radarType, fullDataPath);
     end
+
     command = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', options);
     % The '&' is necessary to include this to allow MATLAB to continue execution before the C program ends
     
@@ -220,6 +228,8 @@ if captureData == 1
     
     
 end
+
+% TODO: make dft of 3 10-sec capture similar to 30-sec capture, compare
 
 %% Load and display Data
 frameTot = [];
@@ -279,7 +289,7 @@ while (runCount <= runs) || (runs == -1)
             error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
         end
         
-        [newFrames pgen fs_hz chipSet] = salsaLoad(fullfile(localDataPath,fileName));
+        [newFrames pgen fs_hz chipSet timeDeltas] = salsaLoad(fullfile(localDataPath,fileName));
         frameTot = [frameTot newFrames];
         frameWindow = frameTot;
         %Getting only last 10 captures to avoid DDC and FFT slowdown,
@@ -312,8 +322,9 @@ while (runCount <= runs) || (runs == -1)
             break;
         end
         
-        %TODO: Modify salsaPlot to take in BOTH figures and plot
-        %appropriately
+        %TODO: Put this after first figure plot
+        %TODO: Figure out how to open figs side by side
+        %TODO: Move plotting into Salsa Plot
         if noiseRemoval
             
             %TODO: Get only last run, this needs to be fixed
@@ -341,9 +352,10 @@ while (runCount <= runs) || (runs == -1)
             figure(PSDFig) %Switch to PSD figure
             clf
             hold on
-            plot(PSDon(firstBin:lastBin,4800)', '-b')
-            plot(PSDoff(firstBin:lastBin, 4800)', ':k');
-            plot(PSD(firstBin:lastBin, 4800)', '-r') %Gets PSD only at 80 Hz.
+            fbin = 4800;
+            plot(PSDon(firstBin:lastBin,fbin)', '-b')
+            plot(PSDoff(firstBin:lastBin, fbin)', ':k');
+            plot(PSD(firstBin:lastBin, fbin)', '-r') %Gets PSD only at 80 Hz.
             legend('Signal + Noise', 'Noise', 'Signal (Spectral Subtraction)')
             xlim([firstBin lastBin])
             str = strcat('PSD at 80 Hz Bin, Run #', num2str(runCount));

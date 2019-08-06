@@ -5,7 +5,7 @@
 % REQUIRED ARGS: 
 % fileName
 % chipSet
-function [frameTot pgen fs_hz chipSet] = salsaLoad(fileName) 
+function [frameTot pgen fs_hz chipSet times] = salsaLoad(fileName) 
 
 fprintf('Loading saved data from %s...\n', fileName)
 
