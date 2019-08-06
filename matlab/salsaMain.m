@@ -22,6 +22,10 @@ if(captureData == true)
 end
 fullDataPath = 'default'; %path from BBB's perspective (see Example 1)
 localDataPath = 'default'; %path from computer's perspective (no IP address included)
+
+% TODO - (optional) - since all varargin arguments are required, the function could take
+% in 3 arguments instead of using 1 required arg and varargin. But this
+% format allows for optional inputs to be added later
 for i = 1:length(varargin)
     arg = varargin{i};
     % TODO : (optional) - having both radarType AND chipSet is a bit redundant.
@@ -48,7 +52,7 @@ for i = 1:length(varargin)
     end
 end
 
-%% Specify parameters
+
 % Check for good inputs
 % TODO : (optional) check to make sure the specified path is valid
 if (strcmp(fullDataPath, 'default'))
@@ -61,6 +65,10 @@ end
 
 % user specifies a name for the captures
 captureName = input('Enter a name for the data file: ', 's');
+%Avoids going over in buffers
+while length(captureName) > 32
+    captureName = input('Please enter a shorter name (max 32 characters): ', 's');
+end
 
 
 
@@ -159,12 +167,6 @@ if captureData == 1
         fprintf('Connection successful!\n')
     end
     
-    % Kill any zombie captures
-    killcommand = sprintf('ssh root@192.168.7.2 "pkill frame"'); %Kills processes with "frame" in name
-    [status,~] = system(killcommand);
-    fprintf('Status...\n')
-    status
-    
     %Framelogger check: 1 second capture
     %Name is captureName.check1
     checkoptions = sprintf('-s ../data/captureSettings -l ../data/%s.check -n %d -r 1 -f %d -t %s -c %s', ...
@@ -218,7 +220,7 @@ if captureData == 1
         options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s', ...
             captureName, numTrials, runs, frameRate, radarType, fullDataPath);
     end
-    %textoptions = ' 2>&1 ~/log.txt';
+
     command = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', options);
     % The '&' is necessary to include this to allow MATLAB to continue execution before the C program ends
     
@@ -234,6 +236,8 @@ frameTot = [];
 runCount = 1;
 
 genFig = figure;
+pos1 = get(gcf,'Position');
+set(gcf,'Position', pos1 - [pos1(3)/2,0,0,0]);
 button = uicontrol('Parent',genFig,...
     'Style','togglebutton',...
     'String','STOP');
@@ -308,6 +312,15 @@ while (runCount <= runs) || (runs == -1)
         %Would like to use framesFFT for noiseRemoval, but matrix gets
         %bigger, how do we fix this???
         framesFFT = db(abs(framesFFT));
+               
+        if button.Value ~= 1
+            if runCount ~= 1
+                clf
+            end
+            salsaPlot(frameWindow_bb, framesFFT, runCount);
+        else
+            break;
+        end
         
         %TODO: Put this after first figure plot
         %TODO: Figure out how to open figs side by side
@@ -333,6 +346,8 @@ while (runCount <= runs) || (runs == -1)
             
             if runCount == 1
                 PSDFig = figure;
+                pos2 = get(gcf,'Position');
+                set(gcf,'Position', pos2 + [pos1(3)/2,0,0,0]);
             end
             figure(PSDFig) %Switch to PSD figure
             clf
@@ -347,18 +362,6 @@ while (runCount <= runs) || (runs == -1)
             title(str)
             hold off
             figure(genFig) %Switch back to general figure
-        end
-        
-        
-        
-        if button.Value ~= 1
-            if runCount ~= 1
-                clf
-            end
-            
-            salsaPlot(frameWindow_bb, framesFFT, runCount, startRange, endRange);
-        else
-            break;
         end
         
         runCount = runCount + 1;
