@@ -171,7 +171,7 @@ if captureData == 1
     %Name is captureName.check1
     checkoptions = sprintf('-s ../data/captureSettings -l ../data/%s.check -n %d -r 1 -f %d -t %s -c %s', ...
         captureName, frameRate, frameRate, radarType, fullDataPath);
-    checkcommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', checkoptions);
+    checkcommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', checkoptions);
     [status,~] = system(checkcommand);
     fprintf('\nPlease wait. Verifying framelogger captures...\n');
     pause(5); %5 seconds to transfer files
@@ -302,9 +302,13 @@ while (runCount <= runs) || (runs == -1)
         
         % Baseband Conversion
         frameCount = size(frameWindow, 2);
+        filtered = size(frameWindow, 2);
+        bg = zeros(size(frameWindow(:,1)));
         frameWindow_bb = zeros(size(frameWindow));
         for i = 1:frameCount
-            frameWindow_bb(:,i) = NoveldaDDC(frameWindow(:,i), chipSet, pgen, fs_hz);
+            frameWindow_bb(:,i) = NoveldaDDC(frameWindow(:,i)-bg, chipSet, pgen, fs_hz);
+            alpha = 0.5;
+            %bg = alpha*frameWindow(:,i) + (1-alpha)*bg;
         end
         
         % FFT of signal for each bin
@@ -317,7 +321,7 @@ while (runCount <= runs) || (runs == -1)
             if runCount ~= 1
                 clf
             end
-            salsaPlot(frameWindow_bb, framesFFT, runCount);
+            salsaPlot(frameWindow_bb, framesFFT, runCount, startRange, endRange);
         else
             break;
         end
