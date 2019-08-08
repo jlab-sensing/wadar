@@ -1,22 +1,40 @@
 ///GLOBALS///
-//timer variable
-elapsedMicros count;
-//RF state variable
+
+//timer variables
+elapsedMicros count; // frequency timing
+elapsedMicros cycles; // toggle timing
+
+const int period =  6250; // half period of tag in microseconds
+const int tOn = (30000000); // tag on duration
+const int tOff = (30000000); // tag off duration
+const int tagPin = 3; // arduino pin supplying power to RF switch
+
+//RF state variable - use for debugging
 int RF = 0;
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(3, OUTPUT); //V_ctl
+  pinMode(tagPin, OUTPUT); //V_ctl
   //initialize RF state
-  digitalWrite(3, LOW);
+  digitalWrite(tagPin, LOW);
+}
+
+void toggleRF() {
+  // Toggle RF between On and Off at 80.0 Hz
+  if (cycles >= period) {
+    digitalWrite(tagPin, (RF) ? HIGH : LOW);
+    RF = !RF;
+    //    Serial.println(RF); //debugging
+    cycles = 0; //restart fq timer after every half period
+  }
 }
 
 void loop() {
-  // Toggle RF between On and Off at 93.75 Hz
-  if (count >= 6250) {
-    digitalWrite(3, (RF) ? HIGH : LOW);
-    RF = !RF;
-    //Serial.println(RF);
-    count = 0;
+  if (count <= tOn) {
+    toggleRF();
+  } else if (count <= (tOn + tOff)) {
+    digitalWrite(tagPin, LOW); //turn tag off
+  } else {
+    count = 0; //restart toggle after one on/off cycle
   }
 }
