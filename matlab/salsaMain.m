@@ -11,8 +11,12 @@
 
 function salsaMain(captureData, varargin)
 %% Process arguments
-close all
-
+%close all
+numTrials = 20000;
+frameRate = 200; % frames per sec
+% TODO - (optional) - since all varargin arguments are required, the function could take
+% in 3 arguments instead of using 1 required arg and varargin. But this
+% format allows for optional inputs to be added later
 if(captureData == true)
     radarType = 'default';
 end
@@ -26,9 +30,13 @@ for i = 1:length(varargin)
     arg = varargin{i};
     % TODO : (optional) - having both radarType AND chipSet is a bit redundant.
     % If consolidated to just chipSet, change C code to expect args matching form of chipSet
+    startRange = 300;
+    endRange = 512;
     if strcmp(lower(arg),'ancho')
         radarType = 'ancho';
         chipSet = "X2";
+        startRange = 110;
+        endRange = 240;
     elseif strcmp(lower(arg), 'cayenne')
         radarType = 'cayenne';
         chipSet = "X1-IPG0";
@@ -44,6 +52,7 @@ for i = 1:length(varargin)
     end
 end
 
+
 % Check for good inputs
 % TODO : (optional) check to make sure the specified path is valid
 if (strcmp(fullDataPath, 'default'))
@@ -56,12 +65,12 @@ end
 
 % user specifies a name for the captures
 captureName = input('Enter a name for the data file: ', 's');
+%Avoids going over in buffers
+while length(captureName) > 32
+    captureName = input('Please enter a shorter name (max 32 characters): ', 's');
+end
 
 
-%% Specify parameters
-numTrials = 12000;
-%runs = 3;  Removed to specify user input
-frameRate = 200; % frames per sec
 
 runs = input('Enter number of desired runs (-1 for indefinite): ');
 runs = floor(runs);
@@ -162,7 +171,7 @@ if captureData == 1
     %Name is captureName.check1
     checkoptions = sprintf('-s ../data/captureSettings -l ../data/%s.check -n %d -r 1 -f %d -t %s -c %s', ...
         captureName, frameRate, frameRate, radarType, fullDataPath);
-    checkcommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', checkoptions);
+    checkcommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', checkoptions);
     [status,~] = system(checkcommand);
     fprintf('\nPlease wait. Verifying framelogger captures...\n');
     pause(5); %5 seconds to transfer files
@@ -211,7 +220,7 @@ if captureData == 1
         options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s', ...
             captureName, numTrials, runs, frameRate, radarType, fullDataPath);
     end
-    %textoptions = ' 2>&1 ~/log.txt';
+
     command = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', options);
     % The '&' is necessary to include this to allow MATLAB to continue execution before the C program ends
     
@@ -227,6 +236,8 @@ frameTot = [];
 runCount = 1;
 
 genFig = figure;
+pos1 = get(gcf,'Position');
+set(gcf,'Position', pos1 - [pos1(3)/2,0,0,0]);
 button = uicontrol('Parent',genFig,...
     'Style','togglebutton',...
     'String','STOP');
@@ -278,7 +289,7 @@ while (runCount <= runs) || (runs == -1)
             error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
         end
         
-        [newFrames pgen fs_hz chipSet] = salsaLoad(fullfile(localDataPath,fileName));
+        [newFrames pgen fs_hz chipSet timeDeltas] = salsaLoad(fullfile(localDataPath,fileName));
         frameTot = [frameTot newFrames];
         frameWindow = frameTot;
         %Getting only last 10 captures to avoid DDC and FFT slowdown,
@@ -291,9 +302,13 @@ while (runCount <= runs) || (runs == -1)
         
         % Baseband Conversion
         frameCount = size(frameWindow, 2);
+        filtered = size(frameWindow, 2);
+        bg = zeros(size(frameWindow(:,1)));
         frameWindow_bb = zeros(size(frameWindow));
         for i = 1:frameCount
-            frameWindow_bb(:,i) = NoveldaDDC(frameWindow(:,i), chipSet, pgen, fs_hz);
+            frameWindow_bb(:,i) = NoveldaDDC(frameWindow(:,i)-bg, chipSet, pgen, fs_hz);
+            alpha = 0.5;
+            %bg = alpha*frameWindow(:,i) + (1-alpha)*bg;
         end
         
         % FFT of signal for each bin
@@ -301,10 +316,19 @@ while (runCount <= runs) || (runs == -1)
         %Would like to use framesFFT for noiseRemoval, but matrix gets
         %bigger, how do we fix this???
         framesFFT = db(abs(framesFFT));
+               
+        if button.Value ~= 1
+            if runCount ~= 1
+                clf
+            end
+            salsaPlot(frameWindow_bb, framesFFT, runCount, startRange, endRange);
+        else
+            break;
+        end
         
         %TODO: Put this after first figure plot
         %TODO: Figure out how to open figs side by side
-        %TODO: Figure out where to put the plotting
+        %TODO: Move plotting into Salsa Plot
         if noiseRemoval
             
             %TODO: Get only last run, this needs to be fixed
@@ -326,30 +350,22 @@ while (runCount <= runs) || (runs == -1)
             
             if runCount == 1
                 PSDFig = figure;
+                pos2 = get(gcf,'Position');
+                set(gcf,'Position', pos2 + [pos1(3)/2,0,0,0]);
             end
             figure(PSDFig) %Switch to PSD figure
             clf
             hold on
-            plot(PSDon(firstBin:lastBin,4800)', '-b')
-            plot(PSDoff(firstBin:lastBin, 4800)', ':k');
-            plot(PSD(firstBin:lastBin, 4800)', '-r') %Gets PSD only at 80 Hz.
+            fbin = 4800;
+            plot(PSDon(firstBin:lastBin,fbin)', '-b')
+            plot(PSDoff(firstBin:lastBin, fbin)', ':k');
+            plot(PSD(firstBin:lastBin, fbin)', '-r') %Gets PSD only at 80 Hz.
             legend('Signal + Noise', 'Noise', 'Signal (Spectral Subtraction)')
             xlim([firstBin lastBin])
             str = strcat('PSD at 80 Hz Bin, Run #', num2str(runCount));
             title(str)
             hold off
             figure(genFig) %Switch back to general figure
-        end
-        
-        
-        
-        if button.Value ~= 1
-            if runCount ~= 1
-                clf
-            end
-            salsaPlot(frameWindow_bb, framesFFT, runCount);
-        else
-            break;
         end
         
         runCount = runCount + 1;
