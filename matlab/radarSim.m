@@ -53,7 +53,7 @@ vnaTXPow = 0; % dBm
 for i = 1:500 
     cpx(i) = complex(sXY(i,4),sXY(i,5));
 end
-magS41 = db(abs(cpx));
+magS41 = db(abs(cpx)); % TODO: should this be PSD instead?
 
 % TODO: y-axis units?
 figure(); plot(f,magS41); title('S21 (above to below ground'); ylim([-100,10]); grid on
@@ -63,10 +63,15 @@ figure(); plot(f,magS41); title('S21 (above to below ground'); ylim([-100,10]); 
 
 % TODO: subtract VNA S21 from the periodogram
 % - reduce periodogram frequency range to 300Mhz-8ghz
+truncRadarFreq = freq(4:103);
+truncRadarMag = 10*log10(psdx(4:103));
 % - undersample VNA S21 datapoints so it has same length as truncated
 % periodogram
-% - subtract VNA S21*2 from periodogram?
-% - apply rxAmpGain
+truncVNAFreq = f(1:5:end);
+truncVNAMag = magS41(1:5:end);
+% - subtract VNA S21*2 from periodogram, apply rxAmpGain
+roundTrip = (truncRadarMag + 2*truncVNAMag) + 23; %TODO: is this right?
+figure(); plot(truncRadarFreq,roundTrip); grid on; title("received radar signal?")
 % - figure out the deal with sensitivity 
 % - figure out the deal with PRF and integration 
 % - add "tag toggling" 
