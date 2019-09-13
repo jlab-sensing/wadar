@@ -24,6 +24,20 @@ pulseGenFMax = 4065; %MHz
 %  our transmitter output power will be x dB
 txPower = -14; %dBm?
 PRF = 48; %MHz.
+% TODO: does the NVA620x note apply to the NVA100 also?
+% NVA620x use coherent integration to achieve processing gain and
+% the level of processing gain increase with higher integration. 
+% Increased integration can be achieved by increasing the number of 
+% pulses per step, by programming the PulsesPerStep con guration 
+% register, or by increasing the number of iterations, by programming
+% the Iterations con guration register. The total integration is the
+% product of these two values. The amount of processing gain is 
+% approximately doubled with twice the integration, resulting in a 
+% Signal-to-Noise Ratio (SNR) enhancement of 3 dB.
+% The number of pulses to read for an individual DAC step value.  
+% PulsesPerStep number of pulses are sampled and integrated
+pulsesPerStep = 8; 
+iterations = 16; % The total number of sweeps to execute between the DAC extremes
 % - our transmitting antenna gain will be x dB
 txAntGainMin = 2; %dBi
 txAntGainMax = 8; %dBi
@@ -83,6 +97,8 @@ rxAntGainMax = 8; %dBi
 rxAmpGain = 23; % dBm...but check that default setting is 6, not 5!
 % sensitivity in what sense? Integrated across the whole spectrum, or
 % instantaneously for any bin?
+% Also, Receiver sensitivity at 10 dB SNR. Radar Settings were: 
+% DACMin = 4014, DACMax = 4178, PulsesPerStep = 100, Iterations = 10.
 rsSensitivity = -95; % dBm
 
 % NOTE: HSC (high speed comparator) compares the output signal from the amplfier 
