@@ -29,16 +29,22 @@ void loop() {
     while (strlen(samples) < 5) {
       samples = get_measurement();  
     }
-    Serial.print("samples(EC/RD/ST): ");
+    Serial.print("samples(ADDR/RAW/TMP/EC): ");
     Serial.println(samples);
+    //sdi_serial_connection.sdi_cmd("1A0!");// change address from 0 to 1
   }
 }
  
 char* get_measurement(){
     // function by Joran Beasley: https://github.com/joranbeasley/SDISerial/blob/master/examples/SDISerialExample/SDISerialExample.ino
-    char* service_request = sdi_serial_connection.sdi_query("?M!", sensorDelay);
+    char* service_request = sdi_serial_connection.sdi_query("1M!", sensorDelay);
     //you can use the time returned above to wait for the service_request_complete
     char* service_request_complete = sdi_serial_connection.wait_for_response(sensorDelay);
     // 1 second potential wait, but response is returned as soon as it's available
-    return sdi_serial_connection.sdi_query("?D0!", sensorDelay);
+    Serial.print("samples(ADDR/RAW/TMP/EC): ");
+    Serial.println(sdi_serial_connection.sdi_query("1D0!", sensorDelay));
+    sdi_serial_connection.sdi_query("0M!", sensorDelay);
+    //you can use the time returned above to wait for the service_request_complete
+    sdi_serial_connection.wait_for_response(sensorDelay);
+    return(sdi_serial_connection.sdi_query("0D0!", sensorDelay));
 }

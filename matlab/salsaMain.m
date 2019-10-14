@@ -260,20 +260,14 @@ while (runCount <= runs) || (runs == -1)
         md5Name = md5File(1).name;
         
         %Get correct string in cmdout
-        %temporarily add alias for linux 
-        aliascommand = "alias md5='md5sum'";
-        system(aliascommand);
         %Format is: MD5 (filename) = checksum
-        md5command = sprintf('md5sum %s', fullfile(localDataPath, fileName));
+        md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
         [status, cmdout] = system(md5command);
-        %Split into strings (cell array)
-        localchecksum = strsplit(cmdout);
-        %find longest string in cell array and convert to char
+        %Split into strings (cell array) and convert to char
+        localchecksum = char(strsplit(cmdout));
         %Trim whitespace at end and put in lowercase and removes trailing
         %blank sspace 
-        stringLengths = cellfun('length', cellstr(localchecksum)); 
-        longestString = char(localchecksum(stringLengths==max(stringLengths)));
-        localchecksum = deblank(lower(strtrim(longestString)));
+        localchecksum = deblank(lower(strtrim(localchecksum(4,:))));
                 
         %Get correct string in file 
         %Format is: checksum filename (cell array type)
@@ -318,16 +312,16 @@ while (runCount <= runs) || (runs == -1)
         end
         
         % FFT of signal for each bin
-        framesFFT = fft(frameWindow_bb,frameCount,2);
+        %framesFFT = fft(frameWindow_bb(:,1:numTrials),numTrials,2);
         %Would like to use framesFFT for noiseRemoval, but matrix gets
         %bigger, how do we fix this???
-        framesFFT = db(abs(framesFFT));
+        %framesFFT = db(abs(framesFFT));
                
         if button.Value ~= 1
             if runCount ~= 1
                 clf
             end
-            salsaPlot(frameWindow_bb, framesFFT, runCount, startRange, endRange);
+            %salsaPlot(frameWindow_bb, framesFFT, runCount, startRange, endRange);
         else
             break;
         end
