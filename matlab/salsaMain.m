@@ -251,6 +251,9 @@ while (runCount <= runs) || (runs == -1)
     end
     %this will detect when a capture named captureName followed by runCount appears
     captureFile = dir(fullfile(localDataPath, strcat(captureName, string(runCount))));
+    if ~captureData && isempty(captureFile)
+        error(sprintf('File %s not found\n', strcat(captureName, string(runCount))));
+    end
     md5File = dir(fullfile(localDataPath, strcat(captureName, string(runCount), '.md5')));
     
     if length(md5File) == 1 && length(captureFile) == 1
@@ -260,15 +263,20 @@ while (runCount <= runs) || (runs == -1)
         md5Name = md5File(1).name;
         
         %Get correct string in cmdout
+        %temporarily add alias for linux 
+        aliascommand = "alias md5='md5sum'";
+        system(aliascommand);
         %Format is: MD5 (filename) = checksum
-        md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
+        md5command = sprintf('md5sum %s', fullfile(localDataPath, fileName));
         [status, cmdout] = system(md5command);
-        %Split into strings (cell array) and convert to char
-        localchecksum = char(strsplit(cmdout));
-        %Trim whitespace at end and put in lowercase and removes trailing
-        %blank sspace 
-        localchecksum = deblank(lower(strtrim(localchecksum(4,:))));
-                
+        %Split into strings (cell array)
+        for s = strsplit(cmdout) 
+            %find longest string in cell array and convert to char
+            localchecksum = deblank(lower(strtrim(s{1})));
+            if (isempty(strfind(localchecksum,'/')) && length(localchecksum) == 32)
+                break
+            end         
+        end
         %Get correct string in file 
         %Format is: checksum filename (cell array type)
         md5checksum = fileread(fullfile(localDataPath, md5Name));
@@ -312,7 +320,7 @@ while (runCount <= runs) || (runs == -1)
         end
         
         % FFT of signal for each bin
-        %framesFFT = fft(frameWindow_bb(:,1:numTrials),numTrials,2);
+        %framesFFT = fft(frameWindow_bb,frameCount,2);
         %Would like to use framesFFT for noiseRemoval, but matrix gets
         %bigger, how do we fix this???
         %framesFFT = db(abs(framesFFT));
