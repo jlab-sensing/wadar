@@ -15,12 +15,13 @@ expNamesUnique = unique(expNames);
 
 % ----------------------------------------- PLOT THE RESULTS----------------------------------------
 % creates one plot per experiment 
+
+figure('Position',[10 10 900 600]); 
 for exp_ind = 1:length(expNamesUnique)
     if length(char(expNamesUnique(exp_ind))) == 0
         continue
     end
-    
-    figure; 
+    subplot(2,3,exp_ind-1);
     legendLabels = []; 
     
     % find the automatically calculated VWCs for each template 
@@ -92,8 +93,10 @@ for exp_ind = 1:length(expNamesUnique)
     title(expNamesUnique(exp_ind), 'Interpreter', 'none'); 
     xlabel('cans'); 
     xlim([-1 5])
+    ylim([-0.15 0.5])
     ylabel('vwc'); 
-    legend();      
+    grid on;
+    legend('Location','northwest');      
 end
 
 end

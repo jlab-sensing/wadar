@@ -267,7 +267,7 @@ while (runCount <= runs) || (runs == -1)
         aliascommand = "alias md5='md5sum'";
         system(aliascommand);
         %Format is: MD5 (filename) = checksum
-        md5command = sprintf('md5sum %s', fullfile(localDataPath, fileName));
+        md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
         [status, cmdout] = system(md5command);
         %Split into strings (cell array)
         for s = strsplit(cmdout) 

@@ -1,8 +1,9 @@
 % Script to calculate VWC from ToF and teros-12 sensor measurements
 c=299792458;
 resolution = 0.003790984152165; %0.004; % 
-airBins = 74; % number of bins from the radar to the un-burried tag
-airSoilBins = 329; % number of bins from the radar to the burried tag
+airBins = 41; % number of bins from the radar to the un-burried tag
+%121 151 183 240 270
+airSoilBins = 240; % number of bins from the radar to the burried tag
 RAW = 2314;  %RAW teros12 measurement
 d=0.33; % meters sensor is buried underground
 t=((airSoilBins-airBins+d/resolution)*resolution)/c; %seconds
