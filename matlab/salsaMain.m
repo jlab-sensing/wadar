@@ -263,12 +263,14 @@ while (runCount <= runs) || (runs == -1)
         md5Name = md5File(1).name;
         
         %Get correct string in cmdout
-        %temporarily add alias for linux 
-        aliascommand = "alias md5='md5sum'";
-        system(aliascommand);
         %Format is: MD5 (filename) = checksum
         md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
         [status, cmdout] = system(md5command);
+        %for linux;
+        if status ~= 0
+            md5command = sprintf('md5sum %s', fullfile(localDataPath, fileName));
+            [status, cmdout] = system(md5command);
+        end
         %Split into strings (cell array)
         for s = strsplit(cmdout) 
             %find longest string in cell array and convert to char
