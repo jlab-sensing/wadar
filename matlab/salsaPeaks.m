@@ -17,26 +17,27 @@
 % localPath: path to experiment folders and csv 
 % writeMode: 0 if looking at individual peak detection plots
 %            1 if writing all peak detection results to xlsv 
+% peakMethod: algorithm used to detect peak; used in determinePeak 
 
-% Example Usage: salsaPeaks('/home/bradley/Documents/Research/peak_detect/', 0) 
-%   Note: be sure to specify captures in the "capturesToPlot" variable 
+% Example Usage: salsaPeaks('/home/bradley/Documents/Research/peak_detect/', 0, "leftPeak") 
 
-function salsaPeaks(localPath, writeMode)
+function salsaPeaks(localPath, writeMode, peakMethod)
 frameRate = 200; 
 maxTemplates = 2; % max number of templates used in any experiment
 
 % ------------------------------------------ DETERMINE MODE ----------------------------------------
-% TODO: allow plotDetectedPeaks to also specify experiment name, since
-% there are repeats in the capture names 
 if writeMode
     capturesToPlot = [];
+    xlsxFilename = input('Please enter a name for the xlsx file (including .xlsx extension): \n', 's');
+    if ~strcmp(xlsxFilename(end-4:end), '.xlsx')
+        xlsxFilename = strcat(xlsxFilename, '.xlsx'); 
+    end
 else
     % specify as expName:captureName 
-    capturesToPlot = {'clay_active:fullDepth_10s_2can8','silt_passive:fullDepth_100s_4can6'}; 
+    capturesToPlot = {'silt_passive:fullDepth_100s_4can4'}; 
 end
-
-% ------------------------------------------ READ THE CSV ------------------------------------------
-csvFilename = 'peaks.csv';  
+% ------------------------------------------ READ THE CSV------------------------------------------
+csvFilename = 'peaks.csv'; 
 fid1 = fopen(fullfile(localPath, csvFilename));  
 in = textscan(fid1,'%s%s%f%f%f%f','delimiter',',');
 expNames = in{1};
@@ -58,11 +59,12 @@ for k = 1:length(expDirs)
     expFileName = expDirs(k).name; 
  
     if strcmp(expFileName, '.') | strcmp(expFileName, '..') | contains(expFileName, 'csv') | ...
-            contains(expFileName, 'xlsx') | contains(expFileName, 'zip') | contains(expFileName, 'txt')
+            contains(expFileName, 'xlsx') | contains(expFileName, 'zip') | contains(expFileName, 'txt') ...
+            | contains(expFileName, 'odt')
         continue 
     end
     
-    % get names of the experiment's captures (templates & data)   
+    % get names of the experiment's captures (templates + data)   
     dataDirs = dir(fullfile(localPath, expFileName)); 
     
     % determine the soil type 
@@ -80,6 +82,7 @@ for k = 1:length(expDirs)
     templatePaths = []; 
     templateFTs = []; 
     templatePeakBins = []; 
+    
     for i = 1:length(dataDirs)
         dataFileName = dataDirs(i).name; 
         
@@ -102,21 +105,19 @@ for k = 1:length(expDirs)
                     frameWindow_bb(:,j) = NoveldaDDC(frameWindow(:,j)-bg, chipSet, pgen, fs_hz);
                 end
 
-                ft = fft(frameWindow_bb(:,(0)*(frameCount) + 1: 1*(frameCount)),(frameCount),2);
+                ft = fft(frameWindow_bb(:,1:frameCount),frameCount,2);
               
-                % choose the frequency that gives the largest area  
+                % choose the frequency that gives the largest peak 
                 freq = 80 * length(ft) / frameRate; 
-                ft = abs(ft(:, freq-3 : freq+3));
-                [argVal, argMax] = max(sum(ft,1));
+                ft = abs(ft(:, freq-1 : freq+1)); % constrain search to tag frequency +/-1
+                [val, argMax] = max(max(ft)); 
                 ft = ft(:,argMax); 
-                
-                ft = ft ./ sum(ft); % normalize 
                 
                 templateFTs(:,length(templatePaths)) = ft(:,1);
                 
                 % find the bin corresponding to the largest peak 
-                [argVal, argMax] = max(ft);
-                templatePeakBins = [templatePeakBins argMax]; 
+                [val, binMax] = max(ft);
+                templatePeakBins = [templatePeakBins binMax]; 
             end
         end
     end
@@ -133,17 +134,26 @@ for k = 1:length(expDirs)
         if ~(strcmp(dataFileName, '.') | strcmp(dataFileName, '..') | contains(dataFileName, 'md5'))
             if ~contains(dataFileName, 'template')
                 
-                % if "read" mode, continue if capture not specified for plotting
+                % if "read" mode, continue if capture not selected for plotting
                 if ~writeMode
-                    captureMatch = false; 
-                    for capture = capturesToPlot
-                        str = strsplit(capture{1}, ':'); 
-                        if strcmp(str{2}, dataFileName) && strcmp(str{1}, expFileName)
-                            captureMatch = true;
-                        end
+                    
+                    % set the condition for showing plot 
+                    showPlot = false; 
+                    
+%                     % condition based on specific captures 
+%                     for capture = capturesToPlot
+%                         str = strsplit(capture{1}, ':'); 
+%                         if strcmp(str{2}, dataFileName) && strcmp(str{1}, expFileName)
+%                             showPlot = true;
+%                         end
+%                     end
+                    
+                    % condition based on showing certain capture types 
+                    if contains(dataFileName,'100s')
+                        showPlot = true;
                     end
                     
-                    if ~captureMatch
+                    if ~showPlot
                         continue 
                     end
                 end
@@ -169,27 +179,17 @@ for k = 1:length(expDirs)
                     frameWindow_bb(:,j) = NoveldaDDC(frameWindow(:,j)-bg, chipSet, pgen, fs_hz);
                 end
 
-                ft = fft(frameWindow_bb(:,(0)*(frameCount) + 1: 1*(frameCount)),(frameCount),2);
-              
-                % choose the frequency that gives the largest area 
-                freq = 80 * length(ft) / frameRate; 
-                ft = abs(ft(:, freq-3 : freq+3));
-                [argVal, argMax] = max(sum(ft,1));
-                ft = ft(:,argMax); 
+                ft = fft(frameWindow_bb(:,1:frameCount),frameCount,2);
                 
-                ft = ft ./ sum(ft); % normalize 
-                
-                % determine best peak for each template by template matching 
+                % determine best peak for each template 
                 for j = 1:length(templateFTs(1,:))
                    
-                    % If "read" mode, view the peak detection plot
-                    % Otherwise, calculate the peak without plotting  
                     if ~writeMode 
-                        plotTitle = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
+                        titleInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
                             " ,manual peak = ", num2str(peaksManual(csvIndex))); 
-                        peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, plotTitle); 
+                        peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod, titleInfo); 
                     else
-                        peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft); 
+                        peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod); 
                     end
                     
                     % store results according to order in csv
@@ -214,7 +214,7 @@ end
 % ------------------------------------------ TABLE TO XLSV -----------------------------------------  
 if writeMode
     T = table(expNames, captureNames, peaksManual, peakPreds, peakErrors, vwcTrue, vwcManual, vwcPreds, vwcErrors);
-    writetable(T, fullfile(localPath,'peakResults.xlsx')); 
+    writetable(T, fullfile(localPath,xlsxFilename)); 
     fclose(fid1);   
 end
 
