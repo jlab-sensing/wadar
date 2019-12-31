@@ -5,7 +5,7 @@
 % templatePeakBin: bin of the template that is used for correlation alignment 
 % ft: ft of the signal 
 % method: method to use for calculating the peak 
-% varargin: if not None, it contains title info for plotting (and causes plotting)
+% varargin: if not None, it contains info for plotting (and causes plotting)
     % note: r.e. the version from 12/28, the title info is not being used
     % for the title, but is being displayed and is causing plotting 
 
@@ -26,12 +26,15 @@ templateFT = abs(templateFT);
 hardCodeFrequencies = 1; % hard code or max peak height 
 
 if hardCodeFrequencies
-    if length(ft(1,:)) <= frameRate * 20 % <= 20s
+    if length(ft(1,:)) <= frameRate * 30 % <= 30s
         freqTag = 80 / frameRate * length(ft(1,:)) + 1; 
-        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 1; 
+        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 1;      
     elseif length(ft(1,:)) == frameRate * 100 % 100s
         freqTag = 80 / frameRate * length(ft(1,:)) + 0; 
         freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 2; 
+    elseif length(ft(1,:)) == frameRate * 300 % 300s
+        freqTag = 80 / frameRate * length(ft(1,:)) - 1;
+        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 3; 
     else
         error('unrecognized capture duration') 
     end
@@ -64,8 +67,13 @@ ftTag = ftTag ./ sum(ftTag);
 plotting = 0; 
 if length(varargin) > 0
     close all; 
-    plotTitle = varargin{1}; 
+    plotInfo = varargin{1};  
+    
     plotting = 1; 
+    
+    manualPeakBin = str2num(plotInfo); 
+    manualPeakBin = round(manualPeakBin); 
+    
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% METHOD 1: CORRELATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -120,20 +128,22 @@ if method == "corr"
     % --------------------------------------------- PLOT -------------------------------------------
     if plotting
         plot(ftTag, 'displayname','signal fourier transform'); hold on;
-        plot(shiftedTemplateFTs(:,argMax), 'DisplayName', 'shifted footprint fourier transform'); 
-        disp(sprintf("%s \n autopeak=%i",plotTitle, peakBin));
+        plot(shiftedTemplateFTs(:,argMax), 'DisplayName', 'shifted footprint fourier transform'); hold on; 
+        plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
+        plot(peakBin, ftTag(peakBin), 'o', 'DisplayName', 'auto peak');
+        
+        disp(sprintf("%s \n autopeak=%i",plotInfo, peakBin));
         title('peak detection using correlation method') 
         xlabel('bin')
         ylabel('fourier transform magnitude') 
-        legend()
-        text(peakBin, ftTag(peakBin), num2str(peakBin)); 
+        legend();
     end
       
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% METHOD 2: LEFT PEAK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif method == 'leftMost'
     
     % constants
-    thresholdAdjust = 0.8; % factor for adjusting which peaks are considered valid
+    thresholdAdjust = 0.9; % factor for adjusting which peaks are considered valid
     filterSize = 10; % filter size for smoothing data 
     
 %     % normalize against the other tag frequencies 
@@ -149,7 +159,7 @@ elseif method == 'leftMost'
 %         ft(:, freqTagHar) ./ mean(ft(:, [freqTagHar-5:freqTagHar-1, freqTagHar+1:freqTagHar+5]),2); 
                  
     % apply MA heuristic filter 
-    smoothing = 1; 
+    smoothing = 0; 
     if smoothing
         ftTag = smoothdata(ftTag, 'movmean', filterSize);
     end
@@ -166,11 +176,12 @@ elseif method == 'leftMost'
     
     if plotting
         plot(ftTag, 'displayname','signal fourier transform'); hold on;
-        disp(sprintf("%s \n autopeak=%i",plotTitle, peakBin));
+        plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
+        plot(peakBin, ftTag(peakBin), 'o', 'DisplayName', 'auto peak'); hold on; 
+        
         title('peak detection using "left most" peak method') 
         xlabel('bin')
         ylabel('fourier transform magnitude') 
-        text(peakBin, ftTag(peakBin), num2str(peakBin)); 
         line([1, 512], [h1,h1], 'LineStyle', '--', 'displayname', 'cutoff1'); 
         line([1, 512], [h2,h2], 'LineStyle', '--', 'displayname', 'cutoff2'); 
         line([1, 512], [threshold, threshold], 'Color', 'red', 'LineStyle', '-', 'displayname', 'threshold'); 

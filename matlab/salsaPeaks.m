@@ -15,7 +15,7 @@
 
 % Args 
 % localPath: path to experiment folders and csv 
-% writeMode: 0 if looking at individual peak detection plots
+% writeMode: 0 if looking at individual peak detection plots (specify captureExpression variable below) 
 %            1 if writing all peak detection results to xlsv 
 % peakMethod: algorithm used to detect peak; used in determinePeak 
 
@@ -24,17 +24,14 @@
 function salsaPeaks(localPath, writeMode, peakMethod)
 frameRate = 200; 
 maxTemplates = 2; % max number of templates used in any experiment
+captureExpression = 'fullDepth_300s_4can1'; % expression in the capture name to match for plotting
 
 % ------------------------------------------ DETERMINE MODE ----------------------------------------
 if writeMode
-    capturesToPlot = [];
     xlsxFilename = input('Please enter a name for the xlsx file (including .xlsx extension): \n', 's');
     if ~strcmp(xlsxFilename(end-4:end), '.xlsx')
         xlsxFilename = strcat(xlsxFilename, '.xlsx'); 
-    end
-else
-    % specify as expName:captureName 
-    capturesToPlot = {'silt_passive:fullDepth_100s_4can4'}; 
+    end  
 end
 % ------------------------------------------ READ THE CSV------------------------------------------
 csvFilename = 'peaks.csv'; 
@@ -138,18 +135,10 @@ for k = 1:length(expDirs)
                 if ~writeMode
                     
                     % set the condition for showing plot 
-                    showPlot = false; 
-                    
-%                     % condition based on specific captures 
-%                     for capture = capturesToPlot
-%                         str = strsplit(capture{1}, ':'); 
-%                         if strcmp(str{2}, dataFileName) && strcmp(str{1}, expFileName)
-%                             showPlot = true;
-%                         end
-%                     end
+                    showPlot = false;               
                     
                     % condition based on showing certain capture types 
-                    if contains(dataFileName,'100s')
+                    if contains(dataFileName, captureExpression)
                         showPlot = true;
                     end
                     
@@ -185,9 +174,10 @@ for k = 1:length(expDirs)
                 for j = 1:length(templateFTs(1,:))
                    
                     if ~writeMode 
-                        titleInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
-                            " ,manual peak = ", num2str(peaksManual(csvIndex))); 
-                        peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod, titleInfo); 
+%                         plotInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
+%                             " ,manual peak = ", num2str(peaksManual(csvIndex))); 
+                        plotInfo = strcat(num2str(peaksManual(csvIndex))); 
+                        peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod, plotInfo); 
                     else
                         peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod); 
                     end
