@@ -128,7 +128,7 @@ if method == "corr"
     % --------------------------------------------- PLOT -------------------------------------------
     if plotting
         plot(ftTag, 'displayname','signal fourier transform'); hold on;
-        plot(shiftedTemplateFTs(:,argMax), 'DisplayName', 'shifted footprint fourier transform'); hold on; 
+        plot(shiftedTemplateFTs(:,argMax), 'DisplayName', 'shifted fingerprint fourier transform'); hold on; 
         plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
         plot(peakBin, ftTag(peakBin), 'o', 'DisplayName', 'auto peak');
         

@@ -19,12 +19,14 @@
 %            1 if writing all peak detection results to xlsv 
 % peakMethod: algorithm used to detect peak; used in determinePeak 
 
-% Example Usage: salsaPeaks('/home/bradley/Documents/Research/peak_detect/', 0, "leftPeak") 
+% Example Usage: salsaPeaks('/home/bradley/Documents/Research/peak_detect/', 1, "leftMost") 
 
 function salsaPeaks(localPath, writeMode, peakMethod)
 frameRate = 200; 
 maxTemplates = 2; % max number of templates used in any experiment
-captureExpression = 'fullDepth_300s_4can1'; % expression in the capture name to match for plotting
+captureExpression = 'fullDepth_10s_0can2'; % expression in the capture name to match for plotting...
+                                            % program will continue if expression is not in capture
+                                            % name 
 
 % ------------------------------------------ DETERMINE MODE ----------------------------------------
 if writeMode
