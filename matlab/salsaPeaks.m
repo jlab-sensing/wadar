@@ -24,7 +24,7 @@
 function salsaPeaks(localPath, writeMode, peakMethod)
 frameRate = 200; 
 maxTemplates = 2; % max number of templates used in any experiment
-captureExpression = 'fullDepth_10s_0can2'; % expression in the capture name to match for plotting...
+captureExpression = 'fullDepth_10s_0can1'; % expression in the capture name to match for plotting...
                                             % program will continue if expression is not in capture
                                             % name 
 
@@ -103,20 +103,29 @@ for k = 1:length(expDirs)
                 for j = 1:frameCount
                     frameWindow_bb(:,j) = NoveldaDDC(frameWindow(:,j)-bg, chipSet, pgen, fs_hz);
                 end
-
-                ft = fft(frameWindow_bb(:,1:frameCount),frameCount,2);
+                
+                ft = fft(frameWindow_bb(:,1:frameCount),frameCount,2); 
               
-                % choose the frequency that gives the largest peak 
-                freq = 80 * length(ft) / frameRate; 
-                ft = abs(ft(:, freq-1 : freq+1)); % constrain search to tag frequency +/-1
-                [val, argMax] = max(max(ft)); 
-                ft = ft(:,argMax); 
+                % choose the frequency based on the capture duration 
+                if length(ft(1,:)) <= frameRate * 30 % <= 30s
+                    freqTag = 80 / frameRate * length(ft(1,:)) + 1;      
+                elseif length(ft(1,:)) == frameRate * 100 % 100s
+                    freqTag = 80 / frameRate * length(ft(1,:)) + 0;  
+                elseif length(ft(1,:)) == frameRate * 300 % 300s
+                    freqTag = 80 / frameRate * length(ft(1,:)) - 1;
+                else
+                    error('unrecognized capture duration') 
+                end
+                
+                ft = abs(ft(:, freqTag)); 
                 
                 templateFTs(:,length(templatePaths)) = ft(:,1);
                 
-                % find the bin corresponding to the largest peak 
-                [val, binMax] = max(ft);
-                templatePeakBins = [templatePeakBins binMax]; 
+                % find the bin corresponding to the left-most large peak 
+                threshold = 0.85 * max(ft);  
+                [peaks peakBins] = findpeaks(ft, 'MinPeakHeight', threshold); 
+                leftBin = peakBins(1); 
+                templatePeakBins = [templatePeakBins leftBin]; 
             end
         end
     end
@@ -171,7 +180,7 @@ for k = 1:length(expDirs)
                 end
 
                 ft = fft(frameWindow_bb(:,1:frameCount),frameCount,2);
-                
+                    
                 % determine best peak for each template 
                 for j = 1:length(templateFTs(1,:))
                    
