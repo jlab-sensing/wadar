@@ -24,7 +24,7 @@
 function salsaPeaks(localPath, writeMode, peakMethod)
 frameRate = 200; 
 maxTemplates = 2; % max number of templates used in any experiment
-captureExpression = 'fullDepth_10s_0can2'; % expression in the capture name to match for plotting...
+captureExpression = 'fullDepth_100s_3can'; % expression in the capture name to match for plotting...
                                             % program will continue if expression is not in capture
                                             % name 
 
@@ -35,16 +35,21 @@ if writeMode
         xlsxFilename = strcat(xlsxFilename, '.xlsx'); 
     end  
 end
+ 
 % ------------------------------------------ READ THE CSV------------------------------------------
 csvFilename = 'peaks.csv'; 
-fid1 = fopen(fullfile(localPath, csvFilename));  
-in = textscan(fid1,'%s%s%f%f%f%f','delimiter',',');
+fid1 = fopen(fullfile(localPath, csvFilename));
+if fid1 == -1
+             error("couldn't open %s",fullfile(localPath, csvFilename));
+end
+in = textscan(fid1,'%s%s%f%f%f%f%f','delimiter',',');
 expNames = in{1};
 captureNames = in{2}; 
 airPeaks = in{3}; 
 peaksManual = in{4}; 
 vwcManual = in{5}; 
-vwcTrue = in{6}; 
+vwcTrue = in{6};
+d = in{7};
 
 % ----------------------------------------- ESTIMATE PEAKS AND VWC ---------------------------------  
 % get names of the folders that contain experiments 
@@ -63,9 +68,6 @@ for k = 1:length(expDirs)
         continue 
     end
     
-    % get names of the experiment's captures (templates + data)   
-    dataDirs = dir(fullfile(localPath, expFileName)); 
-    
     % determine the soil type 
     if (contains(expFileName, 'farm'))
         soilType = 'farm'; 
@@ -73,10 +75,15 @@ for k = 1:length(expDirs)
         soilType = 'silt'; 
     elseif (contains(expFileName, 'clay'))
         soilType = 'clay'; 
+    elseif (startsWith(expFileName,'.')) %skip hidden folders
+        continue
     else
         error('experiment folder name does not contain a valid soil type'); 
     end
-     
+    
+    % get names of the experiment's captures (templates + data)   
+    dataDirs = dir(fullfile(localPath, expFileName)); 
+    
     % get the fts and the maximum peak bins for the templates only   
     templatePaths = []; 
     templateFTs = []; 
@@ -85,12 +92,7 @@ for k = 1:length(expDirs)
     for i = 1:length(dataDirs)
         dataFileName = dataDirs(i).name; 
         
-        if ~(strcmp(dataFileName, '.') | strcmp(dataFileName, '..') | contains(dataFileName, 'md5'))
-            if contains(dataFileName, 'template')
-                
-                % get path 
-                templatePaths = [templatePaths string(dataFileName)];
-                
+        if ~(startsWith(dataFileName, '.') | contains(dataFileName, 'md5')) && (contains(dataFileName, 'template') || contains(dataFileName, 'air'))
                 % get ft of data 
                 % TODO: make this a function 
                 [newFrames pgen fs_hz chipSet timeDeltas] = salsaLoad(fullfile(dataDirs(i).folder, dataFileName));
@@ -112,12 +114,30 @@ for k = 1:length(expDirs)
                 [val, argMax] = max(max(ft)); 
                 ft = ft(:,argMax); 
                 
-                templateFTs(:,length(templatePaths)) = ft(:,1);
-                
                 % find the bin corresponding to the largest peak 
                 [val, binMax] = max(ft);
-                templatePeakBins = [templatePeakBins binMax]; 
-            end
+                %templatePeakBins = [templatePeakBins binMax]; 
+                % find left-most peak matching criteria 
+                h1 = mean(findpeaks(ft(1:100)));
+                h2 = max(ft); 
+                thresholdAdjust = 0.9; % factor for adjusting which peaks are considered valid
+                threshold = thresholdAdjust * (h1 + h2) / 2; 
+    
+                [peaks peakBins] = findpeaks(ft, 'MinPeakHeight', threshold); 
+
+                peakBins = peakBins(peakBins > 22); % assume no peak in first 22
+            if contains(dataFileName, 'template')
+                
+                % get path 
+                templatePaths = [templatePaths string(dataFileName)];
+                
+   
+                templatePeakBins = peakBins(1); 
+                templateFTs(:,length(templatePaths)) = ft(:,1);
+
+            elseif contains(dataFileName, 'air')
+                airPeakBins = peakBins(1);
+            end 
         end
     end
     
@@ -130,8 +150,8 @@ for k = 1:length(expDirs)
     for i = 1:length(dataDirs)
         dataFileName = dataDirs(i).name; 
         
-        if ~(strcmp(dataFileName, '.') | strcmp(dataFileName, '..') | contains(dataFileName, 'md5'))
-            if ~contains(dataFileName, 'template')
+        if ~(startsWith(dataFileName,'.') | contains(dataFileName, 'md5'))
+            if ~(contains(dataFileName, 'template') || contains(dataFileName, 'air'))
                 
                 % if "read" mode, continue if capture not selected for plotting
                 if ~writeMode
@@ -155,7 +175,7 @@ for k = 1:length(expDirs)
                 csvIndex = intersect(ind1,ind2); 
                 if length(csvIndex) ~= 1
                     disp(dataFileName)
-                    error('capture name cannot be linked to a single, unique entry in the csv') 
+                    error('capture name %s cannot be linked to a single, unique entry in the csv', dataFileName) 
                 end
                 
                 % get ft of data 
@@ -176,8 +196,8 @@ for k = 1:length(expDirs)
                 for j = 1:length(templateFTs(1,:))
                    
                     if ~writeMode 
-%                         plotInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
-%                             " ,manual peak = ", num2str(peaksManual(csvIndex))); 
+                         plotInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
+                             " ,manual peak = ", num2str(peaksManual(csvIndex))); 
                         plotInfo = strcat(num2str(peaksManual(csvIndex))); 
                         peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod, plotInfo); 
                     else
@@ -186,7 +206,8 @@ for k = 1:length(expDirs)
                     
                     % store results according to order in csv
                     peakPreds(csvIndex, j) = peak; 
-                    vwcPreds(csvIndex, j) = calculateSoilMoisture(templatePeakBins(j), peak, soilType); 
+                    %vwcPreds(csvIndex, j) = calculateSoilMoisture(airPeakBins(j), peak, soilType); 
+                    vwcPreds(csvIndex, j) = calculateSoilMoisture(airPeaks(csvIndex), peak, soilType, d(csvIndex)); 
                 end        
             end
         end
@@ -199,7 +220,7 @@ if writeMode
     vwcErrors = []; 
     for i = 1: length(peakPreds(1,:))
         peakErrors(:,i) = peakPreds(:,i) - peaksManual; 
-        vwcErrors(:,i) = vwcPreds(:,i) - vwcManual; 
+        vwcErrors(:,i) = vwcPreds(:,i) - vwcTrue; 
     end
 end
 

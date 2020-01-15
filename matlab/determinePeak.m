@@ -20,7 +20,7 @@ function [peakBin] = determinePeak(templateFT, templatePeakBin, ft, frameRate, m
 % find the magnitude of the ft 
 ft = abs(ft); 
 
-templateFT = abs(templateFT); 
+templateFT = abs([templateFT(1:512,:); zeros(512-512,1)]); 
 
 % Find the desired frequencies for the tag and the harmonic 
 hardCodeFrequencies = 1; % hard code or max peak height 
@@ -28,13 +28,17 @@ hardCodeFrequencies = 1; % hard code or max peak height
 if hardCodeFrequencies
     if length(ft(1,:)) <= frameRate * 30 % <= 30s
         freqTag = 80 / frameRate * length(ft(1,:)) + 1; 
-        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 1;      
+        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 1;   
+        templateFT = abs([templateFT(1:400,:); zeros(512-400,1)]); 
     elseif length(ft(1,:)) == frameRate * 100 % 100s
         freqTag = 80 / frameRate * length(ft(1,:)) + 0; 
         freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 2; 
+        templateFT = abs([templateFT(1:300,:); zeros(512-300,1)]); 
+
     elseif length(ft(1,:)) == frameRate * 300 % 300s
         freqTag = 80 / frameRate * length(ft(1,:)) - 1;
-        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 3; 
+        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 3;
+        templateFT = abs([templateFT(1:300,:); zeros(512-300,1)]); 
     else
         error('unrecognized capture duration') 
     end
@@ -58,10 +62,14 @@ end
 % combine information from harmonic frequencies into ftTag 
 ftTag = ft(:,freqTag) + ft(:, freqTagHar); 
 
+%TODO: which normalization method is better?
 % normalize the fts 
-ft = ft ./ sum(ft); 
-templateFT = templateFT ./ sum(templateFT); 
-ftTag = ftTag ./ sum(ftTag); 
+%ft = ft ./ sum(ft); 
+%templateFT = templateFT ./ sum(templateFT); 
+%ftTag = ftTag ./ sum(ftTag); 
+ft = ft / max(ft); 
+templateFT = templateFT / max(templateFT); 
+ftTag = ftTag / max(ftTag); 
 
 % ------------------------------------------ SETUP PLOTS--------------------------------------------
 plotting = 0; 
@@ -103,7 +111,7 @@ if method == "corr"
         
         peakBin = peakBins(binIndex);
 
-        if peakBin < templatePeakBin 
+        if peakBin < (templatePeakBin-10) 
             corr = [corr -1]; % we don't want range bins < template bin to be considered
             continue 
         end
@@ -137,7 +145,7 @@ if method == "corr"
         xlabel('bin')
         ylabel('fourier transform magnitude') 
         legend();
-    end
+   end
       
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% METHOD 2: LEFT PEAK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif method == 'leftMost'
