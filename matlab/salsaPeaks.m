@@ -208,9 +208,9 @@ for k = 1:length(expDirs)
                          plotInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
                              " ,manual peak = ", num2str(peaksManual(csvIndex))); 
                         plotInfo = strcat(num2str(peaksManual(csvIndex))); 
-                        peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod, plotInfo); 
+                        [peak ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod, plotInfo); 
                     else
-                        peak = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod); 
+                        [peak ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod); 
                     end
                     
                     % store results according to order in csv

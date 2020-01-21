@@ -14,12 +14,12 @@
 
 % TODO: this function should return the confidence as well as the peak 
 
-function [peakBin] = determinePeak(templateFT, templatePeakBin, ft, frameRate, method, varargin) 
+function [peakBin ftTag shiftedTemplate] = determinePeak(templateFT, templatePeakBin, ft, frameRate, method, varargin) 
 
 % ------------------------------------------ PREPROCESSING------------------------------------------
 % find the magnitude of the ft 
 ft = abs(ft); 
-
+shiftedTemplate = [];
 templateFT = abs([templateFT(1:512,:); zeros(512-512,1)]); 
 
 % Find the desired frequencies for the tag and the harmonic 
@@ -134,6 +134,7 @@ if method == "corr"
     peakBin = peakBins(argMax);
 
     % --------------------------------------------- PLOT -------------------------------------------
+    shiftedTemplate = shiftedTemplateFTs(:,argMax);
     if plotting
         plot(ftTag, 'displayname','signal fourier transform'); hold on;
         plot(shiftedTemplateFTs(:,argMax), 'DisplayName', 'shifted fingerprint fourier transform'); hold on; 
@@ -181,7 +182,6 @@ elseif method == 'leftMost'
 
     peakBins = peakBins(peakBins > 100); % assume no peak in first 100 
     peakBin = peakBins(1); 
-    
     if plotting
         plot(ftTag, 'displayname','signal fourier transform'); hold on;
         plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
