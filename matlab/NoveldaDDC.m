@@ -63,18 +63,20 @@ end
 
 % Digital Down-Convert parameters (normalized frequency index)
 freqIndex = CF  / Fs * frameSize;
-
+freqIndex=freqIndex;
 % Generate the complex sinusoid LO (local oscillator) to mix into the signal 
 t = linspace(0, 1, frameSize);
-LO = sin(2 * pi * freqIndex * t)  +  1i * cos(2 * pi * freqIndex * t);
-
+%phi=-pi/3;
+phi=0;
+LO = sin(2 * pi * freqIndex * t+phi)  +  1i * cos(2 * pi * freqIndex * t+phi);
 % Adjust LO size, just in case
 if row > col
     LO = LO.';
 end
 
 % Digital Downconvert (the DDC) via direct multiplication
-basebandSignal = rfSignal .* LO;
+% subtracting the mean removes DC offset
+basebandSignal = (rfSignal-mean(mean(rfSignal))) .* LO;
 
 % % LPF Design to eliminate the upper mixing frequencies after the DDC (21 
 % % tap LPF, may need to be tuned based on the rate of desired roll-off)
