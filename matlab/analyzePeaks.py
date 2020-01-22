@@ -10,8 +10,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 from datetime import datetime
+import sys
+import argparse
 
-path = ""
 if len(sys.argv) < 2:
     xlsxFilename = 'corr.xlsx'
     path = '/home/bradley/Documents/Research/peak_detect/' + xlsxFilename
@@ -73,12 +74,15 @@ df['peakErrorsWithinT_1'] = np.where(df['peakErrors_1'].abs() <= t, True, False)
 # # Group Analysis
 
 # Analysis by Moisture Level
-outputFilename = path.rstrip(".xlsx") + ".txt"
+#outputFilename = path.rstrip(".xlsx") + ".txt"
 
-with open(outputFilename, 'a') as fo:
-    now = datetime.now()
-    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-    fo.write(dt_string + "\n\n")
-    fo.write(groupAnalysis(df, 'moistureLevel').__repr__() + "\n\n")
-    fo.write(groupAnalysis(df, 'expNames').__repr__() + "\n\n")
-    fo.write(groupAnalysis(df, 'tagType').__repr__() + "\n\n")
+#with open(outputFilename, 'a') as fo:
+#    now = datetime.now()
+#    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+#    fo.write(dt_string + "\n\n")
+#    fo.write(groupAnalysis(df, 'moistureLevel').__repr__() + "\n\n")
+#    fo.write(groupAnalysis(df, 'expNames').__repr__() + "\n\n")
+#    fo.write(groupAnalysis(df, 'tagType').__repr__() + "\n\n")
+print(groupAnalysis(df, 'moistureLevel'))
+print(groupAnalysis(df, 'expNames'))
+print(groupAnalysis(df, 'tagType'))

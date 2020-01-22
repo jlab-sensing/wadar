@@ -27,7 +27,13 @@ maxTemplates = 2; % max number of templates used in any experiment
 captureExpression = 'fullDepth_10s_0can1'; % expression in the capture name to match for plotting...
                                             % program will continue if expression is not in capture
                                             % name 
-
+pythonpath = '/Users/cjoseph/anaconda/bin/python';
+[status ~] = system(sprintf('%s --version',pythonpath));
+if status ~= 0
+    % good luck
+    [~, pythonpath] = system('which python');
+    pythonpath = strtrim(pythonpath);
+end
 % ------------------------------------------ DETERMINE MODE ----------------------------------------
 if writeMode
     xlsxFilename = input('Please enter a name for the xlsx file (including .xlsx extension): \n', 's');
@@ -238,6 +244,7 @@ if writeMode
     T = table(expNames, captureNames, peaksManual, peakPreds, peakErrors, vwcTrue, vwcManual, vwcPreds, vwcErrors);
     writetable(T, fullfile(localPath,xlsxFilename)); 
     fclose(fid1);   
+    system(sprintf('%s %s %s',pythonpath, 'analyzePeaks.py',fullfile(localPath,xlsxFilename)));
 end
 
 end 
