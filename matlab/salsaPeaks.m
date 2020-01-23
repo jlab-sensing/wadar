@@ -62,6 +62,7 @@ d = in{7};
 expDirs = dir(localPath); 
 
 peakPreds = zeros(length(captureNames), maxTemplates); 
+confidencePreds = zeros(length(captureNames), maxTemplates); 
 vwcPreds = zeros(length(captureNames), maxTemplates); 
 
 % estimate peaks and vwc for each experiment 
@@ -214,15 +215,16 @@ for k = 1:length(expDirs)
                          plotInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
                              " ,manual peak = ", num2str(peaksManual(csvIndex))); 
                         plotInfo = strcat(num2str(peaksManual(csvIndex))); 
-                        [peak ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod, plotInfo); 
+                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod, plotInfo); 
                     else
-                        [peak ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod); 
+                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod); 
                     end
                     
                     % store results according to order in csv
-                    peakPreds(csvIndex, j) = peak; 
+                    peakPreds(csvIndex, j) = peakBin; 
                     %vwcPreds(csvIndex, j) = calculateSoilMoisture(airPeakBins(j), peak, soilType); 
-                    vwcPreds(csvIndex, j) = calculateSoilMoisture(airPeaks(csvIndex), peak, soilType, d(csvIndex)); 
+                    vwcPreds(csvIndex, j) = calculateSoilMoisture(airPeaks(csvIndex), peakBin, soilType, d(csvIndex)); 
+                    confidencePreds(csvIndex, j) = confidence; 
                 end        
             end
         end
@@ -241,7 +243,7 @@ end
 
 % ------------------------------------------ TABLE TO XLSV -----------------------------------------  
 if writeMode
-    T = table(expNames, captureNames, peaksManual, peakPreds, peakErrors, vwcTrue, vwcManual, vwcPreds, vwcErrors);
+    T = table(expNames, captureNames, peaksManual, peakPreds, peakErrors, confidencePreds, vwcTrue, vwcManual, vwcPreds, vwcErrors);
     writetable(T, fullfile(localPath,xlsxFilename)); 
     fclose(fid1);   
     system(sprintf('%s %s %s',pythonpath, 'analyzePeaks.py',fullfile(localPath,xlsxFilename)));

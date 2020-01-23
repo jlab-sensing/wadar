@@ -14,7 +14,7 @@
 
 % TODO: this function should return the confidence as well as the peak 
 
-function [peakBin ftTag shiftedTemplate] = determinePeak(templateFT, templatePeakBin, ft, frameRate, method, varargin) 
+function [peakBin confidence ftTag shiftedTemplate] = determinePeak(templateFT, templatePeakBin, ft, frameRate, method, varargin) 
 
 % ------------------------------------------ PREPROCESSING------------------------------------------
 % find the magnitude of the ft 
@@ -81,80 +81,78 @@ if length(varargin) > 0
     
     manualPeakBin = str2num(plotInfo); 
     manualPeakBin = round(manualPeakBin); 
-    
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% METHOD 1: CORRELATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if method == "corr"
 
 % ----------------------------------------- CALCULATE CORRELATION-----------------------------------
    
-    numPeaks = 6; % number of peaks in the ft to consider 
-    filterSize = 10; 
-    
-    % apply MA heuristic filter 
-    smoothing = 0; 
-    if smoothing
-        ftTag = smoothdata(ftTag, 'movmean', filterSize);
+numPeaks = 6; % number of peaks in the ft to consider 
+filterSize = 10; 
+
+% apply MA heuristic filter 
+smoothing = 0; 
+if smoothing
+    ftTag = smoothdata(ftTag, 'movmean', filterSize);
+end
+
+% find top numPeaks peaks of ft 
+[peaks, peakBins] = findpeaks(ftTag); 
+[maxPeaks,I] = maxk(peaks, numPeaks); 
+peaks = peaks(I); 
+peakBins = peakBins(I); 
+
+% calculate correlation score for all peaks 
+corr = []; 
+shiftedTemplateFTs = []; 
+for binIndex = 1:length(peakBins)
+
+    peakBin = peakBins(binIndex);
+
+    if peakBin < (templatePeakBin-10) 
+        corr = [corr -1]; % we don't want range bins < template bin to be considered
+        continue 
     end
-    
-    % find top numPeaks peaks of ft 
-    [peaks, peakBins] = findpeaks(ftTag); 
-    [maxPeaks,I] = maxk(peaks, numPeaks); 
-    peaks = peaks(I); 
-    peakBins = peakBins(I); 
 
-    % calculate correlation score for all peaks 
-    corr = []; 
-    shiftedTemplateFTs = []; 
-    for binIndex = 1:length(peakBins)
-        
-        peakBin = peakBins(binIndex);
+    % align template ft with data ft by shifting and wrapping 
+    binDifference = peakBin - templatePeakBin; 
 
-        if peakBin < (templatePeakBin-10) 
-            corr = [corr -1]; % we don't want range bins < template bin to be considered
-            continue 
-        end
-        
-        % align template ft with data ft by shifting and wrapping 
-        binDifference = peakBin - templatePeakBin; 
+    shiftedTemplateFTs(:,binIndex) = circshift(templateFT, binDifference);
 
-        shiftedTemplateFTs(:,binIndex) = circshift(templateFT, binDifference);
-            
-        % calculate correlation 
-        if length(shiftedTemplateFTs(:,binIndex)) ~= length(ftTag)
-            error('length of the signals do not match - cannot compute correlation'); 
-        end
-
-        corr = [corr sum(shiftedTemplateFTs(:,binIndex) .* ftTag)]; 
+    % calculate correlation 
+    if length(shiftedTemplateFTs(:,binIndex)) ~= length(ftTag)
+        error('length of the signals do not match - cannot compute correlation'); 
     end
-        
-    % ----------------------------------------- CHOOSE BEST PEAK -----------------------------------
-    [val, argMax] = max(corr);
-    peakBin = peakBins(argMax);
 
-    % --------------------------------------------- PLOT -------------------------------------------
-    shiftedTemplate = shiftedTemplateFTs(:,argMax);
-    if plotting
-        plot(ftTag, 'displayname','signal fourier transform'); hold on;
-        plot(shiftedTemplateFTs(:,argMax), 'DisplayName', 'shifted fingerprint fourier transform'); hold on; 
-        plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
-        plot(peakBin, ftTag(peakBin), 'o', 'DisplayName', 'auto peak');
-        
-        disp(sprintf("%s \n autopeak=%i",plotInfo, peakBin));
-        title('peak detection using correlation method') 
-        xlabel('bin')
-        ylabel('fourier transform magnitude') 
-        legend();
-   end
+    corr = [corr sum(shiftedTemplateFTs(:,binIndex) .* ftTag)]; 
+end
+
+% ----------------------------------------- CHOOSE BEST PEAK -----------------------------------
+[val, argMax] = max(corr);
+peakBin = peakBins(argMax);
+peakBinCorr = peakBin; 
+
+% --------------------------------------------- PLOT -------------------------------------------
+shiftedTemplate = shiftedTemplateFTs(:,argMax);
+if plotting
+    plot(ftTag, 'displayname','signal fourier transform'); hold on;
+    plot(shiftedTemplateFTs(:,argMax), 'DisplayName', 'shifted fingerprint fourier transform'); hold on; 
+    plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
+    plot(peakBin, ftTag(peakBin), 'x', 'DisplayName', 'auto peak');
+
+    disp(sprintf("%s \n autopeak=%i",plotInfo, peakBin));
+    title('peak detection using correlation method') 
+    xlabel('bin')
+    ylabel('fourier transform magnitude') 
+    legend();
+end
       
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% METHOD 2: LEFT PEAK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif method == 'leftMost'
     
-    % constants
-    thresholdAdjust = 0.9; % factor for adjusting which peaks are considered valid
-    filterSize = 10; % filter size for smoothing data 
-    
+% constants
+thresholdAdjust = 0.9; % factor for adjusting which peaks are considered valid
+filterSize = 10; % filter size for smoothing data 
+
 %     % normalize against the other tag frequencies 
 %     ftOther = mean(ft(:, [freqTag - 3 : freqTag - 1, freqTag + 1 : freqTag + 3]), 2); 
 %     ftOther = movmean(ftOther, 30); 
@@ -163,42 +161,59 @@ elseif method == 'leftMost'
 %     
 %     ftTag = ft(:,freqTag) ./ ftOther + ft(:, freqTagHar) ./ ftOtherHar;
 %     ftTag = ftTag ./ sum(ftTag); 
-    
+
 %     ftTag = ft(:, freqTag) ./ mean(ft(:, [freqTag-5:freqTag-1, freqTag+1:freqTag+5]),2) + ...
 %         ft(:, freqTagHar) ./ mean(ft(:, [freqTagHar-5:freqTagHar-1, freqTagHar+1:freqTagHar+5]),2); 
-                 
-    % apply MA heuristic filter 
-    smoothing = 0; 
-    if smoothing
-        ftTag = smoothdata(ftTag, 'movmean', filterSize);
-    end
-    
-    % find left-most peak matching criteria 
-    h1 = mean(findpeaks(ftTag(1:100)));
-    h2 = max(ftTag); 
-    threshold = thresholdAdjust * (h1 + h2) / 2; 
-    
-    [peaks peakBins] = findpeaks(ftTag, 'MinPeakHeight', threshold); 
 
-    peakBins = peakBins(peakBins > 100); % assume no peak in first 100 
-    peakBin = peakBins(1); 
-    if plotting
-        plot(ftTag, 'displayname','signal fourier transform'); hold on;
-        plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
-        plot(peakBin, ftTag(peakBin), 'o', 'DisplayName', 'auto peak'); hold on; 
-        
-        title('peak detection using "left most" peak method') 
-        xlabel('bin')
-        ylabel('fourier transform magnitude') 
-        line([1, 512], [h1,h1], 'LineStyle', '--', 'displayname', 'cutoff1'); 
-        line([1, 512], [h2,h2], 'LineStyle', '--', 'displayname', 'cutoff2'); 
-        line([1, 512], [threshold, threshold], 'Color', 'red', 'LineStyle', '-', 'displayname', 'threshold'); 
-        legend(); 
-    end
+% apply MA heuristic filter 
+smoothing = 0; 
+if smoothing
+    ftTag = smoothdata(ftTag, 'movmean', filterSize);
+end
+
+% find left-most peak matching criteria 
+h1 = mean(findpeaks(ftTag(1:100)));
+h2 = max(ftTag); 
+threshold = thresholdAdjust * (h1 + h2) / 2; 
+
+[peaks peakBins] = findpeaks(ftTag, 'MinPeakHeight', threshold); 
+
+peakBins = peakBins(peakBins > 100); % assume no peak in first 100 
+peakBin = peakBins(1); 
+peakBinLeftMost = peakBin; 
+
+if plotting
+    figure
+    plot(ftTag, 'displayname','signal fourier transform'); hold on;
+    plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
+    plot(peakBin, ftTag(peakBin), 'x', 'DisplayName', 'auto peak'); hold on; 
+
+    title('peak detection using "left most" peak method') 
+    xlabel('bin')
+    ylabel('fourier transform magnitude') 
+    line([1, 512], [h1,h1], 'LineStyle', '--', 'displayname', 'cutoff1'); 
+    line([1, 512], [h2,h2], 'LineStyle', '--', 'displayname', 'cutoff2'); 
+    line([1, 512], [threshold, threshold], 'Color', 'red', 'LineStyle', '-', 'displayname', 'threshold'); 
+    legend(); 
+end
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% ------------------------------------ DETERMINE CONFIDENCE ----------------------------------------
+tau = 20; % normalizing constant 
+
+confidence = exp(-abs(peakBinCorr - peakBinLeftMost) / tau); 
+
+% ------------------------------------ CHOOSE PEAK BY METHOD ---------------------------------------
+
+peakBin = 0; 
+
+if method == "corr"
+    peakBin = peakBinCorr; 
+elseif method == "leftMost"
+    peakBin = peakBinLeftMost; 
 else
     error(strcat("No algorithm called ", method)); 
 end
-
+    
 end

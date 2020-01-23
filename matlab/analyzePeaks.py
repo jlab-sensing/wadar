@@ -51,6 +51,19 @@ df['moistureLevel'] = ((df['vwcTrue'] * 2 // 0.1) + 1).astype('int32')
 df['moistureLevel'] = df['moistureLevel'].map({1: "0-0.1", 2: "0-0.1", 3: "0.1-0.2", 4: "0.1-0.2", 5: "0.2-0.25", \
         6: "0.25-0.3", 7: "0.3-0.35", 8: ">0.35", 9: ">0.35", 10: ">0.35"})
 
+# define confidence levels in increments
+df['confidenceLevel'] = (df['confidencePreds_1'] // 0.1).astype('int32')
+df['confidenceLevel'] = df['confidenceLevel'].map({0: "0-0.1",\
+                                              1: "0.1-0.2",\
+                                              2: "0.2-0.3",\
+                                              3: "0.3-0.4",\
+                                              4: "0.4-0.5",\
+                                              5: "0.5-0.6",\
+                                              6: "0.6-0.7",\
+                                              7: "0.7-0.8",\
+                                              8: "0.8-0.9",\
+                                              9: "0.9-1"})
+
 # calculate absolute value of peak error
 df['peakErrorsAbs_1'] = abs(df['peakErrors_1'])
 
@@ -83,6 +96,11 @@ df['peakErrorsWithinT_1'] = np.where(df['peakErrors_1'].abs() <= t, True, False)
 #    fo.write(groupAnalysis(df, 'moistureLevel').__repr__() + "\n\n")
 #    fo.write(groupAnalysis(df, 'expNames').__repr__() + "\n\n")
 #    fo.write(groupAnalysis(df, 'tagType').__repr__() + "\n\n")
+print('moisture level...\n')
 print(groupAnalysis(df, 'moistureLevel'))
+print('experiment category...\n')
 print(groupAnalysis(df, 'expNames'))
+print('tag type...\n')
 print(groupAnalysis(df, 'tagType'))
+print('confidence level...\n')
+print(groupAnalysis(df, 'confidenceLevel'))
