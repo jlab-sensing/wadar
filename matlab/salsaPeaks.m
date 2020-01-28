@@ -23,6 +23,7 @@
 
 function salsaPeaks(localPath, writeMode, peakMethod)
 frameRate = 200; 
+tagHz = 50; 
 maxTemplates = 2; % max number of templates used in any experiment
 captureExpression = 'fullDepth_10s_0can1'; % expression in the capture name to match for plotting...
                                             % program will continue if expression is not in capture
@@ -115,16 +116,8 @@ for k = 1:length(expDirs)
                 
                 ft = fft(frameWindow_bb(:,1:frameCount),frameCount,2); 
               
-                % choose the frequency based on the capture duration 
-                if length(ft(1,:)) <= frameRate * 30 % <= 30s
-                    freqTag = 80 / frameRate * length(ft(1,:)) + 1;      
-                elseif length(ft(1,:)) == frameRate * 100 % 100s
-                    freqTag = 80 / frameRate * length(ft(1,:)) + 0;  
-                elseif length(ft(1,:)) == frameRate * 300 % 300s
-                    freqTag = 80 / frameRate * length(ft(1,:)) - 1;
-                else
-                    error('unrecognized capture duration') 
-                end
+                % choose the frequency based on the capture duration
+                [freqTag, freqTagHar] = calculateTagFrequencies(tagHz, frameRate, length(ft(1,:))); 
                 
                 ft = abs(ft(:, freqTag)); 
                 
@@ -215,9 +208,9 @@ for k = 1:length(expDirs)
                          plotInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
                              " ,manual peak = ", num2str(peaksManual(csvIndex))); 
                         plotInfo = strcat(num2str(peaksManual(csvIndex))); 
-                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod, plotInfo); 
+                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, tagHz, peakMethod, plotInfo); 
                     else
-                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, peakMethod); 
+                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, tagHz, peakMethod); 
                     end
                     
                     % store results according to order in csv

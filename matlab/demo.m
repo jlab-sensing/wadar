@@ -1,10 +1,11 @@
-d=0.17; %meters
+d=0.06; %meters
 % = "/Users/cjoseph/Documents/research/radar/matlab/data/demo";
-localDataPath = "/Users/cjoseph/radar/matlab/data/demo";
-fullDataPath = sprintf("cjoseph@192.168.7.1:%s",localDataPath);
+localDataPath = "/home/bradley/Documents/Research/winter2020/radar/matlab/data/demo";
+fullDataPath = sprintf("bradley@192.168.7.1:%s",localDataPath);
 radarType="Chipotle";
 numTrials = 2000;
 frameRate = 200; 
+tagHz = 50; 
 corrTemplateFile = "template";
 airCaptureFile = "air";
 captureName = "demoDump";
@@ -21,15 +22,7 @@ end
 tempFT = fft(tempFramesBB,tempFrameCount,2); 
 
 % choose the frequency based on the capture duration 
-if length(tempFT(1,:)) <= frameRate * 30 % <= 30s
-    freqTag = 80 / frameRate * length(tempFT(1,:)) + 1;      
-elseif length(tempFT(1,:)) == frameRate * 100 % 100s
-    freqTag = 80 / frameRate * length(tempFT(1,:)) + 0;  
-elseif length(tempFT(1,:)) == frameRate * 300 % 300s
-    freqTag = 80 / frameRate * length(tempFT(1,:)) - 1;
-else
-    error('unrecognized capture duration') 
-end
+[freqTag, freqTagHar] = calculateTagFrequencies(tagHz, frameRate, numTrials); 
 
 %TODO: improve this?
 tempTagFT = abs(tempFT(:, freqTag)); 
@@ -234,7 +227,7 @@ while true
         
         % FFT of signal for each bin
         ft = fft(framesBB(:,1:frameCount),frameCount,2);
-        [peak confidence ftProcessed shiftedTemp SNR] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, "corr"); 
+        [peak confidence ftProcessed shiftedTemp SNR] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, tagHz, "corr"); 
         vwc = calculateSoilMoisture(airPeakBin, peak, "farm", d); 
         vwcList = [vwcList vwc];
 
@@ -245,8 +238,8 @@ while true
             %% display data %%
             % correlation plot
             subplot(2,2,1);
-            plot(ftProcessed, 'displayname','80Hz FFT bin of signal'); hold on;
-            plot(shiftedTemp, 'DisplayName', '80Hz FFT bin of fingerprint'); hold on; 
+            plot(ftProcessed, 'displayname', sprintf('%i Hz FFT bin of signal',tagHz)); hold on;
+            plot(shiftedTemp, 'DisplayName', sprintf('%i Hz FFT bin of fingerprint',tagHz)); hold on; 
             plot(peak, ftProcessed(peak), 'o', 'DisplayName', sprintf('detected peak = %i', peak));
             title('detected peaks') 
             xlabel('bin')
@@ -285,5 +278,12 @@ while true
         runCount = runCount + 1;
     end
     timer = timer + 1;
+    
+    subplot(2,2,2); 
+    text(0.1,0.9, sprintf('TIMER: %i', timer),'fontsize',18); axis off
+    text(0.1,0.7, sprintf('Capture duration: %i', numTrials/frameRate), 'fontsize',18); 
+    text(0.1,0.5, sprintf('SNR: %f dB', SNR), 'fontsize',18); 
+    text(0.1,0.3, sprintf('Confidence: %f', confidence), 'fontsize',18);   
+    
     pause(1)
 end    
