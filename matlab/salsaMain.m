@@ -12,7 +12,7 @@
 function salsaMain(captureData, varargin)
 %% Process arguments
 %close all
-numTrials = 20000;
+numTrials = 2000;
 frameRate = 200; % frames per sec
 % TODO - (optional) - since all varargin arguments are required, the function could take
 % in 3 arguments instead of using 1 required arg and varargin. But this
@@ -382,7 +382,14 @@ while (runCount <= runs) || (runs == -1)
     end
     pause(1)
 end
-
+deltas = [];
+for i=1:(length(timeDeltas)-1)
+    deltas = [deltas timeDeltas(i+1)-timeDeltas(i)];
+end
+mean(deltas)
+std(deltas)
+max(deltas)
+min(deltas)
 fprintf('\nDone!\n')
 end
 
