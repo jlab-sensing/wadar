@@ -234,7 +234,7 @@ while true
         
         % FFT of signal for each bin
         ft = fft(framesBB(:,1:frameCount),frameCount,2);
-        [peak confidence ftProcessed shiftedTemp] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, "corr"); 
+        [peak confidence ftProcessed shiftedTemp SNR] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, "corr"); 
         vwc = calculateSoilMoisture(airPeakBin, peak, "farm", d); 
         vwcList = [vwcList vwc];
 
@@ -269,7 +269,7 @@ while true
             
             text(0.1,0.9, sprintf('TIMER: %i', timer),'fontsize',18); axis off
             text(0.1,0.7, sprintf('Capture duration: %i', numTrials/frameRate), 'fontsize',18); 
-            text(0.1,0.5, sprintf('SNR: 21dB'), 'fontsize',18); 
+            text(0.1,0.5, sprintf('SNR: %f dB', SNR), 'fontsize',18); 
             text(0.1,0.3, sprintf('Confidence: %f', confidence), 'fontsize',18);   
             
             subplot(2,2,4);

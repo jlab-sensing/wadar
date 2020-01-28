@@ -14,7 +14,7 @@
 
 % TODO: this function should return the confidence as well as the peak 
 
-function [peakBin confidence ftTag shiftedTemplate] = determinePeak(templateFT, templatePeakBin, ft, frameRate, method, varargin) 
+function [peakBin confidence ftTag shiftedTemplate SNR] = determinePeak(templateFT, templatePeakBin, ft, frameRate, method, varargin) 
 
 % ------------------------------------------ PREPROCESSING------------------------------------------
 % find the magnitude of the ft 
