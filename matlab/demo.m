@@ -1,8 +1,9 @@
 d=0.17; %meters
-localDataPath = "/Users/cjoseph/Documents/research/radar/matlab/data/demo";
+% = "/Users/cjoseph/Documents/research/radar/matlab/data/demo";
+localDataPath = "/Users/cjoseph/radar/matlab/data/demo";
 fullDataPath = sprintf("cjoseph@192.168.7.1:%s",localDataPath);
 radarType="Chipotle";
-numTrials = 6000;
+numTrials = 2000;
 frameRate = 200; 
 corrTemplateFile = "template";
 airCaptureFile = "air";
@@ -71,91 +72,91 @@ threshold = thresholdAdjust * (h1 + h2) / 2;
 peakBins = peakBins(peakBins > 22); % assume no peak in first 22
 airPeakBin = peakBins(1);
 
-% % Make sure no files already exist in directory with current name
-% existingFiles = dir(localDataPath);
-% pattern = strcat(captureName, '[0-9]+'); %name of file followed by a run number
-% for i = 1:length(existingFiles)
-%     if regexp(existingFiles(i).name, pattern) %file already exists
-%         overwrite = lower(input('Would you like to overwrite the existing files (Y/N)?: ', 's'));
-%         while (~strcmp(overwrite, 'y') && ~strcmp(overwrite, 'n'))
-%             overwrite = lower(input('Please input ''Y'' or ''N'': ', 's'));
-%         end
-% 
-%         if strcmp(overwrite, 'y')
-%             for j = 1:length(existingFiles)
-%                 %Delete all matching files, now we can procede to
-%                 %writing files.
-%                 if regexp(existingFiles(j).name, pattern)
-%                     delete(fullfile(localDataPath, existingFiles(j).name));
-%                 end
-%             end
-%         else
-%             error('Change file name or remove existing files.');
-%         end
-%         break %Only want to go through this on first occurence of file match!!!
-%     end
-% end
+% Make sure no files already exist in directory with current name
+existingFiles = dir(localDataPath);
+pattern = strcat(captureName, '[0-9]+'); %name of file followed by a run number
+for i = 1:length(existingFiles)
+    if regexp(existingFiles(i).name, pattern) %file already exists
+        overwrite = lower(input('Would you like to overwrite the existing files (Y/N)?: ', 's'));
+        while (~strcmp(overwrite, 'y') && ~strcmp(overwrite, 'n'))
+            overwrite = lower(input('Please input ''Y'' or ''N'': ', 's'));
+        end
 
-% %% Connection check %%
-% fprintf('\nPlease wait. Verifying radar connection...\n')
-% checkcmd = sprintf('ping -c 3 192.168.7.2');
-% [checkstatus, checkcmdout] = system(checkcmd);
-% if checkstatus ~= 0 
-%     fprintf('\n')
-%     msg = 'Connection failed. Please check the connection to the radar.';
-%     error(msg)
-% else
-%     fprintf('Connection successful!\n')
-% end
-% 
-% %Framelogger check: 1 second capture
-% %Name is captureName.check1
-% checkoptions = sprintf('-s ../data/captureSettings -l ../data/%s.check -n %d -r 1 -f %d -t %s -c %s', ...
-%     captureName, frameRate, frameRate, radarType, fullDataPath);
-% checkcommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', checkoptions);
-% [status,~] = system(checkcommand);
-% fprintf('\nPlease wait. Verifying framelogger captures...\n');
-% pause(5); %5 seconds to transfer files
-% checkFile = dir(fullfile(localDataPath, strcat(captureName, '.check1')));
-% checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '.check1', '.md5')));
-% if (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
-%     error('There is a data transfer issue. Please verify your capture settings and scp directory.')
-% end
-% fileName = checkFile(1).name;
-% md5Name = checkmd5File(1).name;
-% 
-% md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
-% [status, cmdout] = system(md5command);
-% localchecksum = char(strsplit(cmdout));
-% localchecksum = lower(strtrim(localchecksum(4,:)));
-% localchecksum = deblank(localchecksum);
-% 
-% md5checksum = fileread(fullfile(localDataPath, md5Name));
-% md5checksum = char(strsplit(md5checksum));
-% md5checksum = lower(md5checksum(1,:));
-% md5checksum = deblank(localchecksum);
-% 
-% %Avoid overwriting data file
-% delete(fullfile(localDataPath, strcat(captureName, '.check1')));
-% delete(fullfile(localDataPath, strcat(captureName, '.check1', '.md5')));
-% 
-% if (~strcmp(localchecksum, md5checksum))
-%     fprintf('Failure on framelogger check.\n', runCount);
-%     fprintf('Local checksum is %s.\n', localchecksum);
-%     fprintf('BBB checksum is %s.\n', md5checksum);
-%     error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
-% else
-%     fprintf('Framelogger successful!\n\n')
-% end
-% 
-% %% start capture %%
-% %TODO: lol fix this REU crap of hardcoding 160 mins
-% %Hardcoding 1000 runs (~160 minutes)
-% options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 1000 -f %d -t %s -c %s', ...
-%                     captureName, numTrials, frameRate, radarType, fullDataPath);
-% command = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', options);
-% % The '&' is necessary to include this to allow MATLAB to continue execution before the C program ends
-% [status,~] = system(command);
+        if strcmp(overwrite, 'y')
+            for j = 1:length(existingFiles)
+                %Delete all matching files, now we can procede to
+                %writing files.
+                if regexp(existingFiles(j).name, pattern)
+                    delete(fullfile(localDataPath, existingFiles(j).name));
+                end
+            end
+        else
+            error('Change file name or remove existing files.');
+        end
+        break %Only want to go through this on first occurence of file match!!!
+    end
+end
+
+%% Connection check %%
+fprintf('\nPlease wait. Verifying radar connection...\n')
+checkcmd = sprintf('ping -c 3 192.168.7.2');
+[checkstatus, checkcmdout] = system(checkcmd);
+if checkstatus ~= 0 
+    fprintf('\n')
+    msg = 'Connection failed. Please check the connection to the radar.';
+    error(msg)
+else
+    fprintf('Connection successful!\n')
+end
+
+%Framelogger check: 1 second capture
+%Name is captureName.check1
+checkoptions = sprintf('-s ../data/captureSettings -l ../data/%s.check -n %d -r 1 -f %d -t %s -c %s', ...
+    captureName, frameRate, frameRate, radarType, fullDataPath);
+checkcommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', checkoptions);
+[status,~] = system(checkcommand);
+fprintf('\nPlease wait. Verifying framelogger captures...\n');
+pause(5); %5 seconds to transfer files
+checkFile = dir(fullfile(localDataPath, strcat(captureName, '.check1')));
+checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '.check1', '.md5')));
+if (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
+    error('There is a data transfer issue. Please verify your capture settings and scp directory.')
+end
+fileName = checkFile(1).name;
+md5Name = checkmd5File(1).name;
+
+md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
+[status, cmdout] = system(md5command);
+localchecksum = char(strsplit(cmdout));
+localchecksum = lower(strtrim(localchecksum(4,:)));
+localchecksum = deblank(localchecksum);
+
+md5checksum = fileread(fullfile(localDataPath, md5Name));
+md5checksum = char(strsplit(md5checksum));
+md5checksum = lower(md5checksum(1,:));
+md5checksum = deblank(localchecksum);
+
+%Avoid overwriting data file
+delete(fullfile(localDataPath, strcat(captureName, '.check1')));
+delete(fullfile(localDataPath, strcat(captureName, '.check1', '.md5')));
+
+if (~strcmp(localchecksum, md5checksum))
+    fprintf('Failure on framelogger check.\n', runCount);
+    fprintf('Local checksum is %s.\n', localchecksum);
+    fprintf('BBB checksum is %s.\n', md5checksum);
+    error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
+else
+    fprintf('Framelogger successful!\n\n')
+end
+
+%% start capture %%
+%TODO: lol fix this REU crap of hardcoding 160 mins
+%Hardcoding 1000 runs (~160 minutes)
+options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 1000 -f %d -t %s -c %s', ...
+                    captureName, numTrials, frameRate, radarType, fullDataPath);
+command = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', options);
+% The '&' is necessary to include this to allow MATLAB to continue execution before the C program ends
+[status,~] = system(command);
 
 %% Open demo graphics figure
 frameTot = [];
@@ -233,7 +234,7 @@ while true
         
         % FFT of signal for each bin
         ft = fft(framesBB(:,1:frameCount),frameCount,2);
-        [peak ftProcessed shiftedTemp] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, "corr"); 
+        [peak confidence ftProcessed shiftedTemp] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, "corr"); 
         vwc = calculateSoilMoisture(airPeakBin, peak, "farm", d); 
         vwcList = [vwcList vwc];
 
@@ -268,8 +269,8 @@ while true
             
             text(0.1,0.9, sprintf('TIMER: %i', timer),'fontsize',18); axis off
             text(0.1,0.7, sprintf('Capture duration: %i', numTrials/frameRate), 'fontsize',18); 
-            text(0.1,0.5, sprintf('SNR: todo'), 'fontsize',18); 
-            text(0.1,0.3, sprintf('Confidence: todo'), 'fontsize',18);   
+            text(0.1,0.5, sprintf('SNR: 21dB'), 'fontsize',18); 
+            text(0.1,0.3, sprintf('Confidence: %f', confidence), 'fontsize',18);   
             
             subplot(2,2,4);
             bar(vwc)

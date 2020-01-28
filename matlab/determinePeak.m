@@ -67,7 +67,7 @@ ftTag = ft(:,freqTag) + ft(:, freqTagHar);
 %ft = ft ./ sum(ft); 
 %templateFT = templateFT ./ sum(templateFT); 
 %ftTag = ftTag ./ sum(ftTag); 
-ft = ft / max(ft); 
+% ft = ft ./ max(ft); 
 templateFT = templateFT / max(templateFT); 
 ftTag = ftTag / max(ftTag); 
 
@@ -215,5 +215,7 @@ elseif method == "leftMost"
 else
     error(strcat("No algorithm called ", method)); 
 end
+
+SNR = calculateSNR(ft, freqTag, peakBin); 
     
 end
