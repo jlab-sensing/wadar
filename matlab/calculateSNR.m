@@ -7,7 +7,7 @@
 % freq: desired frequency 
 % bin: selected bin 
 
-function SNR = calculateSNR(ft, freq, bin)
+function SNRdb = calculateSNR(ft, freq, bin)
 
 signalMag = abs(ft(bin, freq));
 
