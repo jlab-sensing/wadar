@@ -16,6 +16,9 @@
 
 function [peakBin confidence ftTag shiftedTemplate SNR] = determinePeak(templateFT, templatePeakBin, ft, frameRate, method, varargin) 
 
+tagHz = 50; 
+% tagHz = 80;
+
 % ------------------------------------------ PREPROCESSING------------------------------------------
 % find the magnitude of the ft 
 ft = abs(ft); 
@@ -26,23 +29,45 @@ templateFT = abs([templateFT(1:512,:); zeros(512-512,1)]);
 hardCodeFrequencies = 1; % hard code or max peak height 
 
 if hardCodeFrequencies
-    if length(ft(1,:)) <= frameRate * 30 % <= 30s
-        freqTag = 80 / frameRate * length(ft(1,:)) + 1; 
-        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 1;   
-        templateFT = abs([templateFT(1:400,:); zeros(512-400,1)]); 
-    elseif length(ft(1,:)) == frameRate * 100 % 100s
-        freqTag = 80 / frameRate * length(ft(1,:)) + 0; 
-        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 2; 
-        templateFT = abs([templateFT(1:300,:); zeros(512-300,1)]); 
-
-    elseif length(ft(1,:)) == frameRate * 300 % 300s
-        freqTag = 80 / frameRate * length(ft(1,:)) - 1;
-        freqTagHar = (frameRate - 80) / frameRate * length(ft(1,:)) + 3;
-        templateFT = abs([templateFT(1:300,:); zeros(512-300,1)]); 
-    else
-        error('unrecognized capture duration') 
-    end
+    freqTag = tagHz / frameRate * length(ft(1,:)); 
+    freqTagHar = (frameRate - tagHz) / frameRate * length(ft(1,:)); 
     
+    if tagHz == 80
+        if length(ft(1,:)) <= frameRate * 30 % <= 30s
+            freqTag = freqTag + 1; 
+            freqTagHar = freqTagHar + 1;   
+            templateFT = abs([templateFT(1:400,:); zeros(512-400,1)]); 
+        elseif length(ft(1,:)) == frameRate * 100 % 100s
+            freqTag = freqTag + 0; 
+            freqTagHar = freqTagHar + 2;  
+            templateFT = abs([templateFT(1:300,:); zeros(512-300,1)]); 
+        elseif length(ft(1,:)) == frameRate * 300 % 300s
+            freqTag = freqTag -1; 
+            freqTagHar = freqTagHar + 3; 
+            templateFT = abs([templateFT(1:300,:); zeros(512-300,1)]); 
+        else
+            error('unrecognized capture duration') 
+        end
+        
+    elseif tagHz == 50
+         if length(ft(1,:)) <= frameRate * 30 % <= 30s
+            freqTag = freqTag + 1; 
+            freqTagHar = freqTagHar + 1;   
+            templateFT = abs([templateFT(1:400,:); zeros(512-400,1)]); 
+        elseif length(ft(1,:)) == frameRate * 100 % 100s
+            freqTag = freqTag + 1; 
+            freqTagHar = freqTagHar + 1;  
+            templateFT = abs([templateFT(1:300,:); zeros(512-300,1)]); 
+        elseif length(ft(1,:)) == frameRate * 300 % 300s
+            freqTag = freqTag + 0; 
+            freqTagHar = freqTagHar + 2; 
+            templateFT = abs([templateFT(1:300,:); zeros(512-300,1)]); 
+        else
+            error('unrecognized capture duration') 
+        end
+        
+    end
+       
 else
     freqTag = 80 * length(ft) / frameRate; % original guess
 
