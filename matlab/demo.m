@@ -1,11 +1,14 @@
 d=0.06; %meters
-% = "/Users/cjoseph/Documents/research/radar/matlab/data/demo";
-localDataPath = "/home/bradley/Documents/Research/winter2020/radar/matlab/data/demo";
-fullDataPath = sprintf("bradley@192.168.7.1:%s",localDataPath);
+localDataPath = "/Users/cjoseph/Documents/research/radar/matlab/data/demo";
+%localDataPath = "/home/bradley/Documents/Research/winter2020/radar/matlab/data/demo";
+%fullDataPath = sprintf("bradley@192.168.7.1:%s",localDataPath);
+fullDataPath = sprintf("cjoseph@192.168.7.1:%s",localDataPath);
 radarType="Chipotle";
 numTrials = 2000;
 frameRate = 200; 
-tagHz = 50; 
+tagHz = 50;
+SNR=0;
+confidence = 0;
 corrTemplateFile = "template";
 airCaptureFile = "air";
 captureName = "demoDump";
@@ -260,10 +263,11 @@ while true
             % stats?
             subplot(2,2,2);
             
-            text(0.1,0.9, sprintf('TIMER: %i', timer),'fontsize',18); axis off
-            text(0.1,0.7, sprintf('Capture duration: %i', numTrials/frameRate), 'fontsize',18); 
-            text(0.1,0.5, sprintf('SNR: %f dB', SNR), 'fontsize',18); 
-            text(0.1,0.3, sprintf('Confidence: %f', confidence), 'fontsize',18);   
+            text(0.1,1, sprintf('Measurement #%i', runCount-1),'fontsize', 20);axis off
+            text(0.1,0.8, sprintf('TIMER: %is', timer),'fontsize',18); 
+            text(0.1,0.65, sprintf('Capture duration: %is', numTrials/frameRate), 'fontsize',18); 
+            text(0.1,0.50, sprintf('SNR: %f dB', SNR), 'fontsize',18); 
+            text(0.1,0.35, sprintf('Confidence: %f', confidence), 'fontsize',18);   
             
             subplot(2,2,4);
             bar(vwc)
@@ -274,16 +278,34 @@ while true
         else
             break;
         end
-        timer = 0;
+        %timer = 0;
         runCount = runCount + 1;
     end
     timer = timer + 1;
-    
-    subplot(2,2,2); 
-    text(0.1,0.9, sprintf('TIMER: %i', timer),'fontsize',18); axis off
-    text(0.1,0.7, sprintf('Capture duration: %i', numTrials/frameRate), 'fontsize',18); 
-    text(0.1,0.5, sprintf('SNR: %f dB', SNR), 'fontsize',18); 
-    text(0.1,0.3, sprintf('Confidence: %f', confidence), 'fontsize',18);   
-    
+    if button.Value ~= 1
+        a = subplot(2,2,2);    
+        cla(a)
+        text(0.1,1, sprintf('Measurement #%i', runCount-1),'fontsize', 20);axis off
+        text(0.1,0.8, sprintf('TIMER: %is', timer),'fontsize',18); 
+        text(0.1,0.65, sprintf('Capture duration: %is', numTrials/frameRate), 'fontsize',18); 
+        text(0.1,0.5, sprintf('SNR: %f dB', SNR), 'fontsize',18); 
+        text(0.1,0.35, sprintf('Confidence: %f', confidence), 'fontsize',18);   
+    else
+        break;
+    end
     pause(1)
 end    
+
+function stopbutton(hObject, eventdata)
+killcommand = sprintf('ssh root@192.168.7.2 "pkill frame"'); %Kills processes with "frame" in name
+[status,~] = system(killcommand);
+fprintf('Stopping...\n')
+
+eventdata.AffectedObject.Value = 1;
+eventdata.AffectedObject.Interruptible = false;
+eventdata.AffectedObject.ForegroundColor = 'red';
+eventdata.AffectedObject.String = 'STOPPED';
+
+fprintf('Program paused. Please use "Ctrl+C" to resume and finish.\n')
+uiwait()
+end
