@@ -12,7 +12,7 @@ if tagHz == 80
         freqTagHar = freqTagHar + 2;  
     elseif numTrials == frameRate * 300 % 300s
         freqTag = freqTag -1; 
-        freqTagHar = freqTagHar + 3; Y
+        freqTagHar = freqTagHar + 3; 
     else
         error('unrecognized capture duration') 
     end
