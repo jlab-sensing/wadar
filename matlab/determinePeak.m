@@ -4,17 +4,17 @@
 % temlateFT: ft of the template signal 
 % templatePeakBin: bin of the template that is used for correlation alignment 
 % ft: ft of the signal 
-% method: method to use for calculating the peak 
+% peakMethod: method to use for calculating the peak 
+% confidenceMethod: method to use for calculating the confidence 
 % varargin: if not None, it contains info for plotting (and causes plotting)
     % note: r.e. the version from 12/28, the title info is not being used
     % for the title, but is being displayed and is causing plotting 
 
 % Returns 
-% peakBin: calculated peak bin based on the selected method
+% TODO: fill out returns 
 
-% TODO: this function should return the confidence as well as the peak 
-
-function [peakBin confidence ftTag shiftedTemplate SNR] = determinePeak(templateFT, templatePeakBin, ft, frameRate, tagHz, method, varargin) 
+function [peakBin confidence ftTag shiftedTemplate SNR] = determinePeak(...
+    templateFT, templatePeakBin, ft, frameRate, tagHz, peakMethod, confidenceMethod, varargin) 
 
 % ------------------------------------------ PREPROCESSING------------------------------------------
 % find the magnitude of the ft 
@@ -102,9 +102,7 @@ peaks = peaks(I);
 peakBins = peakBins(I); 
 
 % calculate correlation score for all peaks  
-corrBest = 0; 
-peakBinBest = 1; 
-shiftedTemplateFTBest = zeros(size(templateFT)); 
+corr = zeros(numPeaks, searchRadius*2+1); 
 
 for binIndex = 1:length(peakBins)
     
@@ -117,8 +115,7 @@ for binIndex = 1:length(peakBins)
         end
 
         if peakBin < (templatePeakBin-10) 
-            corr = [corr -1]; % we don't want range bins < template bin to be considered
-            continue 
+            continue % we don't want range bins < template bin to be considered
         end
 
         % align template ft with data ft by shifting and wrapping 
@@ -127,25 +124,41 @@ for binIndex = 1:length(peakBins)
         shiftedTemplateFT = circshift(templateFT, binDifference);
 
         % calculate the correlation and remember the highest
-        corr = sum(shiftedTemplateFT .* ftTag); 
-        
-        if (corr > corrBest)
-            corrBest = corr; 
-            shiftedTemplateFTBest = shiftedTemplateFT; 
-            peakBinBest = peakBin; 
-        end
+        corr(binIndex,radius + searchRadius + 1) = sum(shiftedTemplateFT .* ftTag); 
     end
 end
 
 % ----------------------------------------- CHOOSE BEST PEAK -----------------------------------
-peakBin = peakBinBest;
+corr = corr / max(max(corr)); % normalize max corr to 1
+
+% find global maximum 
+[val argBinIndex] = max(corr); 
+[corrBest argRadiusIndex] = max(val); 
+argBinIndex = argBinIndex(argRadiusIndex); 
+
+peakBin = peakBins(argBinIndex) + (argRadiusIndex - searchRadius - 1); 
 peakBinCorr = peakBin; 
 
+% for plotting 
+binDifference = peakBin - templatePeakBin; 
+shiftedTemplateFT = circshift(templateFT, binDifference);
+
+% --------------------------------------GET CONFIDENCE -------------------------------------------
+% find confidence metric using correlation difference between max
+% correlation found in best peak region and second best peak region
+% peak region refers to original peak bins +- searchRadius 
+% TODO - we only want to consider peak regions that are far (>30 bins) away
+corrSecondBest = max(max(corr([1:argBinIndex-1, argBinIndex+1:end],:))); 
+
+% shifted sigmoid such that shifted_sigmoid(0) = 0, shifted_sigmoid(1) = 1
+% TODO: should confidence range from 0.5 to 1 here?
+tau = 0.08; % trial and error 
+corrConfidence = 2 * (1 / (1 + exp(-(corrBest - corrSecondBest)/tau)) - 0.5); 
+
 % --------------------------------------------- PLOT -------------------------------------------
-shiftedTemplate = shiftedTemplateFTBest;
 if plotting
     plot(ftTag, 'displayname','signal fourier transform'); hold on;
-    plot(shiftedTemplateFTBest, 'DisplayName', 'shifted fingerprint fourier transform'); hold on; 
+    plot(shiftedTemplateFT, 'DisplayName', 'shifted fingerprint fourier transform'); hold on; 
     plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
     plot(peakBin, ftTag(peakBin), 'x', 'DisplayName', 'auto peak');
 
@@ -162,18 +175,6 @@ end
 thresholdAdjust = 0.9; % factor for adjusting which peaks are considered valid
 filterSize = 10; % filter size for smoothing data 
 
-%     % normalize against the other tag frequencies 
-%     ftOther = mean(ft(:, [freqTag - 3 : freqTag - 1, freqTag + 1 : freqTag + 3]), 2); 
-%     ftOther = movmean(ftOther, 30); 
-%     ftOtherHar = mean(ft(:, [freqTagHar - 3 : freqTagHar - 1, freqTagHar + 1 : freqTagHar + 3]), 2); 
-%     ftOtherHar = movmean(ftOtherHar, 30); 
-%     
-%     ftTag = ft(:,freqTag) ./ ftOther + ft(:, freqTagHar) ./ ftOtherHar;
-%     ftTag = ftTag ./ sum(ftTag); 
-
-%     ftTag = ft(:, freqTag) ./ mean(ft(:, [freqTag-5:freqTag-1, freqTag+1:freqTag+5]),2) + ...
-%         ft(:, freqTagHar) ./ mean(ft(:, [freqTagHar-5:freqTagHar-1, freqTagHar+1:freqTagHar+5]),2); 
-
 % apply MA heuristic filter 
 smoothing = 0; 
 if smoothing
@@ -187,10 +188,15 @@ threshold = thresholdAdjust * (h1 + h2) / 2;
 
 [peaks peakBins] = findpeaks(ftTag, 'MinPeakHeight', threshold); 
 
+% ----------------------------------------- CHOOSE BEST PEAK -----------------------------------
 peakBins = peakBins(peakBins > 100); % assume no peak in first 100 
 peakBin = peakBins(1); 
 peakBinLeftMost = peakBin; 
 
+% ----------------------------------------- GET CONFIDENCE -----------------------------------
+% leftMostConfidence = 0; 
+
+% --------------------------------------------- PLOT -------------------------------------------
 if plotting
     figure
     plot(ftTag, 'displayname','signal fourier transform'); hold on;
@@ -208,21 +214,33 @@ end
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ------------------------------------ DETERMINE CONFIDENCE ----------------------------------------
-tau = 20; % normalizing constant 
+% ------------------------------------CHOOSE CONFIDENCE BY METHOD-----------------------------------
+confidence = 0; 
 
-confidence = exp(-abs(peakBinCorr - peakBinLeftMost) / tau); 
+if confidenceMethod == "joint"
+    tau = 20; % normalizing constant 
+    confidence = exp(-abs(peakBinCorr - peakBinLeftMost) / tau); 
+    
+elseif confidenceMethod == "same"
+    if peakMethod == "corr"
+        confidence = corrConfidence; 
+    elseif peakMethod == "leftMost"
+       error("no confidence metric created for left most peak method"); 
+    end
+else
+    error("invalid confidence method"); 
+end
 
 % ------------------------------------ CHOOSE PEAK BY METHOD ---------------------------------------
 
 peakBin = 0; 
 
-if method == "corr"
+if peakMethod == "corr"
     peakBin = peakBinCorr; 
-elseif method == "leftMost"
+elseif peakMethod == "leftMost"
     peakBin = peakBinLeftMost; 
 else
-    error(strcat("No algorithm called ", method)); 
+    error(strcat("No algorithm called ", peakMethod)); 
 end
 
 SNR = calculateSNR(ft, freqTag, peakBin); 
