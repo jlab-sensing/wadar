@@ -87,6 +87,7 @@ end
    
 numPeaks = 6; % number of peaks in the ft to consider 
 filterSize = 10; 
+searchRadius = 10; % how many bins to consider on left and right side of peaks 
 
 % apply MA heuristic filter 
 smoothing = 0; 
@@ -100,41 +101,51 @@ end
 peaks = peaks(I); 
 peakBins = peakBins(I); 
 
-% calculate correlation score for all peaks 
-corr = []; 
-shiftedTemplateFTs = []; 
+% calculate correlation score for all peaks  
+corrBest = 0; 
+peakBinBest = 1; 
+shiftedTemplateFTBest = zeros(size(templateFT)); 
+
 for binIndex = 1:length(peakBins)
+    
+    for radius = -searchRadius:searchRadius
 
-    peakBin = peakBins(binIndex);
+        peakBin = peakBins(binIndex) + radius;
+        
+        if (peakBin < 1 || peakBin > length(templateFT))
+            continue
+        end
 
-    if peakBin < (templatePeakBin-10) 
-        corr = [corr -1]; % we don't want range bins < template bin to be considered
-        continue 
+        if peakBin < (templatePeakBin-10) 
+            corr = [corr -1]; % we don't want range bins < template bin to be considered
+            continue 
+        end
+
+        % align template ft with data ft by shifting and wrapping 
+        binDifference = peakBin - templatePeakBin; 
+
+        shiftedTemplateFT = circshift(templateFT, binDifference);
+
+        % calculate the correlation and remember the highest
+        corr = sum(shiftedTemplateFT .* ftTag); 
+        
+        if (corr > corrBest)
+            corrBest = corr; 
+            shiftedTemplateFTBest = shiftedTemplateFT; 
+            peakBinBest = peakBin; 
+        end
     end
-
-    % align template ft with data ft by shifting and wrapping 
-    binDifference = peakBin - templatePeakBin; 
-
-    shiftedTemplateFTs(:,binIndex) = circshift(templateFT, binDifference);
-
-    % calculate correlation 
-    if length(shiftedTemplateFTs(:,binIndex)) ~= length(ftTag)
-        error('length of the signals do not match - cannot compute correlation'); 
-    end
-
-    corr = [corr sum(shiftedTemplateFTs(:,binIndex) .* ftTag)]; 
 end
 
 % ----------------------------------------- CHOOSE BEST PEAK -----------------------------------
-[val, argMax] = max(corr);
-peakBin = peakBins(argMax);
+peakBin = peakBinBest;
 peakBinCorr = peakBin; 
 
 % --------------------------------------------- PLOT -------------------------------------------
-shiftedTemplate = shiftedTemplateFTs(:,argMax);
+shiftedTemplate = shiftedTemplateFTBest;
 if plotting
     plot(ftTag, 'displayname','signal fourier transform'); hold on;
-    plot(shiftedTemplateFTs(:,argMax), 'DisplayName', 'shifted fingerprint fourier transform'); hold on; 
+    plot(shiftedTemplateFTBest, 'DisplayName', 'shifted fingerprint fourier transform'); hold on; 
     plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
     plot(peakBin, ftTag(peakBin), 'x', 'DisplayName', 'auto peak');
 
