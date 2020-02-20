@@ -19,11 +19,11 @@
 %            1 if writing all peak detection results to xlsv 
 % peakMethod: algorithm used to detect peak; used in determinePeak 
 
-% Example Usage: salsaPeaks('/home/bradley/Documents/Research/peak_detect/', 1, "leftMost") 
+% Example Usage: salsaPeaks('/home/bradley/Documents/Research/peak_detect/', 1, "leftMost", "same") 
 
-function salsaPeaks(localPath, writeMode, peakMethod)
+function salsaPeaks(localPath, writeMode, peakMethod, confidenceMethod)
 frameRate = 200; 
-tagHz = 50; 
+tagHz = 80; 
 maxTemplates = 2; % max number of templates used in any experiment
 captureExpression = 'fullDepth_10s_0can1'; % expression in the capture name to match for plotting...
                                             % program will continue if expression is not in capture
@@ -208,9 +208,11 @@ for k = 1:length(expDirs)
                          plotInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
                              " ,manual peak = ", num2str(peaksManual(csvIndex))); 
                         plotInfo = strcat(num2str(peaksManual(csvIndex))); 
-                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, tagHz, peakMethod, plotInfo); 
+                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j),...
+                            ft, frameRate, tagHz, peakMethod, confidenceMethod, plotInfo); 
                     else
-                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j), ft, frameRate, tagHz, peakMethod); 
+                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j),...
+                            ft, frameRate, tagHz, peakMethod, confidenceMethod); 
                     end
                     
                     % store results according to order in csv
