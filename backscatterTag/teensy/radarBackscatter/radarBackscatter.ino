@@ -6,8 +6,9 @@ elapsedMicros cycles; // toggle timing
 
 const int period =  6250; // half period of tag in microseconds
 //const int period =  10000; // half period of tag in microseconds
-int pn[] = {1,0,1,0,1,0,1,0};
-
+//int pn[] = {1,0,1,0,1,0,1,0};
+int pn[] = {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1};
+//int pn[] = {0,1,1,0,1,0,1,0,1,1,1,0,0,0,0,1,0,1,1,1,1,0,0,1,1,0,1,0,1,0,1,0};
 const int tOn = (30000000); // tag on duration
 const int tOff = (30000000); // tag off duration
 const int tagPin = 3; // arduino pin supplying power to RF switch
@@ -27,7 +28,7 @@ void toggleRF() {
   if (cycles >= period) {
     //digitalWrite(tagPin, (RF) ? HIGH : LOW);
     digitalWrite(tagPin, (pn[i]) ? HIGH : LOW);
-    i = (i+1)%8;
+    i = (i+1)%32;
     RF = !RF;
     //Serial.println(pn ? HIGH : LOW); //debugging
     cycles = 0; //restart fq timer after every half period

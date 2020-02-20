@@ -1,4 +1,5 @@
-d=0.06; %meters
+d=0.1; %meters
+method = "corr"; %"leftMost"l
 localDataPath = "/Users/cjoseph/Documents/research/radar/matlab/data/demo";
 %localDataPath = "/home/bradley/Documents/Research/winter2020/radar/matlab/data/demo";
 %fullDataPath = sprintf("bradley@192.168.7.1:%s",localDataPath);
@@ -6,11 +7,11 @@ fullDataPath = sprintf("cjoseph@192.168.7.1:%s",localDataPath);
 radarType="Chipotle";
 numTrials = 2000;
 frameRate = 200; 
-tagHz = 50;
+tagHz = 80;
 SNR=0;
 confidence = 0;
-corrTemplateFile = "template";
-airCaptureFile = "air";
+corrTemplateFile = "template80";
+airCaptureFile = "air80";
 captureName = "demoDump";
 
 %% loading template %%
@@ -22,7 +23,7 @@ for j = 1:tempFrameCount
     tempFramesBB(:,j) = NoveldaDDC(tempRawFrames(:,j), chipSet, pgen, fs_hz);
 end
 
-tempFT = fft(tempFramesBB,tempFrameCount,2); 
+tempFT = fft(tempFramesBB(:,1:numTrials),numTrials,2); 
 
 % choose the frequency based on the capture duration 
 [freqTag, freqTagHar] = calculateTagFrequencies(tagHz, frameRate, numTrials); 
@@ -51,7 +52,7 @@ for j = 1:airFrameCount
     airFramesBB(:,j) = NoveldaDDC(airRawFrames(:,j), chipSet, pgen, fs_hz);
 end
 
-airFT = fft(airFramesBB,airFrameCount,2); 
+airFT = fft(airFramesBB,numTrials,2); 
 
 %TODO: improve this?
 airTagFT = abs(airFT(:, freqTag)); 
@@ -65,7 +66,7 @@ thresholdAdjust = 0.9; % factor for adjusting which peaks are considered valid
 threshold = thresholdAdjust * (h1 + h2) / 2; 
 %threshold = 0.85 * max(tempTagFT);  
 [peaks peakBins] = findpeaks(airTagFT, 'MinPeakHeight', threshold); 
-peakBins = peakBins(peakBins > 22); % assume no peak in first 22
+peakBins = peakBins(peakBins > 22); % assume no peak in first 22x
 airPeakBin = peakBins(1);
 
 % Make sure no files already exist in directory with current name
@@ -230,8 +231,8 @@ while true
         
         % FFT of signal for each bin
         ft = fft(framesBB(:,1:frameCount),frameCount,2);
-        [peak confidence ftProcessed shiftedTemp SNR] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, tagHz, "corr"); 
-        vwc = calculateSoilMoisture(airPeakBin, peak, "farm", d); 
+        [peak confidence ftProcessed shiftedTemp SNR] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, tagHz, method); 
+        vwc = calculateSoilMoisture(airPeakBin, peak, "silt", d); 
         vwcList = [vwcList vwc];
 
         if button.Value ~= 1

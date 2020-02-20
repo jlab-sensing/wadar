@@ -12,7 +12,7 @@
 function salsaMain(captureData, varargin)
 %% Process arguments
 %close all
-numTrials = 2000;
+numTrials = 20000;
 frameRate = 200; % frames per sec
 % TODO - (optional) - since all varargin arguments are required, the function could take
 % in 3 arguments instead of using 1 required arg and varargin. But this
@@ -390,6 +390,28 @@ mean(deltas)
 std(deltas)
 max(deltas)
 min(deltas)
+square = repmat([1 1 -1 -1], 1, numTrials/4);
+pn = [0 1 1 0 1 0 1 0 1 1 1 0 0 0 0 1 0 1 1 1 1 0 0 1 1 0 1 0 1 0 1 0];
+corr = [];
+for i=pn
+    if ~i
+        corr = [corr -1 -1];
+    else
+        corr = [corr i i];
+    end
+end
+corr = repmat(corr, 1, 32);
+corr = corr(1:length(corr)-1.5*length(pn));
+hold on
+%for s=1:length(pn)*2
+%    shifted=circshift(corr,s); square_wave_rep = repmat(shifted, size(frameWindow_bb,1), 1); correlatedFrame = sum(frameWindow_bb.*square_wave_rep,2);plot(abs(correlatedFrame), 'DisplayName',string(s)); 
+%end
+legend
+% hold on
+% s=0;shifted=circshift(square,s); square_wave_rep = repmat(shifted, size(frameWindow_bb,1), 1); correlatedFrame = sum(frameWindow_bb.*square_wave_rep,2);plot(abs(correlatedFrame))
+% s=1;shifted=circshift(square,s); square_wave_rep = repmat(shifted, size(frameWindow_bb,1), 1); correlatedFrame = sum(frameWindow_bb.*square_wave_rep,2);plot(abs(correlatedFrame))
+% s=0;shifted=circshift(square,s); square_wave_rep = repmat(shifted, size(frameWindow_bb,1), 1); correlatedFrame = sum(frameWindow_bb.*square_wave_rep,2);plot(abs(correlatedFrame))
+% legend('square s0','square s1','ft')
 fprintf('\nDone!\n')
 end
 
