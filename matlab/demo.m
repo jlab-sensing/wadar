@@ -25,8 +25,8 @@ idxCaptureDurations = 1; % index of current duration
 alpha_cur = 0.4; % weight given to the most recent capture 
 SNR_prev = 0; % previous value of SNR ewma 
 SNR_cur = 0; % recently measured SNR 
-SNR_t_min = 5; % lower threshold for increasing capture duration 
-SNR_t_max = 7; % upper threshold for decreasing capture duration
+SNR_t_min = 7; % lower threshold for increasing capture duration 
+SNR_t_max = 15; % upper threshold for decreasing capture duration
 
 %% loading template %%
 [tempRawFrames pgen fs_hz chipSet timeDeltas] = salsaLoad(fullfile(localDataPath, corrTemplateFile));
