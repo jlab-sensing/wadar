@@ -25,7 +25,7 @@ function salsaPeaks(localPath, writeMode, peakMethod, confidenceMethod)
 frameRate = 200; 
 tagHz = 80; 
 maxTemplates = 2; % max number of templates used in any experiment
-captureExpression = 'fullDepth_10s_0can1'; % expression in the capture name to match for plotting...
+captureExpression = 'fullDepth_10s_1can3'; % expression in the capture name to match for plotting...
                                             % program will continue if expression is not in capture
                                             % name 
 pythonpath = '/Users/cjoseph/anaconda/bin/python';
@@ -65,6 +65,7 @@ expDirs = dir(localPath);
 peakPreds = zeros(length(captureNames), maxTemplates); 
 confidencePreds = zeros(length(captureNames), maxTemplates); 
 vwcPreds = zeros(length(captureNames), maxTemplates); 
+snrPreds = zeros(length(captureNames), maxTemplates);
 
 % estimate peaks and vwc for each experiment 
 for k = 1:length(expDirs)
@@ -208,10 +209,10 @@ for k = 1:length(expDirs)
                          plotInfo = strcat(expFileName, " , ", dataFileName, " , template: ", num2str(j), ...
                              " ,manual peak = ", num2str(peaksManual(csvIndex))); 
                         plotInfo = strcat(num2str(peaksManual(csvIndex))); 
-                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j),...
+                        [peakBin confidence ftTag shiftedTemplate SNR] = determinePeak(templateFTs(:,j),templatePeakBins(j),...
                             ft, frameRate, tagHz, peakMethod, confidenceMethod, plotInfo); 
                     else
-                        [peakBin confidence ~] = determinePeak(templateFTs(:,j),templatePeakBins(j),...
+                        [peakBin confidence ftTag shiftedTemplate SNR] = determinePeak(templateFTs(:,j),templatePeakBins(j),...
                             ft, frameRate, tagHz, peakMethod, confidenceMethod); 
                     end
                     
@@ -220,6 +221,7 @@ for k = 1:length(expDirs)
                     %vwcPreds(csvIndex, j) = calculateSoilMoisture(airPeakBins(j), peak, soilType); 
                     vwcPreds(csvIndex, j) = calculateSoilMoisture(airPeaks(csvIndex), peakBin, soilType, d(csvIndex)); 
                     confidencePreds(csvIndex, j) = confidence; 
+                    snrPreds(csvIndex, j) = SNR; 
                 end        
             end
         end
@@ -238,7 +240,7 @@ end
 
 % ------------------------------------------ TABLE TO XLSV -----------------------------------------  
 if writeMode
-    T = table(expNames, captureNames, peaksManual, peakPreds, peakErrors, confidencePreds, vwcTrue, vwcManual, vwcPreds, vwcErrors);
+    T = table(expNames, captureNames, peaksManual, peakPreds, peakErrors, confidencePreds, vwcTrue, vwcManual, vwcPreds, vwcErrors, snrPreds);
     writetable(T, fullfile(localPath,xlsxFilename)); 
     fclose(fid1);   
     system(sprintf('%s %s %s',pythonpath, 'analyzePeaks.py',fullfile(localPath,xlsxFilename)));
