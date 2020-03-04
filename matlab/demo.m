@@ -1,8 +1,9 @@
 d=0.1; %meters
-method = "corr"; %"leftMost"l
+method = "corr"; %"leftMost"
+confidenceMethod = "joint"; 
 localDataPath = "/Users/cjoseph/Documents/research/radar/matlab/data/demo";
-%localDataPath = "/home/bradley/Documents/Research/winter2020/radar/matlab/data/demo";
-%fullDataPath = sprintf("bradley@192.168.7.1:%s",localDataPath);
+% localDataPath = "/home/bradley/Documents/Research/winter2020/radar/matlab/data/demo";
+% fullDataPath = sprintf("bradley@192.168.7.1:%s",localDataPath);
 fullDataPath = sprintf("cjoseph@192.168.7.1:%s",localDataPath);
 radarType="Chipotle";
 numTrials = 2000;
@@ -11,8 +12,21 @@ tagHz = 80;
 SNR=0;
 confidence = 0;
 corrTemplateFile = "template80";
+% corrTemplateFile = "template_old"; 
 airCaptureFile = "air80";
-captureName = "demoDump";
+% airCaptureFile = "air_old"; 
+captureName = "demoDump"; 
+% captureName = "mar4Dump";
+
+% SNR-Specific Parameters for Determining Capture Duration 
+captureDurations = [10, 30, 100]; % valid capture durations
+idxCaptureDurations = 1; % index of current duration 
+ 
+alpha_cur = 0.4; % weight given to the most recent capture 
+SNR_prev = 0; % previous value of SNR ewma 
+SNR_cur = 0; % recently measured SNR 
+SNR_t_min = 5; % lower threshold for increasing capture duration 
+SNR_t_max = 7; % upper threshold for decreasing capture duration
 
 %% loading template %%
 [tempRawFrames pgen fs_hz chipSet timeDeltas] = salsaLoad(fullfile(localDataPath, corrTemplateFile));
@@ -147,13 +161,7 @@ else
 end
 
 %% start capture %%
-%TODO: lol fix this REU crap of hardcoding 160 mins
-%Hardcoding 1000 runs (~160 minutes)
-options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 1000 -f %d -t %s -c %s', ...
-                    captureName, numTrials, frameRate, radarType, fullDataPath);
-command = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', options);
-% The '&' is necessary to include this to allow MATLAB to continue execution before the C program ends
-[status,~] = system(command);
+demoCapture(captureName, numTrials, frameRate, radarType, fullDataPath);
 
 %% Open demo graphics figure
 frameTot = [];
@@ -177,8 +185,8 @@ while true
         break
     end
     %this will detect when a capture named captureName followed by runCount appears
-    captureFile = dir(fullfile(localDataPath, strcat(captureName, string(runCount))));
-    md5File = dir(fullfile(localDataPath, strcat(captureName, string(runCount), '.md5')));
+    captureFile = dir(fullfile(localDataPath, strcat(captureName, string(1))));
+    md5File = dir(fullfile(localDataPath, strcat(captureName, string(1), '.md5')));
     
     if length(md5File) == 1 && length(captureFile) == 1
         % Add new frames to existing frames
@@ -231,7 +239,7 @@ while true
         
         % FFT of signal for each bin
         ft = fft(framesBB(:,1:frameCount),frameCount,2);
-        [peak confidence ftProcessed shiftedTemp SNR] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, tagHz, method); 
+        [peak confidence ftProcessed shiftedTemp SNR] = determinePeak(tempTagFT,templatePeakBin, ft, frameRate, tagHz, method, confidenceMethod); 
         vwc = calculateSoilMoisture(airPeakBin, peak, "silt", d); 
         vwcList = [vwcList vwc];
 
@@ -280,8 +288,44 @@ while true
             break;
         end
         %timer = 0;
+        
+        % rename file with _runCount so radar can save new data
+        localDataPathPart = erase(localDataPath, pwd); 
+        oldName = strcat(".",localDataPathPart, "/", captureName, string(1)); 
+        newName = strcat(oldName, "_", string(runCount)); 
+        movefile(oldName, newName); 
+        
+        oldNameMd5 = strcat(oldName, ".md5"); 
+        newNameMd5 = strcat(oldName, "_", string(runCount), ".md5"); 
+        movefile(oldNameMd5, newNameMd5);
+        
+        % determine the new capture length via SNR ewma 
+        SNR_cur = SNR; % calculated in determine peak 
+        if (runCount == 1)
+            SNR_prev = SNR_cur; 
+        end
+        
+        SNR_ewma = alpha_cur*SNR_cur + (1-alpha_cur)*(SNR_prev); 
+        
+        if (SNR_ewma < SNR_t_min)
+            if (idxCaptureDurations < length(captureDurations))
+                idxCaptureDurations = idxCaptureDurations + 1; 
+            end
+            
+        elseif (SNR_ewma > SNR_t_max)
+            if (idxCaptureDurations > 1)
+                idxCaptureDurations = idxCaptureDurations - 1; 
+            end
+        end
+        
+        numTrials = captureDurations(idxCaptureDurations) * frameRate;
+        
+        % take a new capture 
+        demoCapture(captureName, numTrials, frameRate, radarType, fullDataPath); 
+        
         runCount = runCount + 1;
     end
+    
     timer = timer + 1;
     if button.Value ~= 1
         a = subplot(2,2,2);    
@@ -290,7 +334,8 @@ while true
         text(0.1,0.8, sprintf('TIMER: %is', timer),'fontsize',18); 
         text(0.1,0.65, sprintf('Capture duration: %is', numTrials/frameRate), 'fontsize',18); 
         text(0.1,0.5, sprintf('SNR: %f dB', SNR), 'fontsize',18); 
-        text(0.1,0.35, sprintf('Confidence: %f', confidence), 'fontsize',18);   
+        text(0.1,0.35, sprintf('SNR ewma: %f dB', SNR_ewma), 'fontsize',18);
+        text(0.1,0.20, sprintf('Confidence: %f', confidence), 'fontsize',18);   
     else
         break;
     end
@@ -309,4 +354,13 @@ eventdata.AffectedObject.String = 'STOPPED';
 
 fprintf('Program paused. Please use "Ctrl+C" to resume and finish.\n')
 uiwait()
+end
+
+
+function demoCapture(captureName, numTrials, frameRate, radarType, fullDataPath)
+options = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 1 -f %d -t %s -c %s', ...
+                    captureName, numTrials, frameRate, radarType, fullDataPath);
+command = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && ./frameLogger %s " &', options);
+% The '&' is necessary to include this to allow MATLAB to continue execution before the C program ends
+[status,~] = system(command);
 end

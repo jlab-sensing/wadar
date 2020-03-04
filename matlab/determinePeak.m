@@ -166,6 +166,7 @@ if plotting
     title('peak detection using correlation method') 
     xlabel('bin')
     ylabel('fourier transform magnitude') 
+    set(gca,'fontsize',24)
     legend();
 end
       
@@ -199,6 +200,7 @@ peakBinLeftMost = peakBin;
 % --------------------------------------------- PLOT -------------------------------------------
 if plotting
     figure
+    set(gca,'fontsize',24)
     plot(ftTag, 'displayname','signal fourier transform'); hold on;
     plot(manualPeakBin, ftTag(manualPeakBin), 'o', 'DisplayName', 'manual peak'); hold on; 
     plot(peakBin, ftTag(peakBin), 'x', 'DisplayName', 'auto peak'); hold on; 
@@ -206,6 +208,7 @@ if plotting
     title('peak detection using "left most" peak method') 
     xlabel('bin')
     ylabel('fourier transform magnitude') 
+    set(gca,'fontsize',24)
     line([1, 512], [h1,h1], 'LineStyle', '--', 'displayname', 'cutoff1'); 
     line([1, 512], [h2,h2], 'LineStyle', '--', 'displayname', 'cutoff2'); 
     line([1, 512], [threshold, threshold], 'Color', 'red', 'LineStyle', '-', 'displayname', 'threshold'); 
@@ -243,6 +246,7 @@ else
     error(strcat("No algorithm called ", peakMethod)); 
 end
 
+% --------------------------------------------- SNR ------------------------------------------------
 SNR = calculateSNR(ft, freqTag, peakBin); 
     
 end
