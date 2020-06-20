@@ -12,7 +12,7 @@
 function salsaMain(captureData, varargin)
 %% Process arguments
 %close all
-numTrials = 20000;
+numTrials = 100000;
 frameRate = 200; % frames per sec
 % TODO - (optional) - since all varargin arguments are required, the function could take
 % in 3 arguments instead of using 1 required arg and varargin. But this
@@ -187,8 +187,14 @@ if captureData == 1
     md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
     [status, cmdout] = system(md5command);
     localchecksum = char(strsplit(cmdout));
-    localchecksum = lower(strtrim(localchecksum(4,:)));
-    localchecksum = deblank(localchecksum);
+    % figure out which token of the command output is the actual checksum
+    for i = 1:size(localchecksum)
+        ascii = double(strtrim(lower(localchecksum(i,:))));
+        if length(ascii((ascii <= 103 & ascii >= 97) | (ascii <= 75 & ascii >= 48)))
+            localchecksum = strtrim(lower(localchecksum(i,:)));
+            break
+        end
+    end
     
     md5checksum = fileread(fullfile(localDataPath, md5Name));
     md5checksum = char(strsplit(md5checksum));
@@ -386,23 +392,20 @@ deltas = [];
 for i=1:(length(timeDeltas)-1)
     deltas = [deltas timeDeltas(i+1)-timeDeltas(i)];
 end
-mean(deltas)
-std(deltas)
-max(deltas)
-min(deltas)
-square = repmat([1 1 -1 -1], 1, numTrials/4);
-pn = [0 1 1 0 1 0 1 0 1 1 1 0 0 0 0 1 0 1 1 1 1 0 0 1 1 0 1 0 1 0 1 0];
-corr = [];
-for i=pn
-    if ~i
-        corr = [corr -1 -1];
-    else
-        corr = [corr i i];
-    end
-end
-corr = repmat(corr, 1, 32);
-corr = corr(1:length(corr)-1.5*length(pn));
-hold on
+fprintf("Inter-frame spacing goal is %f, achieved %f with stdev %f, min %f, max %f.", 1/200, mean(deltas), std(deltas), max(deltas), min(deltas));
+% square = repmat([1 1 -1 -1], 1, numTrials/4);
+% pn = square;%[0 1 1 0 1 0 1 0 1 1 1 0 0 0 0 1 0 1 1 1 1 0 0 1 1 0 1 0 1 0 1 0];
+% corr = [];
+% %for i=pn
+% %    if ~i
+% %        corr = [corr -1 -1];
+% %    else
+% %        corr = [corr i i];
+% %    end
+% %end
+% corr = repmat(corr, 1, 32);
+% corr = corr(1:length(corr)-1.5*length(pn));
+% hold on
 %for s=1:length(pn)*2
 %    shifted=circshift(corr,s); square_wave_rep = repmat(shifted, size(frameWindow_bb,1), 1); correlatedFrame = sum(frameWindow_bb.*square_wave_rep,2);plot(abs(correlatedFrame), 'DisplayName',string(s)); 
 %end
@@ -412,7 +415,131 @@ legend
 % s=1;shifted=circshift(square,s); square_wave_rep = repmat(shifted, size(frameWindow_bb,1), 1); correlatedFrame = sum(frameWindow_bb.*square_wave_rep,2);plot(abs(correlatedFrame))
 % s=0;shifted=circshift(square,s); square_wave_rep = repmat(shifted, size(frameWindow_bb,1), 1); correlatedFrame = sum(frameWindow_bb.*square_wave_rep,2);plot(abs(correlatedFrame))
 % legend('square s0','square s1','ft')
-fprintf('\nDone!\n')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%LOLOLOLO
+fprintf('\nDone loading! Plotting...\n')
+f = 79.96;
+divisor = 50;%0;
+bins = zeros(divisor,1);
+vals = zeros(divisor,1);
+noise1 = zeros(divisor,1);
+noise2 = zeros(divisor,1);
+phases = zeros(divisor,1);
+load('notag4500','notagframeWindow_bb');
+segSize = size(frameWindow_bb,2)/divisor;
+d = 597;
+offset=35;
+smoothingFactor = 16;
+for i=1:divisor
+    seg = frameWindow_bb(:,(i-1)*segSize+1:i*segSize);
+    %noiseSeg = notagframeWindow_bb(:,(i-1)*segSize+1:i*segSize);
+    %FFT of signal for each bin
+    ft = fft(seg,segSize,2);
+    %%%%%%% FTIDX and IDX %%%%%%%%%%%%
+    ftidx = round(round(f)*(segSize/frameRate))+1;
+    close all;
+    figure; 
+    idx = 355;
+    hold on; maximum = 0; argmax = 0; 
+    if  f > 0   
+        idx = idx+offset;
+        %noiseFT = fft(noiseSeg, segSize, 2);
+        %noiseFT = abs(noiseFT(:,ftidx));
+        %corrft = fft(noiseFT(:,ftidx)); corrft(smoothingFactor:512-smoothingFactor) = 0; noiseFT = ifft(corrft);
+        % Searching phase for correlation argmax
+        for phase = linspace(0, 2*pi)
+            square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
+            square_wave_rep = repmat(square_wave, size(seg,1), 1);
+            correlatedFrame = sum(seg.*square_wave_rep,2);
+            m = max(abs(correlatedFrame)); 
+            if m >= maximum
+                maximum = m; argmax = phase; 
+            end 
+            %plot(abs(correlatedFrame)); 
+        end
+
+        % plotting
+%         phase = argmax;
+%         square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
+%         square_wave_rep = repmat(square_wave, size(seg,1), 1);
+%         correlatedFrame = sum(seg.*square_wave_rep,2);
+        %plot(abs(correlatedFrame))
+%         % smoothing peaks
+%         phase = 0;
+%         square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
+%         square_wave_rep = repmat(square_wave, size(seg,1), 1);
+%         correlatedFrame = sum(seg.*square_wave_rep,2);
+%         plot(abs(correlatedFrame))
+%         fprintf('\nPhase argmax is %f rad\n', argmax)
+        %noise
+%        phase = argmax;
+%        square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
+%        square_wave_rep = repmat(square_wave, size(noiseSeg,1), 1);
+%        noiseCorr = sum(noiseSeg.*square_wave_rep,2);
+
+        corrft = fft(ft(:,ftidx)); corrft(smoothingFactor:512-smoothingFactor) = 0; lpfd = ifft(corrft);
+         [~,idx]=max(abs(lpfd));
+         bins(i)=idx;
+         vals(i) = 4*idx;
+%         plot(abs(ft(:,ftidx)))
+%         plot(abs(lpfd))
+%         %plot(abs(noiseFT))
+%         vals(i) = abs(lpfd(idx));
+         [pks,locs,w, p] = findpeaks(abs(lpfd));
+         [~,biggest]=max(abs(pks));
+         maxidx = locs(biggest);
+         bins(i) = maxidx;
+         fak = lpfd;
+%         fak(maxidx-45:maxidx + 45) = 0; %fak(1:22) = 0;
+         [pks,locs,w, p] = findpeaks(abs(fak));
+         [~,second]=max(abs(pks));
+         penidx = locs(second);
+%         p(biggest:end) = 0; 
+%         
+%         noise1(i) = abs(noiseFT(idx));
+%         noise2idx = max([locs(biggest) locs(second)]);
+         if maxidx > penidx
+             bins(i) = penidx;
+%             noise2idx = min([locs(biggest) locs(second)]);
+         end
+%         end
+%         noise2(i) = abs(lpfd(noise2idx));
+%         legend('fft', 'smoothed', 'noise', 'Location', "northwest")
+        phase = argmax; square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8)); square_wave_rep = repmat(square_wave, size(seg,1), 1); correlatedFrame = sum(seg.*square_wave_rep,2); plot(abs(correlatedFrame))
+        phases(i) = rad2deg(angle(correlatedFrame(bins(i))));
+    else
+        load('hitag4500','hitagframeWindow_bb');
+        meanHi = mean(abs(hitagframeWindow_bb),2);
+        meanFrame = mean(abs(seg),2);
+        plot(meanFrame);
+        meanNoise = mean(abs(notagframeWindow_bb),2);
+        plot(meanNoise);
+        vals(i) = meanFrame(idx);
+        noise1(i) = meanNoise(idx);
+        noise2(i) = max(abs(meanFrame));
+        legend('signal','noise','fft')
+    end
+    plot(abs(ft(:,801))); hold on, plot(abs(lpfd)); plot(abs(correlatedFrame));
+    %bins, phases
+end
+format short g
+bins, vals, noise1, noise2 
+snr1 = 20*log10(abs(vals-noise1)./noise1)
+snr2 = 20*log10(vals./noise1)
+stats1=[min(snr1) median(snr1)-iqr(snr1)/2 median(snr1) median(snr1)+iqr(snr1)/2 max(snr1)]
+stats2=[min(snr2) median(snr2)-iqr(snr2)/2 median(snr2) median(snr1)+iqr(snr2)/2 max(snr2)]
+for k=1:length(phases)
+    if phases(k) < 0
+        corrected(k) = phases(k)+180;
+    else
+        corrected(k) = phases(k);
+    end
+end
+bins, corrected'
+close all;
+plot(abs(ft(:,801))); hold on, plot(abs(lpfd))
+figure; plot(corrected'); ylim([0 180]); grid on
 end
 
 
