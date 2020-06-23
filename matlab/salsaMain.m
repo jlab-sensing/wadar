@@ -12,7 +12,7 @@
 function salsaMain(captureData, varargin)
 %% Process arguments
 %close all
-numTrials = 100000;
+numTrials = 20000;
 frameRate = 200; % frames per sec
 % TODO - (optional) - since all varargin arguments are required, the function could take
 % in 3 arguments instead of using 1 required arg and varargin. But this
@@ -419,52 +419,59 @@ legend
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%LOLOLOLO
 fprintf('\nDone loading! Plotting...\n')
-f = 79.96;
-divisor = 50;%0;
+
+%%% IMPORTANT DEFS %%%%%%%%
+f = 0;%79.96;%0;%%;
+d = 654-90;
+radarOffset=000; %offset in radar settings (mm?)
+adjustment = 0;
+smoothingFactor = 10;
+phasing = 0; %true=1
+offset=round((0.0557*radarOffset+145)/4); %offset induced by tag
+divisor = 10;%0;
+segSize = size(frameWindow_bb,2)/divisor;
+%%%%
+load('notag500kitchen','notagframeWindow_bb');
 bins = zeros(divisor,1);
+autoBins = zeros(divisor,1);
 vals = zeros(divisor,1);
 noise1 = zeros(divisor,1);
 noise2 = zeros(divisor,1);
 phases = zeros(divisor,1);
-load('notag4500','notagframeWindow_bb');
-segSize = size(frameWindow_bb,2)/divisor;
-d = 597;
-offset=35;
-smoothingFactor = 16;
+
 for i=1:divisor
     seg = frameWindow_bb(:,(i-1)*segSize+1:i*segSize);
-    %noiseSeg = notagframeWindow_bb(:,(i-1)*segSize+1:i*segSize);
+    noiseSeg = notagframeWindow_bb(:,(i-1)*segSize+1:i*segSize);
     %FFT of signal for each bin
     ft = fft(seg,segSize,2);
     %%%%%%% FTIDX and IDX %%%%%%%%%%%%
     ftidx = round(round(f)*(segSize/frameRate))+1;
+    if f == 0.1
+       ftidx = 6;
+    end
     close all;
     figure; 
-    idx = 355;
-    hold on; maximum = 0; argmax = 0; 
+    idx = round(((d-radarOffset)/4))+adjustment;
+    maximum = 0; argmax = 0; 
     if  f > 0   
         idx = idx+offset;
-        %noiseFT = fft(noiseSeg, segSize, 2);
-        %noiseFT = abs(noiseFT(:,ftidx));
+        noiseFT = fft(noiseSeg, segSize, 2);
+        noiseFT = noiseFT(:,ftidx);
+        %smooth the noise?
         %corrft = fft(noiseFT(:,ftidx)); corrft(smoothingFactor:512-smoothingFactor) = 0; noiseFT = ifft(corrft);
         % Searching phase for correlation argmax
-        for phase = linspace(0, 2*pi)
-            square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
-            square_wave_rep = repmat(square_wave, size(seg,1), 1);
-            correlatedFrame = sum(seg.*square_wave_rep,2);
-            m = max(abs(correlatedFrame)); 
-            if m >= maximum
-                maximum = m; argmax = phase; 
-            end 
-            %plot(abs(correlatedFrame)); 
+        if phasing
+            for phase = linspace(0, 2*pi)
+                square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
+                square_wave_rep = repmat(square_wave, size(seg,1), 1);
+                correlatedFrame = sum(seg.*square_wave_rep,2);
+                m = max(abs(correlatedFrame)); 
+                if m >= maximum
+                    maximum = m; argmax = phase; 
+                end 
+                %plot(abs(correlatedFrame)); 
+            end
         end
-
-        % plotting
-%         phase = argmax;
-%         square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
-%         square_wave_rep = repmat(square_wave, size(seg,1), 1);
-%         correlatedFrame = sum(seg.*square_wave_rep,2);
-        %plot(abs(correlatedFrame))
 %         % smoothing peaks
 %         phase = 0;
 %         square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
@@ -478,68 +485,91 @@ for i=1:divisor
 %        square_wave_rep = repmat(square_wave, size(noiseSeg,1), 1);
 %        noiseCorr = sum(noiseSeg.*square_wave_rep,2);
 
-        corrft = fft(ft(:,ftidx)); corrft(smoothingFactor:512-smoothingFactor) = 0; lpfd = ifft(corrft);
-         [~,idx]=max(abs(lpfd));
+         corrft = fft(ft(:,ftidx)); corrft(smoothingFactor:512-smoothingFactor) = 0; lpfd = ifft(corrft);
+         lpfd(1:50) = 0;
          bins(i)=idx;
-         vals(i) = 4*idx;
-%         plot(abs(ft(:,ftidx)))
-%         plot(abs(lpfd))
-%         %plot(abs(noiseFT))
-%         vals(i) = abs(lpfd(idx));
+         vals(i) = ft(idx,ftidx);
+
          [pks,locs,w, p] = findpeaks(abs(lpfd));
          [~,biggest]=max(abs(pks));
          maxidx = locs(biggest);
-         bins(i) = maxidx;
+         autoBins(i) = maxidx;
          fak = lpfd;
-%         fak(maxidx-45:maxidx + 45) = 0; %fak(1:22) = 0;
-         [pks,locs,w, p] = findpeaks(abs(fak));
+         fak(maxidx-45:maxidx + 45) = 0; 
+         [pks,locs2,~, ~] = findpeaks(abs(fak));
          [~,second]=max(abs(pks));
-         penidx = locs(second);
+         penidx = locs2(second);
 %         p(biggest:end) = 0; 
-%         
-%         noise1(i) = abs(noiseFT(idx));
-%         noise2idx = max([locs(biggest) locs(second)]);
+         
+         noise1(i) = noiseFT(idx-offset);
+         noise2idx = max([locs(biggest) locs2(second)]);
          if maxidx > penidx
-             bins(i) = penidx;
-%             noise2idx = min([locs(biggest) locs(second)]);
+             autoBins(i) = penidx;
+             noise2idx = min([locs(biggest) locs2(second)]);
          end
-%         end
-%         noise2(i) = abs(lpfd(noise2idx));
-%         legend('fft', 'smoothed', 'noise', 'Location', "northwest")
-        phase = argmax; square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8)); square_wave_rep = repmat(square_wave, size(seg,1), 1); correlatedFrame = sum(seg.*square_wave_rep,2); plot(abs(correlatedFrame))
-        phases(i) = rad2deg(angle(correlatedFrame(bins(i))));
+         noise2(i) = noiseFT(noise2idx);
+        if phasing
+            phase = argmax; square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8)); square_wave_rep = repmat(square_wave, size(seg,1), 1); correlatedFrame = sum(seg.*square_wave_rep,2); plot(abs(correlatedFrame))
+            phases(i) = rad2deg(angle(correlatedFrame(bins(i))));
+        end
     else
-        load('hitag4500','hitagframeWindow_bb');
-        meanHi = mean(abs(hitagframeWindow_bb),2);
-        meanFrame = mean(abs(seg),2);
-        plot(meanFrame);
-        meanNoise = mean(abs(notagframeWindow_bb),2);
-        plot(meanNoise);
+        load('hitag500kitchen','hitagframeWindow_bb');  
+        meanHi = mean(hitagframeWindow_bb,2);
+        meanFrame = mean(seg,2);
+        meanFrame = meanFrame-meanHi;
+        meanNoise = mean(notagframeWindow_bb,2);
         vals(i) = meanFrame(idx);
         noise1(i) = meanNoise(idx);
-        noise2(i) = max(abs(meanFrame));
-        legend('signal','noise','fft')
+        noise2(i) = max(meanFrame);
     end
-    plot(abs(ft(:,801))); hold on, plot(abs(lpfd)); plot(abs(correlatedFrame));
-    %bins, phases
+    if f > 0
+        plot(abs(ft(:,ftidx))); 
+        hold on, plot(abs(lpfd)); 
+    else
+        plot(abs(meanFrame));hold on;
+        plot(abs(meanNoise));
+    end
+    
+    if phasing
+        plot(abs(correlatedFrame));
+        %bins, phases
+    end
 end
 format short g
-bins, vals, noise1, noise2 
-snr1 = 20*log10(abs(vals-noise1)./noise1)
-snr2 = 20*log10(vals./noise1)
-stats1=[min(snr1) median(snr1)-iqr(snr1)/2 median(snr1) median(snr1)+iqr(snr1)/2 max(snr1)]
-stats2=[min(snr2) median(snr2)-iqr(snr2)/2 median(snr2) median(snr1)+iqr(snr2)/2 max(snr2)]
-for k=1:length(phases)
-    if phases(k) < 0
-        corrected(k) = phases(k)+180;
-    else
-        corrected(k) = phases(k);
+idx, autoBins, abs(vals), abs(noise1), abs(noise2)
+snr1 = 20*log10(abs((vals-noise1)./noise1))
+snr2 = 20*log10(abs(vals./noise1))
+%%%%%%% min       bottom quart              med         top quart      max
+stats1=[min(snr1) quantile(snr1,0.25) median(snr1) quantile(snr1,0.75) max(snr1)]
+stats2=[min(snr2) quantile(snr2,0.25) median(snr2) quantile(snr2,0.75) max(snr2)]
+if phasing
+    for k=1:length(phases)
+        if k > 1 && abs(corrected(k-1)-phases(k)) > 100
+            if corrected(k-1)-phases(k) > 0
+                corrected(k) = phases(k)+180;
+            else
+                corrected(k) = phases(k)-180;
+            end
+        else
+            corrected(k) = phases(k);
+        end
     end
+    figure; plot(corrected'); ylim([-22 180]); grid on
+    bins, corrected'
 end
-bins, corrected'
 close all;
-plot(abs(ft(:,801))); hold on, plot(abs(lpfd))
-figure; plot(corrected'); ylim([0 180]); grid on
+if f > 0
+    plot(abs(ft(:,ftidx))); 
+    hold on, plot(abs(lpfd)); 
+    plot(abs(noiseFT));
+    plot(idx,abs(ft(idx,ftidx)), 'g*')
+    legend('fft','lpf','noise','tag idx')
+else
+    plot(abs(meanFrame));hold on;
+    plot(abs(meanNoise));
+    plot(idx,abs(meanFrame(idx)), 'g*')
+    legend('mean signal','mean noise','tag idx')
+end
 end
 
 
