@@ -422,16 +422,16 @@ fprintf('\nDone loading! Plotting...\n')
 
 %%% IMPORTANT DEFS %%%%%%%%
 f = 0;%79.96;%0;%%;
-d = 654-90;
-radarOffset=000; %offset in radar settings (mm?)
-adjustment = 0;
-smoothingFactor = 10;
+d = 4543-90;
+radarOffset=3000; %offset in radar settings (mm?)
+adjustment = -40; %-33;-13;
+smoothingFactor = 13;
 phasing = 0; %true=1
 offset=round((0.0557*radarOffset+145)/4); %offset induced by tag
 divisor = 10;%0;
 segSize = size(frameWindow_bb,2)/divisor;
 %%%%
-load('notag500kitchen','notagframeWindow_bb');
+load('notag4500outside','notagframeWindow_bb');
 bins = zeros(divisor,1);
 autoBins = zeros(divisor,1);
 vals = zeros(divisor,1);
@@ -513,10 +513,10 @@ for i=1:divisor
             phases(i) = rad2deg(angle(correlatedFrame(bins(i))));
         end
     else
-        load('hitag500kitchen','hitagframeWindow_bb');  
+        load('hitag4500outside','hitagframeWindow_bb');  
         meanHi = mean(hitagframeWindow_bb,2);
         meanFrame = mean(seg,2);
-        meanFrame = meanFrame-meanHi;
+        meanFrame = meanFrame-meanHi; idx=idx+offset;
         meanNoise = mean(notagframeWindow_bb,2);
         vals(i) = meanFrame(idx);
         noise1(i) = meanNoise(idx);
@@ -537,8 +537,8 @@ for i=1:divisor
 end
 format short g
 idx, autoBins, abs(vals), abs(noise1), abs(noise2)
-snr1 = 20*log10(abs((vals-noise1)./noise1))
-snr2 = 20*log10(abs(vals./noise1))
+snr1 = 20*log10(abs(vals-noise1)./abs(noise1));
+snr2 = 20*log10(abs((vals-noise2)./noise2));
 %%%%%%% min       bottom quart              med         top quart      max
 stats1=[min(snr1) quantile(snr1,0.25) median(snr1) quantile(snr1,0.75) max(snr1)]
 stats2=[min(snr2) quantile(snr2,0.25) median(snr2) quantile(snr2,0.75) max(snr2)]
