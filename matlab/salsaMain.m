@@ -431,7 +431,7 @@ offset=round((0.0557*radarOffset+145)/4); %offset induced by tag
 divisor = 10;%0;
 segSize = size(frameWindow_bb,2)/divisor;
 %%%%
-load('notag4500outside','notagframeWindow_bb');
+%load('notag4500outside','notagframeWindow_bb');
 bins = zeros(divisor,1);
 autoBins = zeros(divisor,1);
 vals = zeros(divisor,1);
