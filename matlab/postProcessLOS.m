@@ -4,7 +4,7 @@
 % ofsX-X = radar offset setting (in m)
 % YYY    = tag oscillation frequency, e.g. 80hz, or NONE
 
-function postProcess(varargin)
+function postProcessLOS(varargin)
     %% IMPORTANT DEFS %%%%%%%%
     dirs=reshape({'/home/cjoseph/Documents/radar/matlab/data/LOSsnrBedroom/'
                   '/home/cjoseph/Documents/radar/matlab/data/LOSsnrKitchen/'
@@ -17,7 +17,7 @@ function postProcess(varargin)
     smoothingFactor = 13; %how much to smooth during peakfinding, lower is smoother
     phasing = 0; %true=1
     subtracting=0;
-    [snr1, snr2] = deal([]);
+    [snr1, snr2, trueRange, radarRange] = deal([]);
     close all;
     %% Process arguments
     if length(varargin) < 3
@@ -241,7 +241,9 @@ function postProcess(varargin)
             hold on, plot(abs(lpfd)); 
             plot(abs(noiseFT(:,ftidx)));
             plot(idx,abs(ft(idx,ftidx)), 'g*')
-            legend('fft','lpf','noise','tag idx')
+            autoIdx = round(mean(autoBins));
+            plot(autoIdx,abs(ft(autoIdx,ftidx)), 'b*')
+            legend('fft','lpf','noise','true tag idx','auto idx')
             title(fh,'Interpreter', 'none')
             pause(1)
         else
@@ -255,6 +257,8 @@ function postProcess(varargin)
             pause(1)
         end
         %idx, autoBins, abs(vals), abs(noise1), abs(noise2)
+        trueRange = [trueRange; idx*ones(divisor,1)];
+        radarRange = [radarRange; autoBins];
         snr1 = [snr1; 20*log10(abs(vals-noise1)./abs(noise1))];
         snr2 = [snr2; 20*log10(abs(vals./noise2))];
     end
@@ -263,9 +267,11 @@ function postProcess(varargin)
     %% output SNR stats
 %     snr1=snr1(1:end-10);
 %     snr2=snr2(1:end-10);
+    rErr = (abs(trueRange-radarRange)*4)/10.0; %range error in cm
     %%      approxDist min       bottom quart              med         top quart      max
-    stats1=[approxDist min(snr1) quantile(snr1,0.25) median(snr1) quantile(snr1,0.75) max(snr1)]
-    stats2=[approxDist min(snr2) quantile(snr2,0.25) median(snr2) quantile(snr2,0.75) max(snr2)]
+    SNRstats  =[approxDist min(snr1) quantile(snr1,0.25) median(snr1) quantile(snr1,0.75) max(snr1)]
+    peakStats =[approxDist min(snr2) quantile(snr2,0.25) median(snr2) quantile(snr2,0.75) max(snr2)]
+    rangeStats=[approxDist min(rErr) quantile(rErr,0.25) median(rErr) quantile(rErr,0.75) max(rErr)]
 end
 
 
@@ -281,7 +287,7 @@ function check = md5check(fh, md5fh)
     end
     %Split into strings (cell array)
     for s = strsplit(cmdout) 
-        %find longest string in cell array and convert to char
+        % find longest string in cell array and convert to char
         localchecksum = deblank(lower(strtrim(s{1})));
         if (isempty(strfind(localchecksum,'/')) && length(localchecksum) == 32)
             break
