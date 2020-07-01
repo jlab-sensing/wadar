@@ -421,17 +421,17 @@ legend
 fprintf('\nDone loading! Plotting...\n')
 
 %%% IMPORTANT DEFS %%%%%%%%
-f = 0;%79.96;%0;%%;
-d = 4543-90;
-radarOffset=3000; %offset in radar settings (mm?)
-adjustment = -40; %-33;-13;
+f = 79.96;%0;%%;
+d = 641-90;
+radarOffset=0000; %offset in radar settings (mm?)
+adjustment = 0; %-33;-13;
 smoothingFactor = 13;
 phasing = 0; %true=1
 offset=round((0.0557*radarOffset+145)/4); %offset induced by tag
 divisor = 10;%0;
 segSize = size(frameWindow_bb,2)/divisor;
 %%%%
-load('notag4500outside','notagframeWindow_bb');
+%load('notag4500outside','notagframeWindow_bb');
 bins = zeros(divisor,1);
 autoBins = zeros(divisor,1);
 vals = zeros(divisor,1);
@@ -441,7 +441,7 @@ phases = zeros(divisor,1);
 
 for i=1:divisor
     seg = frameWindow_bb(:,(i-1)*segSize+1:i*segSize);
-    noiseSeg = notagframeWindow_bb(:,(i-1)*segSize+1:i*segSize);
+    %noiseSeg = notagframeWindow_bb(:,(i-1)*segSize+1:i*segSize);
     %FFT of signal for each bin
     ft = fft(seg,segSize,2);
     %%%%%%% FTIDX and IDX %%%%%%%%%%%%
@@ -455,8 +455,8 @@ for i=1:divisor
     maximum = 0; argmax = 0; 
     if  f > 0   
         idx = idx+offset;
-        noiseFT = fft(noiseSeg, segSize, 2);
-        noiseFT = noiseFT(:,ftidx);
+        %noiseFT = fft(noiseSeg, segSize, 2);
+        %noiseFT = noiseFT(:,ftidx);
         %smooth the noise?
         %corrft = fft(noiseFT(:,ftidx)); corrft(smoothingFactor:512-smoothingFactor) = 0; noiseFT = ifft(corrft);
         % Searching phase for correlation argmax
