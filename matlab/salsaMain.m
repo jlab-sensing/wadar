@@ -426,9 +426,9 @@ d = 641-90;
 radarOffset=0000; %offset in radar settings (mm?)
 adjustment = 0; %-33;-13;
 smoothingFactor = 13;
-phasing = 0; %true=1
+phasing = 1; %true=1
 offset=round((0.0557*radarOffset+145)/4); %offset induced by tag
-divisor = 10;%0;
+divisor = 1;%0;
 segSize = size(frameWindow_bb,2)/divisor;
 %%%%
 %load('notag4500outside','notagframeWindow_bb');
@@ -449,7 +449,7 @@ for i=1:divisor
     if f == 0.1
        ftidx = 6;
     end
-    close all;
+    %close all;
     figure; 
     idx = round(((d-radarOffset)/4))+adjustment;
     maximum = 0; argmax = 0; 
@@ -472,27 +472,56 @@ for i=1:divisor
                 %plot(abs(correlatedFrame)); 
             end
         end
-%         % smoothing peaks
-%         phase = 0;
-%         square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
-%         square_wave_rep = repmat(square_wave, size(seg,1), 1);
-%         correlatedFrame = sum(seg.*square_wave_rep,2);
-%         plot(abs(correlatedFrame))
-%         fprintf('\nPhase argmax is %f rad\n', argmax)
-        %noise
-%        phase = argmax;
-%        square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
-%        square_wave_rep = repmat(square_wave, size(noiseSeg,1), 1);
-%        noiseCorr = sum(noiseSeg.*square_wave_rep,2);
+        phase = 0;
+        square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
+        square_wave_rep = repmat(square_wave, size(seg,1), 1);
+        correlatedFrame = sum(seg.*square_wave_rep,2);
+        plot(abs(correlatedFrame)); hold on
+        fprintf('\nPhase argmax is %f rad\n', argmax)
+       %noise
+       phase = argmax;
+       square_wave = sign(sin(2*pi*f*(0:segSize-1)/frameRate + phase + 1e-8));
+       square_wave_rep = repmat(square_wave, size(seg,1), 1);
+       maxCorr = sum(seg.*square_wave_rep,2);
+       corrft = fft(maxCorr); corrft(smoothingFactor:512-smoothingFactor) = 0; lpfd = ifft(corrft);
+       lpfd(1:50) = 0;
+       plot(abs(lpfd))
+       [pks,locs,w, p] = findpeaks(abs(lpfd));
+       [~,biggest]=max(abs(pks));
+       maxidx = locs(biggest);
+       
+       %divide into 1s increments?
+       phases=[];
+       div = 1000;
+       minisegSize = length(frameWindow_bb)/div;
+       for j=1:div
+        miniseg = frameWindow_bb(:,(j-1)*minisegSize+1:j*minisegSize);
+        minicorr = sum(miniseg.*square_wave_rep(:,(i-1)*minisegSize+1:i*minisegSize),2);
+        phases = [phases rad2deg(angle(minicorr(maxidx)))];
+       end
+       
+       figure;
+       phaseSpread = zeros(1,20000);
+       plot(rad2deg(angle(frameWindow_bb(maxidx,:)))); hold on;
+       x = (0:div-1)'; y = phases'; xi = (0:(div/20000):div-1)'; yi = interp1q(x,y,xi(1:end-1)); plot(yi)
+       legend(sprintf('baseband phase of bin %i',maxidx),'post-correlation phase of minislices')
+       
+       figure;
+       phaseft = fft(yi(end-2*300:end-1*300)); phaseft(1:3) = 0; plot(abs(phaseft(1:25))/max(abs(phaseft(1:25)))); hold on
+       rawFT = fft(frameWindow_bb(maxidx,end-2*6000:end-1*6000)); rawFT(1:3) = 0; plot(abs(rawFT(1:25))/max(abs(rawFT(1:25))))
+       [~,phasepeak] = max(phaseft(1:30)), 60*(phasepeak/30) 
+       [~,rawpeak] = max(rawFT(1:30)), 60*(rawpeak/30)
+       
+       iphaseft = ifft(phaseft);
 
-         corrft = fft(ft(:,ftidx)); corrft(smoothingFactor:512-smoothingFactor) = 0; lpfd = ifft(corrft);
-         lpfd(1:50) = 0;
-         bins(i)=idx;
-         vals(i) = ft(idx,ftidx);
+       
+       bins(i)=idx;
+       vals(i) = ft(idx,ftidx);
+            % smoothing peaks
 
-         [pks,locs,w, p] = findpeaks(abs(lpfd));
-         [~,biggest]=max(abs(pks));
-         maxidx = locs(biggest);
+
+          
+
          autoBins(i) = maxidx;
          fak = lpfd;
          fak(maxidx-45:maxidx + 45) = 0; 
