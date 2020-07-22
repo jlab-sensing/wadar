@@ -58,7 +58,7 @@ Congrats, you've successfully done a radar capture and processed it!
 
   Attach the radar to it's mount and point it towards the backscatter tag.  For best results, make sure the radar is between 20 and 50cm away from the top of the tag and that it's not underground for this initial test. In the plots, make sure you see a big peak when the tag is on and no peak when the tag is off. 
   
-  IMPORTANT: some of the antennas have very strong polarization, so if you don't see any peak when the tag is on try rotating either the radar or the tag by 90 degrees. Also make sure you understand the radiation pattern of the type of antenna that is attached to the radar to ensure the direction of maximum gain is pointed towards the tag.
+  IMPORTANT: some of the antennas (e.g. Vivaldi) have very strong polarization, so if you don't see any peak when the tag is on try rotating either the radar or the tag by 90 degrees. Also make sure you understand the radiation pattern of the type of antenna that is attached to the radar to ensure the direction of maximum gain is pointed towards the tag.
   
 - Try out the soil_moisture.m program
   
