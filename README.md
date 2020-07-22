@@ -73,3 +73,4 @@ Congrats, you've successfully done a radar capture and processed it!
 - teros: code for interfacing with the Teros12 commercial soil sensor
 - writing: latex files for papers, gnuplot and dat files for graphs
 
+TODOs:
