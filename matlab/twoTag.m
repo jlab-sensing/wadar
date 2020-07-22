@@ -207,8 +207,8 @@ function twoTag(varargin)
     %rErr = (abs(trueRange-radarRange)*4)/10.0; %range error in cm
     %%      approxDist min       bottom quart              med         top quart      max
     %SNRstats  =[approxDist min(snr1) quantile(snr1,0.25) median(snr1) quantile(snr1,0.75) max(snr1)]
-    stats80 =[min((snrBoth80-snrSolo80)) quantile((snrBoth80-snrSolo80),0.25) median((snrBoth80-snrSolo80)) quantile((snrBoth80-snrSolo80),0.75) max((snrBoth80-snrSolo80))]
-    stats79 =[min((snrBoth79-snrSolo79)) quantile((snrBoth79-snrSolo79),0.25) median((snrBoth79-snrSolo79)) quantile((snrBoth79-snrSolo79),0.75) max((snrBoth79-snrSolo79))]
+    statsSolo79 =[min((snrSolo79)) quantile((snrSolo79),0.25) median((snrSolo79)) quantile((snrSolo79),0.75) max((snrSolo79))]
+    statsBoth79 =[min((snrBoth79)) quantile((snrBoth79),0.25) median((snrBoth79)) quantile((snrBoth79),0.75) max((snrBoth79))]
     %both79stats =[min(snrBoth79) quantile(snrBoth79,0.25) median(snrBoth79) quantile(snrBoth79,0.75) max(snrBoth79)]
     %solo80stats =[min(snrSolo80) quantile(snrSolo80,0.25) median(snrSolo80) quantile(snrSolo80,0.75) max(snrSolo80)]
     %solo79stats =[min(snrSolo79) quantile(snrSolo79,0.25) median(snrSolo79) quantile(snrSolo79,0.75) max(snrSolo79)]
@@ -262,12 +262,12 @@ function [sigIdx, noiseIdx] = findSCR(ft,lpfd, ftidx)
         sigIdx = biggestIdx;
         
         tmp = lpfd;
-        tmp(max(1,biggestIdx-50):biggestIdx + 45) = 0; %remove peak area from array
+        tmp(max(1,biggestIdx-50):biggestIdx + 100) = 0; %remove peak area from array
         [pks2,locs2,~, ~] = findpeaks(abs(tmp));
         [~,second]=max(abs(pks2));
         secondIdx = locs2(second);
         
-        tmp(max(secondIdx-50,1):secondIdx + 45) = 0; %remove 2nd peak area from array
+        tmp(max(secondIdx-50,1):secondIdx + 100) = 0; %remove 2nd peak area from array
         [pks3,locs3,~, ~] = findpeaks(abs(tmp));
         [~,third]=max(abs(pks3));
         thirdIdx = locs3(third);

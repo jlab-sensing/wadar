@@ -213,8 +213,7 @@ if captureData == 1
     else
         fprintf('Framelogger successful!\n\n')
     end
-    
-    
+
     
     
     % Start the capture
