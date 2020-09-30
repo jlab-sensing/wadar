@@ -3,21 +3,24 @@
 % DDDDmm = distance to tag (in mm) measured w/ laser ranger
 % ofsX-X = radar offset setting (in m)
 % YYY    = tag oscillation frequency, e.g. 80hz, or NONE
-
-function postProcess(varargin)
+function postProcessNLOS(varargin)
     %% IMPORTANT DEFS %%%%%%%%
-    dirs=reshape({'/home/cjoseph/Documents/radar/matlab/data/LOSsnrBedroom/'
-                  '/home/cjoseph/Documents/radar/matlab/data/LOSsnrKitchen/'
-                  '/home/cjoseph/Documents/radar/matlab/data/LOSsnrOutside/'}, [1 3]);
+    ftindices = containers.Map({0,0.5,1,10,80},[1,11,21,201,1601]);
+    binLocs = struct('o',containers.Map({1,1.5,2.5,3.5,4.5},[276,419,403,424,387]),...
+                     'k',containers.Map({1,1.5,2.5,3.5,4.5},[303,206,410,377,450]),...
+                     'c',containers.Map({1,1.5,2.5,3.5,4.5},[287,377,385,441,386]));
+    dirs=reshape({'/home/cjoseph/Documents/radar/matlab/data/NLOSoutside/'
+                  '/home/cjoseph/Documents/radar/matlab/data/NLOSkitchenWall/'
+                  '/home/cjoseph/Documents/radar/matlab/data/NLOScloset/'}, [1 3]);
     frameRate = 200; % frames per sec
-    divisor = 10; % how many chunks to divide the capture into
+    divisor = 5; % how many chunks to divide the capture into
     radarType = 'chipotle';
     chipSet = "X1-IPG1";
-    adjustment = -40; %-33;-13; % how many bins to adjust peak location
+    adjustment = 0; %-33;-13; % how many bins to adjust peak location
     smoothingFactor = 13; %how much to smooth during peakfinding, lower is smoother
     phasing = 0; %true=1
     subtracting=0;
-    [snr1, snr2] = deal([]);
+    [snr1, snr2, trueRange, radarRange] = deal([]);
     close all;
     %% Process arguments
     if length(varargin) < 3
@@ -32,24 +35,18 @@ function postProcess(varargin)
         files{i} = fh;
         %extract distance from filename
         butt  = strfind(fh, 'mm') - 1;
-        dists(i) = str2double(fh(1:butt))-90; %subtract 90 to account for 9cm offset caused by how the laser ranger was mounted
+        approxDist = str2double(fh(1:butt))/1000;
+        dists(i) = approxDist*1000-90; %subtract 90 to account for 9cm offset caused by how the laser ranger was mounted
     end
     %infer the radar offset setting from the distance
     if dists(1) < 2000
         radarOffset = 0;
-        approxDist = 1.5;
-        if dists(1) < 1000
-            approxDist = 0.5;
-        end
     elseif (dists(1) < 3000 && dists(1) > 2000)
         radarOffset = 1000;
-        approxDist = 2.5;
     elseif (dists(1) < 4000 && dists(1) > 3000)
         radarOffset = 2000;
-        approxDist = 3.5;
     elseif dists(1) > 4000
         radarOffset = 3000;
-        approxDist = 4.5;
     else
         error('something went wrong parsing the radar offset')
     end
@@ -75,14 +72,15 @@ function postProcess(varargin)
     [noise,hi] = deal({});
     for fh=files
         fh = char(fh);
-        noise{end+1} = strcat(fh(1:strfind(fh, 'mm')+9),'NONE_100s1');
-        hi{end+1} = strcat(fh(1:strfind(fh, 'mm')+9),'HI_100s1');
+        noise{end+1} = strcat(fh(1:strfind(fh, 'mm')+9),'NONE',fh(end-6:end));
+        hi{end+1} = strcat(fh(1:strfind(fh, 'mm')+9),'HI', fh(end-6:end));
     end
     
     %% load files
     for fh=files
         fidx = find(ismember(files,fh));
         fh = char(fh);
+        type=fh(end-5);
         % look in all the dirs for the file, then load it
         for d=dirs
             d = char(d);
@@ -101,7 +99,7 @@ function postProcess(varargin)
         
         % do the md5 checks
         if ~md5check(captureFile, md5file) % signal file
-            error('signal file failed md5 check')
+            error('signal file %s failed md5 check', fullfile(d,fh))
         elseif ~md5check(noiseFile, dir(fullfile(d, strcat(char(noise(fidx)),'.md5')))) % noise file
             error('noise file failed md5 check')
         elseif ~md5check(hiFile, dir(fullfile(d, strcat(char(hi(fidx)),'.md5')))) % tag held HI file
@@ -142,12 +140,8 @@ function postProcess(varargin)
             %FFT of signal for each bin
             ft = fft(seg,segSize,2);
             %%%%%%% FTIDX and IDX %%%%%%%%%%%%
-            ftidx = round(round(f)*(segSize/frameRate))+1;
-            if f == 0.1
-               ftidx = 6;
-            end
-            idx = round(((dists(fidx)-radarOffset)/4))+adjustment;
-            idx = idx+offset;
+            ftidx = ftindices(f);
+            idx = binLocs.(type)(approxDist)+adjustment;
             maximum = 0; argmax = 0; 
             if  f > 0   
                 %smooth the noise?
@@ -241,7 +235,9 @@ function postProcess(varargin)
             hold on, plot(abs(lpfd)); 
             plot(abs(noiseFT(:,ftidx)));
             plot(idx,abs(ft(idx,ftidx)), 'g*')
-            legend('fft','lpf','noise','tag idx')
+            autoIdx = round(mean(autoBins));
+            plot(autoIdx,abs(ft(autoIdx,ftidx)), 'b*')
+            legend('fft','lpf','noise','true tag idx','auto idx')
             title(fh,'Interpreter', 'none')
             pause(1)
         else
@@ -264,8 +260,8 @@ function postProcess(varargin)
 %     snr1=snr1(1:end-10);
 %     snr2=snr2(1:end-10);
     %%      approxDist min       bottom quart              med         top quart      max
-    stats1=[approxDist min(snr1) quantile(snr1,0.25) median(snr1) quantile(snr1,0.75) max(snr1)]
-    stats2=[approxDist min(snr2) quantile(snr2,0.25) median(snr2) quantile(snr2,0.75) max(snr2)]
+    %SNRstats  =[approxDist min(snr1) quantile(snr1,0.25) median(snr1) quantile(snr1,0.75) max(snr1)]
+    peakStats =[approxDist min(snr2) quantile(snr2,0.25) median(snr2) quantile(snr2,0.75) max(snr2)]
 end
 
 
@@ -281,7 +277,7 @@ function check = md5check(fh, md5fh)
     end
     %Split into strings (cell array)
     for s = strsplit(cmdout) 
-        %find longest string in cell array and convert to char
+        % find longest string in cell array and convert to char
         localchecksum = deblank(lower(strtrim(s{1})));
         if (isempty(strfind(localchecksum,'/')) && length(localchecksum) == 32)
             break
