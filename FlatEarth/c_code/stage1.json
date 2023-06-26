@@ -1,9 +1,8 @@
 [
-  {"DACMin" : 3800},
-  {"DACMax" : 4900},
+  {"DACMin" : 0},
+  {"DACMax" : 8191},
   {"DACStep" : 8},
   {"Iterations" : 16},
   {"PulsesPerStep" : 8},
-  {"FrameStitch" : 1},
-  {"PGSelect" : 0}
+  {"FrameStitch" : 1}
 ]
