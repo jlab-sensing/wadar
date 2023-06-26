@@ -1,13 +1,12 @@
-% TODO: (optional) - output a useful summary of parameters (e.g. in text or .mat file)...
-% this could be done instead of returning pgen, fs_hz, etc.
+% This script compules the loads radar data from a binary file (captured from frameLogger.c on BBB)
+% and displays the data as a BScan plot
 
-% USAGE: Load radar data from a binary file (captured from frameLogger.c on BBB)
 % REQUIRED ARGS: 
 % fileName
-% chipSet
+
 function salsaLoad(fileName)
 
-% fprintf('Loading saved data from %s...\n', fileName)
+fprintf('Loading saved data from %s...\n', fileName)
 
 FRAME_LOGGER_MAGIC_NUM = hex2dec('FEFE00A2');
 fid = fopen(fileName,'r');
