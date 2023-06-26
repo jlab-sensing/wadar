@@ -236,6 +236,7 @@ double ms_diff(struct timespec *end, struct timespec *start) {
 
 int main(int argc, char **argv)
 {
+
   // Radar handle used as a reference to a structure with information about the
   // connected radar
   RadarHandle_t rh = NULL;
@@ -289,7 +290,7 @@ int main(int argc, char **argv)
   // Pointers to input/output files
   const char *inFile_stage1 = NULL;
   const char *inFile_stage2 = NULL;
-  const char *settingsFile = NULL;
+  char *settingsFile = NULL;
   const char *dataLogFile = NULL;
   const char *copyPath = NULL;
 
@@ -305,8 +306,11 @@ int main(int argc, char **argv)
   //
   // Process command-line arguments
   //
+
   while ((c = getopt(argc, argv, "gs:l:n:d:r:f:t:c:")) != -1) {
+    printf("\n%c", c);
     switch (c) {
+
     /* Enable Gnuplot of radar data */
     case 'g':
       showGnuPlot = true;
@@ -314,12 +318,14 @@ int main(int argc, char **argv)
 
     /* Save configuration JSON to file */
     case 's':
+      printf("\nsave file: %s\n", optarg);
       saveSettingsFile = true;
       settingsFile = optarg;
       break;
 
     /* Save DataLog to binary file */
     case 'l':
+      printf("\nsaveDataLogFile reached");
       saveDataLogFile = true;
       dataLogFile = optarg;
       break;
@@ -395,11 +401,14 @@ int main(int argc, char **argv)
     }
   }
 
+  //printf("inFile_stage1 == %s\n", inFile_stage1);
+  
+  //setIntValueByName(rh, "PulseGen", 1);
+  
   if (radarSpecifier == -1) {
     printf("No radar type specified....Exiting the program....\n");
     exit(0);
   }
-
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -407,14 +416,19 @@ int main(int argc, char **argv)
   //
   // Initiate a radar handle
   //
+  //printf("Radar connect bef\n");
   status = radarHelper_open(&rh, radarConnectionStr);
   if (status) return 1;
 
   //
   // Configure the radar using the Stage 1 configuration JSON file
-  //
+  //printf("before call\n");
+  inFile_stage1 = "stage1.json";
+  inFile_stage2 = "stage2.json";
   status = radarHelper_configFromFile(rh, inFile_stage1, 1);
-  if (status) return 1;
+  if (status){
+    return 1;
+   }
 
   //
   // Do radar timing measurements
@@ -431,17 +445,25 @@ int main(int argc, char **argv)
   // Configure the radar using the Stage 2 configuration JSON file
   //
   status = radarHelper_configFromFile(rh, inFile_stage2, 2);
-  if (status) return 1;
+  if (status){
+  return 1;
+  }
 
   //
   // Save radar settings to file (optional)
   //
 
+  printf("\nabout to save radar settings file \nsaveSettingsFile = %d", saveSettingsFile);
+
   if (saveSettingsFile) {
     //system("exec rm -r ../data/*");
     status = radarHelper_saveConfigToFile(rh, settingsFile);
-    if (status) return 1;
-  }
+    printf("\nstatus = %d", status);
+    if (status) {
+        printf("\nentering if status");
+        return 1;
+    }
+  } 
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -530,9 +552,10 @@ int main(int argc, char **argv)
     char nameBuffer[50];
     if (saveDataLogFile) {
       //remove capture data from previous runs
-      system("exec rm -r ../data/*");
+      //system("exec rm -r ../data/*");
 
       sprintf(nameBuffer, "%s%d", dataLogFile, runNum);
+
       dataLog = fopen(nameBuffer, "wb");
       if (!dataLog) {
         fprintf(stderr, "Unable to open %s!\n", dataLogFile);
@@ -625,6 +648,15 @@ int main(int argc, char **argv)
           sprintf(md5file, "%s.md5", nameBuffer);
           char md5cmd[150];
           //Create md5 on BBB
+
+          // test whether the data log exists by printing
+          //FILE *tempFile = fopen(nameBuffer, "r");
+          //char tempChar = fgetc(tempFile);
+          //while (tempChar != EOF) {
+          //  printf ("%c", tempChar);
+          //  tempChar = fgetc(tempFile);
+          //}
+
           sprintf(md5cmd, "exec md5sum %s > %s", nameBuffer, md5file);
           system(md5cmd);
 
@@ -672,7 +704,9 @@ int main(int argc, char **argv)
 
   //kill the radar screen and empty the data folder
   system("exec pkill radar");
-  system("exec rm -r ../data/*");
+  //system("exec rm -r ../data/*");
+
+  printf("end of the file\n");
 
   return 0;
 }
