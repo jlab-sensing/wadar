@@ -308,7 +308,6 @@ int main(int argc, char **argv)
   //
 
   while ((c = getopt(argc, argv, "gs:l:n:d:r:f:t:c:")) != -1) {
-    printf("\n%c", c);
     switch (c) {
 
     /* Enable Gnuplot of radar data */
@@ -318,14 +317,12 @@ int main(int argc, char **argv)
 
     /* Save configuration JSON to file */
     case 's':
-      printf("\nsave file: %s\n", optarg);
       saveSettingsFile = true;
       settingsFile = optarg;
       break;
 
     /* Save DataLog to binary file */
     case 'l':
-      printf("\nsaveDataLogFile reached");
       saveDataLogFile = true;
       dataLogFile = optarg;
       break;
@@ -401,10 +398,6 @@ int main(int argc, char **argv)
     }
   }
 
-  //printf("inFile_stage1 == %s\n", inFile_stage1);
-  
-  //setIntValueByName(rh, "PulseGen", 1);
-  
   if (radarSpecifier == -1) {
     printf("No radar type specified....Exiting the program....\n");
     exit(0);
@@ -453,14 +446,10 @@ int main(int argc, char **argv)
   // Save radar settings to file (optional)
   //
 
-  printf("\nabout to save radar settings file \nsaveSettingsFile = %d", saveSettingsFile);
-
   if (saveSettingsFile) {
     //system("exec rm -r ../data/*");
     status = radarHelper_saveConfigToFile(rh, settingsFile);
-    printf("\nstatus = %d", status);
     if (status) {
-        printf("\nentering if status");
         return 1;
     }
   } 
