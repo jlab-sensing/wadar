@@ -109,7 +109,7 @@ for i = 1:width(myScan)
     myScanAvg(i,:) = frameAvg;
 end
 % myScan(end,:) = frameAvg;
-imagesc(1:scanTimeSteps, range, myScanAvg');
+imagesc(1:scanTimeSteps, range, myScan');
 % xlabel('Time Steps');
 ylabel('Range [in]');
 title('Average Raw Radar BScan');
@@ -117,9 +117,17 @@ drawnow();
 xticks([0 256 512])
 xticklabels({0, 1000, 2000})
 figure(2)
+subplot(2,1,1)
 plot(range, frameAvg);
 xlabel('Range [in]');
 ylabel('');
 title('Average Raw Radar Scan');
+
+% figure(3)
+subplot(2,1,2)
+plot(range, frameTot);
+title('Total Raw Radar Scan');
+ylabel('')
+xlabel('Range [in]');
 
 end
