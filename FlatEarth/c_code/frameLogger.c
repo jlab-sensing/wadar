@@ -661,6 +661,14 @@ int main(int argc, char **argv)
           sprintf(md5copyBuffer, "exec scp %s %s", md5file, copyPath);
           printf("Copying md5 hash to host computer...\n");
           system(md5copyBuffer);
+          
+          //Send settings file
+          if (saveSettingsFile) {
+            char settingsFileBuffer[150];
+            sprintf(settingsFileBuffer, "exec scp %s %s", settingsFile, copyPath);
+            printf("Copying settingsFile to host computer...\n");
+            system(settingsFileBuffer);
+          } 
 
 
         }
@@ -693,7 +701,7 @@ int main(int argc, char **argv)
 
   //kill the radar screen and empty the data folder
   system("exec pkill radar");
-  //system("exec rm -r ../data/*");
+  system("exec rm -r ../data/*");
 
   printf("end of the file\n");
 
