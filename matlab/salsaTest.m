@@ -87,7 +87,7 @@ end
 
 
 for i = 1:size(frameTot,1)
-    frameAvg(i) = mean(frameTot(i,:));
+    frameAvg(i) = mode(frameTot(i,:));
 end
 figure(1)
 scanTimeSteps = 512;
