@@ -409,13 +409,11 @@ int main(int argc, char **argv)
   //
   // Initiate a radar handle
   //
-  //printf("Radar connect bef\n");
   status = radarHelper_open(&rh, radarConnectionStr);
   if (status) return 1;
 
   //
   // Configure the radar using the Stage 1 configuration JSON file
-  //printf("before call\n");
   inFile_stage1 = "stage1.json";
   inFile_stage2 = "stage2.json";
   status = radarHelper_configFromFile(rh, inFile_stage1, 1);
@@ -449,6 +447,14 @@ int main(int argc, char **argv)
   if (saveSettingsFile) {
     //system("exec rm -r ../data/*");
     status = radarHelper_saveConfigToFile(rh, settingsFile);
+
+    if (copyPath != NULL) {
+      char settingsFileBuffer[150];
+      sprintf(settingsFileBuffer, "exec scp %s %s", settingsFile, copyPath);
+      printf("Copying settingsFile to host computer...\n");
+      system(settingsFileBuffer);
+    }
+
     if (status) {
         return 1;
     }
@@ -541,7 +547,7 @@ int main(int argc, char **argv)
     char nameBuffer[50];
     if (saveDataLogFile) {
       //remove capture data from previous runs
-      //system("exec rm -r ../data/*");
+      system("exec rm -r ../data/*");
 
       sprintf(nameBuffer, "%s%d", dataLogFile, runNum);
 
@@ -661,15 +667,6 @@ int main(int argc, char **argv)
           sprintf(md5copyBuffer, "exec scp %s %s", md5file, copyPath);
           printf("Copying md5 hash to host computer...\n");
           system(md5copyBuffer);
-          
-          //Send settings file
-          if (saveSettingsFile) {
-            char settingsFileBuffer[150];
-            sprintf(settingsFileBuffer, "exec scp %s %s", settingsFile, copyPath);
-            printf("Copying settingsFile to host computer...\n");
-            system(settingsFileBuffer);
-          } 
-
 
         }
     }
