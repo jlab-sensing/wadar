@@ -89,7 +89,7 @@ end
 for i = 1:size(frameTot,1)
     frameAvg(i) = mode(frameTot(i,:));
 end
-figure(1)
+figure(str2num(fileName(end)) * 2 - 1)
 scanTimeSteps = 512;
 myScan = zeros(scanTimeSteps, numberOfSamplers);
 myScanAvg = zeros(scanTimeSteps, numberOfSamplers);
@@ -97,26 +97,19 @@ imagesc(myScan)
 colormap(flipud(colormap(gray)));
 c = 299792458;
 resolution = 1/double(samplesPerSecond)*c/2;
-% resolution = 2 / numberOfSamplers
-% resolution = 0.003790984152165;
-% range = linspace(0,numberOfSamplers*resolution,numberOfSamplers);
 range = linspace(0,numberOfSamplers*resolution*39.37,numberOfSamplers);
-
-% numberOfSamplers*resolution
 
 for i = 1:width(myScan)
     myScan(i,:) = frameTot(:,i);
     myScanAvg(i,:) = frameAvg;
 end
-% myScan(end,:) = frameAvg;
 imagesc(1:scanTimeSteps, range, myScanAvg');
-% xlabel('Time Steps');
 ylabel('Range [in]');
 title('Average Raw Radar BScan');
 drawnow();
 xticks([0 256 512])
 xticklabels({0, 1000, 2000})
-figure(2)
+figure(str2num(fileName(end)) * 2)
 plot(range, frameAvg);
 xlabel('Range [in]');
 ylabel('');
