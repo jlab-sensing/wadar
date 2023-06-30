@@ -43,6 +43,6 @@ void loop() {
 //  } else {
 //    count = 0; //restart toggle after one on/off cycle
 //  }
-  //toggleRF();
-  digitalWrite(tagPin, LOW);
+  toggleRF();
+  //digitalWrite(tagPin, LOW);
 }
