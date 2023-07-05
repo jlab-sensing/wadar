@@ -6,6 +6,8 @@
 
 function salsaLoad(fileName)
 
+close all
+
 fprintf('Loading saved data from %s...\n', fileName)
 
 FRAME_LOGGER_MAGIC_NUM = hex2dec('FEFE00A2');
@@ -68,10 +70,10 @@ frameRate = fread(fid,1,'int');
 times = fread(fid, numFrames, 'double');
 % Here are the radar frames 
 frameTot = fread(fid, numFrames*numberOfSamplers, 'uint32');
-% temp = frameTot;
 % Do the DAC normalization
 frameTot = double(frameTot)/(1.0*pps*iterations)*dacStep + dacMin;
 frameTot = reshape(frameTot, numberOfSamplers, numFrames);
+temp = frameTot;
 
 % Estimated FPS (good to check against frameRate)
 fpsEst = fread(fid, 1, 'float');
@@ -89,15 +91,20 @@ end
 for i = 1:size(frameTot,1)
     frameAvg(i) = mode(frameTot(i,:));
 end
-figure(str2num(fileName(end)) * 2 - 1)
+figure
 scanTimeSteps = 512;
 myScan = zeros(scanTimeSteps, numberOfSamplers);
 myScanAvg = zeros(scanTimeSteps, numberOfSamplers);
 imagesc(myScan)
 colormap(flipud(colormap(gray)));
 c = 299792458;
+
+% TODO - fix resolution
 resolution = 1/double(samplesPerSecond)*c/2;
+% resolution = 2 / numberOfSamplers;
+
 range = linspace(0,numberOfSamplers*resolution*39.37,numberOfSamplers);
+numberOfSamplers*resolution;
 
 for i = 1:width(myScan)
     myScan(i,:) = frameTot(:,i);
@@ -109,10 +116,50 @@ title('Average Raw Radar BScan');
 drawnow();
 xticks([0 256 512])
 xticklabels({0, 1000, 2000})
-figure(str2num(fileName(end)) * 2)
-plot(range, frameAvg);
+figure
+plot(range, frameTot);
 xlabel('Range [in]');
 ylabel('');
 title('Average Raw Radar Scan');
+
+frameFreq = zeros(512, 2000);
+
+for i = 1:height(frameTot)
+    frameBin = frameTot(i,:) - mean(frameTot(i,:));
+    frameFreq(i,:) = abs(fft(frameBin));
+end
+
+% frameFreq = abs(fft(frameBin));
+
+Ts = mean(diff(times));
+Fs = 1 / Ts;
+F = (0:length(frameFreq)-1)*Fs/length(frameFreq);
+
+[maxFreq, maxFreqIndex] = max(frameFreq(:))
+[X Y] = ind2sub(size(frameFreq), maxFreqIndex);
+F(Y)
+
+% temp = find(F == interp1(F, F, 80, "nearest"))
+% [maxFreq, maxFreqIndex] = max(frameFreq(:,temp))
+
+% fprintf("A frequency of %f is detected at %f inches\n", interp1(F, F, 80, "nearest"), maxFreqIndex*resolution*39.17)
+
+figure(3)
+plot(F, frameFreq)
+% ylim([0 40000])
+% xlim([0 max(F)/2])
+xlabel('Frequency (Hz)')
+ylabel('Magnitude')
+
+% figure(3)
+% subplot(2,1,1)
+% hold on
+% plot(F, abs(frameFreq))
+% ylim([0 200000])
+xlim([0 max(F)/2])
+% subplot(2,1,2)
+% hold on
+% plot(frameBin)
+% ylim([dacMin dacMax])
 
 end
