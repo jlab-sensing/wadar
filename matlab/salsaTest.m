@@ -86,7 +86,13 @@ if count ~= 0
     return
 end 
 
-
+% Removes any
+for i = 1:numFrames
+    if max(frameTot(:,i)) > 8191 | min(frameTot(:,i)) == 0
+            % frameTot(:, i) = zeros(1, numberOfSamplers);
+            frameTot(:, i) = frameTot(:, i-1);
+    end
+end
 
 for i = 1:size(frameTot,1)
     frameAvg(i) = mode(frameTot(i,:));
@@ -102,9 +108,10 @@ c = 299792458;
 % TODO - fix resolution
 resolution = 1/double(samplesPerSecond)*c/2;
 % resolution = 2 / numberOfSamplers;
+% resolution = 0.004;
 
 range = linspace(0,numberOfSamplers*resolution*39.37,numberOfSamplers);
-numberOfSamplers*resolution;
+numberOfSamplers * resolution
 
 for i = 1:width(myScan)
     myScan(i,:) = frameTot(:,i);
@@ -135,14 +142,20 @@ Ts = mean(diff(times));
 Fs = 1 / Ts;
 F = (0:length(frameFreq)-1)*Fs/length(frameFreq);
 
-[maxFreq, maxFreqIndex] = max(frameFreq(:))
-[X Y] = ind2sub(size(frameFreq), maxFreqIndex);
-F(Y)
+% [maxFreq, maxFreqIndex] = max(frameFreq(:))
+% [X Y] = ind2sub(size(frameFreq), maxFreqIndex);
+% F(Y)
 
-% temp = find(F == interp1(F, F, 80, "nearest"))
-% [maxFreq, maxFreqIndex] = max(frameFreq(:,temp))
+tagFrequency = interp1(F, F, 80, "nearest");
+tagIndex = find(F == tagFrequency);
+[tagFreq, tagRangeBin] = max(frameFreq(:,tagIndex))
 
-% fprintf("A frequency of %f is detected at %f inches\n", interp1(F, F, 80, "nearest"), maxFreqIndex*resolution*39.17)
+figure(4)
+plot(frameFreq(:, tagIndex))
+xlabel('Range Bin')
+ylabel('Magnitude')
+
+fprintf("A frequency of %f is detected at %f inches\n", interp1(F, F, 80, "nearest"), tagRangeBin*resolution*39.17)
 
 figure(3)
 plot(F, frameFreq)

@@ -86,7 +86,12 @@ if count ~= 0
     return
 end 
 
-
+% Removes any
+for i = 1:numFrames
+    if max(frameTot(:,i)) > 8191 | min(frameTot(:,i)) == 0
+            frameTot(:, i) = zeros(1, numberOfSamplers);
+    end
+end
 
 for i = 1:size(frameTot,1)
     frameAvg(i) = mode(frameTot(i,:));
@@ -104,7 +109,6 @@ resolution = 1/double(samplesPerSecond)*c/2;
 % resolution = 2 / numberOfSamplers;
 
 range = linspace(0,numberOfSamplers*resolution*39.37,numberOfSamplers);
-numberOfSamplers*resolution;
 
 for i = 1:width(myScan)
     myScan(i,:) = frameTot(:,i);
@@ -117,7 +121,7 @@ drawnow();
 xticks([0 256 512])
 xticklabels({0, 1000, 2000})
 figure
-plot(range, frameAvg);
+plot(range, frameTot);
 xlabel('Range [in]');
 ylabel('');
 title('Average Raw Radar Scan');
@@ -135,10 +139,14 @@ Ts = mean(diff(times));
 Fs = 1 / Ts;
 F = (0:length(frameFreq)-1)*Fs/length(frameFreq);
 
-[maxFreq, maxFreqIndex] = max(frameFreq(:));
-[X Y] = ind2sub(size(frameFreq), maxFreqIndex)
+% [maxFreq, maxFreqIndex] = max(frameFreq(:))
+% [X Y] = ind2sub(size(frameFreq), maxFreqIndex);
+% F(Y)
 
-fprintf("A frequency of %f is detected at %f inches\n", F(Y), X*resolution*39.17)
+% temp = find(F == interp1(F, F, 80, "nearest"))
+% [maxFreq, maxFreqIndex] = max(frameFreq(:,temp))
+
+% fprintf("A frequency of %f is detected at %f inches\n", interp1(F, F, 80, "nearest"), maxFreqIndex*resolution*39.17)
 
 figure(3)
 plot(F, frameFreq)
