@@ -419,8 +419,8 @@ int main(int argc, char **argv)
   status = radarHelper_configFromFile(rh, inFile_stage1, 1);
   if (status){
     return 1;
-   }
-
+  }
+  
   //
   // Do radar timing measurements
   //
