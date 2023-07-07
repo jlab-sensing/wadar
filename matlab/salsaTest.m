@@ -97,12 +97,8 @@ end
 for i = 1:size(frameTot,1)
     frameAvg(i) = mode(frameTot(i,:));
 end
-figure
+figure(1)
 scanTimeSteps = 512;
-myScan = zeros(scanTimeSteps, numberOfSamplers);
-myScanAvg = zeros(scanTimeSteps, numberOfSamplers);
-imagesc(myScan)
-colormap(flipud(colormap(gray)));
 c = 299792458;
 
 % TODO - fix resolution
@@ -111,20 +107,10 @@ resolution = 1/double(samplesPerSecond)*c/2;
 % resolution = 0.004;
 
 range = linspace(0,numberOfSamplers*resolution*39.37,numberOfSamplers);
-numberOfSamplers * resolution
+numberOfSamplers * resolution;
 
-for i = 1:width(myScan)
-    myScan(i,:) = frameTot(:,i);
-    myScanAvg(i,:) = frameAvg;
-end
-imagesc(1:scanTimeSteps, range, myScanAvg');
-ylabel('Range [in]');
-title('Average Raw Radar BScan');
-drawnow();
-xticks([0 256 512])
-xticklabels({0, 1000, 2000})
-figure
-plot(range, frameTot);
+figure(1)
+plot(range, frameAvg);
 xlabel('Range [in]');
 ylabel('');
 title('Average Raw Radar Scan');
@@ -142,37 +128,29 @@ Ts = mean(diff(times));
 Fs = 1 / Ts;
 F = (0:length(frameFreq)-1)*Fs/length(frameFreq);
 
-% [maxFreq, maxFreqIndex] = max(frameFreq(:))
-% [X Y] = ind2sub(size(frameFreq), maxFreqIndex);
-% F(Y)
-
 tagFrequency = interp1(F, F, 80, "nearest");
 tagIndex = find(F == tagFrequency);
-[tagFreq, tagRangeBin] = max(frameFreq(:,tagIndex))
+[tagFreq, tagRangeBin] = max(frameFreq(:,tagIndex));
 
-figure(4)
-plot(frameFreq(:, tagIndex))
-xlabel('Range Bin')
-ylabel('Magnitude')
-
-fprintf("A frequency of %f is detected at %f inches\n", interp1(F, F, 80, "nearest"), tagRangeBin*resolution*39.17)
-
-figure(3)
+figure(2)
+subplot(2,1,1)
 plot(F, frameFreq)
-% ylim([0 40000])
-% xlim([0 max(F)/2])
+xlim([0 max(F)/2])
 xlabel('Frequency (Hz)')
 ylabel('Magnitude')
+title('FFT of Radar Frames');
 
-% figure(3)
-% subplot(2,1,1)
-% hold on
-% plot(F, abs(frameFreq))
-% ylim([0 200000])
+subplot(2,1,2)
+plot(F, frameFreq(tagRangeBin, :))
 xlim([0 max(F)/2])
-% subplot(2,1,2)
-% hold on
-% plot(frameBin)
-% ylim([dacMin dacMax])
+xlabel('Range Bin')
+ylabel('Magnitude')
+title("Range Bin " + tagRangeBin + " Isolated");
+
+figure(1)
+hold on
+plot(range(tagRangeBin), frameAvg(tagRangeBin),'rx')
+
+fprintf("A frequency of %f is detected at %f inches\n", interp1(F, F, 80, "nearest"), tagRangeBin*resolution*39.17)
 
 end

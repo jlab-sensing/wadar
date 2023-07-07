@@ -89,14 +89,15 @@ end
 % Removes any
 for i = 1:numFrames
     if max(frameTot(:,i)) > 8191 | min(frameTot(:,i)) == 0
-            frameTot(:, i) = zeros(1, numberOfSamplers);
+            % frameTot(:, i) = zeros(1, numberOfSamplers);
+            frameTot(:, i) = frameTot(:, i-1);
     end
 end
 
 for i = 1:size(frameTot,1)
     frameAvg(i) = mode(frameTot(i,:));
 end
-figure
+figure(1)
 scanTimeSteps = 512;
 myScan = zeros(scanTimeSteps, numberOfSamplers);
 myScanAvg = zeros(scanTimeSteps, numberOfSamplers);
@@ -107,20 +108,23 @@ c = 299792458;
 % TODO - fix resolution
 resolution = 1/double(samplesPerSecond)*c/2;
 % resolution = 2 / numberOfSamplers;
+% resolution = 0.004;
 
 range = linspace(0,numberOfSamplers*resolution*39.37,numberOfSamplers);
+numberOfSamplers * resolution
 
 for i = 1:width(myScan)
     myScan(i,:) = frameTot(:,i);
     myScanAvg(i,:) = frameAvg;
 end
+subplot(2,1,1)
 imagesc(1:scanTimeSteps, range, myScanAvg');
 ylabel('Range [in]');
 title('Average Raw Radar BScan');
 drawnow();
 xticks([0 256 512])
 xticklabels({0, 1000, 2000})
-figure
+subplot(2,1,2)
 plot(range, frameTot);
 xlabel('Range [in]');
 ylabel('');
@@ -139,31 +143,28 @@ Ts = mean(diff(times));
 Fs = 1 / Ts;
 F = (0:length(frameFreq)-1)*Fs/length(frameFreq);
 
-% [maxFreq, maxFreqIndex] = max(frameFreq(:))
-% [X Y] = ind2sub(size(frameFreq), maxFreqIndex);
-% F(Y)
-
-% temp = find(F == interp1(F, F, 80, "nearest"))
-% [maxFreq, maxFreqIndex] = max(frameFreq(:,temp))
-
-% fprintf("A frequency of %f is detected at %f inches\n", interp1(F, F, 80, "nearest"), maxFreqIndex*resolution*39.17)
+tagFrequency = interp1(F, F, 80, "nearest");
+tagIndex = find(F == tagFrequency);
+[tagFreq, tagRangeBin] = max(frameFreq(:,tagIndex))
 
 figure(3)
+subplot(2,1,1)
+plot(F, frameFreq(tagRangeBin, :))
+xlim([0 max(F)/2])
+xlabel('Range Bin')
+ylabel('Magnitude')
+title("Range Bin " + tagIndex + " Isolated");
+subplot(2,1,2)
+plot(range, frameTot(:, tagRangeBin))
+subtitle("Frequency = " + interp1(F, F, 80, "nearest") + "Hz, Range = " + tagRangeBin*resolution*39.17 + "in")
+
+fprintf("A frequency of %f is detected at %f inches\n", interp1(F, F, 80, "nearest"), tagRangeBin*resolution*39.17)
+
+figure(4)
 plot(F, frameFreq)
-% ylim([0 40000])
-% xlim([0 max(F)/2])
+xlim([0 max(F)/2])
 xlabel('Frequency (Hz)')
 ylabel('Magnitude')
-
-% figure(3)
-% subplot(2,1,1)
-% hold on
-% plot(F, abs(frameFreq))
-% ylim([0 200000])
-xlim([0 max(F)/2])
-% subplot(2,1,2)
-% hold on
-% plot(frameBin)
-% ylim([dacMin dacMax])
+title('FFT of Radar Frames');
 
 end
