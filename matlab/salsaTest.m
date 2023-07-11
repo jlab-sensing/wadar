@@ -99,15 +99,11 @@ for i = 1:size(frameTot,1)
 end
 figure(1)
 scanTimeSteps = 512;
-c = 299792458;
+c = 299792458.0; % speed of light
 
 % TODO - fix resolution
-resolution = 1/double(samplesPerSecond)*c/2;
-% resolution = 2 / numberOfSamplers;
-% resolution = 0.004;
-
+resolution = 0.5 * c / samplesPerSecond;
 range = linspace(0,numberOfSamplers*resolution*39.37,numberOfSamplers);
-numberOfSamplers * resolution;
 
 figure(1)
 plot(range, frameAvg);
@@ -124,13 +120,20 @@ end
 
 % frameFreq = abs(fft(frameBin));
 
-Ts = mean(diff(times));
-Fs = 1 / Ts;
-F = (0:length(frameFreq)-1)*Fs/length(frameFreq);
+% Ts = mean(diff(times));
+% Fs = 1 / Ts
+% F = (0:length(frameFreq)-1)*Fs/length(frameFreq);
+
+F = zeros(1, 2000);
+F(1) = times(1) - 0;
+for i = 2:length(times)
+    F(i) = (i-1) * 1 / (times(i) - times(i-1)) / length(frameFreq);
+end
+F = sort(F);
 
 tagFrequency = interp1(F, F, 80, "nearest");
 tagIndex = find(F == tagFrequency);
-[tagFreq, tagRangeBin] = max(frameFreq(:,tagIndex));
+[tagMagnitude, tagRangeBin] = max(frameFreq(:,tagIndex));
 
 figure(2)
 subplot(2,1,1)

@@ -1,6 +1,6 @@
 [
-  {"DACMin" : 0},
-  {"DACMax" : 8191},
+  {"DACMin" : 3800},
+  {"DACMax" : 4900},
   {"DACStep" : 8},
   {"Iterations" : 16},
   {"PulsesPerStep" : 8},
