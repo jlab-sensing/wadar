@@ -493,8 +493,6 @@ int main(int argc, char **argv)
     clkDivider = getIntValueByName(rh, "ClkDivider");
   }
 
-  printf("SampleDelayToReference = %f", getFloatValueByName(rh, "OffsetDistanceFromReference"));
-
   //
   // Allocate memory for signal storage
   //
