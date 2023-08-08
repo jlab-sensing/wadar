@@ -72,6 +72,13 @@ frameTot = fread(fid, numFrames*numberOfSamplers, 'uint32');
 frameTot = double(frameTot)/(1.0*pps*iterations)*dacStep + dacMin;
 frameTot = reshape(frameTot, numberOfSamplers, numFrames);
 
+for i = 1:numFrames
+    if max(frameTot(:,i)) > 8191 | min(frameTot(:,i)) == 0
+            % frameTot(:, i) = zeros(1, numberOfSamplers);
+            frameTot(:, i) = frameTot(:, i-1);
+    end
+end
+
 % Estimated FPS (good to check against frameRate)
 fpsEst = fread(fid, 1, 'float');
 
