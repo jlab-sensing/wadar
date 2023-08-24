@@ -1,10 +1,11 @@
-% This script compules the loads radar data from a binary file (captured from frameLogger.c on BBB)
-% and displays the data as a BScan plot
+% This script compiles the loads radar data from a binary file (captured
+% from frameLogger.c on BBB) and displays the data and the fourier 
+% transform
 
 % REQUIRED ARGS: 
 % fileName
 
-function salsaLoad(fileName)
+function salsaTest(fileName)
 
 close all
 
@@ -39,7 +40,7 @@ switch radarSpecifier
         pgen = fread(fid,1,'int');
         offsetDistance = fread(fid,1,'float');
         sampleDelayToReference = fread(fid,1,'float');
-    
+
     case 10 
         chipSet = "X1-IPGO";
         % The measured sampling rate is next
@@ -88,10 +89,10 @@ end
 
 % Removes any
 for i = 1:numFrames
-    % if max(frameTot(:,i)) > 8191 | min(frameTot(:,i)) == 0
-    %         % frameTot(:, i) = zeros(1, numberOfSamplers);
-    %         frameTot(:, i) = frameTot(:, i-1);
-    % end
+    if max(frameTot(:,i)) > (dacMax + dacStep) | min(frameTot(:,i)) < (dacMin - dacStep)
+            % frameTot(:, i) = zeros(1, numberOfSamplers);
+            frameTot(:, i) = frameTot(:, i-1);
+    end
 end
 
 for i = 1:size(frameTot,1)
@@ -103,13 +104,19 @@ c = 299792458.0; % speed of light
 
 % TODO - fix resolution
 resolution = 0.5 * c / samplesPerSecond;
-range = linspace(0,numberOfSamplers*resolution*39.37,numberOfSamplers);
+range = linspace(0,numberOfSamplers,numberOfSamplers);
 
 figure(1)
+subplot(2,2,2)
 plot(range, frameAvg);
-xlabel('Range [in]');
+xlabel('Range Bin');
 ylabel('');
 title('Average Raw Radar Scan');
+subplot(2,2,1)
+plot(range, frameTot);
+xlabel('Range Bin');
+ylabel('');
+title('Raw Radar Scan');
 
 frameFreq = zeros(512, 2000);
 
@@ -135,67 +142,24 @@ tagFrequency = interp1(F, F, 80, "nearest");
 tagIndex = find(F == tagFrequency);
 [tagMagnitude, tagRangeBin] = max(frameFreq(:,tagIndex));
 
-figure(2)
-subplot(2,1,1)
+subplot(2,2,3)
 plot(F, frameFreq)
 xlim([0 max(F)/2])
 xlabel('Frequency (Hz)')
 ylabel('Magnitude')
 title('FFT of Radar Frames');
 
-subplot(2,1,2)
+subplot(2,2,4)
 plot(F, frameFreq(tagRangeBin, :))
 xlim([0 max(F)/2])
-xlabel('Range Bin')
+xlabel('Frequency (Hz)')
 ylabel('Magnitude')
 title("Range Bin " + tagRangeBin + " Isolated");
 
-figure(1)
+subplot(2,2,1)
 hold on
 plot(range(tagRangeBin), frameAvg(tagRangeBin),'rx')
 
 fprintf("A frequency of %f is detected at %f inches\n", interp1(F, F, 80, "nearest"), tagRangeBin*resolution*39.17)
-
-% Rewriting code in format of demo.m
-% 
-% localDataPath = "/Users/cjoseph/wadar/matlab/data";
-% fullDataPath = sprintf("cjoseph@192.168.7.1:%s",localDataPath);
-% 
-% corrTemplateFile = "captureData1";
-% 
-% radarType="Chipotle";
-% numTrials = 2000;
-% frameRate = 200; 
-% tagHz = 80;
-% 
-% %% loading template %%
-% [tempRawFrames pgen fs_hz chipSet timeDeltas] = salsaLoad(fullfile(localDataPath, corrTemplateFile));
-% tempFrameCount = size(tempRawFrames, 2);
-% tempFramesBB = zeros(size(tempRawFrames));
-% 
-% for j = 1:tempFrameCount
-%     tempFramesBB(:,j) = NoveldaDDC(tempRawFrames(:,j), chipSet, pgen, fs_hz);
-% end
-% 
-% tempFT = fft(tempFramesBB(:,1:numTrials),numTrials,2); 
-% 
-% [freqTag, freqTagHar] = calculateTagFrequencies(tagHz, frameRate, numTrials); 
-% figure(3)
-% 
-% %TODO: improve this?
-% tempTagFT = abs(tempFT(:, freqTag)); 
-% plot(tempTagFT)
-% % find the bin corresponding to the largest peak
-% [val, binMax] = max(tempTagFT);
-% %templatePeakBin = [templatePeakBins binMax];
-% % find left-most peak matching criteria
-% h1 = mean(findpeaks(tempTagFT(1:100)));
-% h2 = max(tempTagFT);
-% thresholdAdjust = 0.9; % factor for adjusting which peaks are considered valid
-% threshold = thresholdAdjust * (h1 + h2) / 2; 
-% %threshold = 0.85 * max(tempTagFT);
-% [peaks peakBins] = findpeaks(tempTagFT, 'MinPeakHeight', threshold); 
-% peakBins = peakBins(peakBins > 22); % assume no peak in first 22
-% templatePeakBin = peakBins(1)
 
 end
