@@ -64,7 +64,7 @@ end
 % Next is the #samplers in a frame
 numberOfSamplers = fread(fid,1,'int');
 % Determine #frames and #runs in capture
-numFrames = fread(fid,1,'int');
+numFrames = fread(fid,1,'int')
 numRuns = fread(fid,1,'int');
 % Next is the frames per second 
 frameRate = fread(fid,1,'int');
@@ -118,7 +118,7 @@ xlabel('Range Bin');
 ylabel('');
 title('Raw Radar Scan');
 
-frameFreq = zeros(512, 2000);
+frameFreq = zeros(512, numFrames);
 
 for i = 1:height(frameTot)
     frameBin = frameTot(i,:) - mean(frameTot(i,:));
@@ -131,7 +131,7 @@ end
 % Fs = 1 / Ts
 % F = (0:length(frameFreq)-1)*Fs/length(frameFreq);
 
-F = zeros(1, 2000);
+F = zeros(1, numFrames);
 F(1) = times(1) - 0;
 for i = 2:length(times)
     F(i) = (i-1) * 1 / (times(i) - times(i-1)) / length(frameFreq);
@@ -151,7 +151,7 @@ title('FFT of Radar Frames');
 
 subplot(2,2,4)
 plot(F, frameFreq(tagRangeBin, :))
-xlim([0 max(F)/2])
+xlim([20 max(F)/2])
 xlabel('Frequency (Hz)')
 ylabel('Magnitude')
 title("Range Bin " + tagRangeBin + " Isolated");
