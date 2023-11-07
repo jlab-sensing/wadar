@@ -1,26 +1,26 @@
-function vwc = wadar(airFileName, captureName)
-% wadar(templateFileName, airFileName, captureName)
+function vwc = wadar(airFileName, captureName, captureCount)
+% vwc = wadar(airFileName, captureName)
 %
 % Script calculates the volumetric water content (vwc) of the soil from 
 % the capture
 %
 % Inputs:
-%        airFileName: 
-%        captureName:
+%        airFileName: Radar capture with tag uncovered with soil
+%        captureName: Radar capture with tag covered with soil
 %
 % Outputs:
-%   vwc: 
+%   vwc: Calculated volumetric water content
 %
 
 
 close all
 
-d = 0.1016; % in meters
-localDataPath = "C:/jlab/wadar/matlab/data/data";
+d = 0.12; % in meters
+localDataPath = "C:/jlab/wadar/matlab/data/";
 tagHz = 80;
 airCaptureFile = airFileName;
 
-[freqTag, freqTagHar] = calculateTagFrequencies(tagHz, 200, 2000); 
+[freqTag, freqTagHar] = calculateTagFrequencies(tagHz, 200, 20000); 
 
 %% Load Air Capture %%
 [airRawFrames pgen fs_hz chipSet timeDeltas] = salsaLoad(fullfile(localDataPath, airCaptureFile));
@@ -32,7 +32,7 @@ for j = 1:airFrameCount
 end
 
 % Find the bin corresponding to the largest peak 
-airFT = fft(airFramesBB, 2000 , 2); 
+airFT = fft(airFramesBB, 20000 , 2); 
 airTagFT = abs(airFT(:, freqTag)); 
 [vals, peaks] = findpeaks(airTagFT, 'MinPeakHeight', max(airTagFT) * 0.9);
 airPeakBin = peaks(1);
@@ -51,7 +51,7 @@ end
 ft = fft(framesBB(:,1:frameCount),frameCount,2);
 TagFT = abs(ft(:, freqTag));
 [vals, peaks] = findpeaks(TagFT, 'MinPeakHeight', max(TagFT) * 0.90);
-peak = peaks(1)
+peak = peaks(1);
 
 vwc = calculateSoilMoisture(airPeakBin, peak, "farm", d);
 
@@ -59,5 +59,9 @@ plot(TagFT)
 xlabel('Range Bins')
 ylabel('Magnitude')
 title("80 Hz Isolated");
+
+fprintf("Air peak located at %d\n", airPeakBin);
+fprintf("Capture peak located at %d\n", peak);
+fprintf("VWC = %f\n", vwc);
 
 end
