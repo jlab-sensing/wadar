@@ -1,4 +1,4 @@
-function vwc = wadar(airFileName, captureName, captureCount)
+function vwc = wadar(airFileName, captureName)
 % vwc = wadar(airFileName, captureName)
 %
 % Script calculates the volumetric water content (vwc) of the soil from 
