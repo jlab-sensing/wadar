@@ -1,5 +1,5 @@
 function SNRdB = tagTest(captureName)
-% vwc = SNRdB = (captureName)
+% vwc = SNRdB = (captureName) t
 %
 % Displays the tag FT and isolates peak bin.
 % Calculates signal to noise ratio (ratio of peak bin amplitude at desired 
