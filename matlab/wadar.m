@@ -46,7 +46,7 @@ templateTagFT = smoothdata(templateTagFT, 'movmean', 10);
 % Find the bin corresponding to the largest peak 
 [~, peaks] = findpeaks(templateTagFT, 'MinPeakHeight', max(templateTagFT) * 0.9);
 if (size(peaks, 1) > 1)
-    templatePeakBin = peaks(1) +  round((peaks(2) - peaks(1)) / 2) + round((templateTagFT(peaks(1)) - templateTagFT(peaks(2))) / max(templateTagFT) * (peaks(2) - peaks(1)));
+    templatePeakBin = peaks(1) +  round((peaks(2) - peaks(1)) / 2) + round((templateTagFT(peaks(2)) - templateTagFT(peaks(1))) / max(templateTagFT) * (peaks(2) - peaks(1)));
 else
     templatePeakBin = peaks(1);
 end
@@ -77,7 +77,7 @@ airTagFT = smoothdata(airTagFT, 'movmean', 10);
 % Find the bin corresponding to the largest peak 
 [~, peaks] = findpeaks(airTagFT, 'MinPeakHeight', max(airTagFT) * 0.9);
 if (size(peaks, 1) > 1)
-        airPeakBin = peaks(1) +  round((peaks(2) - peaks(1)) / 2) + round((airTagFT(peaks(1)) - airTagFT(peaks(2))) / max(airTagFT) * (peaks(2) - peaks(1)));
+        airPeakBin = peaks(1) +  round((peaks(2) - peaks(1)) / 2) + round((airTagFT(peaks(2)) - airTagFT(peaks(1))) / max(airTagFT) * (peaks(2) - peaks(1)));
 else
     airPeakBin = peaks(1);
 end
