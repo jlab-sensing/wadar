@@ -9,7 +9,7 @@ function SNRdB = tagTest(captureName)
 %           captureName: Radar capture
 %
 % Outputs:
-%           SNRdB: Calculated volumetric water content
+%           SNRdB: SNR in dB
 
 close all
 
