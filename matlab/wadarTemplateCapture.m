@@ -1,0 +1,90 @@
+function [captureSuccess, templatePeakBin] = wadarTemplateCapture(localDataPath, trialIndex)
+% vwc = wadarTemplateCapture(airFileName, captureName)
+%
+% Function captures the template capture for correlation analysis
+%
+% Inputs:
+%        
+%
+% Outputs:
+%   vwc: Calculated volumetric water content
+
+% Capture parameters
+frameRate = 200;
+radarType = 'Chipotle';
+fullDataPath = sprintf("cjoseph@192.168.7.1:%s",localDataPath);
+
+% Processing parameters
+tagHz = 80;
+
+[year, month, date] = ymd(datetime("now"));
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '-TemplateTrial', trialIndex, 'Capture');
+
+% Check for existing files with the same name
+existingFiles = dir(localDataPath);
+for i = 1:length(existingFiles)
+    for j = 1:1:10
+        if existingFiles(i).name == strcat(captureName, j, '.frames')
+            printf("Files under this trial index already exist. Iterate the trial index.")
+            captureSuccess = 0;
+            return
+        end
+    end
+end
+
+frameLoggerOptions = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 1 -f %d -t %s -c %s', ...
+    captureName, frameRate, frameRate, radarType, fullDataPath);
+frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', frameLoggerOptions);
+% [status,~] = system(checkcommand);
+% fprintf('\nPlease wait. Verifying framelogger captures...\n');
+% pause(5);
+% checkFile = dir(fullfile(localDataPath, strcat(captureName, '.capture1')));
+% checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '.capture1', '.md5')));
+% if (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
+%     error('There is a data transfer issue. Please verify your capture settings and scp directory.')
+% end
+% fileName = checkFile(1).name;
+% md5Name = checkmd5File(1).name;
+% 
+% md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
+% [status, cmdout] = system(md5command);
+% localchecksum = char(strsplit(cmdout));
+% localchecksum = lower(strtrim(localchecksum(4,:)));
+% localchecksum = deblank(localchecksum);
+% 
+% md5checksum = fileread(fullfile(localDataPath, md5Name));
+% md5checksum = char(strsplit(md5checksum));
+% md5checksum = lower(md5checksum(1,:));
+% md5checksum = deblank(localchecksum);
+
+%% Load Template Capture
+[templateRawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, templateName));
+
+% Baseband Conversion
+templateFrameCount = size(templateRawFrames, 2);
+templateFramesBB = zeros(size(templateRawFrames));
+for j = 1:templateFrameCount
+    templateFramesBB(:,j) = NoveldaDDC(templateRawFrames(:,j), chipSet, pgen, fs_hz);
+end
+
+% Find Tag FT
+templateFreqTag = tagHz / frameRate * templateFrameCount;
+templateFT = fft(templateFramesBB, templateFrameCount , 2); 
+templateTagFT = abs(templateFT(:, templateFreqTag));
+for i = (templateFreqTag-2:1:templateFreqTag+2)
+    temp = abs(templateFT(:, i));
+    if max(temp) > max(templateTagFT)
+        templateTagFT = temp;
+    end
+end
+templateTagFT = smoothdata(templateTagFT, 'movmean', 10);
+
+% Find the bin corresponding to the largest peak 
+[~, peaks] = findpeaks(templateTagFT, 'MinPeakHeight', max(templateTagFT) * 0.9);
+if (size(peaks, 1) > 1)
+    templatePeakBin = peaks(1) +  round((peaks(2) - peaks(1)) / 2) + round((templateTagFT(peaks(2)) - templateTagFT(peaks(1))) / max(templateTagFT) * (peaks(2) - peaks(1)));
+else
+    templatePeakBin = peaks(1);
+end
+
+end
