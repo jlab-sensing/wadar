@@ -534,7 +534,7 @@ int main(int argc, char **argv)
 
   runs = numRuns;
   runNum = 0;
-
+  
   while (runs > 0) {
 
     // Give user some feedback
@@ -545,13 +545,15 @@ int main(int argc, char **argv)
     // Setup datalog (if necessary)
     //
     char nameBuffer[50];
+    char dataLogBuffer[50];
     if (saveDataLogFile) {
       //remove capture data from previous runs
       system("exec rm -r ../data/*");
 
       sprintf(nameBuffer, "%s%d", dataLogFile, runNum);
+      sprintf(dataLogBuffer, "%s.frames", nameBuffer);
 
-      dataLog = fopen(nameBuffer, "wb");
+      dataLog = fopen(dataLogBuffer, "wb");
       if (!dataLog) {
         fprintf(stderr, "Unable to open %s!\n", dataLogFile);
         return 1;
@@ -645,20 +647,20 @@ int main(int argc, char **argv)
           //Create md5 on BBB
 
           // test whether the data log exists by printing
-          //FILE *tempFile = fopen(nameBuffer, "r");
+          //FILE *tempFile = fopen(dataLogBuffer, "r");
           //char tempChar = fgetc(tempFile);
           //while (tempChar != EOF) {
           //  printf ("%c", tempChar);
           //  tempChar = fgetc(tempFile);
           //}
 
-          sprintf(md5cmd, "exec md5sum %s > %s", nameBuffer, md5file);
+          sprintf(md5cmd, "exec md5sum %s > %s", dataLogBuffer, md5file);
           system(md5cmd);
 
 
           //Send data to host
           char copyBuffer[150];
-          sprintf(copyBuffer, "exec scp %s %s", nameBuffer, copyPath);
+          sprintf(copyBuffer, "exec scp %s %s", dataLogBuffer, copyPath);
           printf("Copying data to host computer...\n");
           system(copyBuffer);
 
