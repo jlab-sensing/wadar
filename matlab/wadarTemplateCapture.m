@@ -9,6 +9,10 @@ function [captureSuccess, templatePeakBin] = wadarTemplateCapture(localDataPath,
 % Outputs:
 %   vwc: Calculated volumetric water content
 
+close all;
+
+captureSuccess = 0;
+
 % Capture parameters
 frameRate = 200;   
 frameCount = 200;
@@ -39,8 +43,12 @@ frameLoggerOptions = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 
 frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', ...
     frameLoggerOptions);
 [status,~] = system(frameLoggerCommand);
-    
-pause(frameCount/frameRate + 5);
+  
+fprintf("Please wait. The radar is collecting data.\n")
+pause(frameCount/frameRate);
+fprintf("Waiting for data to be transferred...\n")
+pause(5)
+
 checkFile = dir(fullfile(localDataPath, strcat(captureName, '1.frames')));
 checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '1.md5')));
 if (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
@@ -94,9 +102,42 @@ templateTagFT = smoothdata(templateTagFT, 'movmean', 10);
 % Find the bin corresponding to the largest peak 
 [~, peaks] = findpeaks(templateTagFT, 'MinPeakHeight', max(templateTagFT) * 0.9);
 if (size(peaks, 1) > 1)
-    templatePeakBin = peaks(1) +  round((peaks(2) - peaks(1)) / 2) + round((templateTagFT(peaks(2)) - templateTagFT(peaks(1))) / max(templateTagFT) * (peaks(2) - peaks(1)));
-else
+    if (peaks(2) - peaks(1) < 50)
+        templatePeakBin = peaks(1) +  round((peaks(2) - peaks(1)) / 2) + round((templateTagFT(peaks(2)) - ...
+            templateTagFT(peaks(1))) / max(templateTagFT) * (peaks(2) - peaks(1)));
+    else
+        templatePeakBin = peaks(1);
+    end
+elseif (size(peaks, 1) == 1)
     templatePeakBin = peaks(1);
+else
+    templatePeakBin = 0;
+    fprintf("ERROR: No peak detected. Please ensure backscatter tag is actively powered.\n")
+end
+
+figure(1)
+plot(templateTagFT)
+xline(templatePeakBin)
+xlabel('Range Bins')
+ylabel('Magnitude')
+title("Template Capture - 80 Hz Isolated");
+
+
+validTemplateCapture = input("\nDoes this capture follow the following requirements: (Y/N)\n" + ...
+    "     - A clear and obvious peak is visible\n" + ...
+    "     - There is no double peak\n", ...
+    "s");
+
+if (strcmp(validTemplateCapture, "Y"))
+    captureSuccess = 1;
+    return
+elseif (strcmp(validTemplateCapture, "N"))
+    fprintf("\n")
+    delete(fullfile(localDataPath, strcat(captureName, '1.frames')))
+    delete(fullfile(localDataPath, strcat(captureName, '1.md5')))
+    wadarTemplateCapture(localDataPath, trialIndex);
+else
+    error("Invalid input")
 end
 
 end
