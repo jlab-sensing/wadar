@@ -1,0 +1,35 @@
+[
+  {
+    "DACMin":3800
+  },
+  {
+    "DACMax":4900
+  },
+  {
+    "DACStep":8
+  },
+  {
+    "Iterations":16
+  },
+  {
+    "PulsesPerStep":8
+  },
+  {
+    "FrameStitch":1
+  },
+  {
+    "OffsetDistanceFromReference":0.000000
+  },
+  {
+    "SampleDelayToReference":0.000000
+  },
+  {
+    "SamplesPerSecond":35400458240.000000
+  },
+  {
+    "SamplersPerFrame":512
+  },
+  {
+    "SampleDelay":0.000000
+  }
+]

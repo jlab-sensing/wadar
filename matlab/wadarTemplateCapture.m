@@ -10,55 +10,67 @@ function [captureSuccess, templatePeakBin] = wadarTemplateCapture(localDataPath,
 %   vwc: Calculated volumetric water content
 
 % Capture parameters
-frameRate = 200;
+frameRate = 200;   
+frameCount = 200;
 radarType = 'Chipotle';
-fullDataPath = sprintf("cjoseph@192.168.7.1:%s",localDataPath);
+fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
 % Processing parameters
 tagHz = 80;
 
 [year, month, date] = ymd(datetime("now"));
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '-TemplateTrial', trialIndex, 'Capture');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '-TemplateTrial', num2str(trialIndex), 'Capture');
 
 % Check for existing files with the same name
 existingFiles = dir(localDataPath);
-for i = 1:length(existingFiles)
-    for j = 1:1:10
-        if existingFiles(i).name == strcat(captureName, j, '.frames')
-            printf("Files under this trial index already exist. Iterate the trial index.")
-            captureSuccess = 0;
-            return
-        end
-    end
-end
+
+% for i = 1:length(existingFiles)
+%     for j = 1:1:10
+%         if strcmp(existingFiles(i).name, strcat(captureName, num2str(j), '.frames'))
+%             error("Files under this trial index already exist. Iterate the trial index.")
+%             captureSuccess = 0;
+%             return
+%         end
+%     end
+% end
 
 frameLoggerOptions = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 1 -f %d -t %s -c %s', ...
-    captureName, frameRate, frameRate, radarType, fullDataPath);
-frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', frameLoggerOptions);
-% [status,~] = system(checkcommand);
-% fprintf('\nPlease wait. Verifying framelogger captures...\n');
-% pause(5);
-% checkFile = dir(fullfile(localDataPath, strcat(captureName, '.capture1')));
-% checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '.capture1', '.md5')));
-% if (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
-%     error('There is a data transfer issue. Please verify your capture settings and scp directory.')
-% end
-% fileName = checkFile(1).name;
-% md5Name = checkmd5File(1).name;
-% 
-% md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
-% [status, cmdout] = system(md5command);
-% localchecksum = char(strsplit(cmdout));
-% localchecksum = lower(strtrim(localchecksum(4,:)));
-% localchecksum = deblank(localchecksum);
-% 
-% md5checksum = fileread(fullfile(localDataPath, md5Name));
-% md5checksum = char(strsplit(md5checksum));
-% md5checksum = lower(md5checksum(1,:));
-% md5checksum = deblank(localchecksum);
+    captureName, frameCount, frameRate, radarType, fullDataPath);
+frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', ...
+    frameLoggerOptions);
+[status,~] = system(frameLoggerCommand);
+    
+pause(frameCount/frameRate + 5);
+checkFile = dir(fullfile(localDataPath, strcat(captureName, '1.frames')));
+checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '1.md5')));
+if (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
+    error('There is a data transfer issue. Please verify your capture settings and scp directory.')
+end
+fileName = checkFile(1).name;
+md5Name = checkmd5File(1).name;
+
+md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
+[status, cmdout] = system(md5command);
+localchecksum = char(strsplit(cmdout));
+localchecksum = lower(strtrim(localchecksum(4,:)));
+localchecksum = deblank(localchecksum);
+
+md5checksum = fileread(fullfile(localDataPath, md5Name));
+md5checksum = char(strsplit(md5checksum));
+md5checksum = lower(md5checksum(1,:));
+md5checksum = deblank(localchecksum);
+
+if (~strcmp(localchecksum, md5checksum))
+    fprintf('Failure on framelogger check.\n', runCount);
+    fprintf('Local checksum is %s.\n', localchecksum);
+    fprintf('BBB checksum is %s.\n', md5checksum);
+    error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
+else
+    fprintf('Framelogger captured frames succesfully!\n\n')
+end
 
 %% Load Template Capture
-[templateRawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, templateName));
+[templateRawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, strcat(captureName, '1.frames')));
 
 % Baseband Conversion
 templateFrameCount = size(templateRawFrames, 2);
