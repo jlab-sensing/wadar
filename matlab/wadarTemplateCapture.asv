@@ -23,7 +23,7 @@ fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 tagHz = 80;
 
 [year, month, date] = ymd(datetime("now"));
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '-Template-Trial', num2str(trialIndex), '-Capture');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '-TemplateTrial', num2str(trialIndex), 'Capture');
 
 % Check for existing files with the same name
 existingFiles = dir(localDataPath);
@@ -122,7 +122,7 @@ xlabel('Range Bins')
 ylabel('Magnitude')
 title("Template Capture - 80 Hz Isolated");
 
-SNR = calculateSNR(templateFT, templateFreqTag, templatePeakBin);
+SNR = calculateSNR(templateTagFT, freqTag, closestPeak);
 SNRdB = 10 * log10(SNR)
 
 
