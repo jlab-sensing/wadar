@@ -1,4 +1,4 @@
-function [captureSuccess, peakBin, SNR, SNRdB] = tagTest(localDataPath, tagName, trialIndex, captureCount)
+function wadarTagTest(localDataPath, tagName, trialIndex, captureCount)
 % vwc = tagTest(airFileName, captureName)
 %
 % Function captures radar frames to test tag SNR and display capture
@@ -6,11 +6,12 @@ function [captureSuccess, peakBin, SNR, SNRdB] = tagTest(localDataPath, tagName,
 %
 % Inputs:
 %        localDataPath: Location to store capture on local machine
-%        tagName: Name of tag for file name
-%        trialIndex: trialNumber for file name
+%              tagName: Name of tag for file name
+%           trialIndex: Trial number for file name
+%         captureCount: Number of captures desired
 %
 % Outputs:
-%   vwc: Calculated volumetric water content
+%   None
 
 close all;
 
@@ -51,7 +52,7 @@ frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c
 fprintf("Please wait. The radar is collecting data.\n")
 pause(frameCount/frameRate*captureCount);
 fprintf("Waiting for data to be transferred...\n")
-pause(10)
+pause(10 + 2*captureCount)
 
 checkFile = dir(fullfile(localDataPath, strcat(captureName, '1.frames')));
 checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '1.md5')));
@@ -93,6 +94,7 @@ for i = 1:1:captureCount
     try
         [rawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
     catch
+        failedCaptures = [failedCaptures i];
         continue
     end
 
@@ -124,7 +126,14 @@ for i = 1:1:captureCount
     SNRdB(i) = 10 * log10(SNR(i));
 end
 
-fprintf("%s Testing Results\n\n", tagName)
+% Remove failed captures
+for i = failedCaptures
+    SNRdB(i) = [];
+    peakMagnitudes(i) = [];
+    peakBin(i) = [];
+end
+
+fprintf("\n%s Testing Results\n\n", tagName)
 
 fprintf("SNR Results:\n")
 fprintf("Median: %fdB\nMean: %fdB\n\n", median(SNRdB), mean(SNRdB))
@@ -137,7 +146,7 @@ fprintf("Maximum difference between peak bins: %d\n\n", max(diff(sort(peakBin)))
 
 figure(1)
 plot(tagFT)
-xline(peakBin(i))
+xline(peakBin(captureCount))
 xlabel('Range Bins')
 ylabel('Magnitude')
 title(strcat("Capture ", num2str(captureCount), " - 80 Hz Isolated"));

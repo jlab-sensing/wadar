@@ -7,7 +7,7 @@ function [captureSuccess, templatePeakBin] = wadarTemplateCapture(localDataPath,
 %        
 %
 % Outputs:
-%   vwc: Calculated volumetric water content
+%   captureSuccess: Flag to demonstrate if capture was successful
 
 close all;
 
@@ -15,7 +15,7 @@ captureSuccess = 0;
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 2000;
+frameCount = 200;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
@@ -23,7 +23,7 @@ fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 tagHz = 80;
 
 [year, month, date] = ymd(datetime("now"));
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '-Template-Trial', num2str(trialIndex), '-Capture');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Template_T', num2str(trialIndex), '_C');
 
 % Check for existing files with the same name
 existingFiles = dir(localDataPath);
