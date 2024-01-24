@@ -544,8 +544,8 @@ int main(int argc, char **argv)
     //
     // Setup datalog (if necessary)
     //
-    char nameBuffer[50];
-    char dataLogBuffer[50];
+    char nameBuffer[100];
+    char dataLogBuffer[100];
     if (saveDataLogFile) {
       //remove capture data from previous runs
       system("exec rm -r ../data/*");
