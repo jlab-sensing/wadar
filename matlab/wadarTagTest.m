@@ -15,8 +15,6 @@ function wadarTagTest(localDataPath, tagName, trialIndex, captureCount)
 
 close all;
 
-captureSuccess = 0;
-
 % Capture parameters
 frameRate = 200;   
 frameCount = 2000;

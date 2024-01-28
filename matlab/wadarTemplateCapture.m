@@ -15,7 +15,7 @@ captureSuccess = 0;
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 200;
+frameCount = 2000;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
@@ -122,25 +122,38 @@ xlabel('Range Bins')
 ylabel('Magnitude')
 title("Template Capture - 80 Hz Isolated");
 
-SNR = calculateSNR(templateFT, templateFreqTag, templatePeakBin);
-SNRdB = 10 * log10(SNR)
 
+validTemplateCapture = input("\nDoes this capture follow the following requirements: (Y/N)\n" + ...
+    "     - A clear and obvious peak is visible\n" + ...
+    "     - There is no double peak\n", ...
+    "s");
 
-% validTemplateCapture = input("\nDoes this capture follow the following requirements: (Y/N)\n" + ...
-%     "     - A clear and obvious peak is visible\n" + ...
-%     "     - There is no double peak\n", ...
-%     "s");
-% 
-% if (strcmp(validTemplateCapture, "Y"))
-%     captureSuccess = 1;
-%     return
-% elseif (strcmp(validTemplateCapture, "N"))
-%     fprintf("\n")
-%     delete(fullfile(localDataPath, strcat(captureName, '1.frames')))
-%     delete(fullfile(localDataPath, strcat(captureName, '1.md5')))
-%     wadarTemplateCapture(localDataPath, trialIndex);
-% else
-%     error("Invalid input")
-% end
+if (strcmp(validTemplateCapture, "Y"))
+    captureSuccess = 1;
+    return
+elseif (strcmp(validTemplateCapture, "N"))
+    fprintf("\n")
+    delete(fullfile(localDataPath, strcat(captureName, '1.frames')))
+    delete(fullfile(localDataPath, strcat(captureName, '1.md5')))
+    wadarTemplateCapture(localDataPath, trialIndex);
+else
+    error("Invalid input")
+end
+validTemplateCapture = input("\nDoes this capture follow the following requirements: (Y/N)\n" + ...
+    "     - A clear and obvious peak is visible\n" + ...
+    "     - There is no double peak\n", ...
+    "s");
+
+if (strcmp(validTemplateCapture, "Y"))
+    captureSuccess = 1;
+    return
+elseif (strcmp(validTemplateCapture, "N"))
+    fprintf("\n")
+    delete(fullfile(localDataPath, strcat(captureName, '1.frames')))
+    delete(fullfile(localDataPath, strcat(captureName, '1.md5')))
+    wadarTemplateCapture(localDataPath, trialIndex);
+else
+    error("Invalid input")
+end
 
 end
