@@ -1,0 +1,20 @@
+function volumetricWaterContent = procSoilMoisture(templateName, airFileName, captureName, localDataPath)
+% volumetricWaterContent = procSoilMoisture(airFileName, templateName, localDataPath)
+%
+% Function returns volumetric moisture content based on radar data
+%
+% Inputs:
+%       templateName: Name of radar capture with obvious peak
+%       airFileName: Name of radar capture with backscatter tag on soil but
+%           left uncovered
+%       captureName: Name of radar capture with backscatter tag buried
+%       undeneath wet soil
+%       localDataPath: Path of radar frames storage
+%
+% Outputs:
+%       volumetricWaterContent: Volumetric water content of the soil
+
+%% Process Template Capture
+[procResult, templateCaptureFT, templateTagFT, templatePeakBin, SNRdB] = procCapture(localDataPath, templateName);
+
+end
