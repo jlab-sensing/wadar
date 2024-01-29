@@ -1,25 +1,28 @@
-function wadarTemplateCapture(localDataPath, trialIndex)
-% vwc = wadarTemplateCapture(airFileName, captureName)
+function [captureSuccess, airPeakBin] = wadarAirCapture(localDataPath, trialName)
+% vwc = wadarAirCapture(airFileName, captureName)
 %
-% Function captures the template capture for correlation analysis
+% Function captures the air capture for peak bin comparison
 %
 % Inputs:
-%    localDataPath: Path to store air capture
-%        trialName: Trial name for file naming purposes
+%        
 %
 % Outputs:
-%   
+%   captureSuccess: Flag to demonstrate if capture was successful
 
 close all;
 
-% Capture parameters 
-frameRate = 200;
+captureSuccess = 0;
+
+% Capture parameters
+frameRate = 200;   
 frameCount = 2000;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
+if 
+
 [year, month, date] = ymd(datetime("now"));
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Template_T', num2str(trialIndex), '_C');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Air_T', num2str(trialName), '_C');
 
 % Check for existing files with the same name
 existingFiles = dir(localDataPath);
@@ -28,11 +31,11 @@ for i = 1:length(existingFiles)
     for j = 1:1:10
         if strcmp(existingFiles(i).name, strcat(captureName, num2str(j), '.frames'))
             error("Files under this trial index already exist. Iterate the trial index.")
+            captureSuccess = 0;
+            return
         end
     end
 end
-
-
 
 frameLoggerOptions = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 1 -f %d -t %s -c %s', ...
     captureName, frameCount, frameRate, radarType, fullDataPath);
@@ -73,32 +76,29 @@ else
     fprintf('Framelogger captured frames succesfully!\n\n')
 end
 
-%% Process Capture Data
-[~, templateTagFT, templatePeakBin] = procRadarFrames(localDataPath, strcat(captureName, '1.frames'));
-
-if (templatePeakBin == -1)
-    error("ERROR: No peak detected. Please ensure backscatter tag is actively powered.\n")
-end
+[~, airTagFT, airPeakBin] = procRadarFrames(localDataPath, strcat(captureName, '1.frames'));
 
 figure(1)
-plot(templateTagFT)
-xline(templatePeakBin)
+plot(airTagFT)
+xline(airPeakBin)
 xlabel('Range Bins')
 ylabel('Magnitude')
-title("Template Capture - 80 Hz Isolated");
+title("Air Capture - 80 Hz Isolated");
 
-validTemplateCapture = input("\nDoes this capture follow the following requirements: (Y/N)\n" + ...
+
+validAirCapture = input("\nDoes this capture follow the following requirements: (Y/N)\n" + ...
     "     - A clear and obvious peak is visible\n" + ...
     "     - There is no double peak\n", ...
     "s");
 
-if (strcmp(validTemplateCapture, "Y"))
+if (strcmp(validAirCapture, "Y"))
+    captureSuccess = 1;
     return
-elseif (strcmp(validTemplateCapture, "N"))
+elseif (strcmp(validAirCapture, "N"))
     fprintf("\n")
     delete(fullfile(localDataPath, strcat(captureName, '1.frames')))
     delete(fullfile(localDataPath, strcat(captureName, '1.md5')))
-    wadarTemplateCapture(localDataPath, trialIndex);
+    wadarAirCapture(localDataPath, trialName);
 else
     error("Invalid input")
 end

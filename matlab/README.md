@@ -1,6 +1,6 @@
 # MATLAB Code for Radar Interface
 
-Welcome to the MATLAB code repository for interfacing with radar(s). This codebase primarily interacts with FlatEarth libraries, demo code, and the WADAR scripts.
+Welcome to the MATLAB code repository for interfacing with radar(s). This codebase primarily interacts with FlatEarth libraries, demo code, and the WADAR scripts. The wadar- files are used to automatically collect and process data from the radar. The proc- files manually process previously collected data.
 
 ## Directory Structure
 

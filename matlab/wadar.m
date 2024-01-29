@@ -210,8 +210,8 @@ for i = 1:1:captureCount
     % corrArray = zeros(length(peaks),2);
     corrArray = zeros(1, 512);
     for j = (1:1:512)
-        % corrArray(j) = corr(normalize(circshift(templateTagFT, j)), normalize(TagFT), 'Type', 'Pearson');
-        corrArray(j) = TagFT(j);
+        corrArray(j) = corr(normalize(circshift(templateTagFT, j)), normalize(TagFT), 'Type', 'Pearson');
+        % corrArray(j) = TagFT(j);
     end
     [~, peakIndex] = max(circshift(corrArray, templatePeakBin));
     closestPeak = peaks(1);
