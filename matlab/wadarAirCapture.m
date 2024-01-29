@@ -1,7 +1,7 @@
 function [captureSuccess, airPeakBin] = wadarAirCapture(localDataPath, trialIndex)
 % vwc = wadarAirCapture(airFileName, captureName)
 %
-% Function captures the air capture for peak bin comparing
+% Function captures the air capture for peak bin comparison
 %
 % Inputs:
 %        
