@@ -1,19 +1,19 @@
-function volumetricWaterContent = wadar(airFileName, templateName, localDataPath, trialIndex, captureCount)
+function volumetricWaterContent = wadar(airFileName, templateName, localDataPath, trialName, captureCount)
 % vwc = wadar(airFileName, captureName)
 %
 % Script calculates the volumetric water content (vwc) of the soil from 
 % the capture
 %
 % Inputs:
-%        airFileName: Radar capture with tag uncovered with soil
-%        captureName: Radar capture with tag covered with soil
+%       airFileName: Radar capture with tag uncovered with soil
+%       captureName: Radar capture with tag covered with soil
 %       templateName: Radar capture with obvious tag peak
-%      localDataPath: Location of data storage
-%         trialIndex: Trial number for capture name
+%       localDataPath: Location of data storage
+%       trialName: Trial name for file naming purposes
 %       captureCount: Number of captures desired
 %
 % Outputs:
-%   volumetricWaterContent: Calculated volumetric water content
+%       volumetricWaterContent: Calculated volumetric water content
 %
 
 
@@ -86,7 +86,7 @@ airPeakBin = peaks(1);
 
 [year, month, date] = ymd(datetime("now"));
 
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Wet_T', num2str(trialIndex), '_C');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Wet_T', num2str(trialName), '_C');
 
 % Check for existing files with the same name
 existingFiles = dir(localDataPath);

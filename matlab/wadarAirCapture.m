@@ -85,7 +85,11 @@ else
 end
 
 %% Process Capture Frames
-[~, airTagFT, airPeakBin] = procRadarFrames(localDataPath, strcat(captureName, '1.frames'));
+[procResult, ~, airTagFT, airPeakBin, ~] = procRadarFrames(localDataPath, strcat(captureName, '1.frames'));
+
+if (procResult == false)
+    error("ERROR: Template processing error. Please try again.")
+end
 
 if (airPeakBin == -1)
     error("ERROR: No peak detected. Please ensure backscatter tag is actively powered.\n")

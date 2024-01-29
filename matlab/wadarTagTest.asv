@@ -5,8 +5,7 @@ function wadarTagTest(displayAllFrames, localDataPath, tagName, trialName, captu
 % fourier transform
 %
 % Inputs:
-%       displayAllFrames: If true, displays each capture's frames for 10 
-%           seconds
+%       displayAllFrames: If true, displays each frame for 10 seconds
 %       localDataPath: Location to store capture on local machine
 %       tagName: Name of tag for file naming purposes
 %       trialName: Trial name for file naming purposes
@@ -19,7 +18,7 @@ close all;
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 2000;
+frameCount = 200;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
@@ -58,7 +57,7 @@ frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c
 fprintf("Please wait. The radar is collecting data.\n")
 pause(frameCount/frameRate*captureCount);
 fprintf("Waiting for data to be transferred...\n")
-pause(10 + 2100*frameCount*captureCount/10000000)
+pause(10 + 2*captureCount)
 
 % Verify that the capture is saved
 checkFile = dir(fullfile(localDataPath, strcat(captureName, '1.frames')));
@@ -106,28 +105,6 @@ for i = 1:1:captureCount
     end
 
     peakMagnitudes(i) = tagFT(peakBin(i));
-
-    if (displayAllFrames == true)
-        figure(1)
-        plot(tagFT)
-        xline(peakBin(i))
-        xlabel('Range Bins')
-        ylabel('Magnitude')
-        title(strcat("Capture ", num2str(i), " - 80 Hz Isolated"));
-        
-        figure(2)
-        clf(2)
-        hold on
-        for j = 2:1:frameCount
-            plot(abs(captureFT(:, j)))
-        end
-        xlabel('Range Bins')
-        ylabel('Magnitude')
-        title(strcat("Capture ", num2str(i), " - FT of all peak bins"));
-
-        pause(10);
-    end
-
 end
 
 % Remove failed captures
@@ -137,7 +114,42 @@ for i = failedCaptures
     peakBin(i) = [];
 end
 
-%% Display Results
+% for i = 1:1:captureCount
+%     try
+%         [rawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
+%     catch
+%         failedCaptures = [failedCaptures i];
+%         continue
+%     end
+% 
+%     % Baseband Conversion
+%     frameCount = size(rawFrames, 2);
+%     framesBB = zeros(size(rawFrames));
+%     for j = 1:frameCount
+%         framesBB(:,j) = NoveldaDDC(rawFrames(:,j), chipSet, pgen, fs_hz);
+%     end
+% 
+%     % Find Tag FT
+%     freqTag = tagHz / frameRate * frameCount;
+%     captureFT = fft(framesBB, frameCount , 2); 
+%     tagFT = abs(captureFT(:, freqTag));
+%     for j = (freqTag-2:1:freqTag+2)
+%         temp = abs(captureFT(:, j));
+%         if max(temp) > max(tagFT)
+%             tagFT = temp;
+%         end
+%     end
+%     tagFT = smoothdata(tagFT, 'movmean', 10);
+% 
+%     % Find the bin corresponding to the largest peak 
+%     [peakMagnitude, peaks] = findpeaks(tagFT, 'MinPeakHeight', max(tagFT) * 0.9);
+%     peakBin(i) = peaks(1);
+%     peakMagnitudes(i) = peakMagnitude(1);
+% 
+%     SNR(i) = calculateSNR(captureFT, freqTag, peakBin(i));
+%     SNRdB(i) = 10 * log10(SNR(i));
+% end
+
 fprintf("\n%s Testing Results (Trial %s)\n\n", tagName, trialName)
 
 fprintf("SNR Results:\n")
@@ -148,8 +160,6 @@ fprintf("Peak Magnitude Results:\n")
 fprintf("Median: %f\nMean: %f\n\n", median(peakMagnitudes), mean(peakMagnitudes))
 
 fprintf("Maximum difference between peak bins: %d\n\n", max(diff(sort(peakBin))))
-
-close all
 
 figure(1)
 plot(tagFT)
@@ -165,6 +175,6 @@ for j = 2:1:frameCount
 end
 xlabel('Range Bins')
 ylabel('Magnitude')
-title(strcat("Capture ", num2str(captureCount), " - FT of all peak bins"));
+title(strcat("FT of all peak bins - Capture ", num2str(captureCount)));
 
 end

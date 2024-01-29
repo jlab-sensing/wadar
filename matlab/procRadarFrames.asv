@@ -1,4 +1,4 @@
-function [procResult, captureFT, tagFT, peakBin, SNRdB] = procRadarFrames(localDataPath, captureName)
+function [success, captureFT, tagFT, peakBin, SNRdB] = procRadarFrames(localDataPath, captureName)
 % [captureFT, tagFT, peakBin] = procCapture(localDataPath, captureName)
 %
 % Function processes radar frames for various purposes
@@ -18,15 +18,7 @@ frameRate = 200;
 
 %% Load Capture
 try
-    [rawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, captureName));
-catch
-    procResult = false;
-    captureFT = -1;
-    tagFT = -1;
-    peakBin = -1;
-    SNRdB = -1;
-    return
-end
+[rawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, captureName));
 
 % Baseband Conversion
 frameCount = size(rawFrames, 2);
@@ -60,11 +52,4 @@ elseif (size(peaks, 1) == 1)
     peakBin = peaks(1);
 else
     peakBin = -1;
-end
-
-SNR = calculateSNR(captureFT, freqTag, peakBin);
-SNRdB = 10 * log10(SNR);
-
-procResult = true;
-
 end

@@ -5,7 +5,7 @@ function wadarTemplateCapture(localDataPath, trialName)
 % analysis
 %
 % Inputs:
-%       localDataPath: Path to store air capture
+%       localDataPath: Path to store template capture
 %       trialName: Trial name for file naming purposes
 %
 % Outputs:
@@ -25,7 +25,7 @@ if isnumeric(trialName)
 end
 
 [year, month, date] = ymd(datetime("now"));
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Template_T', num2str(trialName), '_C');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Template_T', trialName, '_C');
 
 % Check for existing files with the same name to prevent overwrite
 existingFiles = dir(localDataPath);
@@ -85,7 +85,11 @@ else
 end
 
 %% Process Capture Frames
-[~, templateTagFT, templatePeakBin] = procRadarFrames(localDataPath, strcat(captureName, '1.frames'));
+[procResult, ~, templateTagFT, templatePeakBin, ~] = procRadarFrames(localDataPath, strcat(captureName, '1.frames'));
+
+if (procResult == false)
+    error("ERROR: Template processing error. Please try again.")
+end
 
 if (templatePeakBin == -1)
     error("ERROR: No peak detected. Please ensure backscatter tag is actively powered.\n")
