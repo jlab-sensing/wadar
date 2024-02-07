@@ -122,7 +122,7 @@ for i = 1:1:captureCount
     [procSuccess, wetPeakBin, airPeakBin, SNRdB(i), wetTagFT] = procCaptureCorrelation(templateFramesName, airFramesName, wetFramesName, localDataPath);
     if (procSuccess == false)
         failedCaptures = [failedCaptures i];
-        fprintf("Capture %d faced a processing issue.\n", i)
+        fprintf("Capture %d will not be processed.\n", i)
         continue
     end
     

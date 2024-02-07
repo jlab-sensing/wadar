@@ -1,5 +1,5 @@
-function [procResult, captureFT, tagFT, peakBin, SNRdB] = procRadarFrames(localDataPath, captureName)
-% [captureFT, tagFT, peakBin] = procCapture(localDataPath, captureName)
+function [procSuccess, captureFT, tagFT, peakBin, SNRdB] = procRadarFrames(localDataPath, captureName)
+% [procResult, captureFT, tagFT, peakBin, SNRdB] = procCapture(localDataPath, captureName)
 %
 % Function processes radar frames for various purposes
 %
@@ -8,9 +8,11 @@ function [procResult, captureFT, tagFT, peakBin, SNRdB] = procRadarFrames(localD
 %       captureName: Name of radar frames file
 %
 % Outputs:
+%       procResult: 'true' if the function loads the capture succesfully
 %       captureFT: The FT of the radar frames
 %       tagFT: The FT of the bin where the selected frequency peaks
 %       peakBin: The bin where the selected frequency peaks
+%       SNRdB: SNR of capture at frequency peak in dB
 
 %% Processing parameters
 tagHz = 80;
@@ -20,7 +22,7 @@ frameRate = 200;
 try
     [rawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, captureName));
 catch
-    procResult = false;
+    procSuccess = false;
     captureFT = -1;
     tagFT = -1;
     peakBin = -1;
@@ -65,6 +67,14 @@ end
 SNR = calculateSNR(captureFT, freqTag, peakBin);
 SNRdB = 10 * log10(SNR);
 
-procResult = true;
+procSuccess = true;
+
+% %% Display Radar Frames
+% figure(1)
+% plot(tagFT)
+% xline(peakBin)
+% xlabel('Range Bins')
+% ylabel('Magnitude')
+% title("Capture - 80 Hz Isolated");
 
 end
