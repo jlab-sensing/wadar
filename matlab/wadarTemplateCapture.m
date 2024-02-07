@@ -15,7 +15,7 @@ close all;
 
 % Capture parameters 
 frameRate = 200;
-frameCount = 2000;
+frameCount = 20000;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
@@ -50,17 +50,19 @@ frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c
 fprintf("Please wait. The radar is collecting data.\n")
 pause(frameCount/frameRate);
 fprintf("Waiting for data to be transferred...\n")
-pause(5)
 
 % Verify that the capture is saved
-checkFile = dir(fullfile(localDataPath, strcat(captureName, '1.frames')));
-checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '1.md5')));
-
-if (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
-    error('There is a data transfer issue. Please verify your capture settings and scp directory.')
+i = 1;
+checkFile = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
+checkmd5File = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.md5')));
+tic
+while (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
+    checkFile = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
+    checkmd5File = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.md5')));
+    if (toc > 20)
+        error('There is a data transfer issue. Please verify your capture settings and scp directory. Ensure that your are already scp into the radar')
+    end
 end
-
-% Verify that the md5 file checks out
 fileName = checkFile(1).name;
 md5Name = checkmd5File(1).name;
 
