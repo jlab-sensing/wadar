@@ -1,13 +1,14 @@
-function volumetricWaterContent = wadar(airFileName, templateName, localDataPath, trialName, captureCount)
-% vwc = wadar(airFileName, captureName)
+function volumetricWaterContent = wadar(displayAllFrames, airFramesName, templateFramesName, localDataPath, trialName, captureCount, tagDepth)
+% volumetricWaterContent = wadar(airFramesName, templateFramesName, localDataPath, trialName, captureCount)
 %
 % Script calculates the volumetric water content (vwc) of the soil from 
 % the capture
 %
 % Inputs:
-%       airFileName: Radar capture with tag uncovered with soil
-%       captureName: Radar capture with tag covered with soil
-%       templateName: Radar capture with obvious tag peak
+%       displayAllFrames: If true, displays each capture's frames for 10 
+%           seconds
+%       airFramesName: Radar capture with tag uncovered with soil
+%       templateFramesName: Radar capture with obvious tag peak
 %       localDataPath: Location of data storage
 %       trialName: Trial name for file naming purposes
 %       captureCount: Number of captures desired
@@ -21,72 +22,35 @@ close all
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 2000;
+frameCount = 200;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
 % Processing parameters
-tagHz = 80;
-tagDepth = 0.12; % in meters
+soilType = 'farm';
 
-%% Load Template Capture
-[templateRawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, templateName));
-
-% Baseband Conversion
-templateFrameCount = size(templateRawFrames, 2);
-templateFramesBB = zeros(size(templateRawFrames));
-for j = 1:templateFrameCount
-    templateFramesBB(:,j) = NoveldaDDC(templateRawFrames(:,j), chipSet, pgen, fs_hz);
+%% Process Template Capture
+[procResult, ~, templateTagFT, ~, ~] = procRadarFrames(localDataPath, templateFramesName);
+if (procResult == false)
+    error("ERROR: Template Frames Invalid")
 end
 
-% Find Tag FT
-templateFreqTag = tagHz / frameRate * templateFrameCount;
-templateFT = fft(templateFramesBB, templateFrameCount , 2); 
-templateTagFT = abs(templateFT(:, templateFreqTag));
-for i = (templateFreqTag-2:1:templateFreqTag+2)
-    temp = abs(templateFT(:, i));
-    if max(temp) > max(templateTagFT)
-        templateTagFT = temp;
-    end
+%% Process Air Capture
+[procResult, ~, airTagFT, airPeakBin, ~] = procRadarFrames(localDataPath, airFramesName);
+if (procResult == false)
+    error("ERROR: Air Frames Invalid")
 end
-templateTagFT = smoothdata(templateTagFT, 'movmean', 10);
-
-% Find the bin corresponding to the largest peak 
-[~, peaks] = findpeaks(templateTagFT, 'MinPeakHeight', max(templateTagFT) * 0.9);
-templatePeakBin = peaks(1);
-
-
-%% Load Air Capture %%
-[airRawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, airFileName));
-
-% Baseband Conversion
-airFrameCount = size(airRawFrames, 2);
-airFramesBB = zeros(size(airRawFrames));
-for j = 1:airFrameCount
-    airFramesBB(:,j) = NoveldaDDC(airRawFrames(:,j), chipSet, pgen, fs_hz);
-end
-
-% Find Tag FT
-airFreqTag = tagHz / frameRate * airFrameCount;
-airFT = fft(airFramesBB, airFrameCount , 2); 
-airTagFT = abs(airFT(:, airFreqTag));
-for i = (airFreqTag-2:1:airFreqTag+2)
-    temp = abs(airFT(:, i));
-    if max(temp) > max(airTagFT)
-        airTagFT = temp;
-    end
-end
-airTagFT = smoothdata(airTagFT, 'movmean', 10);
-
-% Find the bin corresponding to the largest peak 
-[~, peaks] = findpeaks(airTagFT, 'MinPeakHeight', max(airTagFT) * 0.9);
-airPeakBin = peaks(1);
 
 %% Load soil capture %%
 
 [year, month, date] = ymd(datetime("now"));
 
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Wet_T', num2str(trialName), '_C');
+% File name generation
+if isnumeric(trialName)
+    trialName = num2str(trialName);
+end
+
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_WetUnder', num2str(tagDepth*1000), 'mm_T', num2str(trialName), '_C');
 
 % Check for existing files with the same name
 existingFiles = dir(localDataPath);
@@ -105,43 +69,10 @@ frameLoggerOptions = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r 
 frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', ...
     frameLoggerOptions);
 [status,~] = system(frameLoggerCommand);
-  
-fprintf("Please wait. The radar is collecting data.\n")
-pause(frameCount/frameRate*captureCount);
-fprintf("Waiting for data to be transferred...\n")
-pause(10)
-
-checkFile = dir(fullfile(localDataPath, strcat(captureName, '1.frames')));
-checkmd5File = dir(fullfile(localDataPath, strcat(captureName, '1.md5')));
-if (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
-    error('There is a data transfer issue. Please verify your capture settings and scp directory.')
-end
-fileName = checkFile(1).name;
-md5Name = checkmd5File(1).name;
-
-md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
-[status, cmdout] = system(md5command);
-localchecksum = char(strsplit(cmdout));
-localchecksum = lower(strtrim(localchecksum(4,:)));
-localchecksum = deblank(localchecksum);
-
-md5checksum = fileread(fullfile(localDataPath, md5Name));
-md5checksum = char(strsplit(md5checksum));
-md5checksum = lower(md5checksum(1,:));
-md5checksum = deblank(localchecksum);
-
-if (~strcmp(localchecksum, md5checksum))
-    fprintf('Failure on framelogger check.\n', runCount);
-    fprintf('Local checksum is %s.\n', localchecksum);
-    fprintf('BBB checksum is %s.\n', md5checksum);
-    error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
-else
-    fprintf('Framelogger captured frames succesfully!\n\n')
-end
 
 %% Load and Process Captures
 
-SNR = zeros(1, captureCount);
+% SNR = zeros(1, captureCount);
 SNRdB = zeros(1, captureCount);
 peakMagnitudes = zeros(1, captureCount);
 peakBin = zeros(1, captureCount);
@@ -149,83 +80,72 @@ vwc = zeros(1, captureCount);
 failedCaptures = [];
 
 for i = 1:1:captureCount
-    try
-        [rawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
-    catch
+
+    fprintf("Please wait. Capture %d is proceeding\n", i)
+    pause(frameCount/frameRate);
+    fprintf("Waiting for data to be transferred...\n")
+    
+    checkFile = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
+    checkmd5File = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.md5')));
+    tic
+    while (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
+        checkFile = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
+        checkmd5File = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.md5')));
+        if (toc > 10)
+            error('There is a data transfer issue. Please verify your capture settings and scp directory. Ensure that your are already scp into the radar')
+        end
+    end
+    fileName = checkFile(1).name;
+    md5Name = checkmd5File(1).name;
+    
+    md5command = sprintf('md5 %s', fullfile(localDataPath, fileName));
+    [status, cmdout] = system(md5command);
+    localchecksum = char(strsplit(cmdout));
+    localchecksum = lower(strtrim(localchecksum(4,:)));
+    localchecksum = deblank(localchecksum);
+    
+    md5checksum = fileread(fullfile(localDataPath, md5Name));
+    md5checksum = char(strsplit(md5checksum));
+    md5checksum = lower(md5checksum(1,:));
+    md5checksum = deblank(localchecksum);
+    
+    if (~strcmp(localchecksum, md5checksum))
+        fprintf('Failure on framelogger check.\n', runCount);
+        fprintf('Local checksum is %s.\n', localchecksum);
+        fprintf('BBB checksum is %s.\n', md5checksum);
+        error('Uh oh. There has been an error in the file transfer. The md5 hashes do not match.\n')
+    else
+        fprintf('Framelogger captured frame succesfully!\n\n')
+    end
+
+    wetFramesName = strcat(captureName, num2str(i), '.frames');
+    [procSuccess, wetPeakBin, airPeakBin, SNRdB(i), wetTagFT] = procCaptureCorrelation(templateFramesName, airFramesName, wetFramesName, localDataPath);
+    if (procSuccess == false)
         failedCaptures = [failedCaptures i];
+        fprintf("Capture %d faced a processing issue.\n", i)
         continue
     end
-
-    % Baseband Conversion
-    frameCount = size(rawFrames, 2);
-    framesBB = zeros(size(rawFrames));
-    for j = 1:frameCount
-        framesBB(:,j) = NoveldaDDC(rawFrames(:,j), chipSet, pgen, fs_hz);
-    end
     
-    % Find Tag FT
-    freqTag = tagHz / frameRate * frameCount;
-    captureFT = fft(framesBB, frameCount , 2); 
+    peakBin(i) = wetPeakBin;
+    peakMagnitudes(i) = wetTagFT(peakBin(i));
 
-    % Find the bin corresponding to the largest peak 
-    TagFT = abs(captureFT(:, freqTag));
-    for j = (freqTag-2:1:freqTag+2)
-        temp = abs(captureFT(:, j));
-        if max(temp(1:airPeakBin, :)) > max(temp(airPeakBin:end, :)) % if greatest peak is before air peak, skip
-            continue
-        end
-        if max(temp(airPeakBin:end)) > max(TagFT(airPeakBin:end))
-            TagFT = temp;
-        end
-    end
-    TagFT = smoothdata(TagFT, 'movmean', 10);
+    vwc(i) = procSoilMoisture(wetPeakBin, airPeakBin, soilType, tagDepth);
 
-    % TagHarFT = abs(captureFT(:, freqTagHar));
-    % for i = (freqTagHar-2:1:freqTagHar+2)
-    %     temp = abs(captureFT(:, i));
-    %     if max(temp(1:airPeakBin, :)) > max(temp(airPeakBin:end, :)) % if greatest peak is before air peak, skip
-    %         continue
-    %     end
-    %     if max(temp(airPeakBin:end)) > max(TagFT(airPeakBin:end))
-    %         TagHarFT = temp;
-    %     end
-    % end
-
-    % Find the bin corresponding to the largest peak 
-    [~, peaks] = findpeaks(TagFT(airPeakBin:end), 'MinPeakHeight', max(TagFT(airPeakBin:end)) * 0.90);
-    peaks = peaks+airPeakBin;
-
-    % Select peak bin greater than air peak
-    peak = peaks(1);
-    j = 0;
-    while peak < airPeakBin
-        if j > length(peaks) - 1
-            break;
-        end
-        j = i + 1;
-        peak = peaks(j);
+    if (displayAllFrames == true)
+        figure(1)
+        clf(1)
+        plot(normalize(wetTagFT, "range"))
+        hold on;
+        plot(normalize(templateTagFT, "range"))
+        plot(normalize(airTagFT, "range"))
+        xline(airPeakBin)
+        xline(wetPeakBin)
+        legend('Capture (80 Hz)', 'Template (80 Hz)', 'Air (80 Hz)')
+        xlabel('Range Bins')
+        ylabel('Magnitude')
+        title("VWC = ", num2str(vwc(i)));
     end
 
-    % Select peak bin correlated to template capture
-    % corrArray = zeros(length(peaks),2);
-    corrArray = zeros(1, 512);
-    for j = (1:1:512)
-        corrArray(j) = corr(normalize(circshift(templateTagFT, j)), normalize(TagFT), 'Type', 'Pearson');
-        % corrArray(j) = TagFT(j);
-    end
-    [~, peakIndex] = max(circshift(corrArray, templatePeakBin));
-    closestPeak = peaks(1);
-    for j = 1:size(peaks, 1)
-        if abs(peaks(j) - peakIndex) < closestPeak
-            closestPeak = peaks(j);
-        end
-    end
-    peakBin(i) = closestPeak;
-
-    vwc(i) = calculateSoilMoisture(airPeakBin, closestPeak, "farm", tagDepth);
-    
-    SNR(i) = calculateSNR(captureFT, freqTag, peakBin(i));
-    SNRdB(i) = 10 * log10(SNR(i));
 end
 
 % Remove failed captures
@@ -235,20 +155,108 @@ for i = failedCaptures
     peakBin(i) = [];
 end
 
+% for i = 1:1:captureCount
+%     try
+%         [rawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
+%     catch
+%         failedCaptures = [failedCaptures i];
+%         continue
+%     end
+% 
+%     % Baseband Conversion
+%     frameCount = size(rawFrames, 2);
+%     framesBB = zeros(size(rawFrames));
+%     for j = 1:frameCount
+%         framesBB(:,j) = NoveldaDDC(rawFrames(:,j), chipSet, pgen, fs_hz);
+%     end
+% 
+%     % Find Tag FT
+%     freqTag = tagHz / frameRate * frameCount;
+%     captureFT = fft(framesBB, frameCount , 2); 
+% 
+%     % Find the bin corresponding to the largest peak 
+%     TagFT = abs(captureFT(:, freqTag));
+%     for j = (freqTag-2:1:freqTag+2)
+%         temp = abs(captureFT(:, j));
+%         if max(temp(1:airPeakBin, :)) > max(temp(airPeakBin:end, :)) % if greatest peak is before air peak, skip
+%             continue
+%         end
+%         if max(temp(airPeakBin:end)) > max(TagFT(airPeakBin:end))
+%             TagFT = temp;
+%         end
+%     end
+%     TagFT = smoothdata(TagFT, 'movmean', 10);
+% 
+%     % TagHarFT = abs(captureFT(:, freqTagHar));
+%     % for i = (freqTagHar-2:1:freqTagHar+2)
+%     %     temp = abs(captureFT(:, i));
+%     %     if max(temp(1:airPeakBin, :)) > max(temp(airPeakBin:end, :)) % if greatest peak is before air peak, skip
+%     %         continue
+%     %     end
+%     %     if max(temp(airPeakBin:end)) > max(TagFT(airPeakBin:end))
+%     %         TagHarFT = temp;
+%     %     end
+%     % end
+% 
+%     % Find the bin corresponding to the largest peak 
+%     [~, peaks] = findpeaks(TagFT(airPeakBin:end), 'MinPeakHeight', max(TagFT(airPeakBin:end)) * 0.90);
+%     peaks = peaks+airPeakBin;
+% 
+%     % Select peak bin greater than air peak
+%     peak = peaks(1);
+%     j = 0;
+%     while peak < airPeakBin
+%         if j > length(peaks) - 1
+%             break;
+%         end
+%         j = i + 1;
+%         peak = peaks(j);
+%     end
+% 
+%     % Select peak bin correlated to template capture
+%     % corrArray = zeros(length(peaks),2);
+%     corrArray = zeros(1, 512);
+%     for j = (1:1:512)
+%         corrArray(j) = corr(normalize(circshift(templateTagFT, j)), normalize(TagFT), 'Type', 'Pearson');
+%         % corrArray(j) = TagFT(j);
+%     end
+%     [~, peakIndex] = max(circshift(corrArray, templatePeakBin));
+%     closestPeak = peaks(1);
+%     for j = 1:size(peaks, 1)
+%         if abs(peaks(j) - peakIndex) < closestPeak
+%             closestPeak = peaks(j);
+%         end
+%     end
+%     peakBin(i) = closestPeak;
+% 
+%     vwc(i) = calculateSoilMoisture(airPeakBin, closestPeak, "farm", tagDepth);
+% 
+%     SNR(i) = calculateSNR(captureFT, freqTag, peakBin(i));
+%     SNRdB(i) = 10 * log10(SNR(i));
+% end
+% 
+% % Remove failed captures
+% for i = failedCaptures
+%     SNRdB(i) = [];
+%     peakMagnitudes(i) = [];
+%     peakBin(i) = [];
+% end
+
 figure(1)
-plot(normalize(TagFT, "range"))
+clf(1)
+plot(normalize(wetTagFT, "range"))
 hold on;
 plot(normalize(templateTagFT, "range"))
 plot(normalize(airTagFT, "range"))
 xline(airPeakBin)
-xline(closestPeak)
+xline(wetPeakBin)
 legend('Capture (80 Hz)', 'Template (80 Hz)', 'Air (80 Hz)')
 xlabel('Range Bins')
 ylabel('Magnitude')
 title("80 Hz Isolated");
 
 fprintf("Air peak located at %d\n", airPeakBin);
-fprintf("Capture peak located at %d\n\n", closestPeak);
+fprintf("Capture peak located at %d\n\n", wetPeakBin);
 
 fprintf("\nTesting Results\n\n")
 
