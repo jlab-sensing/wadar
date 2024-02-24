@@ -32,6 +32,7 @@ end
 
 % Baseband Conversion
 frameCount = size(rawFrames, 2);
+% frameCount = 5
 framesBB = zeros(size(rawFrames));
 for j = 1:frameCount
     framesBB(:,j) = NoveldaDDC(rawFrames(:,j), chipSet, pgen, fs_hz);

@@ -22,7 +22,7 @@ close all
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 200;
+frameCount = 20000;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
@@ -91,7 +91,7 @@ for i = 1:1:captureCount
     while (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
         checkFile = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
         checkmd5File = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.md5')));
-        if (toc > 20)
+        if (toc > 30)
             error('There is a data transfer issue. Please verify your capture settings and scp directory. Ensure that your are already scp into the radar')
         end
     end
