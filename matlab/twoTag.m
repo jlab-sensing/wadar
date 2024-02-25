@@ -6,7 +6,7 @@
 
 function twoTag(varargin)
     %% IMPORTANT DEFS %%%%%%%%
-    dirs={'/home/cjoseph/Documents/radar/matlab/data/twoTagKitchen/'};
+    dirs={'/home/ericdvet/jlab/wadar/matlab/data/twoTagKitchen'};
     %dirs=reshape({'/home/cjoseph/Documents/radar/matlab/data/LOSsnrBedroom/'
     %              '/home/cjoseph/Documents/radar/matlab/data/LOSsnrKitchen/'
     %              '/home/cjoseph/Documents/radar/matlab/data/LOSsnrOutside/'}, [1 3]);
@@ -137,32 +137,32 @@ function twoTag(varargin)
             noise79solo(i) = solo79FT(noiseIdx, ft79idx); noiseBins79(i) = noiseIdx;
             
             %% PLOTTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             figure; 
-%             plot(abs(ft(:,ft80idx)),'g'); 
-%             hold on, plot(abs(lpfdBoth80),'g:'); 
-%             plot(autoBinsBoth80(i),abs(ft(autoBinsBoth80(i),ft80idx)), 'g*')
-%             plot(noiseBinsBoth80(i),abs(ft(noiseBinsBoth80(i),ft80idx)), 'go')
-%             
-%             plot(abs(ft(:,ft79idx)),'m'); 
-%             hold on, plot(abs(lpfdBoth79),'m:'); 
-%             plot(autoBinsBoth79(i),abs(ft(autoBinsBoth79(i),ft79idx)), 'm*')
-%             plot(noiseBinsBoth79(i),abs(ft(noiseBinsBoth79(i),ft79idx)), 'mo')
-%             
-%             plot(abs(solo80FT(:,ft80idx)),'r');
-%             hold on, plot(abs(lpfd80),'r:'); 
-%             plot(autoBins80(i),abs(solo80FT(autoBins80(i),ft80idx)), 'r*')
-%             plot(noiseBins80(i),abs(solo80FT(noiseBins80(i),ft80idx)), 'ro')
-%             
-%             plot(abs(solo79FT(:,ft79idx)),'b');
-%             hold on, plot(abs(lpfd79),'b:'); 
-%             plot(autoBins79(i),abs(solo79FT(autoBins79(i),ft79idx)), 'b*')
-%             plot(noiseBins79(i),abs(solo79FT(noiseBins79(i),ft79idx)), 'bo')
-%             legend('ftBoth80','lpfBoth80','idxBoth80','noiseIdxBoth80',...
-%                    'ftBoth79','lpfBoth79','idxBoth79','noiseIdxBoth79',...
-%                    'ff80solo','lpf80solo','idx80solo','noiseIdx80solo',...
-%                    'ff79solo','lpf79solo','idx79solo','noiseIdx79solo')
-%             title(fh,'Interpreter', 'none')
-%             pause(1)
+            % figure; 
+            % plot(abs(ft(:,ft80idx)),'g'); 
+            % hold on, plot(abs(lpfdBoth80),'g:'); 
+            % plot(autoBinsBoth80(i),abs(ft(autoBinsBoth80(i),ft80idx)), 'g*')
+            % plot(noiseBinsBoth80(i),abs(ft(noiseBinsBoth80(i),ft80idx)), 'go')
+            % 
+            % plot(abs(ft(:,ft79idx)),'m'); 
+            % hold on, plot(abs(lpfdBoth79),'m:'); 
+            % plot(autoBinsBoth79(i),abs(ft(autoBinsBoth79(i),ft79idx)), 'm*')
+            % plot(noiseBinsBoth79(i),abs(ft(noiseBinsBoth79(i),ft79idx)), 'mo')
+            % 
+            % plot(abs(solo80FT(:,ft80idx)),'r');
+            % hold on, plot(abs(lpfd80),'r:'); 
+            % plot(autoBins80(i),abs(solo80FT(autoBins80(i),ft80idx)), 'r*')
+            % plot(noiseBins80(i),abs(solo80FT(noiseBins80(i),ft80idx)), 'ro')
+            % 
+            % plot(abs(solo79FT(:,ft79idx)),'b');
+            % hold on, plot(abs(lpfd79),'b:'); 
+            % plot(autoBins79(i),abs(solo79FT(autoBins79(i),ft79idx)), 'b*')
+            % plot(noiseBins79(i),abs(solo79FT(noiseBins79(i),ft79idx)), 'bo')
+            % legend('ftBoth80','lpfBoth80','idxBoth80','noiseIdxBoth80',...
+            %        'ftBoth79','lpfBoth79','idxBoth79','noiseIdxBoth79',...
+            %        'ff80solo','lpf80solo','idx80solo','noiseIdx80solo',...
+            %        'ff79solo','lpf79solo','idx79solo','noiseIdx79solo')
+            % title(fh,'Interpreter', 'none')
+            % pause(1)
         end
         figure; 
         plot(abs(ft(:,ft80idx)),'g'); 

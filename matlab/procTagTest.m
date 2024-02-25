@@ -92,36 +92,17 @@ figure(2)
 % for j = 2:1:frameCount
 %     plot(abs(captureFT(:, j)))
 % end
-captureFT(:, 1) = ones(512, 1); % first frame of capture is extremely noisy
+captureFT(:, 1:2) = ones(512, 2); % first 2 frames of capture is extremely noisy
 x = (1:1:512)';
-y = (1:1:200) / frameRate * frameCount;
+y = (1:1:frameCount) / frameCount * frameRate;
 xMat = repmat(x, 1, length(y));
 yMat = repmat(y, length(x), 1);
-zMat = abs(captureFT(:, 1:200));
-size(xMat)
-size(yMat)
-size(zMat)
+zMat = abs(captureFT(:, 1:frameCount));
 plot3(xMat, yMat, zMat)
-% plot3(xMat, yMat, zMat)
-
-% x = (0:0.001:10).';
-% xMat = repmat(x, 1, 4); %// For plot3
-% 
-% %// Define y values
-% y = 0:0.001:0.003;
-% yMat = repmat(y, numel(x), 1); %//For plot3
-% 
-% %// Define z values
-% z1 = sin(x);
-% z2 = cos(x);
-% z3 = exp(-x).*sin(x);
-% z4 = exp(-x).*cos(x);
-% zMat = [z1 z2 z3 z4]; %// For plot3
-
-% plot3(xMat, yMat, zMat, 'b'); %// Make all traces blue
 
 xlabel('Range Bins')
-ylabel('Magnitude')
+ylabel('Frequency')
+zlabel('Magnitude')
 title(strcat("Capture", " - FT of all peak bins"));
 
 end
