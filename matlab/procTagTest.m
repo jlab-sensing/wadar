@@ -10,8 +10,6 @@ function procTagTest(localDataPath, captureName)
 % Outputs:
 %       
 
-close all
-
 %% Processing parameters
 tagHz = 80;
 frameRate = 200;  
@@ -25,6 +23,7 @@ catch
     tagFT = -1;
     peakBin = -1;
     SNRdB = -1;
+    error("Capture could not be loaded\n");
     return
 end
 
@@ -36,6 +35,8 @@ for j = 1:frameCount
     framesBB(:,j) = NoveldaDDC(rawFrames(:,j), chipSet, pgen, fs_hz);
 end
 
+size(framesBB)
+
 % Find Tag FT
 freqTag = tagHz / frameRate * frameCount;
 captureFT = fft(framesBB, frameCount , 2); 
@@ -44,6 +45,7 @@ for i = (freqTag-2:1:freqTag+2)
     temp = abs(captureFT(:, i));
     if max(temp) > max(tagFT)
         tagFT = temp;
+        i
     end
 end
 tagFT = smoothdata(tagFT, 'movmean', 10);
@@ -77,8 +79,6 @@ fprintf("%fdB\n\n", SNRdB)
 
 fprintf("Peak Magnitude Results:\n")
 fprintf("%f\n\n", peakMagnitudes)
-
-close all
 
 figure(1)
 plot(tagFT)
