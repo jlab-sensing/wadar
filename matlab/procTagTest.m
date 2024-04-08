@@ -35,7 +35,6 @@ for j = 1:frameCount
     framesBB(:,j) = NoveldaDDC(rawFrames(:,j), chipSet, pgen, fs_hz);
 end
 
-size(framesBB)
 
 % Find Tag FT
 freqTag = tagHz / frameRate * frameCount;
@@ -45,7 +44,6 @@ for i = (freqTag-2:1:freqTag+2)
     temp = abs(captureFT(:, i));
     if max(temp) > max(tagFT)
         tagFT = temp;
-        i
     end
 end
 tagFT = smoothdata(tagFT, 'movmean', 10);
@@ -80,14 +78,14 @@ fprintf("%fdB\n\n", SNRdB)
 fprintf("Peak Magnitude Results:\n")
 fprintf("%f\n\n", peakMagnitudes)
 
-figure(1)
+figure(2)
 plot(tagFT)
 xline(peakBin)
 xlabel('Range Bins')
 ylabel('Magnitude')
 title(strcat("Capture", " - 80 Hz Isolated"));
 
-figure(2)
+figure(3)
 % hold on
 % for j = 2:1:frameCount
 %     plot(abs(captureFT(:, j)))

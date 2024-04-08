@@ -1,4 +1,4 @@
-function wadarTemplateCapture(localDataPath, trialName)
+    function wadarTemplateCapture(localDataPath, trialName)
 % wadarTemplateCapture(localDataPath, trialName)
 %
 % wadarTemplateCapture captures the template capture for correlation 

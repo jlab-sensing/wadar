@@ -7,7 +7,7 @@
 function twoTag(varargin)
     %% IMPORTANT DEFS %%%%%%%%
     dirs={'/home/ericdvet/jlab/wadar/matlab/data/twoTagKitchen'};
-    %dirs=reshape({'/home/cjoseph/Documents/radar/matlab/data/LOSsnrBedroom/'
+    % dirs=reshape({'/home/cjoseph/Documents/radar/matlab/data/LOSsnrBedroom/'
     %              '/home/cjoseph/Documents/radar/matlab/data/LOSsnrKitchen/'
     %              '/home/cjoseph/Documents/radar/matlab/data/LOSsnrOutside/'}, [1 3]);
     frameRate = 200; % frames per sec

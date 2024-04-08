@@ -19,7 +19,7 @@ close all;
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 2000;
+frameCount = 6000;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
@@ -136,10 +136,10 @@ for i = 1:1:captureCount
 end
 
 % Remove failed captures
-for i = failedCaptures
-    SNRdB(i) = [];
-    peakMagnitudes(i) = [];
-    peakBin(i) = [];
+for j = failedCaptures
+    SNRdB(j) = [];
+    peakMagnitudes(j) = [];
+    peakBin(j) = [];
 end
 
 %% Display Results
@@ -158,10 +158,10 @@ close all
 
 figure(1)
 plot(tagFT)
-xline(peakBin(captureCount))
+xline(peakBin(i))
 xlabel('Range Bins')
 ylabel('Magnitude')
-title(strcat("Capture ", num2str(captureCount), " - 80 Hz Isolated"));
+title(strcat("Capture ", num2str(i), " - 80 Hz Isolated"));
 
 figure(2)
 hold on
@@ -170,6 +170,24 @@ for j = 2:1:frameCount
 end
 xlabel('Range Bins')
 ylabel('Magnitude')
-title(strcat("Capture ", num2str(captureCount), " - FT of all peak bins"));
+title(strcat("Capture ", num2str(i), " - FT of all peak bins"));
+
+figure(3)
+% hold on
+% for j = 2:1:frameCount
+%     plot(abs(captureFT(:, j)))
+% end
+captureFT(:, 1:2) = ones(512, 2); % first 2 frames of capture is extremely noisy
+x = (1:1:512)';
+y = (1:1:frameCount) / frameCount * frameRate;
+xMat = repmat(x, 1, length(y));
+yMat = repmat(y, length(x), 1);
+zMat = abs(captureFT(:, 1:frameCount));
+plot3(xMat, yMat, zMat)
+
+xlabel('Range Bins')
+ylabel('Frequency')
+zlabel('Magnitude')
+title(strcat("Capture", " - FT bins"));
 
 end

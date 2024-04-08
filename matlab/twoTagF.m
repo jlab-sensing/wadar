@@ -7,9 +7,9 @@
 function twoTagF(varargin)
     %% IMPORTANT DEFS %%%%%%%%
     dirs={'/home/cjoseph/Documents/radar/matlab/data/twoTag/'};
-    %dirs=reshape({'/home/cjoseph/Documents/radar/matlab/data/LOSsnrBedroom/'
-    %              '/home/cjoseph/Documents/radar/matlab/data/LOSsnrKitchen/'
-    %              '/home/cjoseph/Documents/radar/matlab/data/LOSsnrOutside/'}, [1 3]);
+    dirs=reshape({'/home/ericdvet/jlab/wadar/matlab/data/LOSsnrBedroom/'
+                 '/home/ericdvet/jlab/wadar/matlab/data/LOSsnrKitchen/'
+                 '/home/ericdvet/jlab/wadar/matlab/data/LOSsnrOutside/'}, [1 3]);
     frameRate = 200; % frames per sec
     divisor = 10; % how many chunks to divide the capture into
     z=1;
