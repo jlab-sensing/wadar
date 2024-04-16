@@ -1,4 +1,4 @@
-function [diffBins] = procTwoTag(localDataPath, captureName, tag1Hz, tag2Hz, resultFlag)
+function [procResult, captureFT, diffBins, tag1FT, tag2FT, tag1Peak, tag2Peak, tag1SNR, tag2SNR] = procTwoTag(localDataPath, captureName, tag1Hz, tag2Hz, resultFlag)
 % procTagTest(localDataPath, captureName)
 %
 % Function processes radar frames for various purposes
@@ -20,9 +20,9 @@ frameRate = 200;
 try
     [rawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, captureName));
 catch
-    error("Capture could not be loaded!");
-    return
+    procResult = false;
 end
+procResult = true;
 
 % Baseband Conversion
 frameCount = size(rawFrames, 2);
@@ -100,8 +100,17 @@ SNRdB(2) = 10 * log10(SNR);
 
 peakMagnitudes(2) = tag2FT(peakBin);
 
+diffBins = abs(peakBins(2) - peakBins(1));
+tag1Peak = peakBins(1);
+tag2Peak = peakBins(2);
+tag1SNR = 0;
+tag2SNR = 0; % TODO, fix SNR for dual tags
+
 %% Display Results
 if (resultFlag == true) 
+
+    close all;
+    
     fprintf("\n%s Testing Results\n\n", captureName)
     
     fprintf("SNR Results:\n")
@@ -112,6 +121,13 @@ if (resultFlag == true)
     fprintf("Peak Magnitude Results:\n")
     fprintf("%d Hz Tag: %fdB\n", tag1Hz, peakMagnitudes(1))
     fprintf("%d Hz Tag: %fdB\n\n", tag2Hz, peakMagnitudes(2))
+
+    fprintf("Peak Results:\n")
+    fprintf("%d Hz Tag: %ddB\n", tag1Hz, peakBins(1))
+    fprintf("%d Hz Tag: %ddB\n\n", tag2Hz, peakBins(2))
+
+    fprintf("For copy pasting:\n")
+    fprintf("%f\n%f\n%d\n%f\n%d\n%d\n\n", SNRdB(1), peakMagnitudes(1), peakBins(1), SNRdB(2), peakMagnitudes(2), peakBins(2))
     
     figure(1)
     hold on;

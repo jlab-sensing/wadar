@@ -1,5 +1,5 @@
-function wadarTagTest(displayAllFrames, localDataPath, tagName, trialName, captureCount)
-% wadarTagTest(localDataPath, tagName, trialName, captureCount)
+function wadarDualTag(displayAllFrames, localDataPath, trialName, captureCount, tag1Hz, tag2Hz)
+% wadarDualTag(localDataPath, tagName, trialName, captureCount)
 %
 % Function captures radar frames to test tag SNR and display capture
 % fourier transform
@@ -27,11 +27,8 @@ fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 if isnumeric(trialName)
     trialName = num2str(trialName);
 end
-if isnumeric(tagName)
-    tagName = num2str(tagName);
-end
 [year, month, date] = ymd(datetime("now"));
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_', tagName, '_T', trialName, '_C');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_', 'DualTag', num2str(tag1Hz), num2str(tag2Hz), '_T', trialName, '_C');
 
 % Check for existing files with the same name to prevent overwrite
 existingFiles = dir(localDataPath);
@@ -55,9 +52,13 @@ frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c
 [status,~] = system(frameLoggerCommand);
 
 %% Process Capture Frames
-SNRdB = zeros(1, captureCount);
-peakMagnitudes = zeros(1, captureCount);
-peakBin = zeros(1, captureCount);
+SNRdB1 = zeros(1, captureCount);
+SNRdB2 = zeros(1, captureCount);
+peakMagnitudes1 = zeros(1, captureCount);
+peakMagnitudes2 = zeros(1, captureCount);
+peakBin1 = zeros(1, captureCount);
+peakBin2 = zeros(1, captureCount);
+diffBins = zeros(1, captureCount);
 failedCaptures = [];
 
 for i = 1:1:captureCount
@@ -100,77 +101,40 @@ for i = 1:1:captureCount
         fprintf('Framelogger captured frames succesfully!\n\n')
     end
 
-    [procResult, captureFT, tagFT, peakBin(i), SNRdB(i)] = procRadarFrames(localDataPath, strcat(captureName, num2str(i), '.frames'));
+    % [procResult, captureFT, tagFT, peakBin(i), SNRdB(i)] = procRadarFrames(localDataPath, strcat(captureName, num2str(i), '.frames'));
+    [procResult, captureFT, diffBins(i), tag1FT, tag2FT, peakBin1(i), peakBin2(i), SNRdB1(i), SNRdB2(i)] = procTwoTag(localDataPath, strcat(captureName, num2str(i), '.frames'), tag1Hz, tag2Hz, displayAllFrames);
+
+    peakMagnitudes1(i) = tag1FT(peakBin1(i));
+    peakMagnitudes2(i) = tag2FT(peakBin2(i));
 
     if (procResult == false)
         failedCaptures = [failedCaptures i];
         fprintf("Capture %d faced a processing issue.\n", i)
-        peakBin(i) = 0;
-        SNRdB(i) = 0;
-        peakMagnitudes(i) = 0;
+        peakBin1(i) = 0;
+        SNRdB1(i) = 0;
+        peakMagnitudes1(i) = 0;
+        peakBin2(i) = 0;
+        SNRdB2(i) = 0;
+        peakMagnitudes2(i) = 0;
         continue
-    end
-
-    peakMagnitudes(i) = tagFT(peakBin(i));
-
-    % Display each capture if demanded
-    if (displayAllFrames == true)
-        figure(1)
-        plot(tagFT)
-        xline(peakBin(i))
-        xlabel('Range Bins')
-        ylabel('Magnitude')
-        title(strcat("Capture ", num2str(i), " - 80 Hz Isolated"));
-        
-        figure(2)
-        clf(2)
-        hold on
-        for j = 2:1:frameCount
-            plot(abs(captureFT(:, j)))
-        end
-        xlabel('Range Bins')
-        ylabel('Magnitude')
-        title(strcat("Capture ", num2str(i), " - FT of all peak bins"));
     end
 
 end
 
 % Remove failed captures
 for j = failedCaptures
-    SNRdB(j) = [];
-    peakMagnitudes(j) = [];
-    peakBin(j) = [];
+    SNRdB1(j) = [];
+    peakMagnitudes1(j) = [];
+    peakBin1(j) = [];
+    SNRdB2(j) = [];
+    peakMagnitudes2(j) = [];
+    peakBin2(j) = [];
 end
 
 %% Display Results
-fprintf("\n%s Testing Results (Trial %s)\n\n", tagName, trialName)
+fprintf("\nDual Tag Testing Results (Trial %s)\n\n", trialName)
 
-fprintf("SNR Results:\n")
-fprintf("Median: %fdB\nMean: %fdB\n\n", median(SNRdB), mean(SNRdB))
-
-
-fprintf("Peak Magnitude Results:\n")
-fprintf("Median: %f\nMean: %f\n\n", median(peakMagnitudes), mean(peakMagnitudes))
-
-fprintf("Maximum difference between peak bins: %d\n\n", max(diff(sort(peakBin))))
-
-close all
-
-figure(1)
-plot(tagFT)
-xline(peakBin(i))
-xlabel('Range Bins')
-ylabel('Magnitude')
-title(strcat("Capture ", num2str(i), " - 80 Hz Isolated"));
-
-figure(2)
-hold on
-for j = 2:1:frameCount
-    plot(abs(captureFT(:, j)))
-end
-xlabel('Range Bins')
-ylabel('Magnitude')
-title(strcat("Capture ", num2str(i), " - FT of all peak bins"));
+diffBins
 
 figure(3)
 % hold on
