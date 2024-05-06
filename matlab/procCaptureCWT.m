@@ -1,4 +1,4 @@
-function procCaptureCWT(localDataPath, captureName, tag1Hz)
+function [peakBin] = procCaptureCWT(localDataPath, captureName, tag1Hz)
 
 close all
 
@@ -44,7 +44,7 @@ for i = 1:length(locMax)
     ridgeLines(i) = locMax(i);
 end
 
-gapThreshold = 3;
+gapThreshold = 5;
 
 removed = [];
 ridgeLinesScales = N:-1:1;
@@ -63,15 +63,34 @@ gap = 0;
 for scale_idx = N:-1:1
     locMax = cell2mat(localMaximums{scale_idx});
     for i = 2:length(locMax)
+        % TODO: Why am I struggling to remove duplicates :|
+        % duplicateFlag = 0;
+        % if length(ridgeLines) > 0
+        %     for dup_idx = 1:length(ridgeLines)
+        %         duplicate = ridgeLines{dup_idx};
+        %         % duplicate
+        %         % locMax(i)
+        %         % ismember(locMax(i), duplicate(:,2))
+        %         if ismember(locMax(i), duplicate(:,2))
+        %             duplicateFlag = 1;
+        %             locMax(i)
+        %         end
+        %     end
+        % end
+        % if (duplicateFlag == 1)
+        %     break
+        % end
         ridgeLine = [scale_idx locMax(i)];
+        % disp(ridgeLine)
         for scale_idx_2 = scale_idx-1:-1:1
-            slidingWindowThreshold = max(1,ceil(0.1*i));
+            slidingWindowThreshold = max(1,ceil(1*scale_idx_2));
             nextScaleLocMax = cell2mat(localMaximums{scale_idx_2});
             nextScaleLocMax = nextScaleLocMax(2:end);
             nextScaleDiffs = abs(nextScaleLocMax - locMax(i));
             [~, closestIdx] = min(nextScaleDiffs);
             if (nextScaleDiffs(closestIdx) < slidingWindowThreshold)
                 ridgeLine(end+1,:) = [scale_idx_2, nextScaleLocMax(closestIdx)];
+                % disp(ridgeLine)
                 gap = 0;
             else
                 gap = gap + 1;
@@ -84,67 +103,55 @@ for scale_idx = N:-1:1
     ridgeLines{end+1} = ridgeLine;
 end
     
-% identify
+%% identify the peaks based on the ridge lines
+% trim ridge lines
+validRidges = {};
+for i = 1:length(ridgeLines)
+    ridgeLine = ridgeLines{i};
+    duplicateFlag = 0;
+    for j = 1:i-1
+        ridgeLineDup = ridgeLines{j};
+        % ismember(ridgeLine(:,2), ridgeLineDup(:,2))
+        if ismember(1, ismember(ridgeLine(:,2), ridgeLineDup(:,2))) 
+            duplicateFlag = 1;
+        end
+    end
+    if duplicateFlag == 0
+        if length(ridgeLine(:,1)) >= 5
+            validRidges{end+1} = ridgeLine;
+        end
+    end
+end
 
-% 
-% for scale_idx = N-1:-1:1
-%     cwtcoeffsAtJ = cwtcoeffs(scale_idx, :);
-%     ridgeLines = [];
-%     for i = 1:length(ridgeLineList)
-%         currRidgeLine = ridgeLinesList{i};
-%         if currRidgeLine(end:1)
-%     end
-% 
-%     for i = 1:length(ridgeLinesList)
-%         currRidgeLine = ridgeLinesList{i};
-%         ridgeLines = currRidgeLine(end,2);
-%         gapNum = 0;
-% 
-%         for j = scale_idx:-1:1
-%             cwtcoeffsAtJ = cwtcoeffs(j, :);
-% 
-%             % find the closest max within the sliding window at next cwt scale
-%             nearestLocMax = [];
-%             slidingWindowThreshold = max(1,ceil(0.1*j));
-%             point_idx = ridgeLines(i);
-%             left_idx = max(1, point_idx - slidingWindowThreshold);
-%             right_idx = min(length(cwtcoeffsAtJ), point_idx + slidingWindowThreshold);
-%             [~, locMax] = findpeaks(abs(cwtcoeffsAtJ(left_idx:right_idx)));
-%             nearestLocMax = [nearestLocMax, locMax + left_idx - 1];
-% 
-%             if length(nearestLocMax) ~= 0
-%                 ridgeLinesIden{end+1} = nearestLocMax;
-%                 ridgeLines = nearestLocMax;
-%                 gapNum = 0;
-%                 break; % because max is found
-%             else
-%                 ridgeLinesIden{end+1} = [];
-%                 gapNum = gapNum + 1; % because no max is found
-%             end
-% 
-%             if gapNum > gapThreshold
-%                 removed(end+1) = ridgeLines(i);
-%             end
-%         end
-% 
-%     end
-% end
-% 
-% 
+% find peaks
+peaks = [];
+for i = 1:length(validRidges)
+    ridge = validRidges{i};
+    disp(ridge)
+    [~, peakLoc] = max(max(abs(cwtcoeffs(ridge(:,1), ridge(:,2)))));
+    for j = 1:height(ridge)
+        if ridge(j,1) == peakLoc
+            peaks(end+1) = ridge(j,2);
+        end
+    end
+end
+[~, peakBin] = max(tag1FT(peaks));
 
 figure(1);
+subplot(2,1,1)
 plot(tag1FT);
 hold on;
-title('Ridge Lines After Step 3');
-xlabel('Sample Index');
+scatter(peaks, tag1FT(peaks))
+title('Tag Bin Isolated');
+xlabel('Peak Bins');
 ylabel('Magnitude');
-legend('Signal', 'Ridge Lines');
+legend('Tag FT', 'Peaks');
 
-figure(2)
+subplot(2,1,2)
 hold on;
-xlim([0 512])
-for i = length(ridgeLines):-1:1
-    temp = ridgeLines{i};
+xlim([0 600])
+for i = length(validRidges):-1:1
+    temp = validRidges{i};
     scatter(temp(:,2), temp(:,1))
     % temp(:,2)
 end
