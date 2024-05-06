@@ -22,7 +22,7 @@ close all
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 20000;
+frameCount = 2000;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 

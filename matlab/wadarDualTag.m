@@ -19,7 +19,7 @@ close all;
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 2000;
+frameCount = 6000;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
@@ -131,11 +131,6 @@ for j = failedCaptures
     peakBin2(j) = [];
 end
 
-%% Display Results
-fprintf("\nDual Tag Testing Results (Trial %s)\n\n", trialName)
-
-diffBins
-
 figure(3)
 % hold on
 % for j = 2:1:frameCount
@@ -153,5 +148,38 @@ xlabel('Range Bins')
 ylabel('Frequency')
 zlabel('Magnitude')
 title(strcat("Capture", " - FT bins"));
+
+fprintf("Raw Data\n\n")
+disp("Peak Magnitudes:")
+disp(peakMagnitudes1)
+disp(peakMagnitudes2)
+disp("Peak Bins:")
+disp(peakBin1)
+disp(peakBin2)
+disp("SNR:")
+disp(SNRdB1)
+disp(SNRdB2)
+
+fprintf("\n%s Testing Results\n\n", captureName)
+
+fprintf("Peak Magnitude Results:\n")
+fprintf("%d Hz Tag: %.2f\n", tag1Hz, mean(peakMagnitudes1))
+fprintf("%d Hz Tag: %.2f\n\n", tag2Hz, mean(peakMagnitudes2))
+
+fprintf("SNR Results:\n")
+fprintf("%d Hz Tag: %.2f dB\n", tag1Hz, mean(SNRdB1))
+fprintf("%d Hz Tag: %.2f dB\n\n", tag2Hz, mean(SNRdB2))
+
+fprintf("Peak Results:\n")
+fprintf("%d Hz Tag: %.0f\n", tag1Hz, mean(peakBin1))
+fprintf("%d Hz Tag: %.0f\n\n", tag2Hz, mean(peakBin2))
+
+fprintf("Peak Variance:\n")
+fprintf("|%.0f - %.0f| = %.0f\n\n", max(abs(peakBin1 - peakBin2)), min(abs(peakBin1 - peakBin2)), ...
+    max(abs(peakBin1 - peakBin2)) - min(abs(peakBin1 - peakBin2)))
+
+fprintf("Peak Bin Difference:\n")
+fprintf("|%.0f - %.0f| = %.0f\n\n", mean(peakBin1), mean(peakBin2), mean(abs(peakBin1 - peakBin2)))
+
 
 end

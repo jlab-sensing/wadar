@@ -8,7 +8,7 @@ close all;
 frameRate = 200;   
 frameCount = 2000;
 displayAllFrames = false;
-localDataPath = '/home/ericdvet/jlab/wadar/matlab/data/dualTagDemo';
+localDataPath = '/home/ericdvet/jlab/wadar/matlab/data/';
 captureCount = 1;
 captureNum = 1;
 tag1Hz = 79;

@@ -44,7 +44,7 @@ for i = (freq1Tag-2:1:freq1Tag+2)
         tag1FT = temp;
     end
 end
-tag1FT = smoothdata(tag1FT, 'movmean', 10);
+% tag1FT = smoothdata(tag1FT, 'movmean', 10);
 
 % Find the bin corresponding to the largest peak 
 [~, peaks] = findpeaks(tag1FT, 'MinPeakHeight', max(tag1FT) * 0.9);
@@ -76,7 +76,7 @@ for i = (freq2Tag-2:1:freq2Tag+2)
         tag2FT = temp;
     end
 end
-tag2FT = smoothdata(tag2FT, 'movmean', 10);
+% tag2FT = smoothdata(tag2FT, 'movmean', 10);
 
 % Find the bin corresponding to the largest peak 
 [~, peaks] = findpeaks(tag2FT, 'MinPeakHeight', max(tag2FT) * 0.9);
@@ -103,41 +103,37 @@ peakMagnitudes(2) = tag2FT(peakBin);
 diffBins = abs(peakBins(2) - peakBins(1));
 tag1Peak = peakBins(1);
 tag2Peak = peakBins(2);
-tag1SNR = 0;
-tag2SNR = 0; % TODO, fix SNR for dual tags
+tag1SNR = SNRdB(1);
+tag2SNR = SNRdB(2); % TODO, fix SNR for dual tags
 
 %% Display Results
 if (resultFlag == true) 
-
-    close all;
     
-    fprintf("\n%s Testing Results\n\n", captureName)
+    % fprintf("\n%s Testing Results\n\n", captureName)
+    % 
+    % 
+    % fprintf("Peak Magnitude Results:\n")
+    % fprintf("%d Hz Tag: %f\n", tag1Hz, peakMagnitudes(1))
+    % fprintf("%d Hz Tag: %f\n\n", tag2Hz, peakMagnitudes(2))
+    % 
+    % fprintf("Peak Results:\n")
+    % fprintf("%d Hz Tag: %d\n", tag1Hz, peakBins(1))
+    % fprintf("%d Hz Tag: %d\n\n", tag2Hz, peakBins(2))
+    % 
+    % fprintf("Peak Bin Difference:\n")
+    % fprintf("|%d - %d| = %d", peakBins(1), peakBins(2), abs(peakBins(1) - peakBins(2)))
     
-    fprintf("SNR Results:\n")
-    fprintf("%d Hz Tag: %fdB\n", tag1Hz, SNRdB(1))
-    fprintf("%d Hz Tag: %fdB\n\n", tag2Hz, SNRdB(2))
-    
-    
-    fprintf("Peak Magnitude Results:\n")
-    fprintf("%d Hz Tag: %fdB\n", tag1Hz, peakMagnitudes(1))
-    fprintf("%d Hz Tag: %fdB\n\n", tag2Hz, peakMagnitudes(2))
-
-    fprintf("Peak Results:\n")
-    fprintf("%d Hz Tag: %ddB\n", tag1Hz, peakBins(1))
-    fprintf("%d Hz Tag: %ddB\n\n", tag2Hz, peakBins(2))
-
-    fprintf("For copy pasting:\n")
-    fprintf("%f\n%f\n%d\n%f\n%d\n%d\n\n", SNRdB(1), peakMagnitudes(1), peakBins(1), SNRdB(2), peakMagnitudes(2), peakBins(2))
-    
+    close all
     figure(1)
     hold on;
-    plot(tag1FT)
-    plot(tag2FT)
-    xline(peakBins(1))
-    xline(peakBins(2))
+    plot(tag1FT, 'displayname', sprintf('%i Hz FFT bin of tag 1',tag1Hz)); hold on;
+    plot(tag2FT, 'DisplayName', sprintf('%i Hz FFT bin of tag 2',tag2Hz)); hold on; 
+    plot(peakBins(1), tag1FT(peakBins(1)), 'o', 'DisplayName', sprintf('detected peak = %i', peakBins(1)));
+    plot(peakBins(2), tag2FT(peakBins(2)), 'o', 'DisplayName', sprintf('detected peak = %i', peakBins(2)));
+    legend(sprintf('%i Hz FFT bin of tag 1',tag1Hz), sprintf('%i Hz FFT bin of tag 2',tag2Hz))
     xlabel('Range Bins')
     ylabel('Magnitude')
-    title('Two Tag Frequencies Isolated');
+    title(captureName);
     
     % figure(2)
     % % hold on
