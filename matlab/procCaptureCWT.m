@@ -4,7 +4,7 @@ clf
 
 %% Control variables
 gapThreshold = 5;
-slidingWindowThreshold = 10;
+slidingWindowThreshold = 0.2;
 SNRThreshold = 1;
 ridgeLengthThreshold = 24;
 
@@ -41,6 +41,9 @@ end
 
 if displayPlot == true
     figure(1)
+    title("80 Hz FT Isolated")
+    ylabel("Magnitude")
+    xlabel("Range Bin")
     subplot(3,1,1)
     plot(tagFT)
 end
@@ -57,7 +60,10 @@ amplThreshold = 0.1 * max(max(cwtCoeffs));
 % Plot coeffs
 if displayPlot == true
     for i = 1:height(cwtCoeffs)
-        subplot(3,1,3)
+        title("CWT Coefficients")
+        ylabel("CWT Coefficients")
+        xlabel("Range Bin")
+        subplot(3,1,2)
         hold on;
         plot(cwtCoeffs(i,:))
     end
@@ -90,7 +96,7 @@ for scale_idx = flip(scale_idxs)
             nextScaleGaps = abs(previousRidgeLine - nextScaleMaxs);
             [closestLocMaxGap, closest_locMax_idx] = min(nextScaleGaps);
             closestLocMax = nextScaleMaxs(closest_locMax_idx);
-            if closestLocMaxGap < slidingWindowThreshold
+            if closestLocMaxGap <= ceil(slidingWindowThreshold * next_scale_idx)
                 ridgeLine(end+1, :) = [scale, closestLocMax];
                 temp = locMax{next_scale_idx};
                 temp(closest_locMax_idx + 1) = [];
@@ -107,14 +113,17 @@ for scale_idx = flip(scale_idxs)
 end
 
 % Plot ridges
-% if (displayPlot == true)
-%     for i = ridgeLines
-%         subplot(3,1,2)
-%         hold on;
-%         temp = i{1};
-%         plot(temp(:, 2), temp(:, 1))
-%     end
-% end
+if (displayPlot == true)
+    for i = ridgeLines
+        subplot(3,1,3)
+        title("Identified Ridge Lines")
+        ylabel("Scales")
+        xlabel("Range Bin")
+        hold on;
+        temp = i{1};
+        plot(temp(:, 2), temp(:, 1))
+    end
+end
 
 % Process ridges
 validRidgeLines = {};
@@ -147,15 +156,15 @@ for i = ridgeLines
     end
 end
 
-if (displayPlot == true)
-    for i = validRidgeLines
-        subplot(3,1,2)
-        xlim([0 600])
-        hold on;
-        temp = i{1};
-        plot(temp(:, 2), temp(:, 1))   
-    end
-end
+% if (displayPlot == true)
+%     for i = validRidgeLines
+%         subplot(3,1,2)
+%         xlim([0 600])
+%         hold on;
+%         temp = i{1};
+%         plot(temp(:, 2), temp(:, 1))   
+%     end
+% end
 
 largest_ridge_idx = max(length(validRidgeLines));
 largestRidge = validRidgeLines{largest_ridge_idx};
@@ -174,9 +183,9 @@ subplot(3,1,1)
 hold on
 scatter(peakMethod1, tagFT(peakMethod1), "x")
 scatter(peakMethod2, tagFT(peakMethod2), "x")
-legend("", sprintf("Method 1 (%d)", peakMethod1), sprintf("Method 2 (%d)", peakMethod2))
+legend("", sprintf("Detected Peak @ %d", peakMethod1))
 
-tagPeakBin = peakMethod2;
+tagPeakBin = peakMethod1;
 
 % cwtft2(tagFT,'wavelet','mexh','scales',1, 'angles',[0 pi/2]);
 end
