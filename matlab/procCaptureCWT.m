@@ -1,10 +1,12 @@
-function [tagPeakBin] = procCaptureCWT(localDataPath, captureName, tagHz)
+function [tagPeakBin] = procCaptureCWT2(localDataPath, captureName, tagHz, displayPlot)
 
 clf
 
 %% Control variables
 gapThreshold = 5;
-slidingWindowThreshold = 5;
+slidingWindowThreshold = 10;
+SNRThreshold = 1;
+ridgeLengthThreshold = 24;
 
 %% Processing parameters
 frameRate = 200;  
@@ -37,83 +39,62 @@ for i = (freqTag-2:1:freqTag+2)
     end
 end
 
-% Pearson Correlation Method (for demo)
+if displayPlot == true
+    figure(1)
+    subplot(3,1,1)
+    plot(tagFT)
+end
 
-% Find the bin corresponding to the largest peak 
-[~, corrPeakList] = findpeaks(tagFT, 'MinPeakHeight', max(tagFT) * 0.90);
-corrPeakList = corrPeakList+0;
-if (size(corrPeakList, 1) > 1)
-    if (corrPeakList(2) - corrPeakList(1) < 50)  % if double peak, invalid radar capture
-        procSuccess = false;
-        fprintf("Double peak detected. Please reorient the radar.\n")
+
+%% Continuous Wavelet Transform
+scales = 1:2:64;
+scales = [scales; 1:length(scales)];
+scale_idxs = 1:length(scales);
+cwtInfo = cwtft(tagFT, 'wavelet', 'mexh', 'scales', 1:2:64);
+cwtCoeffs = cwtInfo.cfs;
+amplThreshold = 0.1 * max(max(cwtCoeffs));
+
+% Plot coeffs
+if displayPlot == true
+    for i = 1:height(cwtCoeffs)
+        subplot(3,1,3)
+        hold on;
+        plot(cwtCoeffs(i,:))
     end
 end
 
-% Select peak bin greater than air peak
-peakBinCorr = corrPeakList(1);
-j = 0;
-while peakBinCorr < 0
-    if j > length(corrPeakList) - 1
-        break;
-    end
-    j = j + 1;
-    peakBinCorr = corrPeakList(j);
-end
-
-% Select peak bin correlated to template capture
-corrArray = zeros(1, 512);
-for j = (1:1:512)
-    shiftedtagFT = circshift(norm(tagFT), j);
-
-    % Pearson Correlation
-    meanTemplate = mean(norm(shiftedtagFT));
-    meanWetTag = mean(norm(tagFT));
-
-    corrArray(j) = sum((shiftedtagFT - meanTemplate) .* (norm(tagFT) - meanWetTag)) / sqrt(sum((shiftedtagFT - meanTemplate).^2) * sum((norm(tagFT) - meanWetTag).^2));
-end
-[~, peakIndex] = max(circshift(corrArray, peakBinCorr));
-closestPeak = corrPeakList(1);
-for j = 1:size(corrPeakList, 1)
-    if abs(corrPeakList(j) - peakIndex) < closestPeak
-        closestPeak = corrPeakList(j);
-    end
-end
-peakBinCorrBin = closestPeak;
-
-% Continuous Wavelet Transform
-cwtCoeffs = cwt(tagFT, 'amor', 200);
-[N, ~] = size(cwtCoeffs);
-
+% Find local maximums in each cwt
 locMax = {};
-ridgeLines = {};
-
-for scale_idx = 1:N
+for i = scales
+    scale = i(1);
+    scale_idx = i(2);
     [~, currLocMax] = findpeaks(abs(cwtCoeffs(scale_idx, :)));
-    locMax{end+1} =  {[scale_idx currLocMax]};
+    locMax{end+1} =  [scale currLocMax];
 end
 
-
-for scale_idx = N:-1:1
-    currLocMax = cell2mat(locMax{scale_idx});
-    for i = 2:length(currLocMax)
-        currRidgeLine = [scale_idx currLocMax(i)];
+% Find all ridge lines
+ridgeLines = {};
+gap = 0;
+for scale_idx = flip(scale_idxs)
+    localScaleMaxs = locMax{scale_idx};
+    localScaleMaxs = localScaleMaxs(2:end);
+    for ridgeLineTop = localScaleMaxs
         gap = 0;
-        for scale_idx_2 = scale_idx-1:-1:1
-            nextScaleLocs = cell2mat(locMax{scale_idx_2});
-            nextScaleLocMax = nextScaleLocs(2:end);
-            nextScaleDiffs = abs(nextScaleLocMax - currLocMax(i));
-            % if currLocMax(i) == 219
-            %     nextScaleLocs
-            %     nextScaleLocs
-            %     nextScaleDiffs
-            % end
-            [~, closest_idx] = min(nextScaleDiffs);
-            if (nextScaleDiffs(closest_idx) <= slidingWindowThreshold)
-                currRidgeLine(end+1,:) = [scale_idx_2, nextScaleLocMax(closest_idx)];
-                nextScaleLocMax(closest_idx) = [];
-                nextScaleLocs = [nextScaleLocs(1) nextScaleLocMax];
-                locMax{scale_idx_2} = {nextScaleLocs}; % this is what removes duplicates
-                gap = 0;
+        scale = scales(1,scale_idx);
+        ridgeLine = [scale ridgeLineTop];
+        for next_scale_idx = scale_idx-1:-1:1
+            previousRidgeLine = ridgeLine(end);
+            scale = scales(1,next_scale_idx);
+            nextScaleMaxs = locMax{next_scale_idx};
+            nextScaleMaxs = nextScaleMaxs(2:end);
+            nextScaleGaps = abs(previousRidgeLine - nextScaleMaxs);
+            [closestLocMaxGap, closest_locMax_idx] = min(nextScaleGaps);
+            closestLocMax = nextScaleMaxs(closest_locMax_idx);
+            if closestLocMaxGap < slidingWindowThreshold
+                ridgeLine(end+1, :) = [scale, closestLocMax];
+                temp = locMax{next_scale_idx};
+                temp(closest_locMax_idx + 1) = [];
+                locMax{next_scale_idx} = temp;
             else
                 gap = gap + 1;
             end
@@ -121,99 +102,81 @@ for scale_idx = N:-1:1
                 break
             end
         end
-        ridgeLines{end+1} = currRidgeLine;
+        ridgeLines{end + 1} = ridgeLine;
     end
 end
-    
-%% Identify the peaks based on the ridge lines
-validRidges = ridgeLines;
-duplicate_idx = 0;
-for i = 1:length(ridgeLines)
-    currRidgeLine = ridgeLines{i};
-    duplicateFlag = 0;
-    for j = 1:i-1
-        ridgeLineDup = ridgeLines{j};
-        if ismember(1, ismember(currRidgeLine(:,2), ridgeLineDup(:,2))) 
-            for k = 1:length(currRidgeLine(:,1))
-                ridgeLineDup(end+1,:) = currRidgeLine(k,:);
+
+% Plot ridges
+% if (displayPlot == true)
+%     for i = ridgeLines
+%         subplot(3,1,2)
+%         hold on;
+%         temp = i{1};
+%         plot(temp(:, 2), temp(:, 1))
+%     end
+% end
+
+% Process ridges
+validRidgeLines = {};
+for i = ridgeLines
+    ridgeLine = i{1};
+    scale = scales(1,:);
+    ridge_line_idxs = [];
+    for j = 1:length(ridgeLine(:,1))
+        ridge_line_idxs(end+1) = find(scale == ridgeLine(j,1));
+    end
+    % size(cwtCoeffs)
+    ridgeLineCWTCoeffs = [];
+    for j = 1:length(ridge_line_idxs)
+        ridgeLineCWTCoeffs(end+1) = cwtCoeffs(ridge_line_idxs(j), ridgeLine(j, 2));
+    end
+    [maxRidgeLineCWTCoeff, max_ridge_line_cwt_coeff_idx] = max(ridgeLineCWTCoeffs);
+    maxRidgeLineCWTCoeffScale = ridgeLine(max_ridge_line_cwt_coeff_idx, 2);
+
+    % 1. scale with max amplitude > certain range
+    if maxRidgeLineCWTCoeff > amplThreshold
+        SNR = maxRidgeLineCWTCoeff / prctile(cwtCoeffs(max_ridge_line_cwt_coeff_idx,:), 95);
+        SNRdB = mag2db(SNR);
+        % 2. SNR > threshold
+        if SNRdB > SNRThreshold
+            % 3. ridge length > threshold
+            if length(ridge_line_idxs) > ridgeLengthThreshold
+                validRidgeLines{end+1} = ridgeLine;
             end
-            currRidgeLine = ridgeLineDup;
-            validRidges{i} = sortrows(currRidgeLine);
-            validRidges{j} = [];
         end
     end
-    % if length(currRidgeLine(:,1)) >= 5
-    %     if duplicateFlag == 0
-    %         validRidges{end+1} = sortrows(currRidgeLine);
-    %     end
-    % end
 end
 
-validRidges = ridgeLines;
-revalidRidges = {};
-for i = 1:length(validRidges)
-    currRidgeLine = validRidges{i};
-    if length(currRidgeLine) > 0
-        if length(currRidgeLine(:,1)) >= 5
-            if duplicateFlag == 0
-                revalidRidges{end+1} = sortrows(currRidgeLine);
-            end
-        end
+if (displayPlot == true)
+    for i = validRidgeLines
+        subplot(3,1,2)
+        xlim([0 600])
+        hold on;
+        temp = i{1};
+        plot(temp(:, 2), temp(:, 1))   
     end
 end
 
+largest_ridge_idx = max(length(validRidgeLines));
+largestRidge = validRidgeLines{largest_ridge_idx};
 
-detectedPeaks = [];
-peakLens = [];
-coeffMaxes = [];
-coeff_idx = [];
-peakLocs = [];
-for i = 1:length(revalidRidges)
-    ridge = revalidRidges{i};
-    [~, peakLoc] = max(max(abs(cwtCoeffs(ridge(:,1), ridge(:,2))))); % max coeff method
-    % peakLoc = length(ridge(:,1));
-    detectedPeaks(end+1) = ridge(peakLoc,2);
-    peakLens(end+1) = length(ridge(:,1));
-    coeffMaxes(end+1) = cwtCoeffs(ridge(peakLoc,1));
-    coeff_idx(end+1) = peakLoc;
-    peakLocs(end+1) = peakLoc;
+peakMethod1 = largestRidge(end,end);
+
+largestRidgeCWTCoeffMaxes = [];
+for i = 1:height(largestRidge)
+    largestRidgeCWTCoeffMaxes(end+1) = cwtCoeffs(find(scale == largestRidge(i,1)), largestRidge(i,2));
 end
+[~, max_largest_ridge_cwt_coeff_idx] = max(largestRidgeCWTCoeffMaxes);
 
-validPeaks = [];
-validPeakLens = [];
-for i = 1:length(detectedPeaks)
-    if tagFT(detectedPeaks(i)) > max(tagFT(detectedPeaks)) * 0.3
-        validPeaks(end+1) = detectedPeaks(i);
-        validPeakLens(end+1) = peakLens(i);
-    end
-end
-detectedPeaks = validPeaks;
-peakLens = validPeakLens;
-[~, temp] = max(peakLens);
+peakMethod2 = largestRidge(max_largest_ridge_cwt_coeff_idx,2);
 
-[~, peakBinCoeff] = max(abs(coeffMaxes));
-[~, peakBinAmpl] = max(tagFT(detectedPeaks));
-tagPeakBin = detectedPeaks(peakBinAmpl);
-% tagPeakBin = detectedPeaks(temp);
+subplot(3,1,1)
+hold on
+scatter(peakMethod1, tagFT(peakMethod1), "x")
+scatter(peakMethod2, tagFT(peakMethod2), "x")
+legend("", sprintf("Method 1 (%d)", peakMethod1), sprintf("Method 2 (%d)", peakMethod2))
 
-figure(1);
-subplot(2,1,1)
-plot(tagFT);
-hold on;
-scatter(detectedPeaks, tagFT(detectedPeaks))
-scatter(tagPeakBin, tagFT(tagPeakBin), 'filled')
-scatter(peakBinCorrBin, tagFT(peakBinCorrBin), 'filled')
-title('Tag Bin Isolated');
-xlabel('Peak Bins');
-ylabel('Magnitude');
-legend('Tag FT', 'Ridges', sprintf('CWT Peak (%d)', tagPeakBin), sprintf('Pearson Correlation Peak (%d)', peakBinCorrBin));
+tagPeakBin = peakMethod2;
 
-subplot(2,1,2)
-hold on;
-xlim([0 600])
-for i = length(revalidRidges):-1:1
-    temp = revalidRidges{i};
-    plot(temp(:,2), temp(:,1))
-end
-
+% cwtft2(tagFT,'wavelet','mexh','scales',1, 'angles',[0 pi/2]);
 end
