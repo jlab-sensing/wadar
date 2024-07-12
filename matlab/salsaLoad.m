@@ -70,12 +70,18 @@ times = fread(fid, numFrames, 'double');
 frameTot = fread(fid, numFrames*numberOfSamplers, 'uint32');
 % Do the DAC normalization
 frameTot = double(frameTot)/(1.0*pps*iterations)*dacStep + dacMin;
+temp = frameTot;
 frameTot = reshape(frameTot, numberOfSamplers, numFrames);
 
+
+% Process out the weird spike
 for i = 1:numFrames
-    if max(frameTot(:,i)) > 8191 | min(frameTot(:,i)) == 0
-            % frameTot(:, i) = zeros(1, numberOfSamplers);
-            frameTot(:, i) = frameTot(:, i-1);
+    if max(frameTot(:,i)) > 8191
+            if (i > 1)
+                frameTot(:, i) = frameTot(:, i-1);
+            else 
+                frameTot(:, i) = frameTot(:, i+1);
+            end
     end
 end
 
@@ -91,5 +97,26 @@ if count ~= 0
 end
 % Calculate some useful radar parameters that can be returned if needed
 [fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz] = NoveldaChipParams(chipSet, pgen,'4mm');
+
+% temp = diff(times);
+% for i = 1:length(temp)
+%     if temp(i) > 0.006
+%         % i
+%     end
+% end
+
+close all
+
+figure(3)
+plot(diff(times))
+xlabel("Frame")
+ylabel("Frame time difference")
+% 
+% close all
+figure(1)
+plot(frameTot)
+figure(2)
+plot(frameTot)
+ylim([0 8191])
 
 end

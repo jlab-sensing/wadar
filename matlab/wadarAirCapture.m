@@ -26,7 +26,7 @@ if isnumeric(trialName)
 end
 
 [year, month, date] = ymd(datetime("now"));
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Air_T', num2str(trialName), '_C');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_Air_', num2str(trialName), '_C');
 
 % Check for existing files with the same name to prevent overwrite
 existingFiles = dir(localDataPath);
