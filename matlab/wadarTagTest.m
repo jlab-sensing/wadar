@@ -1,4 +1,4 @@
-function wadarTagTest(displayAllFrames, localDataPath, tagName, trialName, captureCount)
+function wadarTagTest(displayAllFrames, localDataPath, trialName, tagHz, frameCount, captureCount)
 % wadarTagTest(localDataPath, tagName, trialName, captureCount)
 %
 % Function captures radar frames to test tag SNR and display capture
@@ -8,8 +8,9 @@ function wadarTagTest(displayAllFrames, localDataPath, tagName, trialName, captu
 %       displayAllFrames: If true, displays each capture's frames for 10 
 %           seconds
 %       localDataPath: Location to store capture on local machine
-%       tagName: Name of tag for file naming purposes
-%       trialName: Trial name for file naming purposes
+%       trialName: Trial name for file documenting purposes
+%       tagHz: Oscillation frequency of tag being captures
+%       frameCount: Number of frames in each capture
 %       captureCount: Number of captures desired
 %
 % Outputs:
@@ -18,32 +19,28 @@ function wadarTagTest(displayAllFrames, localDataPath, tagName, trialName, captu
 close all;
 
 % Capture parameters
-frameRate = 200;   
-frameCount = 6000;
+frameRate = 200;
 radarType = 'Chipotle';
-fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
 % File name generation
+[~, hostname] = system('whoami');
+hostname(end) = '';
+fullDataPath = sprintf("%s@192.168.7.1:%s", hostname, localDataPath);
 if isnumeric(trialName)
     trialName = num2str(trialName);
 end
-if isnumeric(tagName)
-    tagName = num2str(tagName);
-end
 [year, month, date] = ymd(datetime("now"));
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_', tagName, '_T', trialName, '_C');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_', trialName, '_C');
 
 % Check for existing files with the same name to prevent overwrite
 existingFiles = dir(localDataPath);
 
-% for i = 1:length(existingFiles)
-%     for j = 1:1:10
-%         if strcmp(existingFiles(i).name, strcat(captureName, num2str(j), '.frames'))
-%             error("Files under this trial index already exist. Iterate the trial index.")
-%             return
-%         end
-%     end
-% end
+for i = 1:length(existingFiles)
+    if strcmp(existingFiles(i).name, strcat(captureName, '1', '.frames'))
+        error("Files under this trial name already exist. Please delete the existing file or choose a new file.")
+        return
+    end
+end
 
 %% Commit Radar Capture
     
@@ -100,7 +97,7 @@ for i = 1:1:captureCount
         fprintf('Framelogger captured frames succesfully!\n\n')
     end
 
-    [procResult, captureFT, tagFT, peakBin(i), SNRdB(i)] = procRadarFrames(localDataPath, strcat(captureName, num2str(i), '.frames'));
+    [procResult, captureFT, tagFT, peakBin(i), SNRdB(i)] = procRadarFrames(localDataPath, strcat(captureName, num2str(i), '.frames'), tagHz);
 
     if (procResult == false)
         failedCaptures = [failedCaptures i];
@@ -143,11 +140,14 @@ for j = failedCaptures
 end
 
 %% Display Results
-fprintf("\n%s Testing Results (Trial %s)\n\n", tagName, trialName)
+fprintf("\n%s Testing Results \n\n", trialName)
+
+trialNumbers = 1:captureCount;
+results = table(trialNumbers, peakMagnitudes, SNRdB, peakBin);
+disp(results)
 
 fprintf("SNR Results:\n")
 fprintf("Median: %fdB\nMean: %fdB\n\n", median(SNRdB), mean(SNRdB))
-
 
 fprintf("Peak Magnitude Results:\n")
 fprintf("Median: %f\nMean: %f\n\n", median(peakMagnitudes), mean(peakMagnitudes))
@@ -177,17 +177,22 @@ figure(3)
 % for j = 2:1:frameCount
 %     plot(abs(captureFT(:, j)))
 % end
-captureFT(:, 1:2) = ones(512, 2); % first 2 frames of capture is extremely noisy
-x = (1:1:512)';
-y = (1:1:frameCount) / frameCount * frameRate;
-xMat = repmat(x, 1, length(y));
-yMat = repmat(y, length(x), 1);
-zMat = abs(captureFT(:, 1:frameCount));
-plot3(xMat, yMat, zMat)
+captureFT(:, 1:2) = ones(512, 2); % first 2 frames of capture are extremely noisy
+% processedFrames = frameCount/100;
+% captureFT(:, 1:processedFrames) = ones(512, processedFrames); 
+% captureFT(:, frameCount-processedFrames+1:frameCount) = ones(512, processedFrames); 
+x = (1:512)';
+y = (1:frameCount) / frameCount * frameRate;
+[xMat, yMat] = meshgrid(x, y);
+zMat = abs(captureFT(:, 1:frameCount))';
+surf(xMat, yMat, zMat, 'EdgeColor', 'none');
+ax = gca; % Get current axes
+% ax.FontSize = 18; % Set the desired font size for the ticks
+xlim([0 512])
 
 xlabel('Range Bins')
 ylabel('Frequency')
 zlabel('Magnitude')
-title(strcat("Capture", " - FT bins"));
+title(strcat("Capture", num2str(i), " - FT bins"));
 
 end

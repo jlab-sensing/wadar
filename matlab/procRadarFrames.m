@@ -1,4 +1,4 @@
-function [procSuccess, captureFT, tagFT, peakBin, SNRdB] = procRadarFrames(localDataPath, captureName)
+function [procSuccess, captureFT, tagFT, peakBin, SNRdB] = procRadarFrames(localDataPath, captureName, tagHz)
 % [procResult, captureFT, tagFT, peakBin, SNRdB] = procCapture(localDataPath, captureName)
 %
 % Function processes radar frames for various purposes
@@ -15,7 +15,6 @@ function [procSuccess, captureFT, tagFT, peakBin, SNRdB] = procRadarFrames(local
 %       SNRdB: SNR of capture at frequency peak in dB
 
 %% Processing parameters
-tagHz = 80;
 frameRate = 200;  
 
 %% Load Capture
@@ -51,19 +50,21 @@ end
 tagFT = smoothdata(tagFT, 'movmean', 10);
 
 % Find the bin corresponding to the largest peak 
-[~, peaks] = findpeaks(tagFT, 'MinPeakHeight', max(tagFT) * 0.9);
-if (size(peaks, 1) > 1)
-    if (peaks(2) - peaks(1) < 50)
-        peakBin = peaks(1) +  round((peaks(2) - peaks(1)) / 2) + round((tagFT(peaks(2)) - ...
-            tagFT(peaks(1))) / max(tagFT) * (peaks(2) - peaks(1)));
-    else
-        peakBin = peaks(1);
-    end
-elseif (size(peaks, 1) == 1)
-    peakBin = peaks(1);
-else
-    peakBin = -1;
-end
+% [~, peaks] = findpeaks(tagFT, 'MinPeakHeight', max(tagFT) * 0.9);
+% if (size(peaks, 1) > 1)
+%     if (peaks(2) - peaks(1) < 50)
+%         peakBin = peaks(1) +  round((peaks(2) - peaks(1)) / 2) + round((tagFT(peaks(2)) - ...
+%             tagFT(peaks(1))) / max(tagFT) * (peaks(2) - peaks(1)));
+%     else
+%         peakBin = peaks(1);
+%     end
+% elseif (size(peaks, 1) == 1)
+%     peakBin = peaks(1);
+% else
+%     peakBin = -1;
+% end
+
+peakBin = procCaptureCWT(tagFT, false);
 
 SNR = calculateSNR(captureFT, freqTag, peakBin);
 SNRdB = 10 * log10(SNR);
