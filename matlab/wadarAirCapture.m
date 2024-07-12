@@ -1,4 +1,4 @@
-function wadarAirCapture(localDataPath, trialName)
+function wadarAirCapture(localDataPath, trialName, frameCount, tagHz)
 % wadarAirCapture(airFileName, captureName)
 %
 % wadarAirCapture captures the backscatter tag buried with no soil covering
@@ -15,11 +15,12 @@ close all;
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 20000;
 radarType = 'Chipotle';
-fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
 % File name generation
+[~, hostname] = system('whoami');
+hostname(end) = '';
+fullDataPath = sprintf("%s@192.168.7.1:%s", hostname, localDataPath);
 if isnumeric(trialName)
     trialName = num2str(trialName);
 end
@@ -88,7 +89,7 @@ else
 end
 
 %% Process Capture Frames
-[procResult, ~, airTagFT, airPeakBin, ~] = procRadarFrames(localDataPath, strcat(captureName, '1.frames'));
+[procResult, ~, airTagFT, airPeakBin, ~] = procRadarFrames(localDataPath, strcat(captureName, '1.frames'), tagHz);
 
 if (procResult == false)
     error("ERROR: Template processing error. Please try again.")
@@ -118,7 +119,7 @@ elseif (strcmp(validAirCapture, "N"))
     fprintf("\n")
     delete(fullfile(localDataPath, strcat(captureName, '1.frames')))
     delete(fullfile(localDataPath, strcat(captureName, '1.md5')))
-    wadarAirCapture(localDataPath, trialName);
+    error("Please rerun the command.")
 else
     error("Invalid input")
 end

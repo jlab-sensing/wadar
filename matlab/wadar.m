@@ -8,10 +8,12 @@ function volumetricWaterContent = wadar(displayAllFrames, airFramesName, localDa
 %       displayAllFrames: If true, displays each capture's frames for 10 
 %           seconds
 %       airFramesName: Radar capture with tag uncovered with soil
-%       templateFramesName: Radar capture with obvious tag peak
 %       localDataPath: Location of data storage
-%       trialName: Trial name for file naming purposes
+%       trialName: Trial name for file documenting purposes
+%       tagHz: Oscillation frequency of tag being captures
+%       frameCount: Number of frames in each capture
 %       captureCount: Number of captures desired
+%       tagDepth: Depth at which tag is buried measured in meters
 %
 % Outputs:
 %       volumetricWaterContent: Calculated volumetric water content
