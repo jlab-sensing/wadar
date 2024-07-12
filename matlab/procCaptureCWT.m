@@ -1,71 +1,44 @@
-function [tagPeakBin] = procCaptureCWT2(localDataPath, captureName, tagHz, displayPlot)
+function [tagPeakBin] = procCaptureCWT(tagFT, displayPlot)
 
 clf
 
 %% Control variables
 gapThreshold = 5;
-slidingWindowThreshold = 0.2;
-SNRThreshold = 1;
-ridgeLengthThreshold = 24;
-
-%% Processing parameters
-frameRate = 200;  
-
-%% Load Capture
-try
-    [rawFrames, pgen, fs_hz, chipSet, ~] = salsaLoad(fullfile(localDataPath, captureName));
-catch
-    procResult = false;
-end
-procResult = true;
-
-% Baseband Conversion
-frameCount = size(rawFrames, 2);
-% frameCount = 5
-framesBB = zeros(size(rawFrames));
-for j = 1:frameCount
-    framesBB(:,j) = NoveldaDDC(rawFrames(:,j), chipSet, pgen, fs_hz);
-end
-
-% Find Tag FT
-captureFT = fft(framesBB, frameCount , 2); 
-
-freqTag = tagHz / frameRate * frameCount;
-tagFT = abs(captureFT(:, freqTag));
-for i = (freqTag-2:1:freqTag+2)
-    temp = abs(captureFT(:, i));
-    if max(temp) > max(tagFT)
-        tagFT = temp;
-    end
-end
+slidingWindowThreshold = 0.3; % 0.5;
+SNRThreshold = 3;
+scales = 1:2:64; %1:2:64;
+ridgeLengthThreshold = 12;
 
 if displayPlot == true
     figure(1)
-    title("80 Hz FT Isolated")
-    ylabel("Magnitude")
-    xlabel("Range Bin")
     subplot(3,1,1)
     plot(tagFT)
+    ax = gca; % Get current axes
+    ax.FontSize = 18; % Set the desired font size for the ticks
+    title("80 Hz FT Isolated", 'FontSize', 30)
+    ylabel("Magnitude", 'FontSize', 22)
+    xlabel("Range Bin", 'FontSize', 22)
 end
 
 
 %% Continuous Wavelet Transform
-scales = 1:2:64;
 scales = [scales; 1:length(scales)];
 scale_idxs = 1:length(scales);
-cwtInfo = cwtft(tagFT, 'wavelet', 'mexh', 'scales', 1:2:64);
+cwtInfo = cwtft(tagFT, 'wavelet', 'mexh', 'scales', scales);
 cwtCoeffs = cwtInfo.cfs;
 amplThreshold = 0.1 * max(max(cwtCoeffs));
 
 % Plot coeffs
 if displayPlot == true
+    subplot(3,1,2)
     for i = 1:height(cwtCoeffs)
-        title("CWT Coefficients")
-        ylabel("CWT Coefficients")
-        xlabel("Range Bin")
-        subplot(3,1,2)
+        title("CWT Coefficients", 'FontSize', 30)
+        ylabel("CWT Coefficients", 'FontSize', 22)
+        xlabel("Range Bin", 'FontSize', 22)
         hold on;
         plot(cwtCoeffs(i,:))
+        ax = gca; % Get current axes
+        ax.FontSize = 18; % Set the desired font size for the ticks
     end
 end
 
@@ -101,6 +74,7 @@ for scale_idx = flip(scale_idxs)
                 temp = locMax{next_scale_idx};
                 temp(closest_locMax_idx + 1) = [];
                 locMax{next_scale_idx} = temp;
+                gap = 0;
             else
                 gap = gap + 1;
             end
@@ -116,12 +90,14 @@ end
 if (displayPlot == true)
     for i = ridgeLines
         subplot(3,1,3)
-        title("Identified Ridge Lines")
-        ylabel("Scales")
-        xlabel("Range Bin")
+        title("Identified Ridge Lines", 'FontSize', 30)
+        ylabel("Scales", 'FontSize', 22)
+        xlabel("Range Bin", 'FontSize', 22)
         hold on;
         temp = i{1};
         plot(temp(:, 2), temp(:, 1))
+        ax = gca; % Get current axes
+        ax.FontSize = 18; % Set the desired font size for the ticks
     end
 end
 
@@ -144,16 +120,18 @@ for i = ridgeLines
 
     % 1. scale with max amplitude > certain range
     if maxRidgeLineCWTCoeff > amplThreshold
-        SNR = maxRidgeLineCWTCoeff / prctile(cwtCoeffs(max_ridge_line_cwt_coeff_idx,:), 95);
+        SNR = maxRidgeLineCWTCoeff / prctile(cwtCoeffs(1,:), 95);
         SNRdB = mag2db(SNR);
         % 2. SNR > threshold
         if SNRdB > SNRThreshold
             % 3. ridge length > threshold
             if length(ridge_line_idxs) > ridgeLengthThreshold
+                % disp(ridgeLine)
                 validRidgeLines{end+1} = ridgeLine;
             end
         end
     end
+
 end
 
 % if (displayPlot == true)
@@ -166,7 +144,17 @@ end
 %     end
 % end
 
-largest_ridge_idx = max(length(validRidgeLines));
+maxHeight = 0;
+largest_ridge_idx = -1;
+for i = 1:length(validRidgeLines)
+    % disp(validRidgeLines{i})
+    % disp(height(validRidgeLines{i}))
+    if (height(validRidgeLines{i}) > maxHeight)
+        maxHeight = height(validRidgeLines{i});
+        largest_ridge_idx = i;
+    end
+end
+% largest_ridge_idx = max(height(validRidgeLines));
 largestRidge = validRidgeLines{largest_ridge_idx};
 
 peakMethod1 = largestRidge(end,end);
@@ -179,13 +167,28 @@ end
 
 peakMethod2 = largestRidge(max_largest_ridge_cwt_coeff_idx,2);
 
-subplot(3,1,1)
-hold on
-scatter(peakMethod1, tagFT(peakMethod1), "x")
-scatter(peakMethod2, tagFT(peakMethod2), "x")
-legend("", sprintf("Detected Peak @ %d", peakMethod1))
+maxHeight = 0;
+largest_ridge_idx = -1;
+for i = 1:length(validRidgeLines)
+    ridgeLine = validRidgeLines{i};
+    if (tagFT(ridgeLine(end, 2)) > maxHeight)
+        maxHeight = tagFT(ridgeLine(end, 2));
+        largest_ridge_idx = i;
+    end
+end
+largestRidge = validRidgeLines{largest_ridge_idx};
+peakMethod3 = largestRidge(end, 2);
 
-tagPeakBin = peakMethod1;
+if (displayPlot)
+    subplot(3,1,1)
+    hold on
+    % scatter(peakMethod1, tagFT(peakMethod1), "x")
+    % scatter(peakMethod2, tagFT(peakMethod2), "x")
+    scatter(peakMethod3, tagFT(peakMethod3), "o")
+    % legend("", sprintf("Detected Peak @ %d", peakMethod1), sprintf("My method @ %d", peakMethod3))
+end
+
+tagPeakBin = peakMethod3;
 
 % cwtft2(tagFT,'wavelet','mexh','scales',1, 'angles',[0 pi/2]);
 end
