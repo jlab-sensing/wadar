@@ -19,7 +19,7 @@ close all;
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 6000;
+frameCount = 20000;
 radarType = 'Chipotle';
 fullDataPath = sprintf("ericdvet@192.168.7.1:%s",localDataPath);
 
@@ -28,7 +28,8 @@ if isnumeric(trialName)
     trialName = num2str(trialName);
 end
 [year, month, date] = ymd(datetime("now"));
-captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_', 'DualTag', num2str(tag1Hz), num2str(tag2Hz), '_T', trialName, '_C');
+% captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_', 'DualTag', num2str(tag1Hz), num2str(tag2Hz), '_', trialName, '_C');
+captureName = strcat(num2str(year), '-', num2str(month), '-', num2str(date), '_', '', num2str(tag1Hz), num2str(tag2Hz), '_', trialName, '_C');
 
 % Check for existing files with the same name to prevent overwrite
 existingFiles = dir(localDataPath);
@@ -131,23 +132,23 @@ for j = failedCaptures
     peakBin2(j) = [];
 end
 
-figure(3)
-% hold on
-% for j = 2:1:frameCount
-%     plot(abs(captureFT(:, j)))
-% end
-captureFT(:, 1:2) = ones(512, 2); % first 2 frames of capture is extremely noisy
-x = (1:1:512)';
-y = (1:1:frameCount) / frameCount * frameRate;
-xMat = repmat(x, 1, length(y));
-yMat = repmat(y, length(x), 1);
-zMat = abs(captureFT(:, 1:frameCount));
-plot3(xMat, yMat, zMat)
-
-xlabel('Range Bins')
-ylabel('Frequency')
-zlabel('Magnitude')
-title(strcat("Capture", " - FT bins"));
+% figure(3)
+% % hold on
+% % for j = 2:1:frameCount
+% %     plot(abs(captureFT(:, j)))
+% % end
+% captureFT(:, 1:2) = ones(512, 2); % first 2 frames of capture is extremely noisy
+% x = (1:1:512)';
+% y = (1:1:frameCount) / frameCount * frameRate;
+% xMat = repmat(x, 1, length(y));
+% yMat = repmat(y, length(x), 1);
+% zMat = abs(captureFT(:, 1:frameCount));
+% plot3(xMat, yMat, zMat)
+% 
+% xlabel('Range Bins')
+% ylabel('Frequency')
+% zlabel('Magnitude')
+% title(strcat("Capture", " - FT bins"));
 
 fprintf("Raw Data\n\n")
 disp("Peak Magnitudes:")

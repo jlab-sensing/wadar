@@ -6,9 +6,10 @@ close all;
 
 % Capture parameters
 frameRate = 200;   
-frameCount = 2000;
+captureDurations = [10, 30, 100];
+frameCount = captureDurations(2) * frameRate;
 displayAllFrames = false;
-localDataPath = '/home/ericdvet/jlab/wadar/matlab/data/';
+localDataPath = '/home/ericdvet/jlab/wadar/matlab/data/StanfordDemo/';
 captureCount = 1;
 captureNum = 1;
 tag1Hz = 79;
@@ -91,7 +92,7 @@ while true
         fprintf("Capture %d faced a processing issue.\n", captureNum-1)
     end
 
-    vwc = procSoilMoisture(max(peakBin1, peakBin2), min(peakBin1, peakBin2), 'farm', 0.1524);
+    vwc = procSoilMoisture(max(peakBin1, peakBin2), min(peakBin1, peakBin2), 'farm', 0.1524) / 2;
     vwcList = [vwcList vwc];
 
     %% display data %%
