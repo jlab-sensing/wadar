@@ -4,7 +4,7 @@
 elapsedMicros count; // frequency timing
 elapsedMicros cycles; // toggle timing
 
-const int period =  6250; // 6329; // half period of tag in microseconds
+const int period =  500000/80; // 6250; // half period of tag in microseconds
 //const int period =  10000; // half period of tag in microseconds
 //int pn[] = {1,0,1,0,1,0,1,0};
 int pn[] = {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1};
