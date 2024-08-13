@@ -6,7 +6,7 @@
 
 typedef struct
 {
-    float *times;
+    double *times;
     double *frameTot;
     int frameRate;
     int numFrames;

@@ -5,6 +5,7 @@
 #include "salsa.h"
 
 #define FRAME_LOGGER_MAGIC_NUM 0xFEFE00A2
+// #define SALSA_TEST
 
 RadarData *salsaLoad(const char *fileName)
 {
@@ -119,16 +120,7 @@ RadarData *salsaLoad(const char *fileName)
         return NULL;
     }
 
-    if (fread(frameTotRaw, sizeof(uint32_t), (radarData->numFrames) * numberOfSamplers, fid) != (radarData->numFrames) * numberOfSamplers)
-    {
-        fprintf(stderr, "ERROR: .frames file formatting");
-        free(frameTotRaw);
-        free(radarData);
-        fclose(fid);
-        return NULL;
-    }
-
-    radarData->times = (float *)malloc((radarData->numFrames) * sizeof(float));
+    radarData->times = (double *)malloc((radarData->numFrames) * sizeof(double));
     radarData->frameTot = (double *)malloc((radarData->numFrames) * numberOfSamplers * sizeof(double));
     if (!radarData->times || !radarData->frameTot)
     {
@@ -143,7 +135,7 @@ RadarData *salsaLoad(const char *fileName)
 
     for (int i = 0; i < (radarData->numFrames); i++)
     {
-        if (fread(&radarData->times[i], sizeof(float), 1, fid) != 1)
+        if (fread(&radarData->times[i], sizeof(double), 1, fid) != 1)
         {
             fprintf(stderr, "ERROR: .frames file formatting");
             free(frameTotRaw);
@@ -155,12 +147,22 @@ RadarData *salsaLoad(const char *fileName)
         }
     }
 
+    if (fread(frameTotRaw, sizeof(uint32_t), (radarData->numFrames) * numberOfSamplers, fid) != (radarData->numFrames) * numberOfSamplers)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
+        free(frameTotRaw);
+        free(radarData);
+        fclose(fid);
+        return NULL;
+    }
+
     for (int i = 0; i < (radarData->numFrames) * numberOfSamplers; i++)
     {
         radarData->frameTot[i] = (double)frameTotRaw[i] / (pps * iterations) * dacStep + dacMin;
     }
     free(frameTotRaw);
 
+    // Process out the weird spike
     for (int i = 0; i < (radarData->numFrames); i++)
     {
         double maxVal = radarData->frameTot[i * numberOfSamplers];
@@ -226,13 +228,14 @@ double frameTot(RadarData *data, int frame, int sampler)
     return data->frameTot[frame * (data->frameRate - 1) + sampler];
 }
 
+#ifdef SALSA_TEST
 int main()
 {
-    RadarData *radarData = salsaLoad("/home/ericdvet/jlab/wadar/signal_processing/2024-7-3_3264_BackParkingLot_C1.frames");
+    RadarData *radarData = salsaLoad("/home/ericdvet/jlab/wadar/signal_processing/testFile.frames");
     if (radarData)
     {
-        // Use radarData
         freeRadarData(radarData);
     }
     return 0;
 }
+#endif
