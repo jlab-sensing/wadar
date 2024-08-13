@@ -61,11 +61,14 @@ RadarData *salsaLoad(const char *fileName)
         return NULL;
     }
 
+    char chipSet[10];
+    int pgen;
+
     switch (radarSpecifier)
     {
     case 2:
-        strcpy(radarData->chipSet, "X2");
-        if (fread(&samplesPerSecond, sizeof(float), 1, fid) != 1 || fread(&radarData->pgen, sizeof(int), 1, fid) != 1 ||
+        strcpy(chipSet, "X2");
+        if (fread(&samplesPerSecond, sizeof(float), 1, fid) != 1 || fread(&pgen, sizeof(int), 1, fid) != 1 ||
             fread(&offsetDistance, sizeof(float), 1, fid) != 1 || fread(&sampleDelayToReference, sizeof(float), 1, fid) != 1)
         {
             fprintf(stderr, "ERROR: .frames file formatting");
@@ -77,10 +80,10 @@ RadarData *salsaLoad(const char *fileName)
     case 10:
     case 11:
         if (radarSpecifier == 10)
-            strcpy(radarData->chipSet, "X1-IPGO");
+            strcpy(chipSet, "X1-IPGO");
         if (radarSpecifier == 11)
-            strcpy(radarData->chipSet, "X1-IPG1");
-        if (fread(&samplesPerSecond, sizeof(double), 1, fid) != 1 || fread(&radarData->pgen, sizeof(int), 1, fid) != 1 ||
+            strcpy(chipSet, "X1-IPG1");
+        if (fread(&samplesPerSecond, sizeof(double), 1, fid) != 1 || fread(&pgen, sizeof(int), 1, fid) != 1 ||
             fread(&samplingRate, sizeof(int), 1, fid) != 1 || fread(&clkDivider, sizeof(int), 1, fid) != 1)
         {
             fprintf(stderr, "ERROR: .frames file formatting");
@@ -96,9 +99,9 @@ RadarData *salsaLoad(const char *fileName)
         return NULL;
     }
 
-    int numberOfSamplers, numFrames, numRuns, frameRate;
-    if (fread(&numberOfSamplers, sizeof(int), 1, fid) != 1 || fread(&numFrames, sizeof(int), 1, fid) != 1 ||
-        fread(&numRuns, sizeof(int), 1, fid) != 1 || fread(&frameRate, sizeof(int), 1, fid) != 1)
+    int numberOfSamplers, numRuns;
+    if (fread(&numberOfSamplers, sizeof(int), 1, fid) != 1 || fread(&(radarData->numFrames), sizeof(int), 1, fid) != 1 ||
+        fread(&numRuns, sizeof(int), 1, fid) != 1 || fread(&(radarData->frameRate), sizeof(int), 1, fid) != 1)
     {
         fprintf(stderr, "ERROR: .frames file formatting");
         free(radarData);
@@ -106,7 +109,7 @@ RadarData *salsaLoad(const char *fileName)
         return NULL;
     }
 
-    size_t frameTotSize = numFrames * numberOfSamplers * sizeof(uint32_t);
+    size_t frameTotSize = (radarData->numFrames) * numberOfSamplers * sizeof(uint32_t);
     uint32_t *frameTotRaw = (uint32_t *)malloc(frameTotSize);
     if (!frameTotRaw)
     {
@@ -116,7 +119,7 @@ RadarData *salsaLoad(const char *fileName)
         return NULL;
     }
 
-    if (fread(frameTotRaw, sizeof(uint32_t), numFrames * numberOfSamplers, fid) != numFrames * numberOfSamplers)
+    if (fread(frameTotRaw, sizeof(uint32_t), (radarData->numFrames) * numberOfSamplers, fid) != (radarData->numFrames) * numberOfSamplers)
     {
         fprintf(stderr, "ERROR: .frames file formatting");
         free(frameTotRaw);
@@ -125,8 +128,8 @@ RadarData *salsaLoad(const char *fileName)
         return NULL;
     }
 
-    radarData->times = (float *)malloc(numFrames * sizeof(float));
-    radarData->frameTot = (double *)malloc(numFrames * numberOfSamplers * sizeof(double));
+    radarData->times = (float *)malloc((radarData->numFrames) * sizeof(float));
+    radarData->frameTot = (double *)malloc((radarData->numFrames) * numberOfSamplers * sizeof(double));
     if (!radarData->times || !radarData->frameTot)
     {
         fprintf(stderr, "ERROR: Memory allocation failure");
@@ -138,7 +141,7 @@ RadarData *salsaLoad(const char *fileName)
         return NULL;
     }
 
-    for (int i = 0; i < numFrames; i++)
+    for (int i = 0; i < (radarData->numFrames); i++)
     {
         if (fread(&radarData->times[i], sizeof(float), 1, fid) != 1)
         {
@@ -152,13 +155,13 @@ RadarData *salsaLoad(const char *fileName)
         }
     }
 
-    for (int i = 0; i < numFrames * numberOfSamplers; i++)
+    for (int i = 0; i < (radarData->numFrames) * numberOfSamplers; i++)
     {
         radarData->frameTot[i] = (double)frameTotRaw[i] / (pps * iterations) * dacStep + dacMin;
     }
     free(frameTotRaw);
 
-    for (int i = 0; i < numFrames; i++)
+    for (int i = 0; i < (radarData->numFrames); i++)
     {
         double maxVal = radarData->frameTot[i * numberOfSamplers];
         for (int j = 1; j < numberOfSamplers; j++)
@@ -216,6 +219,11 @@ void freeRadarData(RadarData *radarData)
         free(radarData->frameTot);
         free(radarData);
     }
+}
+
+double frameTot(RadarData *data, int frame, int sampler)
+{
+    return data->frameTot[frame * (data->frameRate - 1) + sampler];
 }
 
 int main()

@@ -4,15 +4,20 @@
 #include <stdio.h>
 #include <stdint.h>
 
-typedef struct {
-    char chipSet[10];
-    float* times;
-    double* frameTot;
-    double fs_hz;
-    int pgen;
+typedef struct
+{
+    float *times;
+    double *frameTot;
+    int frameRate;
+    int numFrames;
 } RadarData;
 
-RadarData* salsaLoad(const char* fileName);
-void freeRadarData(RadarData* radarData);
+// USAGE: Load radar data from a binary file (captured from frameLogger.c on BBB)
+RadarData *salsaLoad(const char *fileName);
+
+// free data
+void freeRadarData(RadarData *radarData);
+
+double frameTot(RadarData *data, int frame, int sampler);
 
 #endif // SALSA_LOAD_H
