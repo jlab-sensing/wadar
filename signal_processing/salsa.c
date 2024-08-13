@@ -6,49 +6,44 @@
 
 #define FRAME_LOGGER_MAGIC_NUM 0xFEFE00A2
 
-typedef struct {
-    char chipSet[10];
-    float* times;
-    double* frameTot;
-    double fs_hz;
-    int pgen;
-} RadarData;
+RadarData *salsaLoad(const char *fileName)
+{
 
-RadarData* salsaLoad(const char* fileName) {
-    printf("Loading saved data from %s...\n", fileName);
-
-    FILE* fid = fopen(fileName, "rb");
-    if (!fid) {
-        perror("Error opening file");
+    FILE *fid = fopen(fileName, "rb");
+    if (!fid)
+    {
+        fprintf(stderr, "ERROR: File not available");
         return NULL;
     }
 
     uint32_t magic;
-    if (fread(&magic, sizeof(uint32_t), 1, fid) != 1) {
-        perror("Error reading magic number");
+    if (fread(&magic, sizeof(uint32_t), 1, fid) != 1)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
         fclose(fid);
         return NULL;
     }
-    if (magic != FRAME_LOGGER_MAGIC_NUM) {
-        printf("Wrong data format: %s!\n", fileName);
+    if (magic != FRAME_LOGGER_MAGIC_NUM)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
         fclose(fid);
         return NULL;
     }
 
     int iterations, pps, dacMin, dacMax, dacStep;
-    if (fread(&iterations, sizeof(int), 1, fid) != 1 ||
-        fread(&pps, sizeof(int), 1, fid) != 1 ||
-        fread(&dacMin, sizeof(int), 1, fid) != 1 ||
-        fread(&dacMax, sizeof(int), 1, fid) != 1 ||
-        fread(&dacStep, sizeof(int), 1, fid) != 1) {
-        perror("Error reading settings");
+    if (fread(&iterations, sizeof(int), 1, fid) != 1 || fread(&pps, sizeof(int), 1, fid) != 1 ||
+        fread(&dacMin, sizeof(int), 1, fid) != 1 || fread(&dacMax, sizeof(int), 1, fid) != 1 ||
+        fread(&dacStep, sizeof(int), 1, fid) != 1)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
         fclose(fid);
         return NULL;
     }
 
     int radarSpecifier;
-    if (fread(&radarSpecifier, sizeof(int), 1, fid) != 1) {
-        perror("Error reading radar specifier");
+    if (fread(&radarSpecifier, sizeof(int), 1, fid) != 1)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
         fclose(fid);
         return NULL;
     }
@@ -58,79 +53,83 @@ RadarData* salsaLoad(const char* fileName) {
     float sampleDelayToReference = -1;
     float offsetDistance = -1;
 
-    RadarData* radarData = (RadarData*)malloc(sizeof(RadarData));
-    if (!radarData) {
-        perror("Memory allocation failed");
+    RadarData *radarData = (RadarData *)malloc(sizeof(RadarData));
+    if (!radarData)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
         fclose(fid);
         return NULL;
     }
 
-    switch (radarSpecifier) {
-        case 2:
-            strcpy(radarData->chipSet, "X2");
-            if (fread(&samplesPerSecond, sizeof(float), 1, fid) != 1 ||
-                fread(&radarData->pgen, sizeof(int), 1, fid) != 1 ||
-                fread(&offsetDistance, sizeof(float), 1, fid) != 1 ||
-                fread(&sampleDelayToReference, sizeof(float), 1, fid) != 1) {
-                perror("Error reading X2 settings");
-                free(radarData);
-                fclose(fid);
-                return NULL;
-            }
-            break;
-        case 10:
-        case 11:
-            if (radarSpecifier == 10) strcpy(radarData->chipSet, "X1-IPGO");
-            if (radarSpecifier == 11) strcpy(radarData->chipSet, "X1-IPG1");
-            if (fread(&samplesPerSecond, sizeof(double), 1, fid) != 1 ||
-                fread(&radarData->pgen, sizeof(int), 1, fid) != 1 ||
-                fread(&samplingRate, sizeof(int), 1, fid) != 1 ||
-                fread(&clkDivider, sizeof(int), 1, fid) != 1) {
-                perror("Error reading X1 settings");
-                free(radarData);
-                fclose(fid);
-                return NULL;
-            }
-            break;
-        default:
-            printf("Unknown radar specifier!\n");
+    switch (radarSpecifier)
+    {
+    case 2:
+        strcpy(radarData->chipSet, "X2");
+        if (fread(&samplesPerSecond, sizeof(float), 1, fid) != 1 || fread(&radarData->pgen, sizeof(int), 1, fid) != 1 ||
+            fread(&offsetDistance, sizeof(float), 1, fid) != 1 || fread(&sampleDelayToReference, sizeof(float), 1, fid) != 1)
+        {
+            fprintf(stderr, "ERROR: .frames file formatting");
             free(radarData);
             fclose(fid);
             return NULL;
+        }
+        break;
+    case 10:
+    case 11:
+        if (radarSpecifier == 10)
+            strcpy(radarData->chipSet, "X1-IPGO");
+        if (radarSpecifier == 11)
+            strcpy(radarData->chipSet, "X1-IPG1");
+        if (fread(&samplesPerSecond, sizeof(double), 1, fid) != 1 || fread(&radarData->pgen, sizeof(int), 1, fid) != 1 ||
+            fread(&samplingRate, sizeof(int), 1, fid) != 1 || fread(&clkDivider, sizeof(int), 1, fid) != 1)
+        {
+            fprintf(stderr, "ERROR: .frames file formatting");
+            free(radarData);
+            fclose(fid);
+            return NULL;
+        }
+        break;
+    default:
+        fprintf(stderr, "ERROR: .frames file formatting");
+        free(radarData);
+        fclose(fid);
+        return NULL;
     }
 
     int numberOfSamplers, numFrames, numRuns, frameRate;
-    if (fread(&numberOfSamplers, sizeof(int), 1, fid) != 1 ||
-        fread(&numFrames, sizeof(int), 1, fid) != 1 ||
-        fread(&numRuns, sizeof(int), 1, fid) != 1 ||
-        fread(&frameRate, sizeof(int), 1, fid) != 1) {
-        perror("Error reading frame settings");
+    if (fread(&numberOfSamplers, sizeof(int), 1, fid) != 1 || fread(&numFrames, sizeof(int), 1, fid) != 1 ||
+        fread(&numRuns, sizeof(int), 1, fid) != 1 || fread(&frameRate, sizeof(int), 1, fid) != 1)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
         free(radarData);
         fclose(fid);
         return NULL;
     }
 
     size_t frameTotSize = numFrames * numberOfSamplers * sizeof(uint32_t);
-    uint32_t* frameTotRaw = (uint32_t*)malloc(frameTotSize);
-    if (!frameTotRaw) {
-        perror("Memory allocation failed for frameTotRaw");
+    uint32_t *frameTotRaw = (uint32_t *)malloc(frameTotSize);
+    if (!frameTotRaw)
+    {
+        fprintf(stderr, "ERROR: Memory allocation failure");
         free(radarData);
         fclose(fid);
         return NULL;
     }
 
-    if (fread(frameTotRaw, sizeof(uint32_t), numFrames * numberOfSamplers, fid) != numFrames * numberOfSamplers) {
-        perror("Error reading radar frames");
+    if (fread(frameTotRaw, sizeof(uint32_t), numFrames * numberOfSamplers, fid) != numFrames * numberOfSamplers)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
         free(frameTotRaw);
         free(radarData);
         fclose(fid);
         return NULL;
     }
 
-    radarData->times = (float*)malloc(numFrames * sizeof(float));
-    radarData->frameTot = (double*)malloc(numFrames * numberOfSamplers * sizeof(double));
-    if (!radarData->times || !radarData->frameTot) {
-        perror("Memory allocation failed for times or frameTot");
+    radarData->times = (float *)malloc(numFrames * sizeof(float));
+    radarData->frameTot = (double *)malloc(numFrames * numberOfSamplers * sizeof(double));
+    if (!radarData->times || !radarData->frameTot)
+    {
+        fprintf(stderr, "ERROR: Memory allocation failure");
         free(frameTotRaw);
         free(radarData->times);
         free(radarData->frameTot);
@@ -139,9 +138,11 @@ RadarData* salsaLoad(const char* fileName) {
         return NULL;
     }
 
-    for (int i = 0; i < numFrames; i++) {
-        if (fread(&radarData->times[i], sizeof(float), 1, fid) != 1) {
-            perror("Error reading times");
+    for (int i = 0; i < numFrames; i++)
+    {
+        if (fread(&radarData->times[i], sizeof(float), 1, fid) != 1)
+        {
+            fprintf(stderr, "ERROR: .frames file formatting");
             free(frameTotRaw);
             free(radarData->times);
             free(radarData->frameTot);
@@ -151,30 +152,39 @@ RadarData* salsaLoad(const char* fileName) {
         }
     }
 
-    for (int i = 0; i < numFrames * numberOfSamplers; i++) {
+    for (int i = 0; i < numFrames * numberOfSamplers; i++)
+    {
         radarData->frameTot[i] = (double)frameTotRaw[i] / (pps * iterations) * dacStep + dacMin;
     }
     free(frameTotRaw);
 
-    for (int i = 0; i < numFrames; i++) {
+    for (int i = 0; i < numFrames; i++)
+    {
         double maxVal = radarData->frameTot[i * numberOfSamplers];
-        for (int j = 1; j < numberOfSamplers; j++) {
-            if (radarData->frameTot[i * numberOfSamplers + j] > maxVal) {
+        for (int j = 1; j < numberOfSamplers; j++)
+        {
+            if (radarData->frameTot[i * numberOfSamplers + j] > maxVal)
+            {
                 maxVal = radarData->frameTot[i * numberOfSamplers + j];
             }
         }
-        if (maxVal > 8191) {
-            if (i > 0) {
+        if (maxVal > 8191)
+        {
+            if (i > 0)
+            {
                 memcpy(&radarData->frameTot[i * numberOfSamplers], &radarData->frameTot[(i - 1) * numberOfSamplers], numberOfSamplers * sizeof(double));
-            } else {
+            }
+            else
+            {
                 memcpy(&radarData->frameTot[i * numberOfSamplers], &radarData->frameTot[(i + 1) * numberOfSamplers], numberOfSamplers * sizeof(double));
             }
         }
     }
 
     float fpsEst;
-    if (fread(&fpsEst, sizeof(float), 1, fid) != 1) {
-        perror("Error reading estimated FPS");
+    if (fread(&fpsEst, sizeof(float), 1, fid) != 1)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
         free(radarData->times);
         free(radarData->frameTot);
         free(radarData);
@@ -184,8 +194,9 @@ RadarData* salsaLoad(const char* fileName) {
 
     fseek(fid, 0, SEEK_END);
     long remainingData = ftell(fid) - ftell(fid);
-    if (remainingData > 0) {
-        printf("FILE READ ERROR: %ld data remains! Check that file format matches read code\n", remainingData);
+    if (remainingData > 0)
+    {
+        fprintf(stderr, "ERROR: .frames file formatting");
         free(radarData->times);
         free(radarData->frameTot);
         free(radarData);
@@ -197,17 +208,21 @@ RadarData* salsaLoad(const char* fileName) {
     return radarData;
 }
 
-void freeRadarData(RadarData* radarData) {
-    if (radarData) {
+void freeRadarData(RadarData *radarData)
+{
+    if (radarData)
+    {
         free(radarData->times);
         free(radarData->frameTot);
         free(radarData);
     }
 }
 
-int main() {
-    RadarData* radarData = salsaLoad("/home/ericdvet/jlab/wadar/signal_processing/2024-7-3_3264_BackParkingLot_C1.frames");
-    if (radarData) {
+int main()
+{
+    RadarData *radarData = salsaLoad("/home/ericdvet/jlab/wadar/signal_processing/2024-7-3_3264_BackParkingLot_C1.frames");
+    if (radarData)
+    {
         // Use radarData
         freeRadarData(radarData);
     }

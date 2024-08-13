@@ -4,32 +4,15 @@
 #include <stdio.h>
 #include <stdint.h>
 
-typedef struct SalsaDataObj *SalsaData;
-
-typedef struct SalsaDataObj {
-    int iterations;
-    int pps;
-    int dacMin;
-    int dacMax;
-    int dacStep;
-    char *chipSet;
-    int radarSpecifier;
-    float samplesPerSecond;
+typedef struct {
+    char chipSet[10];
+    float* times;
+    double* frameTot;
+    double fs_hz;
     int pgen;
-    float offsetDistance;
-    float sampleDelayToReference;
-    int samplingRate;
-    int clkDivider;
-    int numberOfSamplers;
-    int numFrames;
-    int numRuns;
-    int frameRate;
-    double *times;
-    double *frameTot;
-    float fpsEst;
-} SalsaDataObj;
+} RadarData;
 
-SalsaData salsa_load(const char *fileName);
-void free_salsa_data(SalsaData data);
+RadarData* salsaLoad(const char* fileName);
+void freeRadarData(RadarData* radarData);
 
 #endif // SALSA_LOAD_H
