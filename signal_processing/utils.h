@@ -17,3 +17,5 @@ void hamming(float *window, int M);
 
 // Smooth noisy data by averaging over each window of windowSize.
 void smoothData(double *data, int length, int windowSize);
+
+void computeFFT(complex float *framesBB, complex float *captureFT, int numFrames, int numOfSamplers);

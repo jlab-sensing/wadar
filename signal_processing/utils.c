@@ -4,10 +4,11 @@
 #include <stdlib.h>
 #include <math.h>
 #include <complex.h>
+#include <fftw3.h>
 
 #define PI 3.14159265358979323846
 
-#define UTILS_TEST
+// #define UTILS_TEST
 
 void NoveldaDDC(double *rfSignal, complex float *basebandSignal)
 {
@@ -122,6 +123,37 @@ void smoothData(double *data, int length, int windowSize)
 
     // Free the temporary array
     free(temp);
+}
+
+void computeFFT(complex float *framesBB, complex float *captureFT, int numFrames, int numOfSamplers)
+{
+    fftwf_plan plan;
+
+    fftwf_complex *in = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * numFrames);
+    fftwf_complex *out = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * numFrames);
+    plan = fftwf_plan_dft_1d(numFrames, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    
+    for (int j = 0; j < numOfSamplers; j++)
+    {
+        for (int i = 0; i < numFrames; i++)
+        {
+            in[i][0] = crealf(framesBB[j + i * numOfSamplers]);
+            in[i][1] = cimagf(framesBB[j + i * numOfSamplers]);
+        }
+
+        // Execute the FFT
+        fftwf_execute(plan);
+
+        // Convert FFTW's complex type to complex float
+        for (int i = 0; i < numFrames; ++i)
+        {
+            captureFT[j + i * numOfSamplers] = out[i][0] + I * out[i][1];
+        }
+    }
+
+    fftwf_destroy_plan(plan);
+    fftwf_free(in);
+    fftwf_free(out);
 }
 
 #ifdef UTILS_TEST
