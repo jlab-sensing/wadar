@@ -7,13 +7,13 @@ FLAGS	 = -g -c -Wall
 LFLAGS	 = 
 
 all: $(OBJS)
-	$(CC) -g $(OBJS) -o $(OUT) $(LFLAGS) -lfftw3f -lm
+	$(CC) -g $(OBJS) -o $(OUT) $(LFLAGS) -lfftw3f -lfftw3 -lm
 
 salsa.o: salsa.c
-	$(CC) $(FLAGS) salsa.c -lfftw3f -lm
+	$(CC) $(FLAGS) salsa.c -lfftw3f -lfftw3 -lm
 
 proc.o: proc.c
-	$(CC) $(FLAGS) proc.c -lfftw3f -lm
+	$(CC) $(FLAGS) proc.c -lfftw3f -lfftw3 -lm
 
 
 clean:

@@ -6,8 +6,11 @@
 #include <math.h>
 #include <complex.h>
 
-bool procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
+CaptureData *procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
 {
+
+    CaptureData *captureData = (CaptureData*) malloc (sizeof(CaptureData));
+
     // Processing parameters
     int frameRate = 200;
     int numOfSamplers = 512;
@@ -52,27 +55,27 @@ bool procRadarFrames(const char *localDataPath, const char *captureName, double 
     // Find Tag FT
     int freqTag = (int)(tagHz / frameRate * radarData->numFrames);
 
-    double complex *captureFT;
-    captureFT = (double complex *)malloc(radarData->numFrames * numOfSamplers * sizeof(double complex));
+    captureData->captureFT = (double complex *)malloc(radarData->numFrames * numOfSamplers * sizeof(double complex));
 
-    computeFFT(framesBB, captureFT, radarData->numFrames, numOfSamplers);
+    computeFFT(framesBB, captureData->captureFT, radarData->numFrames, numOfSamplers);
 
     // for (int i = 0; i < numOfSamplers; i++) {
-    //     printf("%f\n", creal(captureFT[i]));
+    //     printf("%f\n", creal(captureData->captureFT[i]));
     // }
 
-    double *tagFT;
-    tagFT = (double *)malloc(numOfSamplers * sizeof(double *));
+    captureData->tagFT = (double *)malloc(numOfSamplers * sizeof(double *));
 
     double maxFTPeak;
     int idx_maxFTPeak;
     maxFTPeak = 0;
 
-    for (int j = freqTag-2; j <= freqTag+2; j++) {
+    for (int j = freqTag - 2; j <= freqTag + 2; j++)
+    {
         for (int i = 0; i < numOfSamplers; i++)
         {
-            if (cabs(captureFT[i + numOfSamplers * (j - 1)]) > maxFTPeak) {
-                maxFTPeak = cabs(captureFT[i + numOfSamplers * (j - 1)]);
+            if (cabs(captureData->captureFT[i + numOfSamplers * (j - 1)]) > maxFTPeak)
+            {
+                maxFTPeak = cabs(captureData->captureFT[i + numOfSamplers * (j - 1)]);
                 idx_maxFTPeak = j;
             }
         }
@@ -81,42 +84,49 @@ bool procRadarFrames(const char *localDataPath, const char *captureName, double 
 
     for (int i = 0; i < numOfSamplers; i++)
     {
-        tagFT[i] = (double) cabs(captureFT[i + numOfSamplers * (idx_maxFTPeak - 1)]);
-        // printf("%f\n", tagFT[i]);
+        captureData->tagFT[i] = (double)cabs(captureData->captureFT[i + numOfSamplers * (idx_maxFTPeak - 1)]);
+        // printf("%f\n", captureData->tagFT[i]);
     }
 
-
-    // smoothData(tagFT, numOfSamplers, 10);
+    // smoothData(captureData->tagFT, numOfSamplers, 10);
 
     for (int i = 0; i < numOfSamplers; i++)
     {
-        // tagFT[i] = (float) cabs(captureFT[i + numOfSamplers * (idx_maxFTPeak)]);
-        printf("%d: %f\n", i, tagFT[i]);
+        // captureData->tagFT[i] = (float) cabs(captureData->captureFT[i + numOfSamplers * (idx_maxFTPeak)]);
+        // printf("%d: %f\n", i, captureData->tagFT[i]);
     }
 
     int peakBin;
-    peakBin = procLargestPeak(tagFT);
-    // peakBin = procCaptureCWT(tagFT, 512);
+    peakBin = procLargestPeak(captureData->tagFT);
+    // peakBin = procCaptureCWT(captureData->tagFT, 512);
 
-    printf("\nPeak of %f at %d\n\n", tagFT[peakBin], peakBin);
+    printf("\nPeak of %f at %d\n\n", captureData->tagFT[peakBin], peakBin);
 
-    free(tagFT);
     free(rfSignal);
     free(framesBB);
     free(temp);
-    free(captureFT);
     freeRadarData(radarData);
 
-    return true;
+    return captureData;
 }
 
-// int findPeakBin(double *tagFT, int size) {
+void freeCaptureData(CaptureData *captureData)
+{
+    if (captureData)
+    {
+        free(captureData->tagFT);
+        free(captureData->captureFT);
+        free(captureData);
+    }
+}
+
+// int findPeakBin(double *captureData->tagFT, int size) {
 // Find the bin corresponding to the largest peak
 int procLargestPeak(double *tagFT)
 {
     double maxVal = -1;
     int size = 512;
-    
+
     for (int i = 0; i < size; i++)
     {
         if (tagFT[i] > maxVal)
@@ -156,7 +166,10 @@ int procLargestPeak(double *tagFT)
 #ifdef PROC_TEST
 int main()
 {
-    procRadarFrames("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
+    CaptureData *captureData;
+    captureData = procRadarFrames("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
+
+    freeCaptureData(captureData);
 
     return 0;
 }

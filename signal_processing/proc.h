@@ -7,10 +7,19 @@
 #include <string.h>
 #include "salsa.h"
 
-// Function processes radar frames for various purposes
-bool procRadarFrames(const char *localDataPath, const char *captureName, double tagHz);
+typedef struct
+{
+    bool procSuccess;
+    double complex *captureFT;
+    double *tagFT;
+    int peakBin;
+    int SNRdB;
+} CaptureData;
 
-// Find the bin corresponding to the largest peak 
+// Function processes radar frames for various purposes
+CaptureData *procRadarFrames(const char *localDataPath, const char *captureName, double tagHz);
+
+// Find the bin corresponding to the largest peak
 int procLargestPeak(double *tagFT);
 
 int procCaptureCWT(double *tagFT, int length);
