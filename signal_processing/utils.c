@@ -92,10 +92,10 @@ void hamming(float *window, int M)
     }
 }
 
-void smoothData(double *data, int length, int windowSize)
+void smoothData(float *data, int length, int windowSize)
 {
-    double *temp = (double *)malloc(length * sizeof(double));
-    double sum = 0.0;
+    float *temp = (float *)malloc(length * sizeof(double));
+    float sum = 0.0;
     int halfWindow = windowSize / 2;
 
     for (int i = 0; i < length; i++)
@@ -154,6 +154,23 @@ void computeFFT(complex float *framesBB, complex float *captureFT, int numFrames
     fftwf_destroy_plan(plan);
     fftwf_free(in);
     fftwf_free(out);
+}
+
+
+// Find local peaks in data
+int* findPeaks(float *arr, int size, int *numPeaks, double minPeakHeight) {
+    int *peaks = (int *)malloc(size * sizeof(int));
+    *numPeaks = 0;
+    
+    for (int i = 1; i < size - 1; i++) {
+        // printf("Peak @ %d: %f\n", i, arr[i]);
+        if (arr[i] > arr[i - 1] && arr[i] > arr[i + 1] && arr[i] > minPeakHeight) {
+            // printf("Peak @ %d: %f\n", i, arr[i]);
+            peaks[*numPeaks] = i;
+            (*numPeaks)++;
+        }
+    }
+    return peaks;
 }
 
 #ifdef UTILS_TEST

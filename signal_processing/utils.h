@@ -16,6 +16,9 @@ void NoveldaDDC(double *rfSignal, complex float *basebandSignal);
 void hamming(float *window, int M);
 
 // Smooth noisy data by averaging over each window of windowSize.
-void smoothData(double *data, int length, int windowSize);
+void smoothData(float *data, int length, int windowSize);
 
 void computeFFT(complex float *framesBB, complex float *captureFT, int numFrames, int numOfSamplers);
+
+// Find local peaks in data
+int* findPeaks(float *arr, int size, int *numPeaks, double minPeakHeight);
