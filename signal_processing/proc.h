@@ -7,12 +7,5 @@
 #include <string.h>
 #include "salsa.h"
 
-void smoothData(double *data, int length, int windowSize);
-
-int procCaptureCWT(double *tagFT, bool displayFlag);
-
-double calculateSNR(double complex *captureFT, int freqTag, int peakBin);
-
-// bool procRadarFrames(const char* localDataPath, const char* captureName, double tagHz,
-//                      bool* procSuccess, double** captureFT, double** tagFT,
-//                      int* peakBin, double* SNRdB);
+// Function processes radar frames for various purposes
+bool procRadarFrames(const char *localDataPath, const char *captureName, double tagHz);
