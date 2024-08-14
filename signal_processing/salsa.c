@@ -1,3 +1,10 @@
+/*
+ * File:   salsa.c
+ * Author: ericdvet
+ *
+ * Replication of Sensor Logic's SalsaLab MATLAB signal processing functions in C
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -5,8 +12,13 @@
 #include "salsa.h"
 
 #define FRAME_LOGGER_MAGIC_NUM 0xFEFE00A2
-// #define SALSA_TEST
 
+/**
+ * @function salsaLoad(const char *fileName)
+ * @param fileName - Name of radar capture to load
+ * @return RadarData *
+ * @brief Load radar data from a binary file (captured from frameLogger.c on BBB)
+ * @author ericdvet */
 RadarData *salsaLoad(const char *fileName)
 {
 
@@ -213,6 +225,12 @@ RadarData *salsaLoad(const char *fileName)
     return radarData;
 }
 
+/**
+ * @function freeRadarData(RadarData *radarData)
+ * @param radarData - RadarData struct to free
+ * @return None
+ * @brief Free RadarData constructed by salsaLoad()
+ * @author ericdvet */
 void freeRadarData(RadarData *radarData)
 {
     if (radarData)
@@ -223,10 +241,7 @@ void freeRadarData(RadarData *radarData)
     }
 }
 
-double frameTot(RadarData *data, int frame, int sampler)
-{
-    return data->frameTot[frame * (data->frameRate - 1) + sampler];
-}
+// #define SALSA_TEST
 
 #ifdef SALSA_TEST
 int main()

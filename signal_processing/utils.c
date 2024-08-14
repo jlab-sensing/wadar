@@ -1,3 +1,10 @@
+/*
+ * File:   utils.h
+ * Author: ericdvet
+ *
+ * Utility functions to assist with WaDAR's data and signal processing functions
+ */
+
 #include "utils.h"
 #include "salsa.h"
 #include <stdio.h>
@@ -8,8 +15,15 @@
 
 #define PI 3.14159265358979323846
 
-// #define UTILS_TEST
-
+/**
+ * @function NoveldaDDC(double *rfSignal, double complex *basebandSignal)
+ * @param rfSignal - Raw radar frames
+ * @param basebandSignal - Resulting digitally downcoverted radar frames
+ * @return None
+ * @brief Function to apply a digital downcovert (DDC) to a high frequency radar
+ *      signal. Brings signal to baseband frequencies and provides an analytic
+ *      signal (i.e. I & Q, in-phase & quadrature, outputs)
+ * @author ericdvet */
 void NoveldaDDC(double *rfSignal, double complex *basebandSignal)
 {
 
@@ -84,6 +98,13 @@ void NoveldaDDC(double *rfSignal, double complex *basebandSignal)
     }
 }
 
+/**
+ * @function hamming(double *window, int M)
+ * @param window - Resulting hamming window
+ * @param M - Size of window
+ * @return None
+ * @brief Returns the N-point symmetric Hamming window in a column vector
+ * @author ericdvet */
 void hamming(double *window, int M)
 {
     for (int n = 0; n <= M; n++)
@@ -92,6 +113,14 @@ void hamming(double *window, int M)
     }
 }
 
+/**
+ * @function smoothData(double *data, int length, int windowSize)
+ * @param *data - Data to smooth
+ * @param length - Length of data
+ * @param windowSize - Length of smoothing window
+ * @return None
+ * @brief Smooth noisy data by averaging over each window of windowSize.
+ * @author ericdvet */
 void smoothData(double *data, int length, int windowSize)
 {
     double *temp = (double *)malloc(length * sizeof(double));
@@ -125,6 +154,17 @@ void smoothData(double *data, int length, int windowSize)
     free(temp);
 }
 
+/**
+ * @function computeFFT(double complex *framesBB, double complex *captureFT, int numFrames, int numOfSamplers)
+ * @param *framesBB - Input of FFT
+ * @param captureFT - Output of FFT
+ * @param numFrames - Number of frames (total columns)
+ * @param numOfSamplers - Number of samplers (total rows)
+ * @return None
+ * @brief Fast Fourier transform (FFT) of input
+ *      The FFT block computes the fast Fourier transform (FFT) across the first
+ *      dimension of an N-D input array, u.
+ * @author ericdvet */
 void computeFFT(double complex *framesBB, double complex *captureFT, int numFrames, int numOfSamplers)
 {
     fftw_plan plan;
@@ -158,7 +198,15 @@ void computeFFT(double complex *framesBB, double complex *captureFT, int numFram
 }
 
 
-// Find local peaks in data
+/**
+ * @function findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight)
+ * @param *arr - Array to find peaks from
+ * @param size - Length of array
+ * @param *numPeaks - Resulting number of peaks
+ * @param minPeakHeight - Minimum peak height
+ * @return int
+ * @brief Returns local peaks in data array
+ * @author ericdvet */
 int* findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight) {
     int *peaks = (int *)malloc(size * sizeof(int));
     *numPeaks = 0;
@@ -173,6 +221,8 @@ int* findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight) {
     }
     return peaks;
 }
+
+// #define UTILS_TEST
 
 #ifdef UTILS_TEST
 int main()
