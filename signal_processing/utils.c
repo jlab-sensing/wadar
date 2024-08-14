@@ -91,6 +91,39 @@ void hamming(float *window, int M)
     }
 }
 
+void smoothData(double *data, int length, int windowSize)
+{
+    double *temp = (double *)malloc(length * sizeof(double));
+    double sum = 0.0;
+    int halfWindow = windowSize / 2;
+
+    for (int i = 0; i < length; i++)
+    {
+        sum = 0.0;
+        int count = 0;
+
+        for (int j = i - halfWindow; j <= i + halfWindow; j++)
+        {
+            if (j >= 0 && j < length)
+            {
+                sum += data[j];
+                count++;
+            }
+        }
+
+        temp[i] = sum / count;
+    }
+
+    // Copy the smoothed data back to the original array
+    for (int i = 0; i < length; i++)
+    {
+        data[i] = temp[i];
+    }
+
+    // Free the temporary array
+    free(temp);
+}
+
 #ifdef UTILS_TEST
 int main()
 {
@@ -107,11 +140,19 @@ int main()
     }
     NoveldaDDC(rfSignal, basebandSignal);
 
-    for (int i = 0; i < 512; i++)
-    {
-        printf("%f + %f\n", creal(basebandSignal[i]), cimag(basebandSignal[i]));
-    }
+    // for (int i = 0; i < 512; i++) {
+    //     printf("%f\n", rfSignal[i]);
+    // }
 
+    smoothData(rfSignal, 512, 10);
+
+    // for (int i = 0; i < 512; i++) {
+    //     printf("%f\n", rfSignal[i]);
+    // }
+
+    free(rfSignal);
+    free(basebandSignal);
+    freeRadarData(radarData);
     return 0;
 }
 #endif

@@ -14,3 +14,6 @@ void NoveldaDDC(double *rfSignal, complex float *basebandSignal);
 
 // Returns the N-point symmetric Hamming window in a column vector
 void hamming(float *window, int M);
+
+// Smooth noisy data by averaging over each window of windowSize.
+void smoothData(double *data, int length, int windowSize);
