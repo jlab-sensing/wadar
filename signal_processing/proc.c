@@ -22,12 +22,12 @@ bool procRadarFrames(const char *localDataPath, const char *captureName, double 
     }
 
     double *rfSignal;
-    complex float *framesBB;
-    complex float *temp;
+    double complex *framesBB;
+    double complex *temp;
 
     rfSignal = (double *)malloc(numOfSamplers * sizeof(double));
-    framesBB = (complex float *)malloc((radarData->numFrames) * numOfSamplers * sizeof(complex float));
-    temp = (complex float *)malloc(numOfSamplers * sizeof(complex float));
+    framesBB = (double complex *)malloc((radarData->numFrames) * numOfSamplers * sizeof(double complex));
+    temp = (double complex *)malloc(numOfSamplers * sizeof(double complex));
 
     // Baseband Conversion
     for (int i = 0; i < radarData->numFrames; i++)
@@ -44,22 +44,27 @@ bool procRadarFrames(const char *localDataPath, const char *captureName, double 
         }
     }
 
+    // for (int i = 500; i < numOfSamplers; i++) {
+    //     printf("%f ", creal(framesBB[i]));
+    // }
+    // printf("\n");
+
     // Find Tag FT
     int freqTag = (int)(tagHz / frameRate * radarData->numFrames);
 
-    complex float *captureFT;
-    captureFT = (complex float *)malloc(radarData->numFrames * numOfSamplers * sizeof(complex float *));
+    double complex *captureFT;
+    captureFT = (double complex *)malloc(radarData->numFrames * numOfSamplers * sizeof(double complex));
 
     computeFFT(framesBB, captureFT, radarData->numFrames, numOfSamplers);
 
-    // for (int i = 0; i < numOfSamplers * radarData->numFrames; i++) {
-    //     printf("%f ", creal(captureFT[i]));
+    // for (int i = 0; i < numOfSamplers; i++) {
+    //     printf("%f\n", creal(captureFT[i]));
     // }
 
-    float *tagFT;
-    tagFT = (float *)malloc(numOfSamplers * sizeof(float *));
+    double *tagFT;
+    tagFT = (double *)malloc(numOfSamplers * sizeof(double *));
 
-    float maxFTPeak;
+    double maxFTPeak;
     int idx_maxFTPeak;
     maxFTPeak = 0;
 
@@ -76,16 +81,24 @@ bool procRadarFrames(const char *localDataPath, const char *captureName, double 
 
     for (int i = 0; i < numOfSamplers; i++)
     {
-        tagFT[i] = cabs(captureFT[i + numOfSamplers * (idx_maxFTPeak - 1)]);
+        tagFT[i] = (double) cabs(captureFT[i + numOfSamplers * (idx_maxFTPeak - 1)]);
         // printf("%f\n", tagFT[i]);
     }
 
 
-    smoothData(tagFT, numOfSamplers, 10);
+    // smoothData(tagFT, numOfSamplers, 10);
+
+    for (int i = 0; i < numOfSamplers; i++)
+    {
+        // tagFT[i] = (float) cabs(captureFT[i + numOfSamplers * (idx_maxFTPeak)]);
+        printf("%d: %f\n", i, tagFT[i]);
+    }
 
     int peakBin;
-    
     peakBin = procLargestPeak(tagFT);
+    // peakBin = procCaptureCWT(tagFT, 512);
+
+    printf("\nPeak of %f at %d\n\n", tagFT[peakBin], peakBin);
 
     free(tagFT);
     free(rfSignal);
@@ -99,7 +112,7 @@ bool procRadarFrames(const char *localDataPath, const char *captureName, double 
 
 // int findPeakBin(double *tagFT, int size) {
 // Find the bin corresponding to the largest peak
-int procLargestPeak(float *tagFT)
+int procLargestPeak(double *tagFT)
 {
     double maxVal = -1;
     int size = 512;

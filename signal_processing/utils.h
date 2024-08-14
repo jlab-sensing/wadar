@@ -10,15 +10,15 @@
 // Function to apply a digital downcovert (DDC) to a high frequency radar
 // signal. Brings signal to baseband frequencies and provides an analytic
 // signal (i.e. I & Q, in-phase & quadrature, outputs)
-void NoveldaDDC(double *rfSignal, complex float *basebandSignal);
+void NoveldaDDC(double *rfSignal, double complex *basebandSignal);
 
 // Returns the N-point symmetric Hamming window in a column vector
-void hamming(float *window, int M);
+void hamming(double *window, int M);
 
 // Smooth noisy data by averaging over each window of windowSize.
-void smoothData(float *data, int length, int windowSize);
+void smoothData(double *data, int length, int windowSize);
 
-void computeFFT(complex float *framesBB, complex float *captureFT, int numFrames, int numOfSamplers);
+void computeFFT(double complex *framesBB, double complex *captureFT, int numFrames, int numOfSamplers);
 
 // Find local peaks in data
-int* findPeaks(float *arr, int size, int *numPeaks, double minPeakHeight);
+int* findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight);

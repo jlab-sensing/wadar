@@ -11,4 +11,6 @@
 bool procRadarFrames(const char *localDataPath, const char *captureName, double tagHz);
 
 // Find the bin corresponding to the largest peak 
-int procLargestPeak(float *tagFT);
+int procLargestPeak(double *tagFT);
+
+int procCaptureCWT(double *tagFT, int length);

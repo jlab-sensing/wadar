@@ -10,7 +10,7 @@
 
 // #define UTILS_TEST
 
-void NoveldaDDC(double *rfSignal, complex float *basebandSignal)
+void NoveldaDDC(double *rfSignal, double complex *basebandSignal)
 {
 
     double CF;
@@ -25,15 +25,15 @@ void NoveldaDDC(double *rfSignal, complex float *basebandSignal)
     double freqIndex = CF / Fs * frameSize;
 
     // Generate the complex sinusoid LO (local oscillator)
-    complex float LO[frameSize];
+    double complex LO[frameSize];
     for (int i = 0; i < frameSize; i++)
     {
-        float t = (float)i / (frameSize - 1);
+        double t = (double)i / (frameSize - 1);
         LO[i] = sin(2 * PI * freqIndex * t) + I * cos(2 * PI * freqIndex * t);
     }
 
     // Digital Downconvert via direct multiplication
-    complex float mean_rfSignal = 0.0f;
+    double complex mean_rfSignal = 0.0;
     for (int i = 0; i < frameSize; i++)
     {
         mean_rfSignal += rfSignal[i];
@@ -47,11 +47,11 @@ void NoveldaDDC(double *rfSignal, complex float *basebandSignal)
     // Digital Downconvert (the DDC) via direct multiplication
     // subtracting the mean removes DC offset
     int M = 20;
-    float window[M + 1];
+    double window[M + 1];
     hamming(window, M);
 
-    float filterWeights[M + 1];
-    float sum = 0.0;
+    double filterWeights[M + 1];
+    double sum = 0.0;
     for (int i = 0; i <= M / 2; i++)
     {
         sum += window[i];
@@ -63,7 +63,7 @@ void NoveldaDDC(double *rfSignal, complex float *basebandSignal)
     }
 
     // Baseband signal using convolution (provides downcoverted, filtered analytic signal)
-    complex float tempSignal[frameSize];
+    double complex tempSignal[frameSize];
     int filterSize = M + 1;
     for (int i = 0; i < frameSize; i++)
     {
@@ -84,7 +84,7 @@ void NoveldaDDC(double *rfSignal, complex float *basebandSignal)
     }
 }
 
-void hamming(float *window, int M)
+void hamming(double *window, int M)
 {
     for (int n = 0; n <= M; n++)
     {
@@ -92,10 +92,10 @@ void hamming(float *window, int M)
     }
 }
 
-void smoothData(float *data, int length, int windowSize)
+void smoothData(double *data, int length, int windowSize)
 {
-    float *temp = (float *)malloc(length * sizeof(double));
-    float sum = 0.0;
+    double *temp = (double *)malloc(length * sizeof(double));
+    double sum = 0.0;
     int halfWindow = windowSize / 2;
 
     for (int i = 0; i < length; i++)
@@ -125,40 +125,41 @@ void smoothData(float *data, int length, int windowSize)
     free(temp);
 }
 
-void computeFFT(complex float *framesBB, complex float *captureFT, int numFrames, int numOfSamplers)
+void computeFFT(double complex *framesBB, double complex *captureFT, int numFrames, int numOfSamplers)
 {
-    fftwf_plan plan;
+    fftw_plan plan;
 
-    fftwf_complex *in = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * numFrames);
-    fftwf_complex *out = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * numFrames);
-    plan = fftwf_plan_dft_1d(numFrames, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_complex *in = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numFrames);
+    fftw_complex *out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numFrames);
+    plan = fftw_plan_dft_1d(numFrames, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
     
-    for (int j = 0; j < numOfSamplers; j++)
+    for (int j = 0; j < numOfSamplers; j++) 
     {
+
         for (int i = 0; i < numFrames; i++)
         {
-            in[i][0] = crealf(framesBB[j + i * numOfSamplers]);
-            in[i][1] = cimagf(framesBB[j + i * numOfSamplers]);
+            in[i][0] = creal(framesBB[j + i * numOfSamplers]);
+            in[i][1] = cimag(framesBB[j + i * numOfSamplers]);
         }
 
         // Execute the FFT
-        fftwf_execute(plan);
+        fftw_execute(plan);
 
-        // Convert FFTW's complex type to complex float
+        // Convert FFTW's complex type to double complex
         for (int i = 0; i < numFrames; ++i)
         {
             captureFT[j + i * numOfSamplers] = out[i][0] + I * out[i][1];
         }
     }
 
-    fftwf_destroy_plan(plan);
-    fftwf_free(in);
-    fftwf_free(out);
+    fftw_destroy_plan(plan);
+    fftw_free(in);
+    fftw_free(out);
 }
 
 
 // Find local peaks in data
-int* findPeaks(float *arr, int size, int *numPeaks, double minPeakHeight) {
+int* findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight) {
     int *peaks = (int *)malloc(size * sizeof(int));
     *numPeaks = 0;
     
