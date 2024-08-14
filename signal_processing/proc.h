@@ -9,3 +9,6 @@
 
 // Function processes radar frames for various purposes
 bool procRadarFrames(const char *localDataPath, const char *captureName, double tagHz);
+
+// Find the bin corresponding to the largest peak 
+int procLargestPeak(float *tagFT);

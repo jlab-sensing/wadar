@@ -8,8 +8,6 @@
 
 bool procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
 {
-    double *rawFrames;
-
     // Processing parameters
     int frameRate = 200;
     int numOfSamplers = 512;
@@ -54,22 +52,40 @@ bool procRadarFrames(const char *localDataPath, const char *captureName, double 
 
     computeFFT(framesBB, captureFT, radarData->numFrames, numOfSamplers);
 
+    // for (int i = 0; i < numOfSamplers * radarData->numFrames; i++) {
+    //     printf("%f ", creal(captureFT[i]));
+    // }
+
     float *tagFT;
     tagFT = (float *)malloc(numOfSamplers * sizeof(float *));
 
-    for (int i = 0; i < numOfSamplers; i++) {
-        tagFT[i] = cabs(captureFT[i + numOfSamplers * (freqTag - 1)]);
-        printf("%d: %f\n", i + numOfSamplers * freqTag, tagFT[i]);
-        // printf("%d\n", freqTag);
+    float maxFTPeak;
+    int idx_maxFTPeak;
+    maxFTPeak = 0;
+
+    for (int j = freqTag-2; j <= freqTag+2; j++) {
+        for (int i = 0; i < numOfSamplers; i++)
+        {
+            if (cabs(captureFT[i + numOfSamplers * (j - 1)]) > maxFTPeak) {
+                maxFTPeak = cabs(captureFT[i + numOfSamplers * (j - 1)]);
+                idx_maxFTPeak = j;
+            }
+        }
+    }
+    freqTag = idx_maxFTPeak;
+
+    for (int i = 0; i < numOfSamplers; i++)
+    {
+        tagFT[i] = cabs(captureFT[i + numOfSamplers * (idx_maxFTPeak - 1)]);
+        // printf("%f\n", tagFT[i]);
     }
 
 
-    // for (int i = 0; i < radarData->numFrames; i++)
-    // {
-    //     (*captureFT)[i] = (complex float *)malloc(radarData->numFrames * sizeof(complex float));
-    //     // Apply FFT to framesBB[i] and store in captureFT[i]
-    //     // [Fill in your FFT implementation here]
-    // }
+    smoothData(tagFT, numOfSamplers, 10);
+
+    int peakBin;
+    
+    peakBin = procLargestPeak(tagFT);
 
     free(tagFT);
     free(rfSignal);
@@ -79,6 +95,47 @@ bool procRadarFrames(const char *localDataPath, const char *captureName, double 
     freeRadarData(radarData);
 
     return true;
+}
+
+// int findPeakBin(double *tagFT, int size) {
+// Find the bin corresponding to the largest peak
+int procLargestPeak(float *tagFT)
+{
+    double maxVal = -1;
+    int size = 512;
+    
+    for (int i = 0; i < size; i++)
+    {
+        if (tagFT[i] > maxVal)
+        {
+            maxVal = tagFT[i];
+        }
+    }
+
+    double minPeakHeight = maxVal * 0.9;
+    int numPeaks = 0;
+    int *peaks = findPeaks(tagFT, size, &numPeaks, minPeakHeight);
+
+    int peakBin = -1;
+
+    if (numPeaks > 1)
+    {
+        if ((peaks[1] - peaks[0]) < 50)
+        {
+            peakBin = peaks[0] + round((peaks[1] - peaks[0]) / 2.0) + round((tagFT[peaks[1]] - tagFT[peaks[0]]) / maxVal * (peaks[1] - peaks[0]));
+        }
+        else
+        {
+            peakBin = peaks[0];
+        }
+    }
+    else if (numPeaks == 1)
+    {
+        peakBin = peaks[0];
+    }
+
+    free(peaks);
+    return peakBin;
 }
 
 #define PROC_TEST
