@@ -172,8 +172,8 @@ void computeFFT(double complex *framesBB, double complex *captureFT, int numFram
     fftw_complex *in = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numFrames);
     fftw_complex *out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numFrames);
     plan = fftw_plan_dft_1d(numFrames, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-    
-    for (int j = 0; j < numOfSamplers; j++) 
+
+    for (int j = 0; j < numOfSamplers; j++)
     {
 
         for (int i = 0; i < numFrames; i++)
@@ -197,7 +197,6 @@ void computeFFT(double complex *framesBB, double complex *captureFT, int numFram
     fftw_free(out);
 }
 
-
 /**
  * @function findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight)
  * @param *arr - Array to find peaks from
@@ -207,19 +206,56 @@ void computeFFT(double complex *framesBB, double complex *captureFT, int numFram
  * @return int
  * @brief Returns local peaks in data array
  * @author ericdvet */
-int* findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight) {
+int *findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight)
+{
     int *peaks = (int *)malloc(size * sizeof(int));
     *numPeaks = 0;
-    
-    for (int i = 1; i < size - 1; i++) {
+
+    for (int i = 1; i < size - 1; i++)
+    {
         // printf("Peak @ %d: %f\n", i, arr[i]);
-        if (arr[i] > arr[i - 1] && arr[i] > arr[i + 1] && arr[i] > minPeakHeight) {
+        if (arr[i] > arr[i - 1] && arr[i] > arr[i + 1] && arr[i] > minPeakHeight)
+        {
             // printf("Peak @ %d: %f\n", i, arr[i]);
             peaks[*numPeaks] = i;
             (*numPeaks)++;
         }
     }
     return peaks;
+}
+
+/**
+ * @function calculateSNR(double complex *captureFT, int numOfSamplers, int freqTag, int peakBin)
+ * @param *captureFT - FT of radar frames
+ * @param numOfSamplers - Number of sampelrs (rows)
+ * @param freqTag - FT isolation of backscatter tag
+ * @param peakBin - Determined peak bin location of backscatter tag
+ * @return float
+ * @brief Returns signal to noise ratio. Calculates ratio of peak bin amplitude at desired 
+ *      frequency vs an average of a few irrelevant frequencies 
+ * @author ericdvet */
+double calculateSNR(double complex *captureFT, int numOfSamplers, int freqTag, int peakBin)
+{
+    double signalMag;
+    signalMag = cabs(captureFT[peakBin + numOfSamplers * (freqTag - 1)]);
+
+
+    int noiseFreqLowBound;
+    int noiseFreqHighBound;
+    noiseFreqLowBound = (int)freqTag * 0.945;
+    noiseFreqHighBound = (int)freqTag * 0.955;
+
+    double noiseMag;
+    noiseMag = 0;
+    for (int j = noiseFreqLowBound; j < noiseFreqHighBound; j++) {
+        noiseMag += cabs(captureFT[peakBin + numOfSamplers * (j-1)]);
+    }
+
+    noiseMag = noiseMag / (noiseFreqHighBound - noiseFreqLowBound);
+
+    double SNR;
+    SNR = signalMag / noiseMag;
+    return (10 * log10(SNR));
 }
 
 // #define UTILS_TEST

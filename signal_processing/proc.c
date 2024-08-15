@@ -115,7 +115,12 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
     peakBin = procLargestPeak(captureData->tagFT);
     // peakBin = procCaptureCWT(captureData->tagFT, 512);
 
-    printf("\nPeak of %f at %d\n\n", captureData->tagFT[peakBin], peakBin);
+    printf("\nPeak of %f at %d\n", captureData->tagFT[peakBin], peakBin);
+
+    double SNR;
+    SNR = calculateSNR(captureData->captureFT, numOfSamplers, freqTag, peakBin);
+
+    printf("SNR of %f\n", SNR);
 
     free(rfSignal);
     free(framesBB);

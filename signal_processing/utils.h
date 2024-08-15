@@ -67,3 +67,15 @@ void computeFFT(double complex *framesBB, double complex *captureFT, int numFram
  * @brief Returns local peaks in data array
  * @author ericdvet */
 int *findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight);
+
+/**
+ * @function calculateSNR(double complex *captureFT, int numOfSamplers, int freqTag, int peakBin)
+ * @param *captureFT - FT of radar frames
+ * @param numOfSamplers - Number of sampelrs (rows)
+ * @param freqTag - FT isolation of backscatter tag
+ * @param peakBin - Determined peak bin location of backscatter tag
+ * @return float
+ * @brief Returns signal to noise ratio. Calculates ratio of peak bin amplitude at desired 
+ *      frequency vs an average of a few irrelevant frequencies 
+ * @author ericdvet */
+double calculateSNR(double complex *captureFT, int numOfSamplers, int freqTag, int peakBin);
