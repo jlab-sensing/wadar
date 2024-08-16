@@ -1,0 +1,6 @@
+[submodule "signal_processing/signal_processing/wavelib"]
+	path = signal_processing/signal_processing/wavelib
+	url = https://github.com/rafat/wavelib
+[submodule "signal_processing/wavelib"]
+	path = signal_processing/wavelib
+	url = https://github.com/rafat/wavelib
