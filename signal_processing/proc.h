@@ -5,6 +5,9 @@
  * Functions to process .frames data to obtain tag information
  */
 
+#ifndef PROC_LOAD_H
+#define PROC_LOAD_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -53,4 +56,6 @@ void freeCaptureData(CaptureData *captureData);
  * @author ericdvet */
 int procLargestPeak(double *tagFT);
 
-// int procCaptureCWT(double *tagFT, int length);
+int procCaptureCWT(double *tagFT);
+
+#endif

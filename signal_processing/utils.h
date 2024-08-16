@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 /*
  * File:   utils.h
  * Author: ericdvet
@@ -79,3 +82,5 @@ int *findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight);
  *      frequency vs an average of a few irrelevant frequencies 
  * @author ericdvet */
 double calculateSNR(double complex *captureFT, int numOfSamplers, int freqTag, int peakBin);
+
+#endif
