@@ -14,14 +14,6 @@
 #include <complex.h>
 #include "wavelib/header/wavelib.h"
 
-// Private structs
-typedef struct
-{
-    int *pointScales;
-    int *pointLocations;
-    int length;
-} RidgeLine;
-
 /**
  * @function procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
  * @param localDataPath - Local file path to radar capture
@@ -121,17 +113,15 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
     }
 
     int peakBin;
-    peakBin = procLargestPeak(captureData->tagFT);
-    // peakBin = procCaptureCWT(captureData->tagFT, 512);
+    // peakBin = procLargestPeak(captureData->tagFT);
+    peakBin = procCaptureCWT(captureData->tagFT);
 
-    // printf("\nPeak of %f at %d\n", captureData->tagFT[peakBin], peakBin);
+    printf("\nPeak of %f at %d\n", captureData->tagFT[peakBin], peakBin);
 
     double SNR;
     SNR = calculateSNR(captureData->captureFT, numOfSamplers, freqTag, peakBin);
 
-    // printf("SNR of %f\n", SNR);
-
-    procCaptureCWT(captureData->tagFT);
+    printf("SNR of %f\n", SNR);
 
     free(rfSignal);
     free(framesBB);
@@ -208,23 +198,16 @@ int procCaptureCWT(double *tagFT)
     // Control variables
     int gapThreshold = 5;
     double slidingWindowThreshold = 0.3; // 0.5;
-    float SNRThreshold = 3.0;
-    float ridgeLengthThreshold = 12.0;
+    // float SNRThreshold = 3.0;
+    float ridgeLengthThreshold = 5;
 
-    // //     %% Continuous Wavelet Transform
-    // // scales = [scales; 1:length(scales)];
-    // // scale_idxs = 1:length(scales);
-    // // cwtInfo = cwtft(tagFT, 'wavelet', 'mexh', 'scales', scales);
-    // // cwtCoeffs = cwtInfo.cfs;
-    // // amplThreshold = 0.1 * max(max(cwtCoeffs));
-
+    // Continuous Wavelet Transform
     cwt_object cwtInfo;
     cwtInfo = cwt_init("dog", 2, 512, 1, 32);
-    // setCWTScaleVector(cwtInfo, scales, 32, 1, 1);
-    setCWTScales(cwtInfo, 1, 2, "linear", 1);
-
+    setCWTScales(cwtInfo, 1, 2, "linear", 1);   
     cwt(cwtInfo, tagFT);
 
+    // More control variables
     double amplThreshold;
     amplThreshold = 0;
     for (int i = 0; i < cwtInfo->J * cwtInfo->siglength; i++)
@@ -236,37 +219,28 @@ int procCaptureCWT(double *tagFT)
     }
     amplThreshold = 0.1 * amplThreshold;
 
+
+    // Find local maximums in each cwt
     double *cwtScaleCoeffs;
     int *numPeaks;
     int **peaks;
-
     peaks = (int **)malloc(cwtInfo->J * sizeof(int *));
     numPeaks = (int *)malloc(cwtInfo->J * sizeof(int));
     cwtScaleCoeffs = (double *)malloc(512 * sizeof(double));
-
-    int counter = 0;
-
     for (int i = 0; i < cwtInfo->J * cwtInfo->siglength; i++)
     {
         cwtScaleCoeffs[i % 512] = fabs(cwtInfo->output[i].re);
         if (i % 512 == 0 && i != 0)
         {
-            counter++;
-            // printf("%d: ", (int)i / 512);
-            // peaks[i / 512] = (int *) malloc(cwtInfo->siglength * sizeof(int));
-            peaks[(i / 512) - 1] = findPeaks(cwtScaleCoeffs, 512, &(numPeaks[(i / 512) - 1]), 0);
-            // printf("%d entries: ", numPeaks[i / 512]);
-            for (int j = 0; j < numPeaks[i / 512]; j++)
+            peaks[(i / 512) - 1] = findPeaks(cwtScaleCoeffs, 512, &(numPeaks[(i / 512) - 1]), 0); // Fuck this line of code for the 2 hours of seg fault headaches
+            for (int j = 0; j < numPeaks[(i / 512) - 1]; j++)
             {
-                // printf("%d ", peaks[i / 512][j]);
             }
-            // printf("\n");
         }
     }
+    peaks[((cwtInfo->J * cwtInfo->siglength) / 512) - 1] = findPeaks(cwtScaleCoeffs, 512, &(numPeaks[((cwtInfo->J * cwtInfo->siglength) / 512) - 1]), 0);
 
-    // printf("Counter = %d\n", counter);
-    peaks[((cwtInfo->J * cwtInfo->siglength) / 512) - 1] = findPeaks(cwtScaleCoeffs, 512, &(numPeaks[((cwtInfo->J * cwtInfo->siglength) / 512)-1]), 0);
-
+    // Find all ridge lines
     RidgeLine *ridgeLines;
     ridgeLines = (RidgeLine *)malloc(1000 * sizeof(RidgeLine));
     int numRidgeLines = 0;
@@ -281,11 +255,39 @@ int procCaptureCWT(double *tagFT)
             ridgeLine.pointLocations = (int *)malloc(cwtInfo->J * sizeof(int));
             if (ridgeLine.pointScales == NULL || ridgeLine.pointLocations == NULL)
             {
-                return;
+                return -1;
             }
             ridgeLine.length = 1;
             ridgeLine.pointScales[0] = scale;
             ridgeLine.pointLocations[0] = peak;
+
+            int gap = 0;
+            for (int s = scale - 1; s >= 0 && gap <= gapThreshold; s--)
+            {
+                int closestMaxIdx = -1;
+                double closestGap = slidingWindowThreshold * s;
+                for (int j = 0; j < numPeaks[s]; j++)
+                {
+                    double currentGap = fabs(peak - peaks[s][j]);
+                    if (currentGap < closestGap)
+                    {
+                        closestGap = currentGap;
+                        closestMaxIdx = j;
+                    }
+                }
+                if (closestMaxIdx != -1)
+                {
+                    ridgeLine.pointScales[ridgeLine.length] = s;
+                    ridgeLine.pointLocations[ridgeLine.length] = peaks[s][closestMaxIdx];
+                    ridgeLine.length++;
+                    numPeaks[s]--;
+                    gap = 0;
+                }
+                else
+                {
+                    gap++;
+                }
+            }
 
             if (ridgeLine.length > 1)
             {
@@ -294,80 +296,36 @@ int procCaptureCWT(double *tagFT)
             }
             else
             {
-                // Free memory if ridge line is not valid
                 free(ridgeLine.pointScales);
                 free(ridgeLine.pointLocations);
             }
         }
     }
 
-    // for (int scale = M - 1; scale >= 0; scale--) {
-    //         for (int i = 0; i < numPeaks[scale]; i++) {
-    //             int peak = peaks[scale][i];
-    //             RidgeLine ridgeLine;
-    //             ridgeLine.pointScales = (int*)malloc(M * sizeof(int));
-    //             ridgeLine.pointLocations = (int*)malloc(M * sizeof(int));
-    //             ridgeLine.length = 1;
-    //             ridgeLine.pointScales[0] = scale;
-    //             ridgeLine.pointLocations[0] = peak;
+    // Process ridges
+    int peakBin = -1;
+    double maxAmplitude = 0;
 
-    //             int gap = 0;
-    //             for (int s = scale - 1; s >= 0 && gap <= gapThreshold; s--) {
-    //                 int closestMaxIdx = -1;
-    //                 double closestGap = slidingWindowThreshold * s;
-    //                 for (int j = 0; j < numPeaks[s]; j++) {
-    //                     double currentGap = fabs(peak - peaks[s][j]);
-    //                     if (currentGap < closestGap) {
-    //                         closestGap = currentGap;
-    //                         closestMaxIdx = j;
-    //                     }
-    //                 }
-    //                 if (closestMaxIdx != -1) {
-    //                     ridgeLine.pointScales[ridgeLine.length] = s;
-    //                     ridgeLine.pointLocations[ridgeLine.length] = peaks[s][closestMaxIdx];
-    //                     ridgeLine.length++;
-    //                     numPeaks[s]--; // Adjust the number of peaks
-    //                     gap = 0;
-    //                 } else {
-    //                     gap++;
-    //                 }
-    //             }
-    //             if (ridgeLine.length > 1) {
-    //                 ridgeLines[(*numRidgeLines)++] = ridgeLine;
-    //             } else {
-    //                 // Free memory if ridge line is not valid
-    //                 free(ridgeLine.pointScales);
-    //                 free(ridgeLine.pointLocations);
-    //             }
-    //         }
-    //     }
+    for (int i = 0; i < numRidgeLines; i++)
+    {
+        RidgeLine ridgeLine = ridgeLines[i];
+        // Ridge length > threshold
+        if (ridgeLine.length >= ridgeLengthThreshold)
+        {
+            for (int j = 0; j < ridgeLine.length; j++)
+            {
+                double amplitude = tagFT[ridgeLine.pointLocations[j]];
+                // Scale with max amplitude > certain range
+                if (amplitude > maxAmplitude)
+                {
+                    maxAmplitude = amplitude;
+                    peakBin = ridgeLine.pointLocations[j];
+                }
+            }
+        }
+    }
 
-    // // Find all ridge lines
-    // RidgeLine ridgeLines[MAX_RIDGE_LINES];
-    // int numRidgeLines = 0;
-    // findRidgeLines(locMax, ridgeLines, &numRidgeLines);
-
-    // // Process ridges and find the peak
-    // int tagPeakBin = findPeak(tagFT, cwtCoeffs, ridgeLines, numRidgeLines);
-
-    /////
-
-    // // printf("%d x %d\n", cwtInfo->J, cwtInfo->siglength);
-    // for (int i = 0; i < cwtInfo->J; i ++) {
-    //     // printf("%f ", cwtInfo->scale[i]);
-    // }
-    // for (int i = 0; i < 512; i++) {
-    //     // printf("%f\n", sqrt(cwtInfo->output[i].re * cwtInfo->output[i].re + cwtInfo->output[i].im * cwtInfo->output[i].im));
-    //     // printf("%f + i%f\n", cwtInfo->output[i].re, cwtInfo->output[i].im);
-    // }
-
-    // FILE *file = fopen("cwt_output.dat", "w");
-    // for (int i = 0; i < 512; i++) {
-    //     fprintf(file, "%d %f\n", i, cwtInfo->output[i].re);
-    // }
-    // fclose(file);
-
-    // cwt_summary(cwtInfo);
+    return peakBin;
 }
 
 #define PROC_TEST

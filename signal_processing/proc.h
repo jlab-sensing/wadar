@@ -19,7 +19,7 @@
 
 /**
  * @struct CaptureData
- * @brief Stores important data collected by procradarFrames()
+ * @brief Stores important data collected by procRadarFrames()
  * @author ericdvet */
 typedef struct
 {
@@ -29,6 +29,17 @@ typedef struct
     int peakBin;
     int SNRdB;
 } CaptureData;
+
+/**
+ * @struct RidgeLine
+ * @brief Stores ridge line information for procCaptureCWT()
+ * @author ericdvet */
+typedef struct
+{
+    int *pointScales;
+    int *pointLocations;
+    int length;
+} RidgeLine;
 
 /**
  * @function procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
@@ -56,6 +67,12 @@ void freeCaptureData(CaptureData *captureData);
  * @author ericdvet */
 int procLargestPeak(double *tagFT);
 
+/**
+ * @function procCaptureCWT(double *tagFT)
+ * @param *tagFT - pointer to FT of the tag's frequency isolated
+ * @return int
+ * @brief Returns bin corresponding to the peak most similar to the ricker wavelet based
+ * @author ericdvet */
 int procCaptureCWT(double *tagFT);
 
 #endif
