@@ -14,6 +14,14 @@
 #include <complex.h>
 #include "wavelib/header/wavelib.h"
 
+// Private structs
+typedef struct
+{
+    int *pointScales;
+    int *pointLocations;
+    int length;
+} RidgeLine;
+
 /**
  * @function procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
  * @param localDataPath - Local file path to radar capture
@@ -201,13 +209,6 @@ int procCaptureCWT(double *tagFT)
     int gapThreshold = 5;
     double slidingWindowThreshold = 0.3; // 0.5;
     float SNRThreshold = 3.0;
-    double *scales;
-    scales = (double *)malloc(32 * sizeof(double));
-    for (int i = 1; i < 64; i += 2)
-    {
-        scales[i] = (double)i;
-        // printf("%f ", scales[i]);
-    }
     float ridgeLengthThreshold = 12.0;
 
     // //     %% Continuous Wavelet Transform
@@ -243,59 +244,103 @@ int procCaptureCWT(double *tagFT)
     numPeaks = (int *)malloc(cwtInfo->J * sizeof(int));
     cwtScaleCoeffs = (double *)malloc(512 * sizeof(double));
 
+    int counter = 0;
+
     for (int i = 0; i < cwtInfo->J * cwtInfo->siglength; i++)
     {
         cwtScaleCoeffs[i % 512] = fabs(cwtInfo->output[i].re);
         if (i % 512 == 0 && i != 0)
         {
-            printf("%d: ", (int)i / 512);
-            peaks[i / 512] = findPeaks(cwtScaleCoeffs, 512, &(numPeaks[i / 512]), 0);
+            counter++;
+            // printf("%d: ", (int)i / 512);
+            // peaks[i / 512] = (int *) malloc(cwtInfo->siglength * sizeof(int));
+            peaks[(i / 512) - 1] = findPeaks(cwtScaleCoeffs, 512, &(numPeaks[(i / 512) - 1]), 0);
             // printf("%d entries: ", numPeaks[i / 512]);
             for (int j = 0; j < numPeaks[i / 512]; j++)
             {
-                printf("%d ", peaks[i / 512][j]);
+                // printf("%d ", peaks[i / 512][j]);
             }
-            printf("\n");
+            // printf("\n");
         }
     }
-    peaks[(cwtInfo->J * cwtInfo->siglength) / 512] = findPeaks(cwtScaleCoeffs, 512, &(numPeaks[(cwtInfo->J * cwtInfo->siglength) / 512]), 0);
 
-    
-    //     for (int scale = M-1; scale >= 0; scale--) {
-    //     for (int i = 0; i < N; i++) {
-    //         if (locMax[scale][i] == 1) {
+    // printf("Counter = %d\n", counter);
+    peaks[((cwtInfo->J * cwtInfo->siglength) / 512) - 1] = findPeaks(cwtScaleCoeffs, 512, &(numPeaks[((cwtInfo->J * cwtInfo->siglength) / 512)-1]), 0);
+
+    RidgeLine *ridgeLines;
+    ridgeLines = (RidgeLine *)malloc(1000 * sizeof(RidgeLine));
+    int numRidgeLines = 0;
+    for (int scale = cwtInfo->J - 1; scale >= 0; scale--)
+    {
+        // printf("test: %d @ %d\n", numPeaks[scale], scale);
+        for (int i = 0; i < numPeaks[scale]; i++)
+        {
+            int peak = peaks[scale][i];
+            RidgeLine ridgeLine;
+            ridgeLine.pointScales = (int *)malloc(cwtInfo->J * sizeof(int));
+            ridgeLine.pointLocations = (int *)malloc(cwtInfo->J * sizeof(int));
+            if (ridgeLine.pointScales == NULL || ridgeLine.pointLocations == NULL)
+            {
+                return;
+            }
+            ridgeLine.length = 1;
+            ridgeLine.pointScales[0] = scale;
+            ridgeLine.pointLocations[0] = peak;
+
+            if (ridgeLine.length > 1)
+            {
+                ridgeLines[numRidgeLines] = ridgeLine;
+                numRidgeLines++;
+            }
+            else
+            {
+                // Free memory if ridge line is not valid
+                free(ridgeLine.pointScales);
+                free(ridgeLine.pointLocations);
+            }
+        }
+    }
+
+    // for (int scale = M - 1; scale >= 0; scale--) {
+    //         for (int i = 0; i < numPeaks[scale]; i++) {
+    //             int peak = peaks[scale][i];
     //             RidgeLine ridgeLine;
+    //             ridgeLine.pointScales = (int*)malloc(M * sizeof(int));
+    //             ridgeLine.pointLocations = (int*)malloc(M * sizeof(int));
     //             ridgeLine.length = 1;
-    //             ridgeLine.points[0] = (RidgePoint){scale, i};
+    //             ridgeLine.pointScales[0] = scale;
+    //             ridgeLine.pointLocations[0] = peak;
 
     //             int gap = 0;
-    //             for (int s = scale-1; s >= 0 && gap <= gapThreshold; s--) {
+    //             for (int s = scale - 1; s >= 0 && gap <= gapThreshold; s--) {
     //                 int closestMaxIdx = -1;
     //                 double closestGap = slidingWindowThreshold * s;
-    //                 for (int j = 0; j < N; j++) {
-    //                     if (locMax[s][j] == 1) {
-    //                         double currentGap = fabs(i - j);
-    //                         if (currentGap < closestGap) {
-    //                             closestGap = currentGap;
-    //                             closestMaxIdx = j;
-    //                         }
+    //                 for (int j = 0; j < numPeaks[s]; j++) {
+    //                     double currentGap = fabs(peak - peaks[s][j]);
+    //                     if (currentGap < closestGap) {
+    //                         closestGap = currentGap;
+    //                         closestMaxIdx = j;
     //                     }
     //                 }
     //                 if (closestMaxIdx != -1) {
-    //                     ridgeLine.points[ridgeLine.length++] = (RidgePoint){s, closestMaxIdx};
-    //                     locMax[s][closestMaxIdx] = 0; // Remove the maximum
+    //                     ridgeLine.pointScales[ridgeLine.length] = s;
+    //                     ridgeLine.pointLocations[ridgeLine.length] = peaks[s][closestMaxIdx];
+    //                     ridgeLine.length++;
+    //                     numPeaks[s]--; // Adjust the number of peaks
     //                     gap = 0;
     //                 } else {
     //                     gap++;
     //                 }
     //             }
     //             if (ridgeLine.length > 1) {
-    //                 ridgeLines[*numRidgeLines] = ridgeLine;
-    //                 (*numRidgeLines)++;
+    //                 ridgeLines[(*numRidgeLines)++] = ridgeLine;
+    //             } else {
+    //                 // Free memory if ridge line is not valid
+    //                 free(ridgeLine.pointScales);
+    //                 free(ridgeLine.pointLocations);
     //             }
     //         }
     //     }
-    // }
 
     // // Find all ridge lines
     // RidgeLine ridgeLines[MAX_RIDGE_LINES];
