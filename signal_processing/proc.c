@@ -117,12 +117,13 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
 
     // printf("\nPeak of %f at %d\n", captureData->tagFT[captureData->peakBin], captureData->peakBin);
 
-    double SNR;
-    SNR = calculateSNR(captureData->captureFT, numOfSamplers, freqTag, captureData->peakBin);
+    captureData->SNRdB = calculateSNR(captureData->captureFT, numOfSamplers, freqTag, captureData->peakBin);
 
     // printf("SNR of %f\n", SNR);
 
     captureData->numFrames = radarData->numFrames;
+    captureData->procSuccess = true;
+
     free(rfSignal);
     free(framesBB);
     free(temp);
@@ -389,7 +390,42 @@ int procCaptureCWT(double *tagFT)
     return peakBin;
 }
 
-#define PROC_TEST
+/**
+ * @function procSoilMoisture(double wetPeakBin, double airPeakBin, const char* soilType, double distance)
+ * @param wetPeakBin - peak bin of backscatter tag covered by wet soil
+ * @param airPeakBin - peak bin of backscatter tag uncovered by soil
+ * @param soilType - type of soil
+ * @param distance - distance between backscatter tag and surface in meters
+ * @return double 
+ * @brief Returns VWC calculated based on ToF and teros-12 sensor calibrations
+ * @author ericdvet */
+double procSoilMoisture(double wetPeakBin, double airPeakBin, const char* soilType, double distance) {
+    double t = ((wetPeakBin - airPeakBin + distance / 0.003790984152165) * 0.003790984152165) / 299792458.0;
+
+    double radar_perm = pow((299792458.0 * t) / distance, 2);
+
+    double perm_to_RAW = (0.01018 * pow(radar_perm, 3)) - (1.479 * pow(radar_perm, 2)) + (77.47 * radar_perm) + 1711;
+
+    double VWC;
+
+    // Soil type calibration
+    if (strcmp(soilType, "farm") == 0) {
+        VWC = (5.12018081e-10 * pow(perm_to_RAW, 3)) - (0.000003854251138 * pow(perm_to_RAW, 2)) + (0.009950433112 * perm_to_RAW) - 8.508168835941;
+    } else if (strcmp(soilType, "stanfordFarm") == 0) {
+        VWC = (9.079e-10 * pow(perm_to_RAW, 3)) - (6.626e-6 * pow(perm_to_RAW, 2)) + (1.643e-2 * perm_to_RAW) - 1.354e1;
+    } else if (strcmp(soilType, "stanfordSilt") == 0) {
+        VWC = (-3.475e-10 * pow(perm_to_RAW, 3)) + (2.263e-6 * pow(perm_to_RAW, 2)) - (4.515e-3 * perm_to_RAW) + 2.85e0;
+    } else if (strcmp(soilType, "stanfordClay") == 0) {
+        VWC = (5.916e-10 * pow(perm_to_RAW, 3)) - (4.536e-6 * pow(perm_to_RAW, 2)) + (1.183e-2 * perm_to_RAW) - 1.017e1;
+    } else {
+        fprintf(stderr, "ERROR: Need a legitimate soil type (farm, stanfordFarm, stanfordSilt, stanfordClay)\n");
+        return -1.0;  // Return an error code
+    }
+
+    return VWC;
+}
+
+// #define PROC_TEST
 
 #ifdef PROC_TEST
 int main()

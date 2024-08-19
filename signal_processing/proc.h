@@ -86,4 +86,15 @@ int procLargestPeak(double *tagFT);
  * @author ericdvet */
 int procCaptureCWT(double *tagFT);
 
+/**
+ * @function procSoilMoisture(double wetPeakBin, double airPeakBin, const char* soilType, double distance)
+ * @param wetPeakBin - peak bin of backscatter tag covered by wet soil
+ * @param airPeakBin - peak bin of backscatter tag uncovered by soil
+ * @param soilType - type of soil
+ * @param distance - distance between backscatter tag and surface in meters
+ * @return double 
+ * @brief Returns VWC calculated based on ToF and teros-12 sensor calibrations
+ * @author ericdvet */
+double procSoilMoisture(double wetPeakBin, double airPeakBin, const char* soilType, double distance);
+
 #endif
