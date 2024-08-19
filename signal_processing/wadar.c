@@ -5,6 +5,8 @@
 #include <math.h>
 #include <time.h>
 #include "proc.h"
+#include <unistd.h>
+#include "utils.h"
 
 // Capture parameters
 #define FRAME_RATE 200
@@ -48,8 +50,9 @@ double wadar(char *localDataPath, char *airFramesName, char *trialName, double t
         printf("Please wait. Capture %d is proceeding\n", i + 1);
         usleep((frameCount / FRAME_RATE) * 1000000);
         printf("Waiting for data to be transferred...\n");
+        usleep((frameCount / FRAME_RATE) * 1000000 * 0.5);
 
-        char wetFramesName[256];
+        char wetFramesName[1000];
         snprintf(wetFramesName, sizeof(wetFramesName), "%s%d.frames", captureName, i + 1);
         CaptureData* wetCapture = procRadarFrames(localDataPath, wetFramesName, tagHz);
         if (!wetCapture || !wetCapture->procSuccess) {
@@ -85,3 +88,17 @@ double wadar(char *localDataPath, char *airFramesName, char *trialName, double t
     return volumetricWaterContent;
 
 }
+
+#define WADAR_TEST
+#ifdef WADAR_TEST
+int main()
+{
+    // CaptureData *captureData;
+    // captureData = procRadarFrames("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
+    procTagTest("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
+
+    wadar("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", "testFile.frames", 80, 200, 1, 0.1);
+
+    return 0;
+}
+#endif
