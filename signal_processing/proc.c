@@ -112,23 +112,64 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
         // printf("%d: %f\n", i, captureData->tagFT[i]);
     }
 
-    int peakBin;
     // peakBin = procLargestPeak(captureData->tagFT);
-    peakBin = procCaptureCWT(captureData->tagFT);
+    captureData->peakBin = procCaptureCWT(captureData->tagFT);
 
-    printf("\nPeak of %f at %d\n", captureData->tagFT[peakBin], peakBin);
+    // printf("\nPeak of %f at %d\n", captureData->tagFT[captureData->peakBin], captureData->peakBin);
 
     double SNR;
-    SNR = calculateSNR(captureData->captureFT, numOfSamplers, freqTag, peakBin);
+    SNR = calculateSNR(captureData->captureFT, numOfSamplers, freqTag, captureData->peakBin);
 
-    printf("SNR of %f\n", SNR);
+    // printf("SNR of %f\n", SNR);
 
+    captureData->numFrames = radarData->numFrames;
     free(rfSignal);
     free(framesBB);
     free(temp);
     freeRadarData(radarData);
 
     return captureData;
+}
+
+/**
+ * @function procTagTest(const char *localDataPath, const char *captureName, double tagHz)
+ * @param localDataPath - Local file path to radar capture
+ * @param captureName - Name of radar capture file
+ * @param captureName - Frequency at which tag is oscillating in Hz
+ * @return None
+ * @brief Function prints capture FT and tag FT to CSV files
+ * @author ericdvet */
+void procTagTest(const char *localDataPath, const char *captureName, double tagHz) {
+    CaptureData *captureData;
+    captureData = procRadarFrames(localDataPath, captureName, tagHz);
+
+    FILE *fileTagFT = fopen("tagFT.csv", "w");
+    if (fileTagFT == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+
+    for (int i = 0; i < 512; i++) {
+        fprintf(fileTagFT, "%.2f\n", captureData->tagFT[i]);  // Write to file in CSV format
+    }
+
+    FILE *fileCaptureFT = fopen("captureFT.csv", "w");
+    if (fileCaptureFT == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    for (int j = 0; j < 512; j++)
+    {
+        for (int i = 0; i < captureData->numFrames - 1; i++)
+        {
+            fprintf(fileCaptureFT, "%.2f, ", fabs(captureData->captureFT[j + i * 512]));
+        }
+        fprintf(fileCaptureFT, "%.2f\n", fabs(captureData->captureFT[j + (captureData->numFrames-1) * 512]));
+    }
+
+    freeCaptureData(captureData);
 }
 
 /**
@@ -192,6 +233,12 @@ int procLargestPeak(double *tagFT)
     return peakBin;
 }
 
+/**
+ * @function procCaptureCWT(double *tagFT)
+ * @param *tagFT - pointer to FT of the tag's frequency isolated
+ * @return int
+ * @brief Returns bin corresponding to the peak most similar to the ricker wavelet based
+ * @author ericdvet */
 int procCaptureCWT(double *tagFT)
 {
 
@@ -325,6 +372,20 @@ int procCaptureCWT(double *tagFT)
         }
     }
 
+    free(numPeaks);
+    free(cwtScaleCoeffs);
+    for (int i = 0; i < cwtInfo->J; i++)
+    {
+        free(peaks[i]);
+    }
+    free(peaks);
+    for (int i = 0; i < numRidgeLines; i++) {
+        free(ridgeLines[i].pointScales);
+        free(ridgeLines[i].pointLocations);
+    }
+    free(ridgeLines);
+    cwt_free(cwtInfo);
+
     return peakBin;
 }
 
@@ -333,10 +394,11 @@ int procCaptureCWT(double *tagFT)
 #ifdef PROC_TEST
 int main()
 {
-    CaptureData *captureData;
-    captureData = procRadarFrames("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
+    // CaptureData *captureData;
+    // captureData = procRadarFrames("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
+    procTagTest("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
 
-    freeCaptureData(captureData);
+    // freeCaptureData(captureData);
 
     return 0;
 }

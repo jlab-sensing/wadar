@@ -28,6 +28,7 @@ typedef struct
     double *tagFT;
     int peakBin;
     int SNRdB;
+    int numFrames;
 } CaptureData;
 
 /**
@@ -50,6 +51,16 @@ typedef struct
  * @brief Function processes radar frames for various purposes
  * @author ericdvet */
 CaptureData *procRadarFrames(const char *localDataPath, const char *captureName, double tagHz);
+
+/**
+ * @function procTagTest(const char *localDataPath, const char *captureName, double tagHz)
+ * @param localDataPath - Local file path to radar capture
+ * @param captureName - Name of radar capture file
+ * @param captureName - Frequency at which tag is oscillating in Hz
+ * @return None
+ * @brief Function prints capture FT and tag FT to CSV files
+ * @author ericdvet */
+void procTagTest(const char *localDataPath, const char *captureName, double tagHz);
 
 /**
  * @function freeCaptureData(CaptureData *captureData)
