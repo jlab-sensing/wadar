@@ -1,3 +1,10 @@
+/*
+ * File:   wadar.h
+ * Author: ericdvet
+ *
+ * High level WaDAR functions. Functions to automatically capture and process radar data to determine soil moisture content. 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -7,12 +14,24 @@
 #include "proc.h"
 #include <unistd.h>
 #include "utils.h"
+#include <curl/curl.h>
 
 // Capture parameters
 #define FRAME_RATE 200
 #define RADAR_TYPE "Chipotle"
 #define SOIL_TYPE "farm"
 
+/**
+ * @function wadar(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth)
+ * @param localDataPath - Local file path to radar capture
+ * @param airFramesName - Name of radar capture file with tag uncovered with soil
+ * @param trialName - Trial name for file documenting purposes
+ * @param tagHz - Oscillation frequency of tag being captured
+ * @param captureCount - Number of captures desired
+ * @param tagDepth - Depth at which tag is buried measured in meters
+ * @return double 
+ * @brief Function calculates the volumetric water content of the soil from the capture
+ * @author ericdvet */
 double wadar(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth) {
 
     double volumetricWaterContent = 0.0;
@@ -89,15 +108,68 @@ double wadar(char *localDataPath, char *airFramesName, char *trialName, double t
 
 }
 
+// Function to post data to the URL
+void wadar2dirtviz(const char *url) {
+    CURL *curl;
+    CURLcode res;
+    struct curl_slist *headers = NULL;
+
+    // Variables for JSON data
+    long ts = 12345678;
+    const char *cell = "dummy";
+    double vwc = 0.4;
+    int raw_vwc = 3;
+    int temp = 2;
+    int ec = 2;
+    int water_pot = 1;
+
+    // Create JSON data
+    char json_data[512];
+    snprintf(json_data, sizeof(json_data),
+        "{\"ts\":%ld,\"cell\":\"%s\",\"vwc\":%.2f,\"raw_vwc\":%d,\"temp\":%d,\"ec\":%d,\"water_pot\":%d}",
+        ts, cell, vwc, raw_vwc, temp, ec, water_pot
+    );
+
+    // Initialize CURL
+    curl = curl_easy_init();
+    if(curl) {
+        // Set URL for the POST request
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+
+        // Set the JSON data to be sent
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_data);
+
+        // Set the content type to application/json
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        // Perform the POST request
+        res = curl_easy_perform(curl);
+
+        // Check for errors
+        if(res != CURLE_OK) {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        }
+
+        // Cleanup
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+    }
+}
+
+
+
 #define WADAR_TEST
 #ifdef WADAR_TEST
 int main()
 {
     // CaptureData *captureData;
     // captureData = procRadarFrames("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
-    procTagTest("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
+    // procTagTest("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
 
-    wadar("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", "testFile.frames", 80, 200, 1, 0.1);
+    // wadar("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", "testFile.frames", 80, 200, 1, 0.1);
+
+    wadar2dirtviz("https://dirtviz.jlab.ucsc.edu/dev/data-collection/frontend/api/teros/");
 
     return 0;
 }
