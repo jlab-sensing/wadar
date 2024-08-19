@@ -83,4 +83,7 @@ int *findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight);
  * @author ericdvet */
 double calculateSNR(double complex *captureFT, int numOfSamplers, int freqTag, int peakBin);
 
+int compare(const void *a, const void *b);
+double median(double *arr, int length);
+
 #endif

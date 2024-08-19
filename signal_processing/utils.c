@@ -258,6 +258,23 @@ double calculateSNR(double complex *captureFT, int numOfSamplers, int freqTag, i
     return (10 * log10(SNR));
 }
 
+int compare(const void *a, const void *b) {
+    double arg1 = *(const double *)a;
+    double arg2 = *(const double *)b;
+    if (arg1 < arg2) return -1;
+    if (arg1 > arg2) return 1;
+    return 0;
+}
+
+double median(double *arr, int length) {
+    qsort(arr, length, sizeof(double), compare);
+    if (length % 2 == 0) {
+        return (arr[length/2 - 1] + arr[length/2]) / 2.0;
+    } else {
+        return arr[length/2];
+    }
+}
+
 // #define UTILS_TEST
 
 #ifdef UTILS_TEST
