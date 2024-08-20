@@ -49,7 +49,7 @@ typedef struct
  * @function procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
  * @param localDataPath - Local file path to radar capture
  * @param captureName - Name of radar capture file
- * @param captureName - Frequency at which tag is oscillating in Hz
+ * @param tagHz - Frequency at which tag is oscillating in Hz
  * @return CaptureData *
  * @brief Function processes radar frames for various purposes
  * @author ericdvet */
@@ -65,8 +65,16 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
  * @author ericdvet */
 double procTagTest(const char *localDataPath, const char *captureName, double tagHz);
 
+/**
+ * @function procTwoTag(const char *localDataPath, const char *captureName, double tag1Hz, double tag2Hz)
+ * @param localDataPath - Local file path to radar capture
+ * @param captureName - Name of radar capture file
+ * @param tag1Hz - Frequency at which tag 1 is oscillating in Hz
+ * @param tag2Hz - Frequency at which tag 2 is oscillating in Hz
+ * @return CaptureData *
+ * @brief Function processes radar frames for various purposes
+ * @author ericdvet */
 CaptureData *procTwoTag(const char *localDataPath, const char *captureName, double tag1Hz, double tag2Hz);
-
 
 /**
  * @function freeCaptureData(CaptureData *captureData)

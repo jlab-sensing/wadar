@@ -42,4 +42,18 @@ double wadar(char *localDataPath, char *airFramesName, char *trialName, double t
  * @author ericdvet */
 double wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount);
 
+/**
+ * @function wadarTwoTag(char *localDataPath, char *airFramesName, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff)
+ * @param localDataPath - Local file path to radar capture
+ * @param airFramesName - Name of radar capture file with tag uncovered with soil
+ * @param trialName - Trial name for file documenting purposes
+ * @param tag1Hz - Oscillation frequency of top tag being captured
+ * @param tag2Hz - Oscillation frequency of bottom tag being captured
+ * @param captureCount - Number of captures desired
+ * @param tagDiff - Distance between tags measured in meters
+ * @return double
+ * @brief Function captures radar frames with two tags to calculate the volumetric water content of the soil
+ * @author ericdvet */
+double wadarTwoTag(char *localDataPath, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff);
+
 #endif WADAR_H

@@ -559,7 +559,7 @@ double procSoilMoisture(double wetPeakBin, double airPeakBin, const char* soilTy
     return VWC;
 }
 
-#define PROC_TEST
+// #define PROC_TEST
 
 #ifdef PROC_TEST
 int main()
