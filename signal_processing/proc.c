@@ -177,6 +177,136 @@ double procTagTest(const char *localDataPath, const char *captureName, double ta
     return SNR;
 }
 
+CaptureData *procTwoTag(const char *localDataPath, const char *captureName, double tag1Hz, double tag2Hz) {
+    CaptureData *captureData = (CaptureData *)malloc(sizeof(CaptureData));
+
+    // Processing parameters
+    int frameRate = 200;
+    int numOfSamplers = 512;
+
+    // Load Capture
+    char fullPath[1024];
+    sprintf(fullPath, "%s/%s", localDataPath, captureName);
+    RadarData *radarData = salsaLoad(fullPath);
+    if (radarData == NULL)
+    {
+        return false;
+    }
+
+    double *rfSignal;
+    double complex *framesBB;
+    double complex *temp;
+
+    rfSignal = (double *)malloc(numOfSamplers * sizeof(double));
+    framesBB = (double complex *)malloc((radarData->numFrames) * numOfSamplers * sizeof(double complex));
+    temp = (double complex *)malloc(numOfSamplers * sizeof(double complex));
+
+    // Baseband Conversion
+    for (int i = 0; i < radarData->numFrames; i++)
+    {
+        for (int j = 0; j < numOfSamplers; j++)
+        {
+            rfSignal[j] = radarData->frameTot[j + i * numOfSamplers];
+        }
+        NoveldaDDC(rfSignal, temp);
+        for (int j = 0; j < numOfSamplers; j++)
+        {
+            framesBB[j + i * numOfSamplers] = temp[j];
+            // printf("%d ", j + i * numOfSamplers);
+        }
+    }
+
+    // for (int i = 500; i < numOfSamplers; i++) {
+    //     printf("%f ", creal(framesBB[i]));
+    // }
+    // printf("\n");
+
+    // Find Tag FT
+    int freqTag1 = (int)(tag1Hz / frameRate * radarData->numFrames);
+    int freqTag2 = (int)(tag2Hz / frameRate * radarData->numFrames);
+
+    captureData->captureFT = (double complex *)malloc(radarData->numFrames * numOfSamplers * sizeof(double complex));
+
+    computeFFT(framesBB, captureData->captureFT, radarData->numFrames, numOfSamplers);
+
+    // for (int i = 0; i < numOfSamplers; i++) {
+    //     printf("%f\n", creal(captureData->captureFT[i]));
+    // }
+
+    captureData->tagFT = (double *)malloc(numOfSamplers * sizeof(double *));
+    captureData->tagFT2 = (double *)malloc(numOfSamplers * sizeof(double *));
+
+    double maxFTPeak1, maxFTPeak2;
+    int idx_maxFTPeak1, idx_maxFTPeak2;
+    maxFTPeak1 = 0;
+    maxFTPeak2 = 0;
+
+    for (int j = freqTag1 - 2; j <= freqTag1 + 2; j++)
+    {
+        for (int i = 0; i < numOfSamplers; i++)
+        {
+            if (cabs(captureData->captureFT[i + numOfSamplers * (j - 1)]) > maxFTPeak1)
+            {
+                maxFTPeak1 = cabs(captureData->captureFT[i + numOfSamplers * (j - 1)]);
+                idx_maxFTPeak1 = j;
+            }
+        }
+    }
+    freqTag1 = idx_maxFTPeak1;
+
+    for (int j = freqTag2 - 2; j <= freqTag2 + 2; j++)
+    {
+        for (int i = 0; i < numOfSamplers; i++)
+        {
+            if (cabs(captureData->captureFT[i + numOfSamplers * (j - 1)]) > maxFTPeak2)
+            {
+                maxFTPeak2 = cabs(captureData->captureFT[i + numOfSamplers * (j - 1)]);
+                idx_maxFTPeak2 = j;
+            }
+        }
+    }
+    freqTag2 = idx_maxFTPeak2;
+
+    for (int i = 0; i < numOfSamplers; i++)
+    {
+        captureData->tagFT[i] = (double)cabs(captureData->captureFT[i + numOfSamplers * (idx_maxFTPeak1 - 1)]);
+        captureData->tagFT2[i] = (double)cabs(captureData->captureFT[i + numOfSamplers * (idx_maxFTPeak2 - 1)]);
+        // printf("%f\n", captureData->tagFT[i]);
+    }
+
+    smoothData(captureData->tagFT, numOfSamplers, 10);
+
+    for (int i = 0; i < numOfSamplers; i++)
+    {
+        // captureData->tagFT[i] = (float) cabs(captureData->captureFT[i + numOfSamplers * (idx_maxFTPeak)]);
+        // printf("%d: %f\n", i, captureData->tagFT[i]);
+    }
+
+    // peakBin = procLargestPeak(captureData->tagFT);
+    captureData->peakBin = procCaptureCWT(captureData->tagFT);
+    captureData->peakBin2 = procCaptureCWT(captureData->tagFT2);
+
+    printf("\nPeak of %f at %d\n", captureData->tagFT[captureData->peakBin], captureData->peakBin);
+    printf("\nPeak 2 of %f at %d\n", captureData->tagFT[captureData->peakBin2], captureData->peakBin2);
+
+    captureData->SNRdB = calculateSNR(captureData->captureFT, numOfSamplers, freqTag1, captureData->peakBin);
+    captureData->SNRdB2 = calculateSNR(captureData->captureFT, numOfSamplers, freqTag2, captureData->peakBin2);     
+
+
+
+    // printf("SNR of %f\n", SNR);
+
+    captureData->numFrames = radarData->numFrames;
+    captureData->procSuccess = true;
+
+    free(rfSignal);
+    free(framesBB);
+    free(temp);
+    freeRadarData(radarData);
+
+    return captureData;
+}
+
 /**
  * @function freeCaptureData(CaptureData *captureData)
  * @param captureData - CaptureData struct to free
@@ -429,14 +559,15 @@ double procSoilMoisture(double wetPeakBin, double airPeakBin, const char* soilTy
     return VWC;
 }
 
-// #define PROC_TEST
+#define PROC_TEST
 
 #ifdef PROC_TEST
 int main()
 {
     // CaptureData *captureData;
     // captureData = procRadarFrames("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
-    procTagTest("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
+    // procTagTest("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
+    procTwoTag("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 79, 80);
 
     // freeCaptureData(captureData);
 

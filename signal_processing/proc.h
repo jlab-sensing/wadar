@@ -26,8 +26,11 @@ typedef struct
     bool procSuccess;
     double complex *captureFT;
     double *tagFT;
+    double *tagFT2;
     int peakBin;
+    int peakBin2;
     int SNRdB;
+    int SNRdB2;
     int numFrames;
 } CaptureData;
 
@@ -61,6 +64,9 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
  * @brief Function prints capture FT and tag FT to CSV files and returns SNR in dB
  * @author ericdvet */
 double procTagTest(const char *localDataPath, const char *captureName, double tagHz);
+
+CaptureData *procTwoTag(const char *localDataPath, const char *captureName, double tag1Hz, double tag2Hz);
+
 
 /**
  * @function freeCaptureData(CaptureData *captureData)
