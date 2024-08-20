@@ -30,4 +30,16 @@
  * @author ericdvet */
 double wadar(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth);
 
+/**
+ * @function wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
+ * @param localDataPath - Local file path to radar capture
+ * @param airFramesName - Name of radar capture file with tag uncovered with soil
+ * @param trialName - Trial name for file documenting purposes
+ * @param tagHz - Oscillation frequency of tag being captured
+ * @param captureCount - Number of captures desired
+ * @return double
+ * @brief Function captures radar frames to test tag SNR
+ * @author ericdvet */
+double wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount);
+
 #endif WADAR_H

@@ -140,14 +140,14 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
  * @return None
  * @brief Function prints capture FT and tag FT to CSV files
  * @author ericdvet */
-void procTagTest(const char *localDataPath, const char *captureName, double tagHz) {
+double procTagTest(const char *localDataPath, const char *captureName, double tagHz) {
     CaptureData *captureData;
     captureData = procRadarFrames(localDataPath, captureName, tagHz);
 
     FILE *fileTagFT = fopen("tagFT.csv", "w");
     if (fileTagFT == NULL) {
         perror("Error opening file");
-        return;
+        return -1;
     }
 
 
@@ -158,7 +158,7 @@ void procTagTest(const char *localDataPath, const char *captureName, double tagH
     FILE *fileCaptureFT = fopen("captureFT.csv", "w");
     if (fileCaptureFT == NULL) {
         perror("Error opening file");
-        return;
+        return -1;
     }
 
     for (int j = 0; j < 512; j++)
@@ -170,7 +170,11 @@ void procTagTest(const char *localDataPath, const char *captureName, double tagH
         fprintf(fileCaptureFT, "%.2f\n", fabs(captureData->captureFT[j + (captureData->numFrames-1) * 512]));
     }
 
+    double SNR = captureData->SNRdB;
+
     freeCaptureData(captureData);
+    
+    return SNR;
 }
 
 /**
