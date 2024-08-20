@@ -41,13 +41,13 @@ After building the project, you can run one of the following commands based on y
 ### Measuring Soil Moisture Content
 
 ```bash
-./wadar wadar -s <localDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>
+./wadar wadar -s <fullDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>
 ```
 
 ### Testing the Tag
 
 ```bash
-./wadar wadarTagTest -s <localDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount>
+./wadar wadarTagTest -s <fullDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount>
 ```
 
 ### Plotting the Results
@@ -60,7 +60,7 @@ python plotCaptureData.py
 
 ### Parameters
 
-- `-s <localDataPath>`: Path where local data will be stored.
+- `-s <fullDataPath>`: Path where local data will be stored.
 - `-b <airFramesName>`: Name of the air frames file.
 - `-t <trialName>`: Name of the trial.
 - `-f <tagHz>`: Frequency of the tag (Hz).
