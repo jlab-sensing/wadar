@@ -44,6 +44,10 @@ After building the project, you can run one of the following commands based on y
 ./wadar wadar -s <fullDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>
 ```
 
+```bash
+./wadar wadarTwoTag -s <localDataPath> -t <trialName> -f <tag1Hz> -g <tag2Hz> -c <frameCount> -n <captureCount> -d <tagDiff>
+```
+
 ### Testing the Tag
 
 ```bash
@@ -64,9 +68,10 @@ python plotCaptureData.py
 - `-b <airFramesName>`: Name of the air frames file.
 - `-t <trialName>`: Name of the trial.
 - `-f <tagHz>`: Frequency of the tag (Hz).
+- `-g <tag2Hz>`: Frequency of the second tag (Hz).
 - `-c <frameCount>`: Number of frames to process.
 - `-n <captureCount>`: Number of captures to perform.
-- `-d <tagDepth>`: Depth of the tag (only required for soil moisture measurement).
+- `-d <tagDepth> or <tagDiff>`: Depth of the tag or distance between two tags (m).
 
 ## Examples
 
