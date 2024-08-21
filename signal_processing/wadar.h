@@ -31,6 +31,17 @@
 double wadar(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth);
 
 /**
+ * @function wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int frameCount, int captureCount)
+ * @param localDataPath - Local file path to radar capture
+ * @param airFramesName - Name of radar capture file with tag uncovered with soil
+ * @param tagHz - Oscillation frequency of tag being captured
+ * @param captureCount - Number of captures desired
+ * @return void 
+ * @brief Function captures radar frame of tag uncovered with air to determine air tag peak bin
+ * @author ericdvet */
+void wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int frameCount, int captureCount);
+
+/**
  * @function wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
  * @param localDataPath - Local file path to radar capture
  * @param airFramesName - Name of radar capture file with tag uncovered with soil

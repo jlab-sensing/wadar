@@ -45,6 +45,10 @@ After building the project, you can run one of the following commands based on y
 ```
 
 ```bash
+./wadar wadarAirCapture -s <fullDataPath> -b <airFramesName> -f <tagHz> -c <frameCount> -n <captureCount>
+```
+
+```bash
 ./wadar wadarTwoTag -s <localDataPath> -t <trialName> -f <tag1Hz> -g <tag2Hz> -c <frameCount> -n <captureCount> -d <tagDiff>
 ```
 
