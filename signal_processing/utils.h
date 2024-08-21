@@ -83,7 +83,22 @@ int *findPeaks(double *arr, int size, int *numPeaks, double minPeakHeight);
  * @author ericdvet */
 double calculateSNR(double complex *captureFT, int numOfSamplers, int freqTag, int peakBin);
 
+/**
+ * @function compare(const void *a, const void *b)
+ * @param *a - First number to compare
+ * @param *b - Second number to compare
+ * @return int
+ * @brief Compare function for qsort() to sort in ascending order
+ * @author ericdvet */
 int compare(const void *a, const void *b);
+
+/**
+ * @function median(double *arr, int length)
+ * @param *arr - Array to find median from
+ * @param length - Length of array
+ * @return double
+ * @brief Returns the median of an array of numbers
+ * @author ericdvet */
 double median(double *arr, int length);
 
 #endif

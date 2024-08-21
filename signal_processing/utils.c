@@ -258,6 +258,13 @@ double calculateSNR(double complex *captureFT, int numOfSamplers, int freqTag, i
     return (10 * log10(SNR));
 }
 
+/**
+ * @function compare(const void *a, const void *b)
+ * @param *a - First number to compare
+ * @param *b - Second number to compare
+ * @return int
+ * @brief Compare function for qsort() to sort in ascending order
+ * @author ericdvet */
 int compare(const void *a, const void *b) {
     double arg1 = *(const double *)a;
     double arg2 = *(const double *)b;
@@ -266,6 +273,13 @@ int compare(const void *a, const void *b) {
     return 0;
 }
 
+/**
+ * @function median(double *arr, int length)
+ * @param *arr - Array to find median from
+ * @param length - Length of array
+ * @return double
+ * @brief Returns the median of an array of numbers
+ * @author ericdvet */
 double median(double *arr, int length) {
     qsort(arr, length, sizeof(double), compare);
     if (length % 2 == 0) {
