@@ -48,6 +48,11 @@ The 'Salsa' software runs on the BBB. We have a modified version of some of thei
 ## Getting started
 
 - Make sure all the prerequisites are installed
+- Install all linked git submodules
+```bash
+git submodule update --init --recursive
+```
+
 - Make sure you can access the radar via `ssh root@192.168.7.2`.
 - Go to the FlatEarth/c_code directory and make sure you can compile the frameLogger code and that it runs on the radar
 - Go to the matlab directory and test that the salsaMain.m code works (check out Example 1 in the code comments at the top)
