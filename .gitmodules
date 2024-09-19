@@ -4,6 +4,3 @@
 [submodule "signal_processing/wavelib"]
 	path = signal_processing/wavelib
 	url = https://github.com/rafat/wavelib
-[submodule "b1/inertial-sense-sdk"]
-	path = b1/inertial-sense-sdk
-	url = https://github.com/inertialsense/inertial-sense-sdk.git
