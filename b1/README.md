@@ -14,6 +14,8 @@ cd dev_ws/src
 git clone https://github.com/jlab-sensing/wadar
 cd wadar
 git submodule update --init --recursive
+cd b1/inertial-sense-sdk
+git submodule update --init --recursive
 ```
 
 ### 2. Create a Symbolic Link
