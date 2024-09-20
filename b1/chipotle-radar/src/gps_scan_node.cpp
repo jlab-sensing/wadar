@@ -1,8 +1,10 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/header.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
-#include "inertial-sense-sdk/msg/gps.hpp" 
+#include <inertial_sense_ros2/msg/gps.hpp>
 #include <iostream>
+#include <fstream>
+#include <vector>
 
 
 #define COORDINATE_TOLERANCE 0.0001
@@ -13,8 +15,8 @@ public:
     GPSSubscriber()
         : Node("gps_subscriber_node")
     {
-        subscription_ = this->create_subscription<inertial-sense-sdk::msg::GPS>(
-            "GPS_rel/", 10, std::bind(&GPSSubscriber::gps_callback, this, std::placeholders::_1));
+        subscription_ = this->create_subscription<inertial_sense_ros2::msg::GPS>(
+            "GPS_rel/info", 10, std::bind(&GPSSubscriber::gps_callback, this, std::placeholders::_1));
         
         target_coordinates_ = {
             {36.956999, -122.058549},
@@ -24,7 +26,7 @@ public:
     }
 
 private:
-    void gps_callback(const inertial-sense-sdk::msg::GPS::SharedPtr msg)
+    void gps_callback(const inertial_sense_ros2::msg::GPS::SharedPtr msg)
     {
         for (const auto& target : target_coordinates_)
         {
@@ -37,49 +39,56 @@ private:
                 RCLCPP_INFO(this->get_logger(), "Target location reached: Latitude: %f, Longitude: %f",
                             msg->latitude, msg->longitude);
 
-                char localDataPath[] = "../data"; // TODO: Update the path to the data folder
-                char airFramesName[] = "temp";
-                char trialName[] = "test";
+                std::string fullDataPath = "../data"; // Update the path to the data folder
+                std::string airFramesName = "temp";
+                std::string trialName = "test";
                 double tagHz = 80;
                 int frameCount = 100;
                 int captureCount = 10;
 
-                double result = wadarTagTest(localDataPath, airFramesName, trialName, tagHz, frameCount, captureCount);
+                std::string command = "./wadar wadarTagTest -s " + fullDataPath +
+                                      " -b " + airFramesName +
+                                      " -t " + trialName +
+                                      " -f " + std::to_string(tagHz) +
+                                      " -c " + std::to_string(frameCount) +
+                                      " -n " + std::to_string(captureCount);
+
+                double result = system(command.c_str());
 
                 RCLCPP_INFO(this->get_logger(), "wadarTagTest result: %f", result);
-                std::cout << "wadarTagTest result: " << result << std::endl;
+                // std::cout << "wadarTagTest result: " << result << std::endl;
 
-                // Ensure the file is created if it doesn't exist
-                std::ofstream file_check("gps_log.csv", std::ios_base::app);
-                if (!file_check)
-                {
-                    std::ofstream create_file("gps_log.csv");
-                    if (!create_file)
-                    {
-                        RCLCPP_ERROR(this->get_logger(), "Failed to create log file");
-                        return;
-                    }
-                    create_file.close();
-                }
-                file_check.close();
+                // // Ensure the file is created if it doesn't exist
+                // std::ofstream file_check("gps_log.csv", std::ios_base::app);
+                // if (!file_check)
+                // {
+                //     std::ofstream create_file("gps_log.csv");
+                //     if (!create_file)
+                //     {
+                //         RCLCPP_ERROR(this->get_logger(), "Failed to create log file");
+                //         return;
+                //     }
+                //     create_file.close();
+                // }
+                // file_check.close();
 
-                std::ofstream log_file("gps_log.csv", std::ios_base::app);
-                if (log_file.is_open())
-                {
-                    log_file << msg->latitude << "," << msg->longitude << "," << result << "\n";
-                    log_file.close();
-                }
-                else
-                {
-                    RCLCPP_ERROR(this->get_logger(), "Failed to open log file");
-                }
+                // std::ofstream log_file("gps_log.csv", std::ios_base::app);
+                // if (log_file.is_open())
+                // {
+                //     log_file << msg->latitude << "," << msg->longitude << "," << result << "\n";
+                //     log_file.close();
+                // }
+                // else
+                // {
+                //     RCLCPP_ERROR(this->get_logger(), "Failed to open log file");
+                // }
 
                 // return;
             }
         }
     }
 
-    rclcpp::Subscription<inertial-sense-sdk::msg::GPS>::SharedPtr subscription_;
+    rclcpp::Subscription<inertial_sense_ros2::msg::GPS>::SharedPtr subscription_;
     std::vector<std::pair<double, double>> target_coordinates_;
 };
 
