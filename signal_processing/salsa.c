@@ -21,8 +21,10 @@
  * @author ericdvet */
 RadarData *salsaLoad(const char *fileName)
 {
-
-    FILE *fid = fopen(fileName, "rb");
+    char resolvedPath[512];
+    strcpy(resolvedPath, "/home/ericdvet/hare-lab/dev_ws/src/wadar/b1/chipotle-radar/2024-09-20__test_C1.frames");
+    printf("Loading radar data from %s\n", resolvedPath);
+    FILE *fid = fopen(resolvedPath, "rb");
     if (!fid)
     {
         fprintf(stderr, "ERROR: File not available");

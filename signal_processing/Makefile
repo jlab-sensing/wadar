@@ -18,6 +18,8 @@ proc.o: proc.c
 wadar.o: wadar.c
 	$(CC) $(FLAGS) wadar.c -lfftw3f -lfftw3 -lm -lcurl
 
+deploy: all
+	cp $(OUT) ../b1/chipotle-radar/
 
 clean:
 	rm -f $(OBJS) $(OUT)
