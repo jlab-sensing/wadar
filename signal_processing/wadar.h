@@ -18,6 +18,16 @@
 #include "utils.h"
 
 /**
+ * @function wadarSaveData(char *localDataPath, char *name, double data)
+ * @param localDataPath - Local file path to radar capture
+ * @param name - Name of data
+ * @param data - Data to save
+ * @return void
+ * @brief Function saves data to a CSV file in the local data path directory with the current time stamp
+ */
+void wadarSaveData(char *localDataPath, char *name, double data);
+
+/**
  * @function wadar(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth)
  * @param localDataPath - Local file path to radar capture
  * @param airFramesName - Name of radar capture file with tag uncovered with soil

@@ -253,9 +253,11 @@ double wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, d
 
     double medianSNRdB = median(SNRdB, captureCount);
 
+    wadarSaveData(localDataPath, trialName, medianSNRdB);
+
     printf("Tag Test Complete\n");
     printf("Median SNR: %f\n", medianSNRdB);
-    system("python3 plotRadarCapture.py");
+    // system("python3 plotRadarCapture.py");
     printf("Please run python plotRadarCapture.py to view the plots\n");
 
     return medianSNRdB;
@@ -354,6 +356,35 @@ double wadarTwoTag(char *localDataPath, char *trialName, double tag1Hz, double t
     printf("The Volumetric Water Content is: %.2f\n", volumetricWaterContent);
 
     return volumetricWaterContent;
+}
+
+/**
+ * @function wadarSaveData(char *localDataPath, char *name, double data)
+ * @param localDataPath - Local file path to radar capture
+ * @param name - Name of data
+ * @param data - Data to save
+ * @return void
+ * @brief Function saves data to a CSV file in the local data path directory with the current time stamp
+ */
+void wadarSaveData(char *localDataPath, char *name, double data) {
+    FILE *file;
+    char filePath[512];
+    snprintf(filePath, sizeof(filePath), "%s/data.csv", localDataPath);
+
+    file = fopen(filePath, "a");
+    if (file == NULL)
+    {
+        printf("Error opening file %s\n", filePath);
+        return;
+    }
+
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char timeStr[100];
+    strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &tm);
+
+    fprintf(file, "%s,%s,%.2f\n", timeStr, name, data);
+    fclose(file);
 }
 
 // Function to post data to the URL
