@@ -15,14 +15,14 @@
 #include "wavelib/header/wavelib.h"
 
 /**
- * @function procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
- * @param localDataPath - Local file path to radar capture
+ * @function procRadarFrames(const char *fullDataPath, const char *captureName, double tagHz)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.2:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data"
  * @param captureName - Name of radar capture file
  * @param captureName - Frequency at which tag is oscillating in Hz
  * @return CaptureData *
  * @brief Function processes radar frames for various purposes
  * @author ericdvet */
-CaptureData *procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
+CaptureData *procRadarFrames(const char *fullDataPath, const char *captureName, double tagHz)
 {
 
     CaptureData *captureData = (CaptureData *)malloc(sizeof(CaptureData));
@@ -33,11 +33,11 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
 
     // Load Capture
     char fullPath[1024];
-    const char *colon = strchr(localDataPath, ':');
+    const char *colon = strchr(fullDataPath, ':');
     if (colon != NULL) {
-        localDataPath = colon + 1;
+        fullDataPath = colon + 1;
     }
-    sprintf(fullPath, "%s/%s", localDataPath, captureName);
+    sprintf(fullPath, "%s/%s", fullDataPath, captureName);
     RadarData *radarData = salsaLoad(fullPath);
     if (radarData == NULL)
     {
@@ -137,16 +137,16 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
 }
 
 /**
- * @function procTagTest(const char *localDataPath, const char *captureName, double tagHz)
- * @param localDataPath - Local file path to radar capture
+ * @function procTagTest(const char *fullDataPath, const char *captureName, double tagHz)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.2:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data"
  * @param captureName - Name of radar capture file
  * @param captureName - Frequency at which tag is oscillating in Hz
  * @return None
  * @brief Function prints capture FT and tag FT to CSV files
  * @author ericdvet */
-double procTagTest(const char *localDataPath, const char *captureName, double tagHz) {
+double procTagTest(const char *fullDataPath, const char *captureName, double tagHz) {
     CaptureData *captureData;
-    captureData = procRadarFrames(localDataPath, captureName, tagHz);
+    captureData = procRadarFrames(fullDataPath, captureName, tagHz);
 
     FILE *fileTagFT = fopen("tagFT.csv", "w");
     if (fileTagFT == NULL) {
@@ -183,7 +183,7 @@ double procTagTest(const char *localDataPath, const char *captureName, double ta
     return SNR;
 }
 
-CaptureData *procTwoTag(const char *localDataPath, const char *captureName, double tag1Hz, double tag2Hz) {
+CaptureData *procTwoTag(const char *fullDataPath, const char *captureName, double tag1Hz, double tag2Hz) {
     CaptureData *captureData = (CaptureData *)malloc(sizeof(CaptureData));
 
     // Processing parameters
@@ -192,7 +192,7 @@ CaptureData *procTwoTag(const char *localDataPath, const char *captureName, doub
 
     // Load Capture
     char fullPath[1024];
-    sprintf(fullPath, "%s/%s", localDataPath, captureName);
+    sprintf(fullPath, "%s/%s", fullDataPath, captureName);
     RadarData *radarData = salsaLoad(fullPath);
     if (radarData == NULL)
     {

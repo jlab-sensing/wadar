@@ -46,35 +46,35 @@ typedef struct
 } RidgeLine;
 
 /**
- * @function procRadarFrames(const char *localDataPath, const char *captureName, double tagHz)
- * @param localDataPath - Local file path to radar capture
+ * @function procRadarFrames(const char *fullDataPath, const char *captureName, double tagHz)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.2:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data"
  * @param captureName - Name of radar capture file
  * @param tagHz - Frequency at which tag is oscillating in Hz
  * @return CaptureData *
  * @brief Function processes radar frames for various purposes
  * @author ericdvet */
-CaptureData *procRadarFrames(const char *localDataPath, const char *captureName, double tagHz);
+CaptureData *procRadarFrames(const char *fullDataPath, const char *captureName, double tagHz);
 
 /**
- * @function procTagTest(const char *localDataPath, const char *captureName, double tagHz)
- * @param localDataPath - Local file path to radar capture
+ * @function procTagTest(const char *fullDataPath, const char *captureName, double tagHz)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.2:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data"
  * @param captureName - Name of radar capture file
  * @param captureName - Frequency at which tag is oscillating in Hz
  * @return double
  * @brief Function prints capture FT and tag FT to CSV files and returns SNR in dB
  * @author ericdvet */
-double procTagTest(const char *localDataPath, const char *captureName, double tagHz);
+double procTagTest(const char *fullDataPath, const char *captureName, double tagHz);
 
 /**
- * @function procTwoTag(const char *localDataPath, const char *captureName, double tag1Hz, double tag2Hz)
- * @param localDataPath - Local file path to radar capture
+ * @function procTwoTag(const char *fullDataPath, const char *captureName, double tag1Hz, double tag2Hz)
+ * @param fullDataPath - Full data file path to radar capture
  * @param captureName - Name of radar capture file
  * @param tag1Hz - Frequency at which tag 1 is oscillating in Hz
  * @param tag2Hz - Frequency at which tag 2 is oscillating in Hz
  * @return CaptureData *
  * @brief Function processes radar frames for various purposes
  * @author ericdvet */
-CaptureData *procTwoTag(const char *localDataPath, const char *captureName, double tag1Hz, double tag2Hz);
+CaptureData *procTwoTag(const char *fullDataPath, const char *captureName, double tag1Hz, double tag2Hz);
 
 /**
  * @function freeCaptureData(CaptureData *captureData)
