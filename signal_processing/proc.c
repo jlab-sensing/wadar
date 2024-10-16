@@ -33,6 +33,10 @@ CaptureData *procRadarFrames(const char *localDataPath, const char *captureName,
 
     // Load Capture
     char fullPath[1024];
+    const char *colon = strchr(localDataPath, ':');
+    if (colon != NULL) {
+        localDataPath = colon + 1;
+    }
     sprintf(fullPath, "%s/%s", localDataPath, captureName);
     RadarData *radarData = salsaLoad(fullPath);
     if (radarData == NULL)
@@ -171,6 +175,8 @@ double procTagTest(const char *localDataPath, const char *captureName, double ta
     }
 
     double SNR = captureData->SNRdB;
+
+    printf("SNR of %f\n", SNR);
 
     freeCaptureData(captureData);
     
@@ -566,8 +572,8 @@ int main()
 {
     // CaptureData *captureData;
     // captureData = procRadarFrames("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
-    // procTagTest("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 80);
-    procTwoTag("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 79, 80);
+    procTagTest("/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data", "2024-10-10__testNoTag_C1.frames", 64);
+    // procTwoTag("/home/ericdvet/jlab/wadar/signal_processing/", "testFile.frames", 79, 80);
 
     // freeCaptureData(captureData);
 

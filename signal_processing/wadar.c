@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include "utils.h"
 #include <curl/curl.h>
+#include <netdb.h>
 
 // Capture parameters
 #define FRAME_RATE 200
@@ -190,8 +191,8 @@ void wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int
 
 
 /**
- * @function wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
- * @param localDataPath - Local file path to radar capture
+ * @function wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path"
  * @param airFramesName - Name of radar capture file with tag uncovered with soil
  * @param trialName - Trial name for file documenting purposes
  * @param tagHz - Oscillation frequency of tag being captured
@@ -199,7 +200,7 @@ void wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int
  * @return double
  * @brief Function captures radar frames to test tag SNR
  * @author ericdvet */
-double wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
+double wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
 {
 
     // Load soil capture
@@ -209,8 +210,6 @@ double wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, d
     snprintf(captureName, sizeof(captureName), "%d-%02d-%02d__%s_C", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, trialName);
 
     // Frame logger command
-    char fullDataPath[256];
-    sprintf(fullDataPath, "%s@192.168.7.1:%s", "ericdvet", localDataPath);
     char frameLoggerCommand[1024];
     snprintf(frameLoggerCommand, sizeof(frameLoggerCommand),
              "ssh root@192.168.7.2 \"screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger -s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s \" &",
@@ -222,16 +221,19 @@ double wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, d
     int failedCaptures[captureCount];
     int failedCount = 0;
 
+    printf("Connecting to radar...\n");
+    usleep(10 * 1000000);
+
     for (int i = 0; i < captureCount; i++)
     {
         printf("Please wait. Capture %d is proceeding\n", i + 1);
         usleep((frameCount / FRAME_RATE) * 1000000);
         printf("Waiting for data to be transferred...\n");
-        usleep((frameCount / FRAME_RATE) * 1000000 * 0.5);
+        usleep((frameCount / FRAME_RATE) * 1000000 * 0.5 + 5000000);
 
         char fileName[1000];
         snprintf(fileName, sizeof(fileName), "%s%d.frames", captureName, i + 1);
-        SNRdB[i] = procTagTest(localDataPath, fileName, tagHz);
+        SNRdB[i] = procTagTest(fullDataPath, fileName, tagHz);
         if (SNRdB[i] == -1)
         {
             failedCaptures[failedCount++] = i;
@@ -253,7 +255,7 @@ double wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, d
 
     double medianSNRdB = median(SNRdB, captureCount);
 
-    wadarSaveData(localDataPath, trialName, medianSNRdB);
+    wadarSaveData(fullDataPath, trialName, medianSNRdB);
 
     printf("Tag Test Complete\n");
     printf("Median SNR: %f\n", medianSNRdB);

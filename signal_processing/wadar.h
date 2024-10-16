@@ -52,8 +52,8 @@ double wadar(char *localDataPath, char *airFramesName, char *trialName, double t
 void wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int frameCount, int captureCount);
 
 /**
- * @function wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
- * @param localDataPath - Local file path to radar capture
+ * @function wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
+ * @param fullDataPath - Full data file path to radar capture (including /home/$user if necessary). Must be in the format "user@ip:path".
  * @param airFramesName - Name of radar capture file with tag uncovered with soil
  * @param trialName - Trial name for file documenting purposes
  * @param tagHz - Oscillation frequency of tag being captured
