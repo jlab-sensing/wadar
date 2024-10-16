@@ -212,7 +212,7 @@ double wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, do
     // Frame logger command
     char frameLoggerCommand[1024];
     snprintf(frameLoggerCommand, sizeof(frameLoggerCommand),
-             "ssh root@192.168.7.2 \"screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger -s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s \" &",
+             "ssh -q root@192.168.7.2 \"screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger -s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s \" &",
              captureName, frameCount, captureCount, FRAME_RATE, RADAR_TYPE, fullDataPath);
     system(frameLoggerCommand);
 
