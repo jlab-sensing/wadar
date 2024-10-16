@@ -21,7 +21,7 @@
  * @param captureName - Frequency at which tag is oscillating in Hz
  * @return CaptureData *
  * @brief Function processes radar frames for various purposes
- * @author ericdvet */
+ */
 CaptureData *procRadarFrames(const char *fullDataPath, const char *captureName, double tagHz)
 {
 
@@ -143,23 +143,37 @@ CaptureData *procRadarFrames(const char *fullDataPath, const char *captureName, 
  * @param captureName - Frequency at which tag is oscillating in Hz
  * @return None
  * @brief Function prints capture FT and tag FT to CSV files
- * @author ericdvet */
+ */
 double procTagTest(const char *fullDataPath, const char *captureName, double tagHz) {
     CaptureData *captureData;
     captureData = procRadarFrames(fullDataPath, captureName, tagHz);
 
-    FILE *fileTagFT = fopen("tagFT.csv", "w");
+    char tagFTFileName[256];
+    char captureFTFileName[256];
+    
+    char modifiedCaptureName[256];
+    strncpy(modifiedCaptureName, captureName, sizeof(modifiedCaptureName) - 1);
+    modifiedCaptureName[sizeof(modifiedCaptureName) - 1] = '\0';
+    char *dotFrames = strstr(modifiedCaptureName, ".frames");
+    if (dotFrames != NULL) {
+        *dotFrames = '\0';
+    }
+
+    sprintf(tagFTFileName, "%s_tagFT.csv", modifiedCaptureName);
+    printf("Being stored in %s\n", tagFTFileName);
+    sprintf(captureFTFileName, "%s_captureFT.csv", modifiedCaptureName);
+
+    FILE *fileTagFT = fopen(tagFTFileName, "w");
     if (fileTagFT == NULL) {
         perror("Error opening file");
         return -1;
     }
 
-
     for (int i = 0; i < 512; i++) {
         fprintf(fileTagFT, "%.2f\n", captureData->tagFT[i]);  // Write to file in CSV format
     }
 
-    FILE *fileCaptureFT = fopen("captureFT.csv", "w");
+    FILE *fileCaptureFT = fopen(captureFTFileName, "w");
     if (fileCaptureFT == NULL) {
         perror("Error opening file");
         return -1;

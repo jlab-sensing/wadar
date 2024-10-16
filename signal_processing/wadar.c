@@ -188,7 +188,7 @@ void wadarAirCapture(char *fullDataPath, char *airFramesName, double tagHz, int 
 
 /**
  * @function wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
- * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path"
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.2:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data"
  * @param trialName - Trial name for file documenting purposes
  * @param tagHz - Oscillation frequency of tag being captured
  * @param captureCount - Number of captures desired

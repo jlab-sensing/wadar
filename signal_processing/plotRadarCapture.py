@@ -2,29 +2,35 @@
 #  Author: ericdvet
 # 
 #  Plot the 3D FT of the captured radar data and the FT of the isolated tag
-#  Created on 2021-07-07
 
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
+import argparse
 
-csv_filename = "tagFT.csv"
+# Set up argument parser
+parser = argparse.ArgumentParser(description='Plot radar capture data.')
+parser.add_argument('tagFT', type=str, help='CSV file for tag FT data')
+parser.add_argument('captureFT', type=str, help='CSV file for capture FT data')
+args = parser.parse_args()
+
+# Read tagFT data
 tagFT = []
-
-with open(csv_filename, mode='r') as file:
+with open(args.tagFT, mode='r') as file:
     reader = csv.reader(file)
     for row in reader:
         tagFT.append(float(row[0]))
 
 plt.figure()
 plt.plot(tagFT, linestyle='-', color='b')
-plt.title("80 Hz Isolated")
+plt.title(f"80 Hz Isolated - {args.tagFT}")
 plt.xlabel("Range Bins")
 plt.ylabel("Magnitude")
 plt.savefig("tagFT.png")
 
-data = np.loadtxt("captureFT.csv", delimiter=",", skiprows=0)
+# Read captureFT data
+data = np.loadtxt(args.captureFT, delimiter=",", skiprows=0)
 
 rows, cols = data.shape
 processed_frames = cols // 100
@@ -45,7 +51,7 @@ surf = ax.plot_surface(xMat, yMat, zMat, cmap='viridis', edgecolor='none')
 ax.set_xlabel('Range Bins')
 ax.set_ylabel('Frequency')
 ax.set_zlabel('Magnitude')
-ax.set_title('FT bins')
+ax.set_title(f'FT bins - {args.captureFT}')
 plt.savefig("captureFT.png")
 
 # # Last plot
