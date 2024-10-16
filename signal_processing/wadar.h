@@ -18,14 +18,14 @@
 #include "utils.h"
 
 /**
- * @function wadarSaveData(char *localDataPath, char *name, double data)
- * @param localDataPath - Local file path to radar capture
+ * @function wadarSaveData(char *fullDataPath, char *name, char *dataName, double data)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.1:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data".
  * @param name - Name of data
  * @param data - Data to save
  * @return void
  * @brief Function saves data to a CSV file in the local data path directory with the current time stamp
  */
-void wadarSaveData(char *localDataPath, char *name, double data);
+void wadarSaveData(char *fullDataPath, char *name, double data);
 
 /**
  * @function wadar(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth)
@@ -53,15 +53,14 @@ void wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int
 
 /**
  * @function wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
- * @param fullDataPath - Full data file path to radar capture (including /home/$user if necessary). Must be in the format "user@ip:path".
- * @param airFramesName - Name of radar capture file with tag uncovered with soil
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path"
  * @param trialName - Trial name for file documenting purposes
  * @param tagHz - Oscillation frequency of tag being captured
  * @param captureCount - Number of captures desired
  * @return double
  * @brief Function captures radar frames to test tag SNR
  * @author ericdvet */
-double wadarTagTest(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount);
+double wadarTagTest(char *fullDataPath, char *trialName, double tagHz, int frameCount, int captureCount)
 
 /**
  * @function wadarTwoTag(char *localDataPath, char *airFramesName, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff)

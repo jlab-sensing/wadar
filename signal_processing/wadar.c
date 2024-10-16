@@ -193,14 +193,13 @@ void wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int
 /**
  * @function wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
  * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path"
- * @param airFramesName - Name of radar capture file with tag uncovered with soil
  * @param trialName - Trial name for file documenting purposes
  * @param tagHz - Oscillation frequency of tag being captured
  * @param captureCount - Number of captures desired
  * @return double
  * @brief Function captures radar frames to test tag SNR
  * @author ericdvet */
-double wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
+double wadarTagTest(char *fullDataPath, char *trialName, double tagHz, int frameCount, int captureCount)
 {
 
     // Load soil capture
@@ -260,7 +259,7 @@ double wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, do
     printf("Tag Test Complete\n");
     printf("Median SNR: %f\n", medianSNRdB);
     // system("python3 plotRadarCapture.py");
-    printf("Please run python plotRadarCapture.py to view the plots\n");
+    printf("Please run python3 plotRadarCapture.py to view the plots\n");
 
     return medianSNRdB;
 }
@@ -361,18 +360,21 @@ double wadarTwoTag(char *localDataPath, char *trialName, double tag1Hz, double t
 }
 
 /**
- * @function wadarSaveData(char *localDataPath, char *name, double data)
- * @param localDataPath - Local file path to radar capture
+ * @function wadarSaveData(char *fullDataPath, char *name, char *dataName, double data)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.1:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data".
  * @param name - Name of data
  * @param data - Data to save
  * @return void
  * @brief Function saves data to a CSV file in the local data path directory with the current time stamp
  */
-void wadarSaveData(char *localDataPath, char *name, double data) {
+void wadarSaveData(char *fullDataPath, char *name, double data) {
     FILE *file;
     char filePath[512];
-    snprintf(filePath, sizeof(filePath), "%s/data.csv", localDataPath);
-
+    snprintf(filePath, sizeof(filePath), "%s/data.csv", fullDataPath);
+    const char *colon = strchr(filePath, ':');
+    if (colon != NULL) {
+        memmove(filePath, colon + 1, strlen(colon));
+    }
     file = fopen(filePath, "a");
     if (file == NULL)
     {
@@ -404,14 +406,14 @@ int main(int argc, char *argv[])
     if (argc < 2)
     {
         printf("Run wadar for measuring soil moisture content or wadarTagTest for testing the tag\n");
-        printf("Usage: %s wadar -s <localDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>\n", argv[0]);
-        printf("Usage: %s wadarAirCapture -s <localDataPath> -b <airFramesName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
-        printf("Usage: %s wadarTagTest -s <localDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
-        printf("Usage: %s wadarTwoTag -s <localDataPath> -t <trialName> -f <tag1Hz> -g <tag2Hz> -c <frameCount> -n <captureCount> -d <tagDiff>\n", argv[0]);
+        printf("Usage: %s wadar -s <fullDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>\n", argv[0]);
+        printf("Usage: %s wadarAirCapture -s <fullDataPath> -b <airFramesName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
+        printf("Usage: %s wadarTagTest -s <fullDataPath> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>\n", argv[0]);
+        printf("Usage: %s wadarTwoTag -s <fullDataPath> -t <trialName> -f <tag1Hz> -g <tag2Hz> -c <frameCount> -n <captureCount> -d <tagDiff>\n", argv[0]);
         return -1;
     }
 
-    char *localDataPath = NULL;
+    char *fullDataPath = NULL;
     char *airFramesName = NULL;
     char *trialName = NULL;
     double tagHz = 0.0;
@@ -428,7 +430,7 @@ int main(int argc, char *argv[])
         {
             if (strcmp(argv[i], "-s") == 0)
             {
-                localDataPath = argv[++i];
+                fullDataPath = argv[++i];
             }
             else if (strcmp(argv[i], "-b") == 0)
             {
@@ -460,14 +462,14 @@ int main(int argc, char *argv[])
                 return -1;
             }
         }
-        if (!localDataPath || !airFramesName || !trialName || tagHz == 0.0 || frameCount == 0 || captureCount == 0 || tagDepth == 0.0)
+        if (!fullDataPath || !airFramesName || !trialName || tagHz == 0.0 || frameCount == 0 || captureCount == 0 || tagDepth == 0.0)
         {
-            printf("Missing arguments. Usage: %s wadar -s <localDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>\n", argv[0]);
+            printf("Missing arguments. Usage: %s wadar -s <fullDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>\n", argv[0]);
             return -1;
         }
 
         // Call the wadar function with the parsed arguments
-        double VWC = wadar(localDataPath, airFramesName, trialName, tagHz, frameCount, captureCount, tagDepth);
+        double VWC = wadar(fullDataPath, airFramesName, trialName, tagHz, frameCount, captureCount, tagDepth);
         wadar2dirtviz("https://dirtviz.jlab.ucsc.edu/api/teros/", VWC);
         return 0;
     }
@@ -478,7 +480,7 @@ int main(int argc, char *argv[])
         {
             if (strcmp(argv[i], "-s") == 0)
             {
-                localDataPath = argv[++i];
+                fullDataPath = argv[++i];
             }
             else if (strcmp(argv[i], "-b") == 0)
             {
@@ -502,14 +504,14 @@ int main(int argc, char *argv[])
                 return -1;
             }
         }
-        if (!localDataPath || !airFramesName || tagHz == 0.0 || frameCount == 0 || captureCount == 0)
+        if (!fullDataPath || !airFramesName || tagHz == 0.0 || frameCount == 0 || captureCount == 0)
         {
             printf("Missing arguments. Usage: %s wadarAirCapture -s <localDataPath> -b <airFramesName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
             return -1;
         }
 
         // Call the wadar function with the parsed arguments
-        wadarAirCapture(localDataPath, airFramesName, tagHz, frameCount, captureCount);
+        wadarAirCapture(fullDataPath, airFramesName, tagHz, frameCount, captureCount);
         return 0;
     }
 
@@ -520,11 +522,7 @@ int main(int argc, char *argv[])
         {
             if (strcmp(argv[i], "-s") == 0)
             {
-                localDataPath = argv[++i];
-            }
-            else if (strcmp(argv[i], "-b") == 0)
-            {
-                airFramesName = argv[++i];
+                fullDataPath = argv[++i];
             }
             else if (strcmp(argv[i], "-t") == 0)
             {
@@ -548,14 +546,14 @@ int main(int argc, char *argv[])
                 return -1;
             }
         }
-        if (!localDataPath || !airFramesName || !trialName || tagHz == 0.0 || frameCount == 0 || captureCount == 0)
+        if (!fullDataPath || !trialName || tagHz == 0.0 || frameCount == 0 || captureCount == 0)
         {
-            printf("Missing arguments. Usage: %s wadar -s <localDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>\n", argv[0]);
+            printf("Missing arguments. Usage: %s wadarTagTest -s <fullDataPath> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>\n", argv[0]);
             return -1;
         }
 
         // Call the wadar function with the parsed arguments
-        wadarTagTest(localDataPath, airFramesName, trialName, tagHz, frameCount, captureCount);
+        wadarTagTest(fullDataPath, trialName, tagHz, frameCount, captureCount);
         return 0;
     }
 
@@ -566,7 +564,7 @@ int main(int argc, char *argv[])
         {
             if (strcmp(argv[i], "-s") == 0)
             {
-                localDataPath = argv[++i];
+                fullDataPath = argv[++i];
             }
             else if (strcmp(argv[i], "-t") == 0)
             {
@@ -598,24 +596,24 @@ int main(int argc, char *argv[])
                 return -1;
             }
         }
-        if (!localDataPath || !trialName || tagHz == 0.0 || tag2Hz == 0.0 || frameCount == 0 || captureCount == 0 || tagDiff == 0.0)
+        if (!fullDataPath || !trialName || tagHz == 0.0 || tag2Hz == 0.0 || frameCount == 0 || captureCount == 0 || tagDiff == 0.0)
         {
-            printf("Missing arguments. Usage: %s wadarTwoTag -s <localDataPath> -t <trialName> -f <tag1Hz> -g <tag2Hz> -c <frameCount> -n <captureCount> -d <tagDiff>\n", argv[0]);
+            printf("Missing arguments. Usage: %s wadarTwoTag -s <fullDataPath> -t <trialName> -f <tag1Hz> -g <tag2Hz> -c <frameCount> -n <captureCount> -d <tagDiff>\n", argv[0]);
             return -1;
         }
 
         // Call the wadar function with the parsed arguments
-        double VWC = wadarTwoTag(localDataPath, trialName, tagHz, tag2Hz, frameCount, captureCount, tagDiff);
+        double VWC = wadarTwoTag(fullDataPath, trialName, tagHz, tag2Hz, frameCount, captureCount, tagDiff);
         wadar2dirtviz("https://dirtviz.jlab.ucsc.edu/api/teros/", VWC);
         return 0;
     }
 
     // Invalid function message
     printf("Run wadar for measuring soil moisture content or wadarTagTest for testing the tag\n");
-    printf("Usage: %s wadar -s <localDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>\n", argv[0]);
-    printf("Usage: %s wadarAirCapture -s <localDataPath> -b <airFramesName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
-    printf("Usage: %s wadarTagTest -s <localDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
-    printf("Usage: %s wadarTwoTag -s <localDataPath> -t <trialName> -f <tag1Hz> -g <tag2Hz> -c <frameCount> -n <captureCount> -d <tagDiff>\n", argv[0]);
+    printf("Usage: %s wadar -s <fullDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount> -d <tagDepth>\n", argv[0]);
+    printf("Usage: %s wadarAirCapture -s <fullDataPath> -b <airFramesName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
+    printf("Usage: %s wadarTagTest -s <fullDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
+    printf("Usage: %s wadarTwoTag -s <fullDataPath> -t <trialName> -f <tag1Hz> -g <tag2Hz> -c <frameCount> -n <captureCount> -d <tagDiff>\n", argv[0]);
     return -1;
 }
 #endif
