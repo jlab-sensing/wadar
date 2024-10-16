@@ -23,8 +23,8 @@
 #define SOIL_TYPE "farm"
 
 /**
- * @function wadar(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth)
- * @param localDataPath - Local file path to radar capture
+ * @function wadar(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.1:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data"
  * @param airFramesName - Name of radar capture file with tag uncovered with soil
  * @param trialName - Trial name for file documenting purposes
  * @param tagHz - Oscillation frequency of tag being captured
@@ -33,13 +33,13 @@
  * @return double
  * @brief Function calculates the volumetric water content of the soil from the capture
  * @author ericdvet */
-double wadar(char *localDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth)
+double wadar(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth)
 {
 
     double volumetricWaterContent = 0.0;
 
     // Process Air Capture
-    CaptureData *airCapture = procRadarFrames(localDataPath, airFramesName, tagHz);
+    CaptureData *airCapture = procRadarFrames(fullDataPath, airFramesName, tagHz);
     if (!airCapture || !airCapture->procSuccess)
     {
         printf("ERROR: Air Frames Invalid\n");
@@ -54,8 +54,6 @@ double wadar(char *localDataPath, char *airFramesName, char *trialName, double t
     snprintf(captureName, sizeof(captureName), "%d-%02d-%02d_%dmmDepth_%s_C", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, (int)(tagDepth * 1000), trialName);
 
     // Frame logger command
-    char fullDataPath[256];
-    sprintf(fullDataPath, "%s@192.168.7.1:%s", "ericdvet", localDataPath);
     char frameLoggerCommand[1024];
     snprintf(frameLoggerCommand, sizeof(frameLoggerCommand),
              "ssh root@192.168.7.2 \"screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger -s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s \" &",
@@ -79,7 +77,7 @@ double wadar(char *localDataPath, char *airFramesName, char *trialName, double t
 
         char wetFramesName[1000];
         snprintf(wetFramesName, sizeof(wetFramesName), "%s%d.frames", captureName, i + 1);
-        CaptureData *wetCapture = procRadarFrames(localDataPath, wetFramesName, tagHz);
+        CaptureData *wetCapture = procRadarFrames(fullDataPath, wetFramesName, tagHz);
         if (!wetCapture || !wetCapture->procSuccess)
         {
             failedCaptures[failedCount++] = i;
@@ -119,15 +117,15 @@ double wadar(char *localDataPath, char *airFramesName, char *trialName, double t
 }
 
 /**
- * @function wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int frameCount, int captureCount)
- * @param localDataPath - Local file path to radar capture
+ * @function wadarAirCapture(char *fullDataPath, char *airFramesName, double tagHz, int frameCount, int captureCount)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.2:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data"
  * @param airFramesName - Name of radar capture file with tag uncovered with soil
  * @param tagHz - Oscillation frequency of tag being captured
  * @param captureCount - Number of captures desired
  * @return void 
  * @brief Function captures radar frame of tag uncovered with air to determine air tag peak bin
  * @author ericdvet */
-void wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int frameCount, int captureCount) {
+void wadarAirCapture(char *fullDataPath, char *airFramesName, double tagHz, int frameCount, int captureCount) {
 
     // Load soil capture
     time_t t = time(NULL);
@@ -136,8 +134,6 @@ void wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int
     snprintf(captureName, sizeof(captureName), "%d-%02d-%02d_Air_C", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
 
     // Frame logger command
-    char fullDataPath[256];
-    sprintf(fullDataPath, "%s@192.168.7.1:%s", "ericdvet", localDataPath);
     char frameLoggerCommand[1024];
     snprintf(frameLoggerCommand, sizeof(frameLoggerCommand),
              "ssh root@192.168.7.2 \"screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger -s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s \" &",
@@ -160,7 +156,7 @@ void wadarAirCapture(char *localDataPath, char *airFramesName, double tagHz, int
 
         char airFramesName[1000];
         snprintf(airFramesName, sizeof(airFramesName), "%s%d.frames", captureName, i + 1);
-        CaptureData *airCapture = procRadarFrames(localDataPath, airFramesName, tagHz);
+        CaptureData *airCapture = procRadarFrames(fullDataPath, airFramesName, tagHz);
         if (!airCapture || !airCapture->procSuccess)
         {
             failedCaptures[failedCount++] = i;
@@ -265,8 +261,8 @@ double wadarTagTest(char *fullDataPath, char *trialName, double tagHz, int frame
 }
 
 /**
- * @function wadarTwoTag(char *localDataPath, char *airFramesName, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff)
- * @param localDataPath - Local file path to radar capture
+ * @function wadarTwoTag(char *fullDataPath, char *airFramesName, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff)
+ * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.1:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data"
  * @param airFramesName - Name of radar capture file with tag uncovered with soil
  * @param trialName - Trial name for file documenting purposes
  * @param tag1Hz - Oscillation frequency of top tag being captured
@@ -276,7 +272,7 @@ double wadarTagTest(char *fullDataPath, char *trialName, double tagHz, int frame
  * @return double
  * @brief Function captures radar frames with two tags to calculate the volumetric water content of the soil
  * @author ericdvet */
-double wadarTwoTag(char *localDataPath, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff)
+double wadarTwoTag(char *fullDataPath, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff)
 {
 
     double volumetricWaterContent = 0.0;
@@ -288,8 +284,6 @@ double wadarTwoTag(char *localDataPath, char *trialName, double tag1Hz, double t
     snprintf(captureName, sizeof(captureName), "%d-%02d-%02d_DualTag%d%d_%s_C", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, (int) tag1Hz, (int) tag2Hz, trialName);
 
     // Frame logger command
-    char fullDataPath[256];
-    sprintf(fullDataPath, "%s@192.168.7.1:%s", "ericdvet", localDataPath);
     char frameLoggerCommand[1024];
     snprintf(frameLoggerCommand, sizeof(frameLoggerCommand),
              "ssh root@192.168.7.2 \"screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger -s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s \" &",
@@ -316,7 +310,7 @@ double wadarTwoTag(char *localDataPath, char *trialName, double tag1Hz, double t
 
         char wetFramesName[1000];
         snprintf(wetFramesName, sizeof(wetFramesName), "%s%d.frames", captureName, i + 1);
-        CaptureData *wetCapture = procTwoTag(localDataPath, wetFramesName, tag1Hz, tag2Hz);
+        CaptureData *wetCapture = procTwoTag(fullDataPath, wetFramesName, tag1Hz, tag2Hz);
         if (!wetCapture || !wetCapture->procSuccess)
         {
             failedCaptures[failedCount++] = i;
@@ -506,7 +500,7 @@ int main(int argc, char *argv[])
         }
         if (!fullDataPath || !airFramesName || tagHz == 0.0 || frameCount == 0 || captureCount == 0)
         {
-            printf("Missing arguments. Usage: %s wadarAirCapture -s <localDataPath> -b <airFramesName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
+            printf("Missing arguments. Usage: %s wadarAirCapture -s <fullDataPath> -b <airFramesName> -f <tagHz> -c <frameCount> -n <captureCount>\n", argv[0]);
             return -1;
         }
 
