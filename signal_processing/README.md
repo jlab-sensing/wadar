@@ -55,7 +55,7 @@ After building the project, you can run one of the following commands based on y
 ### Testing the Tag
 
 ```bash
-./wadar wadarTagTest -s <fullDataPath> -b <airFramesName> -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount>
+./wadar wadarTagTest -s <fullDataPath> -b -t <trialName> -f <tagHz> -c <frameCount> -n <captureCount>
 ```
 
 ### Plotting the Results
@@ -63,12 +63,12 @@ After building the project, you can run one of the following commands based on y
 After running `wadarTagTest`, you can generate plots using the following command:
 
 ```bash
-python plotCaptureData.py
+python plotCaptureData.py <Name of tag FT>  <Name of capture FT> 
 ```
 
 ### Parameters
 
-- `-s <fullDataPath>`: Path where local data will be stored.
+- `-s <fullDataPath>`: ull data file path to radar capture storage. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.1:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data".
 - `-b <airFramesName>`: Name of the air frames file.
 - `-t <trialName>`: Name of the trial.
 - `-f <tagHz>`: Frequency of the tag (Hz).
@@ -88,7 +88,7 @@ python plotCaptureData.py
 ### Example 2: Testing the Tag
 
 ```bash
-./wadar wadarTagTest -s /data/tagTest -b airFrames002 -t trialB -f 2000 -c 200 -n 10
+./wadar wadarTagTest -s ericdvet@192.168.7.1:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data -t testWeeWoo -f 64 -c 200 -n 3
 ```
 
 ### Example 3: Plotting the Results
