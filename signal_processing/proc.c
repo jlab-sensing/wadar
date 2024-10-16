@@ -148,8 +148,8 @@ double procTagTest(const char *fullDataPath, const char *captureName, double tag
     CaptureData *captureData;
     captureData = procRadarFrames(fullDataPath, captureName, tagHz);
 
-    char tagFTFileName[256];
-    char captureFTFileName[256];
+    char tagFTFileName[1024];
+    char captureFTFileName[1024];
     
     char modifiedCaptureName[256];
     strncpy(modifiedCaptureName, captureName, sizeof(modifiedCaptureName) - 1);
@@ -159,9 +159,14 @@ double procTagTest(const char *fullDataPath, const char *captureName, double tag
         *dotFrames = '\0';
     }
 
-    sprintf(tagFTFileName, "%s_tagFT.csv", modifiedCaptureName);
+    const char *colon = strchr(fullDataPath, ':');
+    if (colon != NULL) {
+        fullDataPath = colon + 1;
+    }
+
+    sprintf(tagFTFileName, "%s/%s_tagFT.csv", fullDataPath, modifiedCaptureName);
     printf("Being stored in %s\n", tagFTFileName);
-    sprintf(captureFTFileName, "%s_captureFT.csv", modifiedCaptureName);
+    sprintf(captureFTFileName, "%s/%s_captureFT.csv", fullDataPath, modifiedCaptureName);
 
     FILE *fileTagFT = fopen(tagFTFileName, "w");
     if (fileTagFT == NULL) {

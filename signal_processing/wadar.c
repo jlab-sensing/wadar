@@ -16,6 +16,7 @@
 #include "utils.h"
 #include <curl/curl.h>
 #include <netdb.h>
+#include "wadar.h"
 
 // Capture parameters
 #define FRAME_RATE 200
@@ -32,7 +33,7 @@
  * @param tagDepth - Depth at which tag is buried measured in meters
  * @return double
  * @brief Function calculates the volumetric water content of the soil from the capture
- * @author ericdvet */
+ */
 double wadar(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth)
 {
 
@@ -68,12 +69,15 @@ double wadar(char *fullDataPath, char *airFramesName, char *trialName, double ta
     int failedCaptures[captureCount];
     int failedCount = 0;
 
+    printf("Connecting to radar...\n");
+    usleep(10 * 1000000);
+
     for (int i = 0; i < captureCount; i++)
     {
         printf("Please wait. Capture %d is proceeding\n", i + 1);
         usleep((frameCount / FRAME_RATE) * 1000000);
         printf("Waiting for data to be transferred...\n");
-        usleep((frameCount / FRAME_RATE) * 1000000 * 0.5);
+        usleep((frameCount / FRAME_RATE) * 1000000 * 0.5 + 5000000);
 
         char wetFramesName[1000];
         snprintf(wetFramesName, sizeof(wetFramesName), "%s%d.frames", captureName, i + 1);
@@ -113,6 +117,8 @@ double wadar(char *fullDataPath, char *airFramesName, char *trialName, double ta
 
     printf("The Volumetric Water Content is: %.2f\n", volumetricWaterContent);
 
+    wadarSaveData(fullDataPath, trialName, volumetricWaterContent, SNRdB[0], peakBin[0]);
+
     return volumetricWaterContent;
 }
 
@@ -124,7 +130,7 @@ double wadar(char *fullDataPath, char *airFramesName, char *trialName, double ta
  * @param captureCount - Number of captures desired
  * @return void 
  * @brief Function captures radar frame of tag uncovered with air to determine air tag peak bin
- * @author ericdvet */
+ */
 void wadarAirCapture(char *fullDataPath, char *airFramesName, double tagHz, int frameCount, int captureCount) {
 
     // Load soil capture
@@ -147,12 +153,15 @@ void wadarAirCapture(char *fullDataPath, char *airFramesName, double tagHz, int 
     int failedCaptures[captureCount];
     int failedCount = 0;
 
+    printf("Connecting to radar...\n");
+    usleep(10 * 1000000);
+
     for (int i = 0; i < captureCount; i++)
     {
         printf("Please wait. Capture %d is proceeding\n", i + 1);
         usleep((frameCount / FRAME_RATE) * 1000000);
         printf("Waiting for data to be transferred...\n");
-        usleep((frameCount / FRAME_RATE) * 1000000 * 0.5);
+        usleep((frameCount / FRAME_RATE) * 1000000 * 0.5 + 5000000);
 
         char airFramesName[1000];
         snprintf(airFramesName, sizeof(airFramesName), "%s%d.frames", captureName, i + 1);
@@ -184,7 +193,6 @@ void wadarAirCapture(char *fullDataPath, char *airFramesName, double tagHz, int 
         captureCount--;
     }
 }
-
 
 /**
  * @function wadarTagTest(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount)
@@ -250,7 +258,7 @@ double wadarTagTest(char *fullDataPath, char *trialName, double tagHz, int frame
 
     double medianSNRdB = median(SNRdB, captureCount);
 
-    wadarSaveData(fullDataPath, trialName, medianSNRdB);
+    wadarSaveData(fullDataPath, trialName, -1, medianSNRdB, -1);
 
     printf("Tag Test Complete\n");
     printf("Median SNR: %f\n", medianSNRdB);
@@ -271,7 +279,7 @@ double wadarTagTest(char *fullDataPath, char *trialName, double tagHz, int frame
  * @param tagDiff - Distance between tags measured in meters
  * @return double
  * @brief Function captures radar frames with two tags to calculate the volumetric water content of the soil
- * @author ericdvet */
+ */
 double wadarTwoTag(char *fullDataPath, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff)
 {
 
@@ -301,12 +309,15 @@ double wadarTwoTag(char *fullDataPath, char *trialName, double tag1Hz, double ta
     int failedCaptures[captureCount];
     int failedCount = 0;
 
+    printf("Connecting to radar...\n");
+    usleep(10 * 1000000);
+
     for (int i = 0; i < captureCount; i++)
     {
         printf("Please wait. Capture %d is proceeding\n", i + 1);
         usleep((frameCount / FRAME_RATE) * 1000000);
         printf("Waiting for data to be transferred...\n");
-        usleep((frameCount / FRAME_RATE) * 1000000 * 0.5);
+        usleep((frameCount / FRAME_RATE) * 1000000 * 0.5 + 5000000);
 
         char wetFramesName[1000];
         snprintf(wetFramesName, sizeof(wetFramesName), "%s%d.frames", captureName, i + 1);
@@ -354,14 +365,16 @@ double wadarTwoTag(char *fullDataPath, char *trialName, double tag1Hz, double ta
 }
 
 /**
- * @function wadarSaveData(char *fullDataPath, char *name, char *dataName, double data)
+ * @function wadarSaveData(char *fullDataPath, char *name, char *dataName, double vwc, double snr, int peakBin)
  * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.1:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data".
  * @param name - Name of data
- * @param data - Data to save
+ * @param vwc - Volumetric Water Content
+ * @param snr - Signal-to-Noise Ratio
+ * @param peakBin - Peak bin value
  * @return void
  * @brief Function saves data to a CSV file in the local data path directory with the current time stamp
  */
-void wadarSaveData(char *fullDataPath, char *name, double data) {
+void wadarSaveData(char *fullDataPath, char *name, double vwc, double snr, int peakBin) {
     FILE *file;
     char filePath[512];
     snprintf(filePath, sizeof(filePath), "%s/data.csv", fullDataPath);
@@ -381,9 +394,10 @@ void wadarSaveData(char *fullDataPath, char *name, double data) {
     char timeStr[100];
     strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &tm);
 
-    fprintf(file, "%s,%s,%.2f\n", timeStr, name, data);
+    fprintf(file, "%s,%s,%.2f,%.2f,%d\n", timeStr, name, vwc, snr, peakBin);
     fclose(file);
 }
+
 
 // Function to post data to the URL
 void wadar2dirtviz(const char *url, double vwc)
@@ -464,7 +478,7 @@ int main(int argc, char *argv[])
 
         // Call the wadar function with the parsed arguments
         double VWC = wadar(fullDataPath, airFramesName, trialName, tagHz, frameCount, captureCount, tagDepth);
-        wadar2dirtviz("https://dirtviz.jlab.ucsc.edu/api/teros/", VWC);
+        // wadar2dirtviz("https://dirtviz.jlab.ucsc.edu/api/teros/", VWC);
         return 0;
     }
 
@@ -598,7 +612,7 @@ int main(int argc, char *argv[])
 
         // Call the wadar function with the parsed arguments
         double VWC = wadarTwoTag(fullDataPath, trialName, tagHz, tag2Hz, frameCount, captureCount, tagDiff);
-        wadar2dirtviz("https://dirtviz.jlab.ucsc.edu/api/teros/", VWC);
+        // wadar2dirtviz("https://dirtviz.jlab.ucsc.edu/api/teros/", VWC);
         return 0;
     }
 

@@ -18,14 +18,16 @@
 #include "utils.h"
 
 /**
- * @function wadarSaveData(char *fullDataPath, char *name, char *dataName, double data)
+ * @function wadarSaveData(char *fullDataPath, char *name, char *dataName, double vwc, double snr, int peakBin)
  * @param fullDataPath - Full data file path to radar capture. Must be in the format "user@ip:path". Example: "ericdvet@192.168.7.1:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data".
  * @param name - Name of data
- * @param data - Data to save
+ * @param vwc - Volumetric Water Content
+ * @param snr - Signal-to-Noise Ratio
+ * @param peakBin - Peak bin value
  * @return void
  * @brief Function saves data to a CSV file in the local data path directory with the current time stamp
  */
-void wadarSaveData(char *fullDataPath, char *name, double data);
+void wadarSaveData(char *fullDataPath, char *name, double vwc, double snr, int peakBin);
 
 /**
  * @function wadar(char *fullDataPath, char *airFramesName, char *trialName, double tagHz, int frameCount, int captureCount, double tagDepth)
@@ -60,7 +62,7 @@ void wadarAirCapture(char *fullDataPath, char *airFramesName, double tagHz, int 
  * @return double
  * @brief Function captures radar frames to test tag SNR
  * @author ericdvet */
-double wadarTagTest(char *fullDataPath, char *trialName, double tagHz, int frameCount, int captureCount)
+double wadarTagTest(char *fullDataPath, char *trialName, double tagHz, int frameCount, int captureCount);
 
 /**
  * @function wadarTwoTag(char *fullDataPath, char *airFramesName, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff)
@@ -76,4 +78,4 @@ double wadarTagTest(char *fullDataPath, char *trialName, double tagHz, int frame
  * @author ericdvet */
 double wadarTwoTag(char *fullDataPath, char *trialName, double tag1Hz, double tag2Hz, int frameCount, int captureCount, double tagDiff);
 
-#endif WADAR_H
+#endif 
