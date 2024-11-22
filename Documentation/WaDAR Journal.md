@@ -1,7 +1,6 @@
 
 # Project WaDAR Notes
-
-## Abstract
+## Eric Vetha
 These are my notes taken during my work on the WADAR project for Dr. Colleen Josephson's jLab at UCSC.
 
 ## Table of Contents
@@ -36,7 +35,9 @@ This chapter compiles information regarding communication with the Chipotle Rada
 ```bash
 # SSH into the BeagleBone.
 ssh root@192.168.7.2
+```
 
+```bash
 # Shutdown board (imperative, forgetting to do so will require re-flashing the BBB).
 sudo shutdown -h now
 ```
@@ -157,16 +158,24 @@ Ensure:
 ```bash
 # Verify radar connection via USB.
 dmesg show
+```
 
+```bash
 # List available IPs.
 ip l
+```
 
+```bash
 # Toggle enxs IPs on.
 sudo IP link set enxXXXXXX up
+```
 
+```bash
 # Use DHclient to assign IP.
 sudo dhclient enxXXXXXX
+```
 
+```bash
 # Validate SSH and set up pubkeys for passwordless access.
 ssh root@192.168.7.2
 ssh tragedy@192.168.7.1
@@ -176,7 +185,10 @@ ssh tragedy@192.168.7.1
 ```bash
 # Remove problematic driver to use Realtek WiFi modem.
 sudo rmmod iwlmvm
+```
 
+
+```bash
 # Re-enable the driver.
 sudo modprobe iwlmvm
 ```
@@ -185,25 +197,161 @@ sudo modprobe iwlmvm
 ```bash
 # Show available IPs.
 ip l
+```
 
+```bash
 # Start WiFi advertiser.
 systemctl start
+```
 
+```bash
 # Interrogate fidelity.
 ethtool
+```
 
+```bash
 # Display IPs and configuration.
 cat /etc/dnsmasq.d/quadruped
+```
 
+```bash
 # Verify WiFi connection.
 dmesg
 ```
 
 ---
 
-## GPS Coordinates
-This section pertains to the theory and methodology of working with GPS coordinates in the ROS package.
+## BeagleBone Black Purgatory
 
-TODO
+### Internet Sharing through Host Machine
 
-##
+#### Step 1: Enable IP Forwarding
+```bash
+sudo sysctl -w net.ipv4.ip_forward=1
+```
+
+#### Step 2: Set up Network Address Translation
+Configure iptables to forward traffic between wlp0s20f3 (Wi-Fi) and enx648cbbf22564 (USB Ethernet):
+```bash
+sudo iptables -t nat -A POSTROUTING -o wlp0s20f3 -j MASQUERADE
+sudo iptables -A FORWARD -i enx648cbbf22564 -o wlp0s20f3 -j ACCEPT
+sudo iptables -A FORWARD -i wlp0s20f3 -o enx648cbbf22564 -m state --state ESTABLISHED,RELATED -j ACCEPT
+```
+
+#### Step 3: Configure Beaglebone
+
+1. SSH into the BeagleBone
+```bash
+ssh -v root@192.168.7.2
+```
+
+2. Set the default gateway to the host computer
+```bash
+sudo route add default gw 192.168.7.1
+```
+
+3. Update the DNS settings
+```bash
+sudo nano /etc/resolv.conf
+```
+
+Add the following
+```plaintext
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+```
+
+4. Test the connection
+```bash
+ping google.com
+```
+
+#### Notes: 
+Since the BBB is running Debian Jessie, some stuff needs to be done to resolve further issues.
+
+1. Switch to Achived Repositories
+```bash
+sudo nano /etc/apt/sources.list
+```
+Replace the contents with the following
+```plaintext
+deb http://archive.debian.org/debian jessie main contrib non-free
+deb http://archive.debian.org/debian-security jessie/updates main contrib non-free
+```
+
+2. Disable Repository SSL Verification
+```bash
+sudo nano /etc/apt/apt.conf
+```
+Add the following
+```plaintext
+Acquire::Check-Valid-Until "false";
+Acquire::https::Verify-Peer "false";
+Acquire::https::Verify-Host "false";
+```
+
+3. Test success
+```bash
+sudo apt-get update
+```
+
+### Configuring BeagleBone with X11 Forwarding 
+#### Step 1: Enable X11 Forwarding on the Host Machine (BBB)
+Ensure your SSH daemon (sshd) is configured for X11 forwarding:
+```bash
+sudo nano /etc/ssh/sshd_config
+
+Confirm or set the following:
+```plaintext
+X11Forwarding yes
+X11DisplayOffset 10
+X11UseLocalhost yes
+```
+
+Restart the SSH daemon:
+```bash
+sudo systemctl restart sshd
+```
+
+#### Step 2: Enable X11 Forwarding on the Client Machine (Your Computer)
+In your local machine's SSH client configuration file:
+```bash
+nano ~/.ssh/config
+```
+
+
+Add the following:
+```plaintext
+Host 192.168.7.2
+    ForwardX11 yes
+    ForwardX11Trusted yes
+```
+
+Verify that xauth is installed on the BeagleBone:
+```bash
+sudo apt-get install xauth
+```
+
+Check and restart your X11 server:
+```bash
+sudo systemctl restart sshd
+```
+
+#### Step 3: Test X11 Forwarding
+SSH into the BeagleBone with X11 forwarding:
+```bash
+ssh -X root@192.168.7.2
+```
+
+Test X11 by running a graphical application:
+```bash
+gnuplot
+plot sin(x)
+```
+
+#### Step 4: Resolve Issues with X Server
+Kill any unnecessary X server processes:
+```bash
+ps aux | grep X
+kill <PID>
+```
