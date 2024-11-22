@@ -1,5 +1,7 @@
 # Radar Captures
 
+## This is OUTDATED and currently used as a backup
+
 This document contains links to .zip files hosted on Google Drive, each containing radar captures along with a brief description.
 
 ## Captures
