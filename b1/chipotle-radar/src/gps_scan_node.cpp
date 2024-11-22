@@ -101,19 +101,21 @@ int main(int argc, char *argv[])
     // rclcpp::spin(std::make_shared<GPSSubscriber>());
     // rclcpp::shutdown();
 
-    std::string fullDataPath = "~/hare-lab/dev_ws/src/wadar/signal_processing/data"; // Update the path to the data folder
-    std::string airFramesName = "temp";
-    std::string trialName = "test";
+    std::string fullDataPath = "ericdvet@192.168.7.1:/home/ericdvet/hare-lab/dev_ws/src/wadar/signal_processing/data"; // Update the path to the data folder
+    std::string airFramesName = "2024-10-16__test_C1.frames";
+    std::string trialName = "test2";
     double tagHz = 80;
-    int frameCount = 2000;
+    int frameCount = 200;
     int captureCount = 1;
+    double captureDepth = 0.25;
 
-    std::string command = "cd wadar/signal_processing/ && ./wadar wadarTagTest -s " + fullDataPath +
+    std::string command = "cd wadar/signal_processing/ && ./wadar wadar -s " + fullDataPath +
                           " -b " + airFramesName +
                           " -t " + trialName +
                           " -f " + std::to_string(tagHz) +
                           " -c " + std::to_string(frameCount) +
-                          " -n " + std::to_string(captureCount);
+                          " -n " + std::to_string(captureCount) +
+                          " -d " + std::to_string(captureDepth);
     // std::string command = "ls";
 
     char cwd[1024];
