@@ -1,40 +1,32 @@
-[OUTDATED]
+# Unitree B1 Workspace
 
-# Unitree B1 Integration
+This subfolder contains the necessary files and instructions to integrate the wadar sensing system with the Unitree B1 quadruped robot using ROS 2 Iron. Follow the steps below to set up and build the package. These steps assume you have already cloned this repository and have followed the directions in the the root README.md to install all dependencies.
 
-This subfolder contains the necessary files and instructions to integrate the wadar sensing system with the Unitree B1 quadruped robot using ROS 2 Iron. Follow the steps below to set up and build the package.
-
-##Setup
+## Setup
 
 ### 1. Clone the Repository and Submodule
 
-First, clone this repository and ensure the inertial-sense-sdk submodule is included. Navigate to your ROS 2 workspace and clone the required package:
+These steps assume you have already cloned this repository and have f
 
 ```bash
-mkdir -p dev_ws/src
-cd dev_ws/src
-git clone https://github.com/jlab-sensing/wadar
-cd wadar
-git submodule update --init --recursive
-cd b1/inertial-sense-sdk
+cd b1_ws/src/inertial-sense-sdk
 git submodule update --init --recursive
 ```
 
 ### 2. Create a Symbolic Link
 
-To allow colcon build to find the appropriate ROS 2 package, create a symbolic link from the inertial-sense-sdk submodule's ROS 2 directory to your workspace src directory:
+To allow colcon build to find the appropriate ROS 2 packages, return to the workspace directory and create a symbolic link from the inertial-sense-sdk submodule's ROS 2 directory to your workspace src directory:
 
 ```bash
-cd dev_ws/src
+cd src
 sudo ln -s wadar/inertial-sense-sdk/ros2 .
-sudo ln -s wadar/chipotle-radar .
 ```
 
 ### 3. Build the Workspace
 
-Return to the root of your ROS 2 workspace and build the package using colcon:
+Return to the workspace and build the package using colcon:
 ```bash
-cd dev_ws
+source /opt/ros/iron/setup.bash
 colcon build
 ```
 
@@ -50,3 +42,7 @@ You will need to run this command every time you open a new terminal to have acc
 echo "source ~/dev_ws/install/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 ```
+
+## Packages
+
+TODO:
