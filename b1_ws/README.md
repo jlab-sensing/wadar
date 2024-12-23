@@ -37,12 +37,6 @@ For ROS 2 to function properly, you need to source the setup script to set up th
 . install/setup.bash
 ```
 
-You will need to run this command every time you open a new terminal to have access to the ROS 2 commands. To avoid this, you can add the line to your ~/.bashrc:
-```bash
-echo "source ~/dev_ws/install/setup.bash" >> ~/.bashrc
-source ~/.bashrc
-```
-
 ## Packages
 
 TODO:
