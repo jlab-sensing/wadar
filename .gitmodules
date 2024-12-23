@@ -10,3 +10,6 @@
 [submodule "RF-Backscatter-PCB-V1"]
 	path = RF-Backscatter-PCB-V1
 	url = https://github.com/jlab-sensing/RF-Backscatter-PCB-V1.git
+[submodule "backscatter_tag/RF-Backscatter-PCB-V1"]
+	path = backscatter_tag/RF-Backscatter-PCB-V1
+	url = https://github.com/jlab-sensing/RF-Backscatter-PCB-V1.git
