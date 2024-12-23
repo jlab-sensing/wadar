@@ -14,17 +14,18 @@ class TagUI(Node):
             self.tag_callback,
             10)
         self.compass = None
-        self.i = 0
 
     def tag_callback(self, msg):
-        self.relative_heading_angle = msg.relative_heading_angle
-        self.alignment_angle = msg.alignment_angle
+        if msg is None:
+            return
+        self.relative_heading = msg.relative_heading
+        self.alignment = msg.alignment
         self.distance = msg.distance
 
-        if self.compass:
-            self.compass.update_heading(self.relative_heading_angle)
+        if self.compass is not None:
+            self.compass.update_heading(self.relative_heading)
             self.compass.update_distance(msg.distance)
-            self.compass.update_alignment(self.alignment_angle)
+            self.compass.update_alignment(self.alignment)
 
 class Compass(tk.Canvas):
     def __init__(self, master, **kwargs):
@@ -36,7 +37,7 @@ class Compass(tk.Canvas):
         self.needle = self.create_line(150, 150, 150, 50, fill="red", width=3)
         self.distance_label = self.create_text(400, 50, text="Distance to tag:", anchor="w", font=("Arial", 10))
         self.distance_text = self.create_text(400, 70, text="0.0000 m", anchor="w", font=("Arial", 10))
-        self.create_text(150, 2850, text="Tag Alignment", anchor="center", font=("Arial", 12))
+        self.create_text(150, 280, text="Tag Alignment", anchor="center", font=("Arial", 12))
         self.create_oval(50, 300, 250, 500, fill="white")
         self.create_line(150, 300, 150, 500, fill="black")
         self.alignment_needle = self.create_line(150, 300, 150, 500, fill="blue", width=3)
@@ -53,7 +54,7 @@ class Compass(tk.Canvas):
         x = 150 + 80 * math.sin(heading_rad)
         y = 150 - 80 * math.cos(heading_rad)
         self.coords(self.needle, 150, 150, x, y)
-        if heading < 5 or heading > 355:
+        if abs(heading - 360) < 5 or heading < 5:
             self.itemconfig(self.distance_light, fill="green")
         elif heading < 10 or heading > 350:
             self.itemconfig(self.distance_light, fill="yellow")
@@ -68,7 +69,7 @@ class Compass(tk.Canvas):
         y_end = 400 + 80 * math.cos(alignment_rad)
         self.coords(self.alignment_needle, x_start, y_start, x_end, y_end)
         self.itemconfig(self.alignment_text, text="{:.4f} deg".format(alignment))
-        if alignment < 5 or alignment > 355:
+        if abs(alignment - 360) < 5 or alignment < 5:
             self.itemconfig(self.alignment_light, fill="green")
         elif alignment < 10 or alignment > 350:
             self.itemconfig(self.alignment_light, fill="yellow")

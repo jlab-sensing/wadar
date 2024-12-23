@@ -1,12 +1,12 @@
 # Unitree B1 Workspace
 
-This subfolder contains the necessary files and instructions to integrate the wadar sensing system with the Unitree B1 quadruped robot using ROS 2 Iron. Follow the steps below to set up and build the package. These steps assume you have already cloned this repository and have followed the directions in the the root README.md to install all dependencies.
+This subfolder contains the necessary files and instructions to integrate the wadar sensing system with the Unitree B1 quadruped robot using ROS 2 Iron. Follow the steps below to set up and build the package. These steps assume you have already cloned this repository and have followed the directions in the root README.md to install all dependencies.
 
 ## Setup
 
 ### 1. Clone the Repository and Submodule
 
-These steps assume you have already cloned this repository and have f
+These steps assume you have already cloned this repository and have followed the directions in the root README.md to install all dependencies.
 
 ```bash
 cd b1_ws/src/inertial-sense-sdk
@@ -19,7 +19,7 @@ To allow colcon build to find the appropriate ROS 2 packages, return to the work
 
 ```bash
 cd src
-sudo ln -s wadar/inertial-sense-sdk/ros2 .
+ln -s wadar/inertial-sense-sdk/ros2 .
 ```
 
 ### 3. Build the Workspace
