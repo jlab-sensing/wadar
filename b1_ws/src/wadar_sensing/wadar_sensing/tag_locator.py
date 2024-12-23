@@ -1,9 +1,11 @@
 import rclpy
 from rclpy.node import Node
 from inertial_sense_ros2.msg import DIDINS1
-import tkinter as tk
 import math
 from wadar_sensing.globalPath import global_path
+
+from textual.app import *
+from textual.widgets import *
 
 class TagLocator(Node):
 
@@ -28,8 +30,10 @@ class TagLocator(Node):
         tagLongitude = -121.890591
         tagHeading = 0
 
+        tagHeadingDiff = tagHeading - self.heading
+
         relativeAngle = global_path(self.latitude, self.longitude, self.heading, tagLatitude, tagLongitude)
-        self.get_logger().info(f'Relative Angle: {relativeAngle}')
+        self.get_logger().info(f'Turn {relativeAngle} \t Align to {tagHeadingDiff}')
 
 def main(args=None):
     rclpy.init(args=args)
