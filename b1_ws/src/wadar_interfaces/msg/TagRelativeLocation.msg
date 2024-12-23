@@ -1,2 +1,3 @@
 float32 relative_heading_angle
 float32 alignment_angle
+float32 distance

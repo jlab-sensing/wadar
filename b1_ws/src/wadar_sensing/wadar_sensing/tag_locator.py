@@ -34,13 +34,14 @@ class TagLocator(Node):
         tagHeadingDiff = tagHeading - self.heading
 
         relativeAngle = global_path(self.latitude, self.longitude, self.heading, tagLatitude, tagLongitude)
-        self.get_logger().info(f'Turn {relativeAngle} \t Align to {tagHeadingDiff}')
+
+        distance = math.sqrt((self.latitude - tagLatitude)**2 + (self.longitude - tagLongitude)**2) * 111139
 
         msg = TagRelativeLocation()
         msg.relative_heading_angle = relativeAngle
         msg.alignment_angle = tagHeadingDiff
+        msg.distance = distance
         self.tag_publisher.publish(msg)
-        self.get_logger().info('Publishing tag relative location')
 
 def main(args=None):
     rclpy.init(args=args)

@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'tag_locator = wadar_sensing.tag_locator:main',
+            'gui = wadar_sensing.gui:main',
         ],
     },
 )
