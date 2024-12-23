@@ -1,3 +1,5 @@
+[OUTDATED]
+
 # Unitree B1 Integration
 
 This subfolder contains the necessary files and instructions to integrate the wadar sensing system with the Unitree B1 quadruped robot using ROS 2 Iron. Follow the steps below to set up and build the package.

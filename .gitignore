@@ -23,3 +23,6 @@ tramp
 *.png
 captureSettings
 wadar
+b1_ws/build/
+b1_ws/install/
+b1_ws/log/
