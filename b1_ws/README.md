@@ -13,6 +13,9 @@ sudo apt install ros-iron-joint-state-publisher-gui
 sudo apt install ros-iron-xacro
 sudo apt install ros-iron-gazebo-ros-pkgs
 sudo apt install ros-iron-robot-localization
+sudo apt install ros-iron-slam-toolbox
+sudo apt install ros-iron-tf2-tools
+sudo apt install ros-iron-nav2-bringup
 ```
 
 ## Setup
