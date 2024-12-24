@@ -12,7 +12,7 @@ find_package(ament_cmake REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 install(
-  DIRECTORY src launch rviz xacro meshes
+  DIRECTORY src launch rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
