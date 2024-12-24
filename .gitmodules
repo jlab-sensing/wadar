@@ -13,3 +13,6 @@
 [submodule "b1_ws/src/inertial-sense-sdk"]
 	path = b1_ws/src/inertial-sense-sdk
 	url = https://github.com/harelab-ucsc/inertial-sense-sdk.git
+[submodule "b1_ws/mapproxy"]
+	path = b1_ws/mapproxy
+	url = https://github.com/danielsnider/MapViz-Tile-Map-Google-Maps-Satellite.git
