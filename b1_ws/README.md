@@ -1,6 +1,19 @@
 # Unitree B1 Workspace
 
-This subfolder contains the necessary files and instructions to integrate the wadar sensing system with the Unitree B1 quadruped robot using ROS 2 Iron. Follow the steps below to set up and build the package. These steps assume you have already cloned this repository and have followed the directions in the root README.md to install all dependencies.
+This subfolder contains the necessary files and instructions to integrate the wadar sensing system with the Unitree B1 quadruped robot using ROS 2 Iron. Follow the steps below to set up and build the package. These steps assume you have already cloned this repository and have followed the directions in the root README.md to install general dependencies.
+
+## B1 Workspace Dependencies
+
+```bash
+sudo apt install libgeographic-dev
+sudo apt install ros-iron-navigation2
+sudo apt install ros-iron-nav2-bringup
+sudo apt install ros-iron-turtlebot3-gazebo
+sudo apt install ros-iron-joint-state-publisher-gui
+sudo apt install ros-iron-xacro
+sudo apt install ros-iron-gazebo-ros-pkgs
+sudo apt install ros-iron-robot-localization
+```
 
 ## Setup
 
