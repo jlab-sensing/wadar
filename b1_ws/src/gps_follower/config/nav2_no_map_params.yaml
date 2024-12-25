@@ -111,20 +111,20 @@ controller_server:
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.26
+      max_vel_x: 2.6
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 10.0
       min_speed_xy: 0.0
-      max_speed_xy: 0.26
+      max_speed_xy: 2.6
       min_speed_theta: 0.0
       # Add high threshold velocity for turtlebot 3 issue.
       # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
-      acc_lim_x: 2.5
+      acc_lim_x: 25.0
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
+      acc_lim_theta: 32.0
+      decel_lim_x: -25.0
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
+      decel_lim_theta: -32.0
       vx_samples: 20
       vy_samples: 5
       vtheta_samples: 20
@@ -203,8 +203,8 @@ global_costmap:
       # fit on a big static costmap. Thus it is recommended to use a rolling global costmap large enough to 
       # contain each pair of successive waypoints. See: https://github.com/ros-planning/navigation2/issues/2174
       rolling_window: True
-      width: 50
-      height: 50
+      width: 500
+      height: 500
       track_unknown_space: true
       # no static map
       plugins: ["obstacle_layer", "inflation_layer"]
@@ -305,10 +305,10 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.26, 0.0, 1.0]
-    min_velocity: [-0.26, 0.0, -1.0]
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
+    max_velocity: [2.6, 0.0, 10.0]
+    min_velocity: [-2.6, 0.0, -10.0]
+    max_accel: [25.0, 0.0, 32.0]
+    max_decel: [-25.0, 0.0, -32.0]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
