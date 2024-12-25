@@ -16,6 +16,9 @@ sudo apt install ros-iron-robot-localization
 sudo apt install ros-iron-slam-toolbox
 sudo apt install ros-iron-tf2-tools
 sudo apt install ros-iron-nav2-bringup
+sudo apt install ros-$ROS_DISTRO-mapviz
+sudo apt install ros-$ROS_DISTRO-mapviz-plugins
+sudo apt install ros-$ROS_DISTRO-tile-map
 ```
 
 ## Setup
