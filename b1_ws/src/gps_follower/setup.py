@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 import os
 from glob import glob
 
-package_name = 'nav2_gps_waypoint_follower_demo'
+package_name = 'gps_follower'
 
 setup(
     name=package_name,
@@ -28,9 +28,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'logged_waypoint_follower = nav2_gps_waypoint_follower_demo.logged_waypoint_follower:main',
-            'interactive_waypoint_follower = nav2_gps_waypoint_follower_demo.interactive_waypoint_follower:main',
-            'gps_waypoint_logger = nav2_gps_waypoint_follower_demo.gps_waypoint_logger:main'
+            'logged_waypoint_follower = gps_follower.logged_waypoint_follower:main',
+            'interactive_waypoint_follower = gps_follower.interactive_waypoint_follower:main',
+            'gps_waypoint_logger = gps_follower.gps_waypoint_logger:main'
         ],
     },
 )
