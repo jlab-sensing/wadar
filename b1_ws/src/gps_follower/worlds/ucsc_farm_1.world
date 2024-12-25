@@ -30,7 +30,6 @@
       <elevation>488.0</elevation>
       <heading_deg>180</heading_deg>
     </spherical_coordinates>
-    
     <physics type="ode">
       <real_time_update_rate>100.0</real_time_update_rate>
       <max_step_size>0.01</max_step_size>

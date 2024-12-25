@@ -3,9 +3,8 @@
 <package format="3">
   <name>gps_follower</name>
   <version>0.0.0</version>
-  <description>Demo package for following GPS waypoints with nav2</description>
-  <maintainer email="pedro.gonzalez@eia.edu.co">pepisg</maintainer>
-  <maintainer email="stevenmacenski@gmail.com">Steve Macenski</maintainer>
+  <description>TODO</description>
+  <maintainer email="evetha@ucsc.edu">ericdvet</maintainer>
   <license>MIT</license>
 
   <depend>navigation2</depend>
