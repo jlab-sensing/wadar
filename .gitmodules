@@ -16,6 +16,3 @@
 [submodule "b1_ws/mapproxy"]
 	path = b1_ws/mapproxy
 	url = https://github.com/danielsnider/MapViz-Tile-Map-Google-Maps-Satellite.git
-[submodule "b1_ws/b1_ws/mapproxy"]
-	path = b1_ws/b1_ws/mapproxy
-	url = https://github.com/danielsnider/MapViz-Tile-Map-Google-Maps-Satellite.git
