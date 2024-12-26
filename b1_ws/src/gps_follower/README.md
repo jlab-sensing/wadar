@@ -1,4 +1,4 @@
-# gps_follower Node
+# gps_follower Simulation Node
 
 ## Gazebo and Rviz
 
