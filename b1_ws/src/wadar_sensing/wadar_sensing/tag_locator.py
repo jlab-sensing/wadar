@@ -13,8 +13,8 @@ class TagLocator(Node):
         self.heading = None
 
         # Tentatively hardcoded tag location
-        self.tag_latitude = 37.3361663
-        self.tag_longitude = -121.890591
+        self.tag_latitude = 36.982271
+        self.tag_longitude = -122.053967
         self.tag_heading = 0
 
         self.gps_subscription = self.create_subscription(

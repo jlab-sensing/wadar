@@ -30,7 +30,9 @@ setup(
         'console_scripts': [
             'logged_waypoint_follower = gps_follower.logged_waypoint_follower:main',
             'interactive_waypoint_follower = gps_follower.interactive_waypoint_follower:main',
-            'gps_waypoint_logger = gps_follower.gps_waypoint_logger:main'
+            'gps_waypoint_logger = gps_follower.gps_waypoint_logger:main',
+            'is_imx_emulator = gps_follower.is_imx_emulator:main',
+            'gui = gps_follower.gui:main'
         ],
     },
 )

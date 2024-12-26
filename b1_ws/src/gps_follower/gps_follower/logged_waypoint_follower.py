@@ -7,6 +7,8 @@ import sys
 import time
 
 from gps_follower.utils.gps_utils import latLonYaw2Geopose
+from geographic_msgs.msg import GeoPoseStamped  # Import the message type
+from rclpy.node import Node  # Import Node
 
 
 class YamlWaypointParser:
@@ -29,14 +31,16 @@ class YamlWaypointParser:
         return gepose_wps
 
 
-class GpsWpCommander():
+class GpsWpCommander(Node):
     """
     Class to use nav2 gps waypoint follower to follow a set of waypoints logged in a yaml file
     """
 
     def __init__(self, wps_file_path):
+        super().__init__('gps_wp_commander')
         self.navigator = BasicNavigator("basic_navigator")
         self.wp_parser = YamlWaypointParser(wps_file_path)
+        self.wp_publisher = self.create_publisher(GeoPoseStamped, 'current_waypoint', 10)  # Initialize the publisher
 
     def start_wpf(self):
         """
@@ -44,9 +48,14 @@ class GpsWpCommander():
         """
         self.navigator.waitUntilNav2Active(localizer='robot_localization')
         wps = self.wp_parser.get_wps()
-        self.navigator.followGpsWaypoints(wps)
-        while (not self.navigator.isTaskComplete()):
-            time.sleep(0.1)
+        for wp in wps:
+            geo_pose_stamped = GeoPoseStamped()
+            geo_pose_stamped.pose = wp
+            geo_pose_stamped.header.stamp = self.get_clock().now().to_msg()
+            self.wp_publisher.publish(geo_pose_stamped)  # Publish the current waypoint
+            self.navigator.followGpsWaypoints([wp])
+            while not self.navigator.isTaskComplete():
+                time.sleep(0.1)
         print("wps completed successfully")
 
 

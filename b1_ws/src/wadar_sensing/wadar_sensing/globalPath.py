@@ -7,7 +7,7 @@ def global_path(self_latitude, self_longitude, self_heading, tag_latitude, tag_l
     Args:
         self_latitude (float): Current latitude.
         self_longitude (float): Current longitude.
-        self_heading (float): Current heading in degrees.
+        self_heading (float): Current heading in radians.
         tagLatitude (float): Target latitude.
         tagLongitude (float): Target longitude.
 
@@ -22,7 +22,9 @@ def global_path(self_latitude, self_longitude, self_heading, tag_latitude, tag_l
     bearingAngle = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2), math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
     bearingAngle = math.degrees(bearingAngle)
     bearingAngle = (bearingAngle + 360) % 360
-    relativeAngle = bearingAngle - self_heading
+
+    self_heading_degrees = math.degrees(self_heading)
+    relativeAngle = bearingAngle - self_heading_degrees
 
     relativeAngle = (relativeAngle + 360) % 360
     return relativeAngle
