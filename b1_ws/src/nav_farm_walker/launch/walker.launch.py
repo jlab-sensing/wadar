@@ -14,26 +14,20 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
-    gps_wpf_dir = get_package_share_directory('nav_farm_walker')
-    launch_dir = os.path.join(gps_wpf_dir, 'launch')
-    params_dir = os.path.join(gps_wpf_dir, "config")
-    nav2_params = os.path.join(params_dir, "nav2_no_map_params.yaml")
+    walker_dir = get_package_share_directory('nav_farm_walker')
+    launch_dir = os.path.join(walker_dir, 'launch')
+    params_dir = os.path.join(walker_dir, "config")
+    nav2_params = os.path.join(params_dir, "nav2_params.yaml")
     configured_params = RewrittenYaml(
         source_file=nav2_params, root_key="", param_rewrites="", convert_types=True
     )
 
     use_rviz = LaunchConfiguration('use_rviz')
-    use_mapviz = LaunchConfiguration('use_mapviz')
 
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
         default_value='False',
         description='Whether to start RVIZ')
-
-    declare_use_mapviz_cmd = DeclareLaunchArgument(
-        'use_mapviz',
-        default_value='False',
-        description='Whether to start mapviz')
 
     robot_localization_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -57,13 +51,7 @@ def generate_launch_description():
         condition=IfCondition(use_rviz)
     )
 
-    mapviz_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_dir, 'mapviz.launch.py')),
-        condition=IfCondition(use_mapviz)
-    )
-
-    urdf_file = os.path.join(gps_wpf_dir, 'urdf', 'walker.urdf')
+    urdf_file = os.path.join(walker_dir, 'urdf', 'walker.urdf')
     with open(urdf_file, 'r') as infp:
         robot_description = infp.read()
 
@@ -74,23 +62,6 @@ def generate_launch_description():
         output='screen',
         parameters=[{'robot_description': robot_description}]
     )
-
-    # Remove static transform publishers to avoid loops
-    # static_transform_publisher_cmd_odom = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     name='static_transform_publisher_odom',
-    #     output='screen',
-    #     arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'odom']
-    # )
-
-    # static_transform_publisher_cmd_map = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     name='static_transform_publisher_map',
-    #     output='screen',
-    #     arguments=['0', '0', '0', '0', '0', '0', 'odom', 'map']
-    # )
 
     # Create the launch description and populate
     ld = LaunchDescription()
@@ -104,10 +75,8 @@ def generate_launch_description():
     # navigation2 launch
     ld.add_action(navigation2_cmd)
 
-    # viz launch
+    # rviz launch
     ld.add_action(declare_use_rviz_cmd)
     ld.add_action(rviz_cmd)
-    ld.add_action(declare_use_mapviz_cmd)
-    ld.add_action(mapviz_cmd)
 
     return ld

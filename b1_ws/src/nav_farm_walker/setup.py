@@ -32,7 +32,8 @@ setup(
             'interactive_waypoint_follower = nav_farm_walker.interactive_waypoint_follower:main',
             'gps_waypoint_logger = nav_farm_walker.gps_waypoint_logger:main',
             'is_imx_emulator = nav_farm_walker.is_imx_emulator:main',
-            'gui = nav_farm_walker.gui:main'
+            'gui = nav_farm_walker.gui:main',
+            'sensor_publisher = nav_farm_walker.sensor_publisher:main'
         ],
     },
 )
