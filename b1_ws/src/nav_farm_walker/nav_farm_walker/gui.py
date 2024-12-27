@@ -32,6 +32,9 @@ class TagUI(Node):
         self.tag_latitude = 0
         self.tag_longitude = 0
         self.tag_heading = 0
+        self.latitude = 0
+        self.longitude = 0
+        self.heading = 0
 
     def ins_callback(self, msg):
         if msg.lla is None or msg.theta is None:

@@ -22,13 +22,7 @@ def generate_launch_description():
         source_file=nav2_params, root_key="", param_rewrites="", convert_types=True
     )
 
-    use_rviz = LaunchConfiguration('use_rviz')
     use_mapviz = LaunchConfiguration('use_mapviz')
-
-    declare_use_rviz_cmd = DeclareLaunchArgument(
-        'use_rviz',
-        default_value='False',
-        description='Whether to start RVIZ')
 
     declare_use_mapviz_cmd = DeclareLaunchArgument(
         'use_mapviz',
@@ -51,12 +45,6 @@ def generate_launch_description():
         }.items(),
     )
 
-    rviz_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(bringup_dir, "launch", 'rviz_launch.py')),
-        condition=IfCondition(use_rviz)
-    )
-
     mapviz_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(launch_dir, 'mapviz.launch.py')),
@@ -75,23 +63,6 @@ def generate_launch_description():
         parameters=[{'robot_description': robot_description}]
     )
 
-    # Remove static transform publishers to avoid loops
-    # static_transform_publisher_cmd_odom = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     name='static_transform_publisher_odom',
-    #     output='screen',
-    #     arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'odom']
-    # )
-
-    # static_transform_publisher_cmd_map = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     name='static_transform_publisher_map',
-    #     output='screen',
-    #     arguments=['0', '0', '0', '0', '0', '0', 'odom', 'map']
-    # )
-
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -105,8 +76,6 @@ def generate_launch_description():
     ld.add_action(navigation2_cmd)
 
     # viz launch
-    ld.add_action(declare_use_rviz_cmd)
-    ld.add_action(rviz_cmd)
     ld.add_action(declare_use_mapviz_cmd)
     ld.add_action(mapviz_cmd)
 

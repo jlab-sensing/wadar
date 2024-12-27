@@ -6,7 +6,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 gps_wpf_dir = get_package_share_directory("nav_farm_walker")
-mapviz_config_file = os.path.join(gps_wpf_dir, "config", "gps_wpf_demo.mvc")
+mapviz_config_file = os.path.join(gps_wpf_dir, "config", "gps_wpf.mvc")
 
 
 def generate_launch_description():
