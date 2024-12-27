@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 import os
 from glob import glob
 
-package_name = 'gps_follower'
+package_name = 'nav_farm_walker'
 
 setup(
     name=package_name,
@@ -28,11 +28,11 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'logged_waypoint_follower = gps_follower.logged_waypoint_follower:main',
-            'interactive_waypoint_follower = gps_follower.interactive_waypoint_follower:main',
-            'gps_waypoint_logger = gps_follower.gps_waypoint_logger:main',
-            'is_imx_emulator = gps_follower.is_imx_emulator:main',
-            'gui = gps_follower.gui:main'
+            'logged_waypoint_follower = nav_farm_walker.logged_waypoint_follower:main',
+            'interactive_waypoint_follower = nav_farm_walker.interactive_waypoint_follower:main',
+            'gps_waypoint_logger = nav_farm_walker.gps_waypoint_logger:main',
+            'is_imx_emulator = nav_farm_walker.is_imx_emulator:main',
+            'gui = nav_farm_walker.gui:main'
         ],
     },
 )
