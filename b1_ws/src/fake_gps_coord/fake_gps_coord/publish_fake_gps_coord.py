@@ -27,13 +27,13 @@ class GpsNode(Node):
 
         msg.theta = [0.0, 0.0, 0.0]  
         msg.uvw = [0.0, 0.0, 0.0]    
-        msg.lla = [37.7749, -122.4194, 0.0] 
+        msg.lla = [36.982505, -122.055467, 0.0] 
         msg.ned = self.lla_to_ned(msg.lla)
-        
+
         self.publisher_.publish(msg)
 
     def lla_to_ned(self, lla):
-        lat0, lon0, alt0 = 37.7749, -122.4194, 0.0 # i have 0 fucking clue what these values are supposed to be
+        lat0, lon0, alt0 = 36.982505, -122.055467, 0.0 # i have 0 fucking clue what these values are supposed to be
 
         lat = lla[0] * (3.141592653589793 / 180.0)
         lon = lla[1] * (3.141592653589793 / 180.0)

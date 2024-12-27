@@ -1,19 +1,4 @@
 <robot name="walker">
-  <!-- Define materials -->
-  <material name="grey">
-    <color rgba="0.5 0.5 0.5 1.0"/>
-  </material>
-  <material name="white">
-    <color rgba="1.0 1.0 1.0 1.0"/>
-  </material>
-  <material name="blue">
-    <color rgba="0.0 0.0 1.0 1.0"/>
-  </material>
-  <material name="green">
-    <color rgba="0.0 1.0 0.0 1.0"/>
-  </material>
-
-  <!-- Base footprint link -->
   <link name="base_footprint">
     <visual>
       <geometry>
@@ -23,14 +8,12 @@
     </visual>
   </link>
 
-  <!-- Base link joint -->
   <joint name="base_link_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
     <origin xyz="0 0 0.1" rpy="0 0 0"/>
   </joint>
 
-  <!-- Base link -->
   <link name="base_link">
     <visual>
       <geometry>
@@ -40,14 +23,12 @@
     </visual>
   </link>
 
-  <!-- GPS joint -->
   <joint name="gps_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="gps_link"/>
     <origin xyz="0 0 1.5" rpy="0 0 0"/>
   </joint>
 
-  <!-- GPS link -->
   <link name="gps_link">
     <visual>
       <geometry>
@@ -57,14 +38,12 @@
     </visual>
   </link>
 
-  <!-- IMU joint -->
   <joint name="imu_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="imu_link"/>
     <origin xyz="0 0 0.5" rpy="0 0 0"/>
   </joint>
 
-  <!-- IMU link -->
   <link name="imu_link">
     <visual>
       <geometry>
