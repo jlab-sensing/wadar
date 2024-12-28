@@ -6,7 +6,7 @@ import os
 import sys
 import time
 
-from gps_follower.utils.gps_utils import latLonYaw2Geopose
+from nav_farm_walker.utils.gps_utils import latLonYaw2Geopose
 from geographic_msgs.msg import GeoPoseStamped  # Import the message type
 from rclpy.node import Node  # Import Node
 
