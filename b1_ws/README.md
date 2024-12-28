@@ -15,17 +15,14 @@ sudo apt install ros-iron-gazebo-ros-pkgs
 sudo apt install ros-iron-robot-localization
 sudo apt install ros-iron-slam-toolbox
 sudo apt install ros-iron-tf2-tools
-sudo apt install ros-iron-nav2-bringup
-sudo apt install ros-$ROS_DISTRO-mapviz
-sudo apt install ros-$ROS_DISTRO-mapviz-plugins
-sudo apt install ros-$ROS_DISTRO-tile-map
+sudo apt install ros-iron-mapviz
+sudo apt install ros-iron-mapviz-plugins
+sudo apt install ros-iron-tile-map
 ```
 
 ## Setup
 
 ### 1. Clone the Repository and Submodule
-
-These steps assume you have already cloned this repository and have followed the directions in the root README.md to install all dependencies.
 
 ```bash
 cd b1_ws/src/inertial-sense-sdk
@@ -58,4 +55,4 @@ For ROS 2 to function properly, you need to source the setup script to set up th
 
 ## Packages
 
-TODO:
+See [package descriptions](https://github.com/jlab-sensing/wadar/blob/master/b1_ws/src/README.md).
