@@ -24,7 +24,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Get the launch directory
     gps_wpf_dir = get_package_share_directory(
-        "gps_follower")
+        "nav_farm_sim")
     launch_dir = os.path.join(gps_wpf_dir, 'launch')
     world = os.path.join(gps_wpf_dir, "worlds", "ucsc_farm_1.world")
 

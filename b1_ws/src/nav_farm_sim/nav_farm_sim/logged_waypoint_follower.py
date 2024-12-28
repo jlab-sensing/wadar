@@ -6,7 +6,7 @@ import os
 import sys
 import time
 
-from gps_follower.utils.gps_utils import latLonYaw2Geopose
+from nav_farm_sim.utils.gps_utils import latLonYaw2Geopose
 from geographic_msgs.msg import GeoPoseStamped  # Import the message type
 from rclpy.node import Node  # Import Node
 
@@ -64,7 +64,7 @@ def main():
 
     # allow to pass the waypoints file as an argument
     default_yaml_file_path = os.path.join(get_package_share_directory(
-        "gps_follower"), "config", "demo_waypoints.yaml")
+        "nav_farm_sim"), "config", "demo_waypoints.yaml")
     if len(sys.argv) > 1:
         yaml_file_path = sys.argv[1]
     else:
