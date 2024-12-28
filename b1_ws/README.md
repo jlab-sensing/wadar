@@ -56,3 +56,17 @@ For ROS 2 to function properly, you need to source the setup script to set up th
 ## Packages
 
 See [package descriptions](https://github.com/jlab-sensing/wadar/blob/master/b1_ws/src/README.md).
+
+
+## Citations
+
+```
+@inproceedings{macenski2020marathon2,
+    title={Marathon 2: A Navigation System},
+    author={Macenski, Steve and Foote, Tully and Gerkey, Brian and Lalancette, Martin and Woodall, William},
+    booktitle={2020 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+    pages={2718--2725},
+    year={2020},
+    organization={IEEE}
+}
+```
