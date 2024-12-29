@@ -3,6 +3,7 @@ from rclpy.node import Node
 from nav2_simple_commander.robot_navigator import BasicNavigator
 from geometry_msgs.msg import PointStamped
 from nav_farm_sim.utils.gps_utils import latLonYaw2Geopose
+from geographic_msgs.msg import GeoPoseStamped 
 
 
 class InteractiveGpsWpCommander(Node):
@@ -16,6 +17,8 @@ class InteractiveGpsWpCommander(Node):
 
         self.mapviz_wp_sub = self.create_subscription(
             PointStamped, "/clicked_point", self.mapviz_wp_cb, 1)
+        
+        self.wp_publisher = self.create_publisher(GeoPoseStamped, 'current_waypoint', 10) 
 
     def mapviz_wp_cb(self, msg: PointStamped):
         """
@@ -23,13 +26,19 @@ class InteractiveGpsWpCommander(Node):
         """
         if msg.header.frame_id != "wgs84":
             self.get_logger().warning(
-                "Received point from mapviz that ist not in wgs84 frame. This is not a gps point and wont be followed")
+                "Received point from mapviz that is not in wgs84 frame. This is not a gps point and won't be followed")
             return
 
         self.navigator.waitUntilNav2Active(localizer='robot_localization')
-        wp = [latLonYaw2Geopose(msg.point.y, msg.point.x)]
-        self.navigator.followGpsWaypoints(wp)
-        if (self.navigator.isTaskComplete()):
+        wp = latLonYaw2Geopose(msg.point.y, msg.point.x)
+        
+        geo_pose_stamped = GeoPoseStamped()
+        geo_pose_stamped.pose = wp
+        geo_pose_stamped.header.stamp = self.get_clock().now().to_msg()
+        self.wp_publisher.publish(geo_pose_stamped) 
+
+        self.navigator.followGpsWaypoints([wp])
+        if self.navigator.isTaskComplete():
             self.get_logger().info("wps completed successfully")
 
 

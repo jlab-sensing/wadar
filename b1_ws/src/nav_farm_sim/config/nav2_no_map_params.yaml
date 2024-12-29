@@ -157,8 +157,10 @@ local_costmap:
       global_frame: odom
       robot_base_frame: base_link
       rolling_window: true
-      width: 3
-      height: 3
+      width: 30
+      height: 30
+      origin_x: -15.0
+      origin_y: -15.0
       resolution: 0.05
       robot_radius: 0.22
       plugins: ["voxel_layer", "inflation_layer"]
@@ -202,9 +204,11 @@ global_costmap:
       # When using GPS navigation you will potentially traverse huge environments which are not practical to
       # fit on a big static costmap. Thus it is recommended to use a rolling global costmap large enough to 
       # contain each pair of successive waypoints. See: https://github.com/ros-planning/navigation2/issues/2174
-      rolling_window: True
+      rolling_window: False
       width: 500
       height: 500
+      origin_x: -250.0
+      origin_y: -250.0
       track_unknown_space: true
       # no static map
       plugins: ["obstacle_layer", "inflation_layer"]
@@ -313,3 +317,23 @@ velocity_smoother:
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
+
+map_server:
+  ros__parameters:
+    yaml_filename: "ucsc_farm_1_world.yaml"
+    topic_name: "map"
+    frame_id: "map"
+
+map_saver:
+  ros__parameters:
+    save_map_timeout: 5.0
+    free_thresh_default: 0.25
+    occupied_thresh_default: 0.65
+
+costmap_filter_info_server:
+  ros__parameters:
+    type: 1
+    filter_info_topic: "costmap_filter_info"
+    mask_topic: "filter_mask"
+    base: 0.0
+    multiplier: 0.25
