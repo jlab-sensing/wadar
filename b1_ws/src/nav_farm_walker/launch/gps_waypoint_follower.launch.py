@@ -66,11 +66,11 @@ def generate_launch_description():
     # Create the launch description and populate
     ld = LaunchDescription()
 
-    # robot state publisher launch
-    ld.add_action(start_robot_state_publisher_cmd)
-
     # robot localization launch
     ld.add_action(robot_localization_cmd)
+
+    # robot state publisher launch
+    ld.add_action(start_robot_state_publisher_cmd)
 
     # navigation2 launch
     ld.add_action(navigation2_cmd)
