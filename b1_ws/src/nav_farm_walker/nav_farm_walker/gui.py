@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from wadar_interfaces.msg import TagRelativeLocation
-from inertial_sense_ros2.msg import DIDINS1
+from inertial_sense_ros2.msg import DIDINS2
 import math
 import threading
 import tkinter as tk
@@ -14,8 +14,8 @@ class TagUI(Node):
     def __init__(self):
         super().__init__('tag_ui')
         self.gps_subscription = self.create_subscription(
-            DIDINS1,
-            'fake_ins1',
+            DIDINS2,
+            'ins_quat_uvw_lla',
             self.ins_callback,
             10)
         self.local_plan_subscription = self.create_subscription(
@@ -37,13 +37,18 @@ class TagUI(Node):
         self.heading = 0
 
     def ins_callback(self, msg):
-        if msg.lla is None or msg.theta is None:
-            self.get_logger().warn('msg.lla or msg.theta is None, skipping calculation.')
+        if msg.lla is None:
+            self.get_logger().warn('msg.lla None, skipping calculation.')
             return
 
         self.latitude = msg.lla[0]
         self.longitude = msg.lla[1]
-        self.heading = msg.theta[2]
+        
+        quat_ned = [float(msg.qn2b[1]), float(msg.qn2b[2]), float(msg.qn2b[3]), float(msg.qn2b[0])]
+        v_ned = [quat_ned[0], quat_ned[1], quat_ned[2]]
+        v_enu = [v_ned[1], v_ned[0], -v_ned[2]]
+        quat_enu = [v_enu[0], v_enu[1], v_enu[2], quat_ned[3]]
+        euler_enu = [0, 0, math.atan2(2*(quat_enu[3]*quat_enu[2] + quat_enu[0]*quat_enu[1]), 1 - 2*(quat_enu[1]**2 + quat_enu[2]**2))]
 
         R = 6371000  # Radius of the Earth in meters
         lat1 = math.radians(self.latitude)
@@ -61,7 +66,7 @@ class TagUI(Node):
 
         if self.compass is not None:
             self.compass.update_distance(distance)
-            self.compass.update_alignment(self.heading)
+            self.compass.update_alignment(self.tag_heading - euler_enu[2])
         else:
             self.get_logger().warn('Compass is None, skipping update.')
 
@@ -81,7 +86,7 @@ class TagUI(Node):
         relative_heading = heading - self.heading
 
         if self.compass is not None:
-            self.compass.update_heading(relative_heading)
+            self.compass.update_heading(heading - math.pi/2)
         else:
             self.get_logger().warn('Compass is None, skipping update.')
 

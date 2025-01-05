@@ -2,14 +2,14 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Imu, NavSatFix
 from nav_msgs.msg import Odometry
-from inertial_sense_ros2.msg import DIDINS2, DIDINS4, GPS
+from inertial_sense_ros2.msg import DIDINS2, GPS
 
 class SensorPublisher(Node):
 
     def __init__(self):
         super().__init__('sensor_publisher')
 
-        self.imu_sub = self.create_subscription(Imu, '/imu', self.imu_callback, 10) 
+        self.imu_sub = self.create_subscription(DIDINS2, '/ins_quat_uvw_lla', self.imu_callback, 10) 
         self.imu_pub = self.create_publisher(Imu, '/imu/data', 10)  
 
         self.gps_sub = self.create_subscription(GPS, '/gps1/pos_vel', self.gps_callback, 10)  
@@ -25,16 +25,24 @@ class SensorPublisher(Node):
         imu_msg = Imu()
         imu_msg.header.stamp = self.get_clock().now().to_msg()
         imu_msg.header.frame_id = "imu_link"
-        imu_msg.orientation.x = data.orientation.x
-        imu_msg.orientation.y = data.orientation.y
-        imu_msg.orientation.z = data.orientation.z
-        imu_msg.orientation.w = data.orientation.w
-        imu_msg.angular_velocity.x = data.angular_velocity.x
-        imu_msg.angular_velocity.y = data.angular_velocity.y
-        imu_msg.angular_velocity.z = data.angular_velocity.z
-        imu_msg.linear_acceleration.x = data.linear_acceleration.x
-        imu_msg.linear_acceleration.y = data.linear_acceleration.y
-        imu_msg.linear_acceleration.z = data.linear_acceleration.z
+
+        quat_ned = [float(data.qn2b[1]), float(data.qn2b[2]), float(data.qn2b[3]), float(data.qn2b[0])]
+        v_ned = [quat_ned[0], quat_ned[1], quat_ned[2]]
+        v_enu = [v_ned[1], v_ned[0], -v_ned[2]]
+        quat_enu = [v_enu[0], v_enu[1], v_enu[2], quat_ned[3]]
+
+        imu_msg.orientation.x = quat_enu[0]
+        imu_msg.orientation.y = quat_enu[1]
+        imu_msg.orientation.z = quat_enu[2]
+        imu_msg.orientation.w = quat_enu[3]
+
+        imu_msg.angular_velocity.x = float(data.uvw[0])
+        imu_msg.angular_velocity.y = float(data.uvw[1])
+        imu_msg.angular_velocity.z = float(data.uvw[2])
+        # only doing this because the imu data published isn't correct and we don't need acceleration anyway
+        imu_msg.linear_acceleration.x = 0.0
+        imu_msg.linear_acceleration.y = 0.0
+        imu_msg.linear_acceleration.z = 0.0
         self.imu_pub.publish(imu_msg)
     
     def gps_callback(self, data):
