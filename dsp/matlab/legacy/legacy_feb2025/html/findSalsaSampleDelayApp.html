@@ -1,0 +1,173 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Salsa: Find SampleDelayToReference App --HELP</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-02"><meta name="DC.source" content="findSalsaSampleDelayAppHelp.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Salsa: Find SampleDelayToReference App --HELP</h1><!--introduction--><p>Find Salsa <i>SampleDelayToReference</i> for absolute ranging. Copyright 2015 <a href="http://www.flatearthinc.com">FlatEarth Inc.</a></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Description</a></li><li><a href="#2">Setup</a></li><li><a href="#3">Connection</a></li><li><a href="#4">Operation &amp; Output</a></li></ul></div><h2>Description<a name="1"></a></h2><p>The radar register setting <i>SampleDelayToReference</i> is a timing variable to indicate to the radar receiver when to start listening with respect to the transmitted pulse. Finding the correct <i>Sample DelayToReference</i> delays the radar receiver acquisition to in time and distance. The idea is to artificially move the "zero" refence plane to the desired impingement point of the antennas so absolute ranging is accurate. Essentially, this App helps the user calculate and compensate for the timing delays in the chip, PCB traces, cables, and antennas to move the "zero" plane to the antenna phase center.</p><h2>Setup<a name="2"></a></h2><div><ol><li>Setup the Beaglebone Black (BBB) and Salsa cape with the desired antennas and cables for future use. Note: max cable length, approximately 5 meters (Contact FlatEarth if desired cable length is beyond 5 meters).</li><li>Find a suitable target with the following specifications: the target size or target radar cross-section (RCS) needs to be equivalent to or bigger than 650 sq. cm. (~100 sq. inches) metal plate. Note: a 12 inch x 9 inch copper-clad sheet of FR4 works well.</li><li>Separate the unit from the target and point the antennas at the target either by pointing it at a wall with a hanging target or proping the target above the radar using a relatively radar transparent structure, e.g. an elongated cardboard box works well.Note: Target must physically be within 1 radar frame from antenna (i.e. 1 meter for Ancho and 2 meters for Cayenne).</li></ol></div><h2>Connection<a name="3"></a></h2><p>Connect to the radar using the default USB virtual port, 192.168.7.2, or specify an IP address to use via Ethernet (Insert Cat5e cable into RJ-45 jack on the BBB and reboot so DHCP server assigns the BBB a unique IP address) Easily open or close the radar connection with the labeled push buttons.</p><p><img vspace="5" hspace="5" src="help1_connection.PNG" alt=""> </p><p>The radar always performs a calibration immediately after connection to accurately calculate all the internal delays for accurate <i>SampleDelayToReference</i> calibartion. The App alerts the user when calibration is finished and enables all the remaining operation buttons. Note: Calibration time for the Ancho is ~13 secs and ~2 secs for the Cayenne.</p><p><img vspace="5" hspace="5" src="help2_calibration.PNG" alt=""> </p><p><img vspace="5" hspace="5" src="help3_finish.PNG" alt=""> </p><h2>Operation &amp; Output<a name="4"></a></h2><p>First, the proper Cape type must be choosen as some radar register settings are unique to the cape type. Choose either <i>Ancho</i> or <i>Cayenne</i>; only one can be choosen at a time.</p><p><img vspace="5" hspace="5" src="help4_capeType.PNG" alt=""> </p><p>Next, measure the true target distance to the desired "zero" antenna plane, to the nearest half-centimeter. Target must physically be within 1 radar frame from antenna (i.e. 1 meter for Ancho and 2 meters for Cayenne).</p><p><img vspace="5" hspace="5" src="help5_targetDist.PNG" alt=""> </p><p>Once the true target distance, in meters, is entered hit the "Run" push button. There are two options after this:</p><div><ol><li>Use a background sky shot for clutter removal, i.e. more robust measurements, but takes more time as the target needs to be removed for data capture, then put back in place.</li><li>Do NOT use a background sky shot (this will be used for speed, but can still deliver accurate timing measurements).</li></ol></div><p>If YES, first remove the target for Background clutter capture, and these two dialog boxes are encountered, hit "YES" and proceed; otherwise, the App begins.</p><p><img vspace="5" hspace="5" src="help6_skyshot.PNG" alt=""> </p><p><img vspace="5" hspace="5" src="help7_skyshot.PNG" alt=""> </p><p>Once the App is running it is toggling through different delays, capturing radar measurments, and calculating target position. The user will see screens similar to this:</p><p><img vspace="5" hspace="5" src="help8_measuring.PNG" alt=""> </p><p>When data capture is finished, a linear regression is begun on the data points to find the most accurate <i>SampleDelayToReference</i>. The measurement is checked in two ways: if it has an acceptable <i>Quality Index</i> and if it is within a certain tolerance from the <i>Direct Pulse</i>. If it passes both, the App accepts and presents the results</p><p><img vspace="5" hspace="5" src="help9_done.PNG" alt=""> </p><p>Otherwise, adjust your setup and try again!</p><p><img vspace="5" hspace="5" src="help10_tryagain.PNG" alt=""> </p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Salsa: Find SampleDelayToReference App REPLACE_WITH_DASH_DASHHELP
+% Find Salsa _SampleDelayToReference_ for absolute ranging.
+% Copyright 2015 <http://www.flatearthinc.com FlatEarth Inc.>
+%% Description
+% The radar register setting _SampleDelayToReference_ is a timing variable
+% to indicate to the radar receiver when to start listening with respect to
+% the transmitted pulse. Finding the correct _Sample DelayToReference_
+% delays the radar receiver acquisition to in time and distance. The idea
+% is to artificially move the "zero" refence plane to the desired
+% impingement point of the antennas so absolute ranging is accurate.
+% Essentially, this App helps the user calculate and compensate for the
+% timing delays in the chip, PCB traces, cables, and antennas to move the
+% "zero" plane to the antenna phase center.
+%
+%% Setup
+% # Setup the Beaglebone Black (BBB) and Salsa cape with the desired
+% antennas and cables for future use. Note: max cable length, approximately
+% 5 meters (Contact FlatEarth if desired cable length is beyond 5 meters).
+% # Find a suitable target with the following specifications: the target
+% size or target radar cross-section (RCS) needs to be equivalent to or
+% bigger than 650 sq. cm. (~100 sq. inches) metal plate. Note: a 12 inch x
+% 9 inch copper-clad sheet of FR4 works well.
+% # Separate the unit from the target and point the antennas at the target
+% either by pointing it at a wall with a hanging target or proping the
+% target above the radar using a relatively radar transparent structure,
+% e.g. an elongated cardboard box works well.Note: Target must physically
+% be within 1 radar frame from antenna (i.e. 1 meter for Ancho and 2 meters
+% for Cayenne).
+%% Connection
+% Connect to the radar using the default USB virtual port, 192.168.7.2, or
+% specify an IP address to use via Ethernet (Insert Cat5e cable into RJ-45
+% jack on the BBB and reboot so DHCP server assigns the BBB a unique IP
+% address) Easily open or close the radar connection with the labeled push
+% buttons.
+% 
+% <<help1_connection.PNG>>
+%
+% The radar always performs a calibration immediately after connection to
+% accurately calculate all the internal delays for accurate
+% _SampleDelayToReference_ calibartion. The App alerts the user when
+% calibration is finished and enables all the remaining operation buttons.
+% Note: Calibration time for the Ancho is ~13 secs and ~2 secs for the
+% Cayenne.
+%
+% <<help2_calibration.PNG>>
+%
+% <<help3_finish.PNG>>
+% 
+% 
+%% Operation & Output
+% First, the proper Cape type must be choosen as some radar register
+% settings are unique to the cape type. Choose either _Ancho_ or
+% _Cayenne_; only one can be choosen at a time. 
+%
+% <<help4_capeType.PNG>>
+% 
+% Next, measure the true target distance to the desired "zero" antenna
+% plane, to the nearest half-centimeter. Target must physically
+% be within 1 radar frame from antenna (i.e. 1 meter for Ancho and 2 meters
+% for Cayenne).
+%
+% <<help5_targetDist.PNG>>
+% 
+% Once the true target distance, in meters, is entered hit the "Run" push 
+% button. There are two options after this: 
+%
+% # Use a background sky shot for clutter removal, i.e. more robust
+% measurements, but takes more time as the target needs to be removed for
+% data capture, then put back in place.
+% # Do NOT use a background sky shot (this will be used for speed, but can
+% still deliver accurate timing measurements).
+%
+% If YES, first remove the target for Background clutter capture, and these
+% two dialog boxes are encountered, hit "YES" and proceed; otherwise, the
+% App begins.
+% 
+% <<help6_skyshot.PNG>>
+% 
+% <<help7_skyshot.PNG>>
+% 
+% Once the App is running it is toggling through different delays,
+% capturing radar measurments, and calculating target position. The user
+% will see screens similar to this:
+% 
+% <<help8_measuring.PNG>>
+% 
+% When data capture is finished, a linear regression is begun on the data
+% points to find the most accurate _SampleDelayToReference_. The
+% measurement is checked in two ways: if it has an acceptable _Quality
+% Index_ and if it is within a certain tolerance from the _Direct Pulse_.
+% If it passes both, the App accepts and presents the results
+% 
+% <<help9_done.PNG>>
+% 
+% Otherwise, adjust your setup and try again!
+% 
+% <<help10_tryagain.PNG>>
+% 
+
+
+
+##### SOURCE END #####
+--></body></html>

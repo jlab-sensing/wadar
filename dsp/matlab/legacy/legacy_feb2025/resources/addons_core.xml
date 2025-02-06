@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<addonCore>
+
+  <label>SalsaLab</label>
+
+  <version>1.56</version>
+
+  <type>Toolbox</type>
+
+  <identifier>833090c3-9f39-459b-beaf-f5e540c53a8e</identifier>
+
+  <summary>A connector toolbox to interface Flat Earth's Salsa Modules with MATLAB</summary>
+
+  <createdBy name="Raymond Weber"/>
+
+  <image>resources/screenshot.png</image>
+
+</addonCore>
