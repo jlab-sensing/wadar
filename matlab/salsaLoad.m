@@ -75,15 +75,15 @@ frameTot = reshape(frameTot, numberOfSamplers, numFrames);
 
 
 % Process out the weird spike
-% for i = 1:numFrames
-%     if max(frameTot(:,i)) > 8191
-%             if (i > 1)
-%                 frameTot(:, i) = frameTot(:, i-1);
-%             else 
-%                 frameTot(:, i) = frameTot(:, i+1);
-%             end
-%     end
-% end
+for i = 1:numFrames
+    if max(frameTot(:,i)) > 8191
+            if (i > 1)
+                frameTot(:, i) = frameTot(:, i-1);
+            else 
+                frameTot(:, i) = frameTot(:, i+1);
+            end
+    end
+end
 
 % Estimated FPS (good to check against frameRate)
 fpsEst = fread(fid, 1, 'float');
