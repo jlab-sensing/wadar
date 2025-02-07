@@ -1,0 +1,8 @@
+source;share/chipotle-radar/hook/cmake_prefix_path.ps1
+source;share/chipotle-radar/hook/cmake_prefix_path.dsv
+source;share/chipotle-radar/hook/cmake_prefix_path.sh
+source;share/chipotle-radar/local_setup.bash
+source;share/chipotle-radar/local_setup.dsv
+source;share/chipotle-radar/local_setup.ps1
+source;share/chipotle-radar/local_setup.sh
+source;share/chipotle-radar/local_setup.zsh

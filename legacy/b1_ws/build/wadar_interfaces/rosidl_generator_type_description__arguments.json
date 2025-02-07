@@ -1,0 +1,7 @@
+{
+  "package_name": "wadar_interfaces",
+  "output_dir": "/home/ericdvet/jlab/wadar/b1_ws/build/wadar_interfaces/rosidl_generator_type_description/wadar_interfaces",
+  "idl_tuples": [
+    "/home/ericdvet/jlab/wadar/b1_ws/build/wadar_interfaces/rosidl_adapter/wadar_interfaces:msg/TagRelativeLocation.idl"
+  ]
+}

@@ -1,0 +1,4 @@
+source;share/chipotle-radar/local_setup.bash
+source;share/chipotle-radar/local_setup.dsv
+source;share/chipotle-radar/local_setup.sh
+source;share/chipotle-radar/local_setup.zsh

@@ -1,0 +1,4 @@
+source;share/wadar_interfaces/local_setup.bash
+source;share/wadar_interfaces/local_setup.dsv
+source;share/wadar_interfaces/local_setup.sh
+source;share/wadar_interfaces/local_setup.zsh

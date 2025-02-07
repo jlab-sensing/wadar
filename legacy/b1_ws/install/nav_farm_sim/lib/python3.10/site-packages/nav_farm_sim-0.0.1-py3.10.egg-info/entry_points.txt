@@ -1,0 +1,6 @@
+[console_scripts]
+gps_waypoint_logger = nav_farm_sim.gps_waypoint_logger:main
+gui = nav_farm_sim.gui:main
+interactive_waypoint_follower = nav_farm_sim.interactive_waypoint_follower:main
+is_imx_emulator = nav_farm_sim.is_imx_emulator:main
+logged_waypoint_follower = nav_farm_sim.logged_waypoint_follower:main

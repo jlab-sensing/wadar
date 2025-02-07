@@ -1,0 +1,31 @@
+{
+  "package_name": "inertial_sense_ros2",
+  "output_dir": "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_generator_type_description/inertial_sense_ros2",
+  "idl_tuples": [
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/GTime.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/SatInfo.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/GPS.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/GPSInfo.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/PIMU.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/RTKInfo.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/RTKRel.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/GlonassEphemeris.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/GNSSEphemeris.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/GNSSObservation.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/GNSSObsVec.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/INL2States.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/DIDINS2.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/DIDINS1.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:msg/DIDINS4.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:srv/FirmwareUpdate.idl",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/inertial_sense_ros2/rosidl_adapter/inertial_sense_ros2:srv/RefLLAUpdate.idl"
+  ],
+  "include_paths": [
+    "std_msgs:/opt/ros/iron/share/std_msgs",
+    "builtin_interfaces:/opt/ros/iron/share/builtin_interfaces",
+    "geometry_msgs:/opt/ros/iron/share/geometry_msgs",
+    "diagnostic_msgs:/opt/ros/iron/share/diagnostic_msgs",
+    "service_msgs:/opt/ros/iron/share/service_msgs",
+    "sensor_msgs:/opt/ros/iron/share/sensor_msgs"
+  ]
+}

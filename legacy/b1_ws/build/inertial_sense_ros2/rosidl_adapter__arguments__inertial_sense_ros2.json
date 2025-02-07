@@ -1,0 +1,22 @@
+{
+  "package_name": "inertial_sense_ros2",
+  "non_idl_tuples": [
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/GTime.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/SatInfo.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/GPS.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/GPSInfo.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/PIMU.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/RTKInfo.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/RTKRel.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/GlonassEphemeris.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/GNSSEphemeris.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/GNSSObservation.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/GNSSObsVec.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/INL2States.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/DIDINS2.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/DIDINS1.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:msg/DIDINS4.msg",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:srv/FirmwareUpdate.srv",
+    "/home/ericdvet/jlab/wadar/b1_ws/src/ros2:srv/RefLLAUpdate.srv"
+  ]
+}

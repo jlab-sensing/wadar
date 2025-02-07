@@ -1,0 +1,17 @@
+README.md
+package.xml
+setup.cfg
+setup.py
+../../build/fake_gps_coord/fake_gps_coord.egg-info/PKG-INFO
+../../build/fake_gps_coord/fake_gps_coord.egg-info/SOURCES.txt
+../../build/fake_gps_coord/fake_gps_coord.egg-info/dependency_links.txt
+../../build/fake_gps_coord/fake_gps_coord.egg-info/entry_points.txt
+../../build/fake_gps_coord/fake_gps_coord.egg-info/requires.txt
+../../build/fake_gps_coord/fake_gps_coord.egg-info/top_level.txt
+../../build/fake_gps_coord/fake_gps_coord.egg-info/zip-safe
+fake_gps_coord/__init__.py
+fake_gps_coord/publish_fake_gps_coord.py
+resource/fake_gps_coord
+test/test_copyright.py
+test/test_flake8.py
+test/test_pep257.py

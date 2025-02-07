@@ -1,0 +1,4 @@
+# generated from rosidl_cmake/cmake/rosidl_cmake-extras.cmake.in
+
+set(inertial_sense_ros2_IDL_FILES "msg/GTime.idl;msg/SatInfo.idl;msg/GPS.idl;msg/GPSInfo.idl;msg/PIMU.idl;msg/RTKInfo.idl;msg/RTKRel.idl;msg/GlonassEphemeris.idl;msg/GNSSEphemeris.idl;msg/GNSSObservation.idl;msg/GNSSObsVec.idl;msg/INL2States.idl;msg/DIDINS2.idl;msg/DIDINS1.idl;msg/DIDINS4.idl;srv/FirmwareUpdate.idl;srv/RefLLAUpdate.idl")
+set(inertial_sense_ros2_INTERFACE_FILES "msg/GTime.msg;msg/SatInfo.msg;msg/GPS.msg;msg/GPSInfo.msg;msg/PIMU.msg;msg/RTKInfo.msg;msg/RTKRel.msg;msg/GlonassEphemeris.msg;msg/GNSSEphemeris.msg;msg/GNSSObservation.msg;msg/GNSSObsVec.msg;msg/INL2States.msg;msg/DIDINS2.msg;msg/DIDINS1.msg;msg/DIDINS4.msg;srv/FirmwareUpdate.srv;srv/FirmwareUpdate_Request.msg;srv/FirmwareUpdate_Response.msg;srv/RefLLAUpdate.srv;srv/RefLLAUpdate_Request.msg;srv/RefLLAUpdate_Response.msg")

@@ -1,0 +1,6 @@
+source;share/wadar_sensing/hook/pythonpath.ps1
+source;share/wadar_sensing/hook/pythonpath.dsv
+source;share/wadar_sensing/hook/pythonpath.sh
+source;share/wadar_sensing/hook/ament_prefix_path.ps1
+source;share/wadar_sensing/hook/ament_prefix_path.dsv
+source;share/wadar_sensing/hook/ament_prefix_path.sh

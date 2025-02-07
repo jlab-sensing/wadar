@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: nav_farm_walker
+Version: 0.0.1
+Summary: Demo package for following GPS waypoints with nav2
+Maintainer: root
+Maintainer-email: pedro.gonzalez@eia.edu.co
+License: MIT
+Requires-Dist: setuptools

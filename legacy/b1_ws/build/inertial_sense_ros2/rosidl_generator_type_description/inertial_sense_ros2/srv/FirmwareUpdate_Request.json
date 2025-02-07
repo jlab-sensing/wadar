@@ -1,0 +1,26 @@
+{
+  "type_description_msg": {
+    "type_description": {
+      "type_name": "inertial_sense_ros2/srv/FirmwareUpdate_Request",
+      "fields": [
+        {
+          "name": "filename",
+          "type": {
+            "type_id": 17,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": ""
+          },
+          "default_value": ""
+        }
+      ]
+    },
+    "referenced_type_descriptions": []
+  },
+  "type_hashes": [
+    {
+      "type_name": "inertial_sense_ros2/srv/FirmwareUpdate_Request",
+      "hash_string": "RIHS01_f0e31e3a8ccbed5c4ee699d7b9c3e18db825bebb243eb2e0c337c7148aa6210e"
+    }
+  ]
+}

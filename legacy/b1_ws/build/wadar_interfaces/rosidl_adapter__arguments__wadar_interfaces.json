@@ -1,0 +1,6 @@
+{
+  "package_name": "wadar_interfaces",
+  "non_idl_tuples": [
+    "/home/ericdvet/jlab/wadar/b1_ws/src/wadar_interfaces:msg/TagRelativeLocation.msg"
+  ]
+}

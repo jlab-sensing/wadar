@@ -1,0 +1,29 @@
+{
+  "package_name": "wadar_interfaces",
+  "output_dir": "/home/ericdvet/jlab/wadar/b1_ws/build/wadar_interfaces/rosidl_generator_cpp/wadar_interfaces",
+  "template_dir": "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource",
+  "idl_tuples": [
+    "/home/ericdvet/jlab/wadar/b1_ws/build/wadar_interfaces/rosidl_adapter/wadar_interfaces:msg/TagRelativeLocation.idl"
+  ],
+  "target_dependencies": [
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../../../lib/rosidl_generator_cpp/rosidl_generator_cpp",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../../../lib/python3.10/site-packages/rosidl_generator_cpp/__init__.py",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/action__builder.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/action__struct.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/action__traits.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/idl.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/idl__builder.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/idl__struct.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/idl__traits.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/msg__builder.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/msg__struct.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/msg__traits.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/srv__builder.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/srv__struct.hpp.em",
+    "/opt/ros/iron/share/rosidl_generator_cpp/cmake/../resource/srv__traits.hpp.em",
+    "/home/ericdvet/jlab/wadar/b1_ws/build/wadar_interfaces/rosidl_adapter/wadar_interfaces/msg/TagRelativeLocation.idl"
+  ],
+  "type_description_tuples": [
+    "msg/TagRelativeLocation.idl:/home/ericdvet/jlab/wadar/b1_ws/build/wadar_interfaces/rosidl_generator_type_description/wadar_interfaces/msg/TagRelativeLocation.json"
+  ]
+}

@@ -1,0 +1,2 @@
+[console_scripts]
+stationary = fake_gps_coord.publish_fake_gps_coord:main

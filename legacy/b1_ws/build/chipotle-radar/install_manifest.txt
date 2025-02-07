@@ -1,0 +1,16 @@
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/lib/chipotle-radar/gps_scan_node
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/ament_index/resource_index/package_run_dependencies/chipotle-radar
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/ament_index/resource_index/parent_prefix_path/chipotle-radar
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/environment/ament_prefix_path.sh
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/environment/ament_prefix_path.dsv
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/environment/path.sh
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/environment/path.dsv
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/local_setup.bash
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/local_setup.sh
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/local_setup.zsh
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/local_setup.dsv
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/package.dsv
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/ament_index/resource_index/packages/chipotle-radar
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/cmake/chipotle-radarConfig.cmake
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/cmake/chipotle-radarConfig-version.cmake
+/home/ericdvet/jlab/wadar/b1_ws/install/chipotle-radar/share/chipotle-radar/package.xml

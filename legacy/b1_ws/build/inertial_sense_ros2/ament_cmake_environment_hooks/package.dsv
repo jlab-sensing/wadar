@@ -1,0 +1,4 @@
+source;share/inertial_sense_ros2/local_setup.bash
+source;share/inertial_sense_ros2/local_setup.dsv
+source;share/inertial_sense_ros2/local_setup.sh
+source;share/inertial_sense_ros2/local_setup.zsh

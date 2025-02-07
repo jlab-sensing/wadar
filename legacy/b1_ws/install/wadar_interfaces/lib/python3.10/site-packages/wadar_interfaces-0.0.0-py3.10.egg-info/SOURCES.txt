@@ -1,0 +1,8 @@
+setup.py
+wadar_interfaces/__init__.py
+wadar_interfaces.egg-info/PKG-INFO
+wadar_interfaces.egg-info/SOURCES.txt
+wadar_interfaces.egg-info/dependency_links.txt
+wadar_interfaces.egg-info/top_level.txt
+wadar_interfaces/msg/__init__.py
+wadar_interfaces/msg/_tag_relative_location.py

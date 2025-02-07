@@ -1,0 +1,6 @@
+source;share/fake_gps_coord/hook/pythonpath.ps1
+source;share/fake_gps_coord/hook/pythonpath.dsv
+source;share/fake_gps_coord/hook/pythonpath.sh
+source;share/fake_gps_coord/hook/ament_prefix_path.ps1
+source;share/fake_gps_coord/hook/ament_prefix_path.dsv
+source;share/fake_gps_coord/hook/ament_prefix_path.sh
