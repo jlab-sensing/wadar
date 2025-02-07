@@ -19,3 +19,6 @@
 [submodule "RadarCaptures/wadar-database"]
 	path = RadarCaptures/wadar-database
 	url = https://github.com/jlab-sensing/wadar-database
+[submodule "uwb/chipotle"]
+	path = uwb/chipotle
+	url = https://github.com/jlab-sensing/chipotle.git
