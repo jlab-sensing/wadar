@@ -1,18 +1,6 @@
-[submodule "signal_processing/signal_processing/wavelib"]
-	path = signal_processing/signal_processing/wavelib
-	url = https://github.com/rafat/wavelib
-[submodule "signal_processing/wavelib"]
-	path = signal_processing/wavelib
-	url = https://github.com/rafat/wavelib
-[submodule "RF-Backscatter-PCB-V1"]
-	path = RF-Backscatter-PCB-V1
-	url = https://github.com/jlab-sensing/RF-Backscatter-PCB-V1.git
 [submodule "backscatter_tag/RF-Backscatter-PCB-V1"]
 	path = backscatter_tag/RF-Backscatter-PCB-V1
 	url = https://github.com/jlab-sensing/RF-Backscatter-PCB-V1.git
-[submodule "b1_ws/mapproxy"]
-	path = legacy/b1_ws/mapproxy
-	url = https://github.com/danielsnider/MapViz-Tile-Map-Google-Maps-Satellite.git
 [submodule "RadarCaptures/wadar-database"]
 	path = RadarCaptures/wadar-database
 	url = https://github.com/jlab-sensing/wadar-database
@@ -22,3 +10,9 @@
 [submodule "legacy/b1_ws/src/inertial-sense-sdk"]
 	path = legacy/b1_ws/src/inertial-sense-sdk
 	url = https://github.com/harelab-ucsc/inertial-sense-sdk.git
+[submodule "dsp/c_signal_processing/wavelib"]
+	path = dsp/c_signal_processing/wavelib
+	url = https://github.com/rafat/wavelib.git
+[submodule "legacy/b1_ws/MapViz-Tile-Map-Google-Maps-Satellite"]
+	path = legacy/b1_ws/MapViz-Tile-Map-Google-Maps-Satellite
+	url = https://github.com/danielsnider/MapViz-Tile-Map-Google-Maps-Satellite.git
