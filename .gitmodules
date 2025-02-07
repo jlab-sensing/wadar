@@ -4,9 +4,15 @@
 [submodule "01_dsp/c_signal_processing/wavelib"]
 	path = 01_dsp/c_signal_processing/wavelib
 	url = https://github.com/rafat/wavelib.git
-[submodule "legacy/b1_ws/MapViz-Tile-Map-Google-Maps-Satellite"]
-	path = legacy/b1_ws/MapViz-Tile-Map-Google-Maps-Satellite
-	url = https://github.com/danielsnider/MapViz-Tile-Map-Google-Maps-Satellite.git
 [submodule "02_uwb/chipotle"]
 	path = 02_uwb/chipotle
 	url = https://github.com/jlab-sensing/chipotle.git
+[submodule "03_backscatter_tag/RF-Backscatter-PCB-V1"]
+	path = 03_backscatter_tag/RF-Backscatter-PCB-V1
+	url = https://github.com/jlab-sensing/RF-Backscatter-PCB-V1
+[submodule "06_legacy/b1_ws/mapviz"]
+	path = 06_legacy/b1_ws/mapviz
+	url = https://github.com/danielsnider/MapViz-Tile-Map-Google-Maps-Satellite.git
+[submodule "06_legacy/b1_ws/src/inertial-sense-sdk"]
+	path = 06_legacy/b1_ws/src/inertial-sense-sdk
+	url = https://github.com/harelab-ucsc/inertial-sense-sdk.git
