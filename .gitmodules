@@ -1,6 +1,3 @@
-[submodule "RadarCaptures/wadar-database"]
-	path = RadarCaptures/wadar-database
-	url = https://github.com/jlab-sensing/wadar-database
 [submodule "legacy/b1_ws/src/inertial-sense-sdk"]
 	path = legacy/b1_ws/src/inertial-sense-sdk
 	url = https://github.com/harelab-ucsc/inertial-sense-sdk.git
@@ -13,6 +10,3 @@
 [submodule "02_uwb/chipotle"]
 	path = 02_uwb/chipotle
 	url = https://github.com/jlab-sensing/chipotle.git
-[submodule "03_backscatter_tag/RF-Backscatter-PCB-V1"]
-	path = 03_backscatter_tag/RF-Backscatter-PCB-V1
-	url = https://github.com/jlab-sensing/RF-Backscatter-PCB-V1.git

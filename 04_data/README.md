@@ -4,7 +4,7 @@
 
 This directory contains directions on how to access the server required containing radar captures taken by the Chipotle UWB. Follow the instructions below to access and transfer files. 
 
-If you are not added to the HARE-Lab data server, please use the backup repository at [wadar-database](https://github.com/jlab-sensing/wadar-database).
+If you are not added to the HARE-Lab data server, please use the backup repository at [wadar-database](https://github.com/jlab-sensing/wadar-database). It is not added as a submodule here because of its size.
 
 SSH Access
 ----------
