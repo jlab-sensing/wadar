@@ -1,8 +1,5 @@
 # Digital Signal Processing (DSP) Pipeline
 
-> __Note:__  
-> README last updated February 2025
-
 ## Overview
 
 This directory consists all the post processing software required to process radar signals for soil moisture estimation.
