@@ -16,3 +16,6 @@
 [submodule "b1_ws/mapproxy"]
 	path = b1_ws/mapproxy
 	url = https://github.com/danielsnider/MapViz-Tile-Map-Google-Maps-Satellite.git
+[submodule "RadarCaptures/wadar-database"]
+	path = RadarCaptures/wadar-database
+	url = https://github.com/jlab-sensing/wadar-database
