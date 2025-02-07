@@ -29,7 +29,6 @@ The following paths display a the high-level structure and description of each f
 ├── 02_uwb                  # TODO
 ├── 03_backscatter_tag      # TODO
 ├── 04_data                 # TODO
-├── 05_teros                # TODO
 ├── 05_misc                 # TODO
 ├── 06_legacy               # TODO
 ├── 07_Documentation        # TODO
