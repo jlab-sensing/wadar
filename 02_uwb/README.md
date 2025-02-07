@@ -7,6 +7,7 @@ This directory contains all necessary software and hardware for the UWB used in 
 ```
 ├── FlatEarth               # Software components for UWB radar
 ├── chipotle                # Hardware components for UWB radar
+├── shutdown                # Shutdown script to safely shutdown the radar software
 ```
 
 ## Dependencies
