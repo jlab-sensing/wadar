@@ -1,6 +1,3 @@
-[submodule "backscatter_tag/RF-Backscatter-PCB-V1"]
-	path = backscatter_tag/RF-Backscatter-PCB-V1
-	url = https://github.com/jlab-sensing/RF-Backscatter-PCB-V1.git
 [submodule "RadarCaptures/wadar-database"]
 	path = RadarCaptures/wadar-database
 	url = https://github.com/jlab-sensing/wadar-database
@@ -16,3 +13,6 @@
 [submodule "02_uwb/chipotle"]
 	path = 02_uwb/chipotle
 	url = https://github.com/jlab-sensing/chipotle.git
+[submodule "03_backscatter_tag/RF-Backscatter-PCB-V1"]
+	path = 03_backscatter_tag/RF-Backscatter-PCB-V1
+	url = https://github.com/jlab-sensing/RF-Backscatter-PCB-V1.git
