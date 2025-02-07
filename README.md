@@ -15,7 +15,7 @@ The system consists of three main components:
 
 | Component | Description | 
 | --- | --- |
-| [Backscatter Tag](https://github.com/jlab-sensing/wadar/tree/master/backscatter_tag) | A passive RF tag buried underground |
+| [Backscatter Tag](https://github.com/jlab-sensing/wadar/tree/master/backscatter_tag) | A passive backscatter tag buried underground |
 | [Radar](https://github.com/jlab-sensing/wadar/tree/master/uwb) | An above-ground UWB impulse radar |
 | [Signal Processing Code](https://github.com/jlab-sensing/wadar/tree/master/dsp) | Processes radar signals for soil moisture estimation |
 
@@ -25,13 +25,12 @@ The system consists of three main components:
 The following paths display a the high-level structure and description of each folder. Each individual folder contains a README with more information.
 
 ```
-├── 01_dsp                  # TODO
-├── 02_uwb                  # TODO
-├── 03_backscatter_tag      # TODO
-├── 04_data                 # TODO
-├── 05_misc                 # TODO
-├── 06_legacy               # TODO
-├── 07_Documentation        # TODO
+├── 01_dsp                  # C and MATLAB signal processing pipelines required to process radar signals for soil moisture estimation
+├── 02_uwb                  # Software and hardware for the Chipotle UWB radar
+├── 03_backscatter_tag      # Software and hardware for the passive backscatter tag
+├── 04_data                 # Instructions on accessing radar frame data
+├── 05_misc                 # Teros 12 software for comparison and shutdown script
+├── 06_legacy               # Software for old hardware and old WaDAR project(s)
 ```
 
 ## Support
