@@ -6,9 +6,11 @@ This directory contains all necessary software and hardware for the UWB used in 
 
 ```
 ├── FlatEarth               # Software components for UWB radar
-├── chipotle                # Hardware components for UWB radar
+├── chipotle                # Hardware components for UWB radar, see [1]
 ├── shutdown                # Shutdown script to safely shutdown the radar software
 ```
+
+[1] Please note that the chipotle repository is private, and you will get a 404 error if we have not given you access to it.
 
 ## Dependencies
 
