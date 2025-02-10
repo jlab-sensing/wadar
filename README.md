@@ -9,15 +9,17 @@
 
 This project is based on the research published in [Low-cost In-ground Soil Moisture Sensing with Radar Backscatter Tags](https://doi.org/10.1145/3460112.3472326) and aims to make precision agriculture more affordable and scalable for farmers worldwide.
 
+![wadar](wadar.png)
+
 ## System Components
 
 The system consists of three main components:
 
 | Component | Description | 
 | --- | --- |
-| [Backscatter Tag](https://github.com/jlab-sensing/wadar/tree/master/backscatter_tag) | A passive backscatter tag buried underground |
-| [Radar](https://github.com/jlab-sensing/wadar/tree/master/uwb) | An above-ground UWB impulse radar |
-| [Signal Processing Code](https://github.com/jlab-sensing/wadar/tree/master/dsp) | Processes radar signals for soil moisture estimation |
+| [Backscatter Tag](https://github.com/jlab-sensing/wadar/tree/master/03_backscatter_tag) | A passive backscatter tag buried underground |
+| [Radar](https://github.com/jlab-sensing/wadar/tree/master/02_uwb) | An above-ground UWB impulse radar |
+| [Signal Processing Code](https://github.com/jlab-sensing/wadar/tree/master/01_dsp) | Processes radar signals for soil moisture estimation |
 
 
 ## File structure of repository
