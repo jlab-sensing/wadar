@@ -7,14 +7,17 @@ function ChipotleRadar(radarName, testType, localDataPath)
     % Inputs:
     % radarName: The name of the radar to be tested for file naming purposes.
     % testType: The type of test to be run. Options are:
-    %   - 
-    %   -
-    %   - 
-    %   - 
-    % localDataPath: The path to the local data directory
+    %   - 'SanityCheck': Perform a basic functionality check of the radar.
+    %   - 'Calibration': Calibrate the radar using a known target.
+    %   - 'Ranging': Measure distances to various targets.
+    % localDataPath: The path to the local data directory where captured frames will be stored.
     % 
     % Outputs:
-    % 
+    % None. The function generates plots and saves data files in the specified local data path.
+    %
+    % Example usage:
+    % ChipotleRadar('0_2_1', 'SanityCheck', '../data/')     % Perform a sanity check on radar 0_2_1
+
     
     close all; clc
     
@@ -81,7 +84,7 @@ function ChipotleRadar(radarName, testType, localDataPath)
         fprintf("Press any key to continue.\n")
         pause
     
-        captureName = strcat(testType, '_', radarName, '_1_C');
+        captureName = strcat(testType, '_', radarName, '_Step1_C');
     
         % Check for existing files with the same name to prevent overwrite
         existingFiles = dir(localDataPath);
@@ -118,6 +121,7 @@ function ChipotleRadar(radarName, testType, localDataPath)
     
         pause(3)
         [calibrationStep1Frames, ~, ~, ~, ~] = salsaLoad(strcat(localDataPath, fileName));
+        calibrationStep1Frames = median(calibrationStep1Frames,2);
         
         figure(1)
         plot(calibrationStep1Frames)
@@ -131,7 +135,7 @@ function ChipotleRadar(radarName, testType, localDataPath)
         fprintf("Enter the distance between the radar and the calibration target in meters.\n");
         trueDistance = input('Distance: ');
     
-        captureName = strcat(testType, '_', radarName, '2_C');
+        captureName = strcat(testType, '_', radarName, '_Step2_C');
     
         % Check for existing files with the same name to prevent overwrite
         existingFiles = dir(localDataPath);
@@ -165,6 +169,7 @@ function ChipotleRadar(radarName, testType, localDataPath)
         
         pause(3)
         [calibrationStep2Frames, ~, ~, ~, ~] = salsaLoad(strcat(localDataPath, fileName));
+        calibrationStep2Frames = median(calibrationStep2Frames, 2);
     
         figure(1)
         plot(calibrationStep2Frames - calibrationStep1Frames)
