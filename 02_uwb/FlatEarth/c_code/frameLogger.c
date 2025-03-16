@@ -130,7 +130,7 @@
 
 // Novelda radar API include
 #include "Radarlib3.h"
-
+#include "proc.h"
 #define CLOCKID CLOCK_REALTIME
 
 // -----------------------------------------------------------------------------
@@ -190,7 +190,57 @@ static double *timedelta;
 // -----------------------------------------------------------------------------
 // Utility Functions
 // -----------------------------------------------------------------------------
+void processAndPrintVWC_FileBased(RadarHelper *rh, int numSamplers) {
+    FILE *dataLog = fopen(FRAME_FILE, "wb");
+    if (!dataLog) {
+        fprintf(stderr, "Unable to open file %s for writing!\n", FRAME_FILE);
+        return;
+    }
 
+    // Allocate memory for radar frames
+    unsigned short *radarFrames = (unsigned short *)malloc(numSamplers * sizeof(unsigned short));
+    if (!radarFrames) {
+        fprintf(stderr, "Memory allocation failed!\n");
+        fclose(dataLog);
+        return;
+    }
+
+    // Capture frames using radar helper function
+    int status = radarHelper_getFrameRaw(rh, radarFrames, numSamplers);
+    if (status != 0) {
+        fprintf(stderr, "Error capturing radar frames!\n");
+        free(radarFrames);
+        fclose(dataLog);
+        return;
+    }
+
+    // Write radar frames to file
+    fwrite(radarFrames, sizeof(unsigned short), numSamplers, dataLog);
+    fclose(dataLog);  // Close the file after writing
+    free(radarFrames); // Free memory since we are now using the file
+
+    // Process frames using the file-based approach
+    CaptureData *captureData = procRadarFrames(FRAME_FILE, "processed_output", 1.0);
+    if (!captureData) {
+        fprintf(stderr, "Error processing radar frames!\n");
+        return;
+    }
+
+    // Extract necessary values for soil moisture calculation
+    double wetPeakBin = captureData->wetPeakBin;
+    double airPeakBin = captureData->airPeakBin;
+    double distance = captureData->distance;
+    const char *soilType = "farm";  // Set to appropriate soil type
+
+    // Calculate Volumetric Water Content (VWC)
+    double volumetricWaterContent = procSoilMoisture(wetPeakBin, airPeakBin, soilType, distance);
+    if (volumetricWaterContent < 0) {
+        fprintf(stderr, "Failed to compute VWC due to invalid soil type.\n");
+        return;
+    }
+
+    printf("Volumetric Water Content: %f\n", volumetricWaterContent);
+}
 void Usage()
 {
   printf("Usage: FrameLogger [-option(s)]\n");
@@ -672,10 +722,11 @@ int main(int argc, char **argv)
 
         }
     }
-
+    
     // Decrement run counter
     runs--;
   }
+  processAndPrintVWC_FileBased(rh, numberOfSamplers);
   printf("\n");
 
 
