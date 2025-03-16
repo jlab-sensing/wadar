@@ -160,7 +160,7 @@
 
 #define GNUPLOT_PRACTICAL_Y_MIN (1500)
 #define GNUPLOT_PRACTICAL_Y_MAX (7000)
-
+#define FRAME_FILE "radar_capture.frames"  // File to store radar frames
 // -----------------------------------------------------------------------------
 // Function Prototypes
 // -----------------------------------------------------------------------------
