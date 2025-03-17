@@ -1,7 +1,6 @@
 # Target Compiler
 #CC=gcc # use this if compiling on the BBB
-#CC=gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc # cross-compiler for x86-linux -> ARM linux 
-CC=arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf-gcc # cross-compiler for x86-linux -> ARM linux (https://i.imgflip.com/6q75zl.jpg)
+CC=gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc # cross-compiler for x86-linux -> ARM linux 
 #CC=arm-mac-linux-gnueabihf/bin/arm-mac-linux-gnueabihf-gcc # cross-compiler for Darwin (macOS) ->  ARM linux
 
 # Relative paths in this dll project
@@ -37,4 +36,4 @@ clean:
 	rm frameLogger
 
 deploy:
-	scp frameLogger root@192.168.7.2:~/FlatEarth/Demos/Common/frameLogger
+	scp frameLogger root@192.168.7.2:~/FlatEarth/Demos/Common/FrameLogger
