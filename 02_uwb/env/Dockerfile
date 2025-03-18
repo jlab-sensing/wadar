@@ -1,4 +1,4 @@
-# my environment for consistency's sake
+# lab computer's environment for consistency's sake
 FROM ubuntu:22.04 
 
 # essentials
