@@ -1,31 +1,30 @@
-# x86 Debian so we're doing 86-linux -> ARM linux 
-FROM amd64/debian:10
- 
-# non-interactive mode, because I see this in many Dockerfiles
-ENV DEBIAN_FRONTEND=noninteractive
+# my environment for consistency's sake
+FROM ubuntu:22.04 
 
-# since debian 8.7 is no longer supported, we need to change the sources.list
-# RUN rm /etc/apt/sources.list
-# RUN echo "deb [trusted=yes] http://archive.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list.d/jessie.list
-# RUN echo "deb [trusted=yes] http://archive.debian.org/debian jessie main" >> /etc/apt/sources.list.d/jessie.list
+# essentials
+RUN apt-get update && apt-get install -y \
+  build-essential \
+  curl \
+  wget \
+  git \
+  vim \
+  nano \
+  sudo \
+  && rm -rf /var/lib/apt/lists/*
 
-# cross-compiling tools for ARM and other needed packages
-ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y \
-    gcc-arm-linux-gnueabihf \   
-    binutils-arm-linux-gnueabihf \  
-    g++-arm-linux-gnueabihf \    
-    git \
-    sudo \
-    make \
-    nano \
-    gcc \
-    && apt-get clean
-WORKDIR /root
-CMD ["bash"]
+# Install cross-compiler dependencies
+RUN apt-get update && apt-get install -y \
+  gcc-multilib \
+  g++-multilib \
+  lib32z1 \
+  lib32stdc++6 \
+  && rm -rf /var/lib/apt/lists/*
+
 
 # Clone the repository
-RUN git clone https://github.com/jlab-sensing/wadar.git /root/wadar
+RUN git clone https://github.com/jlab-sensing/wadar.git /home/wadar
 
+WORKDIR /home/wadar
+
+# Default command
+CMD ["bash"]
