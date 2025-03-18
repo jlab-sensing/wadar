@@ -1,3 +1,0 @@
-[console_scripts]
-gui = wadar_sensing.gui:main
-tag_locator = wadar_sensing.tag_locator:main
