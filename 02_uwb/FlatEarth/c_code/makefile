@@ -1,7 +1,7 @@
 # Target Compiler
 #CC=gcc # use this if compiling on the BBB
-#CC=gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc # cross-compiler for x86-linux -> ARM linux 
-CC=arm-mac-linux-gnueabihf/bin/arm-mac-linux-gnueabihf-gcc # cross-compiler for Darwin (macOS) ->  ARM linux
+CC=gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc # cross-compiler for x86-linux -> ARM linux 
+#CC=arm-mac-linux-gnueabihf/bin/arm-mac-linux-gnueabihf-gcc # cross-compiler for Darwin (macOS) ->  ARM linux
 
 # Relative paths in this dll project
 NOVELDA_INC_DIR=usr/include/novelda
