@@ -1,8 +1,72 @@
-# Radar Soil Sensing Project
+# Water Radar (WaDAR)
 
-## Introduction
-The sensing system consists of four main components: the backscatter tag, the radar, the matlab code that processes the radar signal, and the teros12 commercial sensor that we use to verify the radar measurements. 
+> __Note:__  
+> README last updated February 2025
 
+## Overview
+
+**WaDAR** (Water Radar) is an open-source project that enables low-cost, high-accuracy soil moisture sensing using backscatter tags**. The system combines in-ground passive backscatter tags with above-ground radars to achieve wireless soil moisture monitoring with fine-grain resolution.
+
+This project is based on the research published in [Low-cost In-ground Soil Moisture Sensing with Radar Backscatter Tags](https://doi.org/10.1145/3460112.3472326) and aims to make precision agriculture more affordable and scalable for farmers worldwide.
+
+![wadar](wadar.png)
+
+## System Components
+
+The system consists of three main components:
+
+| Component | Description | 
+| --- | --- |
+| [Backscatter Tag](https://github.com/jlab-sensing/wadar/tree/master/03_backscatter_tag) | A passive backscatter tag buried underground |
+| [Radar](https://github.com/jlab-sensing/wadar/tree/master/02_uwb) | An above-ground UWB impulse radar |
+| [Signal Processing Code](https://github.com/jlab-sensing/wadar/tree/master/01_dsp) | Processes radar signals for soil moisture estimation |
+
+
+## File structure of repository
+
+The following paths display a the high-level structure and description of each folder. Each individual folder contains a README with more information.
+
+```
+├── 01_dsp                  # C and MATLAB signal processing pipelines required to process radar signals for soil moisture estimation
+├── 02_uwb                  # Software and hardware for the Chipotle UWB radar
+├── 03_backscatter_tag      # Software and hardware for the passive backscatter tag
+├── 04_data                 # Instructions on accessing radar frame data
+├── 05_misc                 # Teros 12 software for comparison and shutdown script
+├── 06_legacy               # Software for old hardware and old WaDAR project(s)
+```
+
+## Support
+
+For issues relating to software and hardware, please create an issue in this repository. 
+
+<!--## Contributing-->
+
+<!--See [CONTRIBUTING.md](./CONTRIBUTING.md).-->
+
+<!--## Code of Conduct-->
+
+<!--This project adheres to-->
+<!--[Contributor Covenant](https://www.contributor-covenant.org).-->
+<!--See [Code of Conduct](./CODE_OF_CONDUCT.md) for a local copy.-->
+
+<!--## License-->
+
+<!--Code in this repository is licensed under the MIT License unless specified in the file header. See @ref LICENSE for full document.-->
+
+## Maintainers
+
+- [Colleen Josephson](mailto:cjosephson@ucsc.edu)
+- [Eric Vetha](mailto:evetha@ucsc.edu)
+
+## Citation
+If you use this project in your research, please cite:
+
+> C. Josephson, M. Kotaru, S. Katti, K. Winstein, R. Chandra,  
+> "Low-cost In-ground Soil Moisture Sensing with Radar Backscatter Tags,"  
+> *COMPASS '21*, June 28 - July 2, 2021, Virtual Event, Australia.  
+> [DOI: 10.1145/3460112.3472326](https://doi.org/10.1145/3460112.3472326)
+
+<!-- 
 ## Dependencies
 The software is compatible with any Unix-based OS such as OSX 10.X or Linux. We have the following additional software dependencies:
 - a recent MATLAB release ([here](https://drive.google.com/drive/u/1/folders/1ysOlEd1t2GFOKYOxBg3uzE3v5n-13ok5) is our group network MATLAB license if you don't already have one)
@@ -67,15 +131,4 @@ Congrats, you've successfully done a radar capture and processed it!
   
 - Try out the soil_moisture.m program
   
-  Now you can try burying the tag and using soil_moisture.m to compare the results against the commercial sensor. More detailed instructions coming soon (TODO).
-  
-### Below is an overview of the directory structure. There are additional README files within most of the subdirectories.
-
-- backscatterTag: code for the radar backscatter tag prototype
-- FlatEarth: code that runs on the Flat Earth Ancho, Cayenne and Chipotle radars
-- legacy: old code that is no longer used
-- matlab: matlab code, mainly for interfacing with the radar
-- teros: code for interfacing with the Teros12 commercial soil sensor
-- writing: latex files for papers, gnuplot and dat files for graphs
-
-TODOs:
+  Now you can try burying the tag and using soil_moisture.m to compare the results against the commercial sensor. More detailed instructions coming soon (TODO). -->

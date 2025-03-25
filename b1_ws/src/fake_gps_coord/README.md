@@ -1,1 +1,0 @@
-Temporary package that I created while initially testing the wadar_sensing package. Will be reduduntant as soon as I get access to an IMU.

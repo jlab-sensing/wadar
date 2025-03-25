@@ -1,0 +1,1 @@
+All legacy components are now stored in the [wadar-attic](https://github.com/jlab-sensing/wadar-attic).
