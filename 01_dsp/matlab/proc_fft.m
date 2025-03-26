@@ -7,12 +7,12 @@ function [captureFT, tagFT] = proc_fft(framesBB, frameRate, tagHz)
 % function.
 %
 % Inputs:
-%   framesBB: downconverted, i.e. baseband, and filtered IQ radar signal
-%   frameRate: frame rate in Hz
+%   framesBB: Downconverted, i.e. baseband, and filtered IQ radar signal.
+%   frameRate: Frame rate in Hz.
 %
 % Outputs:
-%  captureFT: FFT of the radar frames
-%  tagFT: FFT of the tag signal
+%  captureFT: FFT of the radar frames.
+%  tagFT: FFT of the tag signal.
 
 frameCount = width(framesBB);
 

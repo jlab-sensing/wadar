@@ -1,21 +1,21 @@
 function [frameTot, framesBB, frameRate] = proc_frames(localDataPath, captureName)
-% frameTot, framesBB, captureFT, tagFT] = proc_frames(localDataPath, captureName, tagHz, frameRate)
+% [frameTot, framesBB, captureFT, tagFT] = proc_frames(localDataPath, captureName, tagHz, frameRate)
 %
 % Function to process Novelda radar data captures. This function reads in a 
 % radar data capture file and processes the data to extract the radar frames
 % and the baseband signal. 
 %
 % Inputs:
-%   localDataPath: path to the data capture file
-%   captureName: name of the data capture file
-%   tagHz: tag frequency in Hz
-%   frameRate: frame rate in Hz
+%   localDataPath: Path to the data capture file.
+%   captureName: Name of the data capture file.
+%   tagHz: Tag frequency in Hz.
+%   frameRate: Frame rate in Hz.
 %
 % Outputs:
-%   frameTot: raw radar data frames
-%   basebandSignal: downconverted, i.e. baseband, and filtered IQ radar 
+%   frameTot: Raw radar data frames.
+%   basebandSignal: Downconverted, i.e. baseband, and filtered IQ radar 
 %                   signal, note: use abs() on output to get envelope
-%                   magnitude
+%                   magnitude.
 
 % Setting default parameters
 arguments 

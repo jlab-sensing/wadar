@@ -1,20 +1,20 @@
 function fileName = acq_frames(captureName, localDataPath, frameCount, frameRate, radarType)
 % fileName = acq_frames(captureName, localDataPath, frameCount, frameRate, radarType)
 %
-% Function to take a radar capture and save it to a file. This function
+% Function to acquire a radar capture and save it to a file. This function
 % sends a command to the radar to start a capture and then waits for the
 % capture to be saved to the specified directory. The function will check
 % for the existence of the file and then return the name of the file.
 %
 % Inputs:
-%   captureName: name of the data capture file
-%   localDataPath: path to the data capture file
-%   frameCount: number of frames to capture
-%   frameRate: frame rate in Hz
-%   radarType: type of radar to capture data from
+%   captureName: Name of the data capture file.
+%   localDataPath: Path to the data capture file.
+%   frameCount: Number of frames to capture.
+%   frameRate: Frame rate in Hz.
+%   radarType: Type of radar to capture data from.
 %
 % Outputs:
-%   fileName: name of the saved data capture file
+%   fileName: Name of the saved data capture file.
 
 % Setting default parameters
 arguments 
