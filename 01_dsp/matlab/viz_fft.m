@@ -22,7 +22,6 @@ y = (1:frameCount) / frameCount * frameRate;
 [xMat, yMat] = meshgrid(x, y);
 zMat = abs(captureFT(:, 1:frameCount))';
 surf(xMat, yMat, zMat, 'EdgeColor', 'none');
-ax = gca;       % Get current axes
 xlim([0 512])
 
 xlabel('Range Bins')

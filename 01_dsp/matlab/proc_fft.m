@@ -20,14 +20,6 @@ frameCount = width(framesBB);
 captureFT = fft(framesBB, frameCount , 2); 
 
 % Find Tag FT
-freqTag = tagHz / frameRate * frameCount;
-tagFT = abs(captureFT(:, freqTag));
-for i = (freqTag-2:1:freqTag+2)
-    temp = abs(captureFT(:, i));
-    if max(temp) > max(tagFT)
-            tagFT = temp;
-    end
-end
-tagFT = smoothdata(tagFT, 'movmean', 10);
+[tagFT, ~] = tag_index(captureFT, frameRate, tagHz);
 
 end

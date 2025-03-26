@@ -1,16 +1,16 @@
-function VWC = proc_vwc(wetPeakBin, airPeakBin, soilType, distance)
+function VWC = sense_vwc(wetPeakBin, airPeakBin, soilType, distance)
 % VWC = proc_vwc(wetPeakBin, airPeakBin, soilType, distance)
 %
-% Function calculates VWC from ToF sensor measurements
+% Function calculates VWC from ToF sensor measurements.
 %
 % Inputs:
-%       wetPeakBin: Peak bin of backscatter tag covered by wet soil
-%       airPeakBin: Peak bin of backscatter tag uncovered by soil
-%       soilType: Type of soil
-%       distance: Distance between backscatter tag and surface in meters
+%       wetPeakBin: Peak bin of backscatter tag covered by wet soil.
+%       airPeakBin: Peak bin of backscatter tag uncovered by soil.
+%       soilType: Type of soil.
+%       distance: Distance between backscatter tag and surface in meters.
 %
 % Outputs:
-%       VWC: Volumetric water content (in decimal form)
+%       VWC: Volumetric water content (in decimal form).
 
 c=299792458;
 resolution = 0.003790984152165; % 0.004 m
