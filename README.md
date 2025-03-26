@@ -27,6 +27,7 @@ The system consists of three main components:
 The following paths display a the high-level structure and description of each folder. Each individual folder contains a README with more information.
 
 ```
+├── 00_documentation        # Lab journal documentation 
 ├── 01_dsp                  # C and MATLAB signal processing pipelines required to process radar signals for soil moisture estimation
 ├── 02_uwb                  # Software and hardware for the Chipotle UWB radar
 ├── 03_backscatter_tag      # Software and hardware for the passive backscatter tag
