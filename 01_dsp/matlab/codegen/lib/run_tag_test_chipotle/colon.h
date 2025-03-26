@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: colon.h
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 #ifndef COLON_H

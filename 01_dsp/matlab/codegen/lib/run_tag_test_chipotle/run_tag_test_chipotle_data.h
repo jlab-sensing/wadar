@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: run_tag_test_chipotle_data.h
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 #ifndef RUN_TAG_TEST_CHIPOTLE_DATA_H
@@ -22,7 +21,7 @@
 extern FILE *eml_openfiles[20];
 extern omp_nest_lock_t run_tag_test_chipotle_nestLockGlobal;
 extern const char cv[128];
-extern boolean_T isInitialized_run_tag_test_chipotle;
+extern bool isInitialized_run_tag_test_chipotle;
 
 #endif
 /*

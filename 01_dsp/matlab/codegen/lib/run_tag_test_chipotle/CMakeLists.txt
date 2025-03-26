@@ -13,6 +13,10 @@ if(DEFINED ENV{CMAKE_EXPORT_COMPILE_COMMANDS} AND NOT DEFINED CMAKE_EXPORT_COMPI
     set(CMAKE_EXPORT_COMPILE_COMMANDS $ENV{CMAKE_EXPORT_COMPILE_COMMANDS})
 endif()
 
+if(NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 
 ###########################################################################
 ## Path variables
@@ -24,7 +28,7 @@ get_filename_component(START_DIR ../../.. ABSOLUTE)
 # by setting the variable from the command line, e.g.,
 # 
 # 	cmake . -DMATLAB_ROOT=/path/to/another/matlab/root
-set(MATLAB_ROOT C:/Program\ Files/MATLAB/R2024b CACHE PATH "")
+set(MATLAB_ROOT /usr/local/MATLAB/R2025a CACHE PATH "")
 
 # Additional variables that are defined conditionally.
 if("${CMAKE_CURRENT_BINARY_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -97,7 +101,6 @@ add_library(run_tag_test_chipotle STATIC ${START_DIR}/codegen/lib/run_tag_test_c
     ${START_DIR}/codegen/lib/run_tag_test_chipotle/coderFread.c
     ${START_DIR}/codegen/lib/run_tag_test_chipotle/ifWhileCond.c
     ${START_DIR}/codegen/lib/run_tag_test_chipotle/mrdivide_helper.c
-    ${START_DIR}/codegen/lib/run_tag_test_chipotle/mtimes.c
     ${START_DIR}/codegen/lib/run_tag_test_chipotle/minOrMax.c
     ${START_DIR}/codegen/lib/run_tag_test_chipotle/NoveldaChipParams.c
     ${START_DIR}/codegen/lib/run_tag_test_chipotle/string1.c
@@ -123,7 +126,6 @@ add_library(run_tag_test_chipotle STATIC ${START_DIR}/codegen/lib/run_tag_test_c
 
 # Set properties for target "run_tag_test_chipotle".
 set_target_properties(run_tag_test_chipotle PROPERTIES PREFIX ""
-    POSITION_INDEPENDENT_CODE ON
     RUNTIME_OUTPUT_DIRECTORY "${BINARY_START_DIR}/codegen/lib/run_tag_test_chipotle/$<0:>"
     LIBRARY_OUTPUT_DIRECTORY "${BINARY_START_DIR}/codegen/lib/run_tag_test_chipotle/$<0:>"
     ARCHIVE_OUTPUT_DIRECTORY "${BINARY_START_DIR}/codegen/lib/run_tag_test_chipotle/$<0:>")

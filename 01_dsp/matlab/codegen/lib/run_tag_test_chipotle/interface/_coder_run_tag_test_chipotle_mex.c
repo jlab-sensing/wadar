@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: _coder_run_tag_test_chipotle_mex.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -36,7 +35,7 @@ void mexFunction(int32_T nlhs, mxArray *plhs[], int32_T nrhs,
 emlrtCTX mexFunctionCreateRootTLS(void)
 {
   emlrtCreateRootTLSR2022a(&emlrtRootTLSGlobal, &emlrtContextGlobal, NULL, 1,
-                           NULL, "windows-1252", true);
+                           NULL, "UTF-8", true);
   return emlrtRootTLSGlobal;
 }
 

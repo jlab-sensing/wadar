@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: string1.h
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 #ifndef STRING1_H
@@ -21,16 +20,13 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-boolean_T b_string_eq(const char obj2_Value_data[],
-                      const int obj2_Value_size[2]);
+bool b_string_eq(const char obj2_Value_data[], const int obj2_Value_size[2]);
 
-boolean_T c_string_eq(const char obj2_Value_data[],
-                      const int obj2_Value_size[2]);
+bool c_string_eq(const char obj2_Value_data[], const int obj2_Value_size[2]);
 
-boolean_T d_string_eq(const char obj2_Value_data[],
-                      const int obj2_Value_size[2]);
+bool d_string_eq(const char obj2_Value_data[], const int obj2_Value_size[2]);
 
-boolean_T string_eq(const char obj2_Value_data[], const int obj2_Value_size[2]);
+bool string_eq(const char obj2_Value_data[], const int obj2_Value_size[2]);
 
 void string_lower(const char obj_Value_data[], const int obj_Value_size[2],
                   char y_Value_data[], int y_Value_size[2]);

@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: NoveldaChipParams.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -76,7 +75,6 @@ double NoveldaChipParams(const char chipSet_Value_data[],
   int b_index;
   int fL;
   int i;
-  int i1;
   char switch_expression_Value_data[7];
   string_lower(chipSet_Value_data, chipSet_Value_size,
                switch_expression_Value_data, switch_expression_Value_size);
@@ -96,7 +94,7 @@ double NoveldaChipParams(const char chipSet_Value_data[],
   }
   switch (b_index) {
   case 0: {
-    boolean_T b_PGen_data;
+    bool b_PGen_data;
     /* -------------------NVA6100, Medium-Band PGen--------------------%% */
     *bwr = 12.0;
     /*  bwr dB down from normalized peak setting for fractional bandwidth
@@ -107,19 +105,19 @@ double NoveldaChipParams(const char chipSet_Value_data[],
     for (i = 0; i < PGen_size; i++) {
       b_PGen_data = (PGen_data[0] == 0.0);
     }
-    if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+    if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
       b_index = 0;
     } else {
       for (i = 0; i < PGen_size; i++) {
         b_PGen_data = (PGen_data[0] == 1.0);
       }
-      if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+      if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
         b_index = 1;
       } else {
         for (i = 0; i < PGen_size; i++) {
           b_PGen_data = (PGen_data[0] == 2.0);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
           b_index = 2;
         } else {
           b_index = -1;
@@ -164,7 +162,7 @@ double NoveldaChipParams(const char chipSet_Value_data[],
     *pwr_dBm = -19.0;
   } break;
   case 1: {
-    boolean_T b_PGen_data;
+    bool b_PGen_data;
     /* ---------------------NVA6100, Low-Band PGen---------------------%% */
     *bwr = 12.0;
     /*  bwr dB down from normalized peak setting for fractional bandwidth
@@ -177,19 +175,19 @@ double NoveldaChipParams(const char chipSet_Value_data[],
     for (i = 0; i < PGen_size; i++) {
       b_PGen_data = (PGen_data[0] == 0.0);
     }
-    if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+    if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
       b_index = 0;
     } else {
       for (i = 0; i < PGen_size; i++) {
         b_PGen_data = (PGen_data[0] == 1.0);
       }
-      if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+      if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
         b_index = 1;
       } else {
         for (i = 0; i < PGen_size; i++) {
           b_PGen_data = (PGen_data[0] == 2.0);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
           b_index = 2;
         } else {
           b_index = -1;
@@ -228,7 +226,7 @@ double NoveldaChipParams(const char chipSet_Value_data[],
     *pwr_dBm = -14.0;
   } break;
   case 2: {
-    boolean_T b_PGen_data;
+    bool b_PGen_data;
     /* -----------------------------NVA6201---------------------------%% */
     *bwr = 10.0;
     /*  bwr dB down from normalized peak setting for fractional bandwidth (5 dB
@@ -241,74 +239,73 @@ double NoveldaChipParams(const char chipSet_Value_data[],
     for (i = 0; i < PGen_size; i++) {
       b_PGen_data = (PGen_data[0] == 0.0);
     }
-    if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+    if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
       b_index = 0;
     } else {
       for (i = 0; i < PGen_size; i++) {
         b_PGen_data = (PGen_data[0] == 1.0);
       }
-      if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+      if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
         b_index = 1;
       } else {
         for (i = 0; i < PGen_size; i++) {
           b_PGen_data = (PGen_data[0] == 2.0);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
           b_index = 2;
         } else {
           for (i = 0; i < PGen_size; i++) {
             b_PGen_data = (PGen_data[0] == 3.0);
           }
-          if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+          if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
             b_index = 3;
           } else {
             for (i = 0; i < PGen_size; i++) {
               b_PGen_data = (PGen_data[0] == 4.0);
             }
-            if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+            if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
               b_index = 4;
             } else {
               for (i = 0; i < PGen_size; i++) {
                 b_PGen_data = (PGen_data[0] == 5.0);
               }
-              if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+              if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
                 b_index = 5;
               } else {
                 for (i = 0; i < PGen_size; i++) {
                   b_PGen_data = (PGen_data[0] == 6.0);
                 }
-                if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+                if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
                   b_index = 6;
                 } else {
                   for (i = 0; i < PGen_size; i++) {
                     b_PGen_data = (PGen_data[0] == 7.0);
                   }
-                  if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+                  if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
                     b_index = 7;
                   } else {
                     for (i = 0; i < PGen_size; i++) {
                       b_PGen_data = (PGen_data[0] == 8.0);
                     }
-                    if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+                    if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
                       b_index = 8;
                     } else {
                       for (i = 0; i < PGen_size; i++) {
                         b_PGen_data = (PGen_data[0] == 9.0);
                       }
-                      if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+                      if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
                         b_index = 9;
                       } else {
                         for (i = 0; i < PGen_size; i++) {
                           b_PGen_data = (PGen_data[0] == 10.0);
                         }
-                        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+                        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
                           b_index = 10;
                         } else {
                           for (i = 0; i < PGen_size; i++) {
                             b_PGen_data = (PGen_data[0] == 11.0);
                           }
-                          if (ifWhileCond((boolean_T *)&b_PGen_data,
-                                          PGen_size)) {
+                          if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
                             b_index = 11;
                           } else {
                             b_index = -1;
@@ -496,8 +493,9 @@ double NoveldaChipParams(const char chipSet_Value_data[],
     }
   } break;
   case 3: {
+    int c_index;
     int exitg2;
-    boolean_T b_PGen_data;
+    bool b_PGen_data;
     /* ------------------X4, Impulse Radar Transceiver SoC-----------------%% */
     *bwr = 10.0;
     /*  bwr dB down from normalized peak setting for fractional bandwidth (5 dB
@@ -507,43 +505,43 @@ double NoveldaChipParams(const char chipSet_Value_data[],
     *fs_hz = 2.3328E+10;
     /*  mean system sampling rate, 23.328 GS/s */
     /*  Pulse Generator */
-    b_index = -1;
-    fL = 0;
+    c_index = -1;
+    b_index = 0;
     do {
       exitg2 = 0;
-      if (fL < 2) {
-        i = 3 * fL;
-        for (i1 = 0; i1 < PGen_size; i1++) {
-          b_PGen_data = (i == PGen_data[0]);
+      if (b_index < 2) {
+        fL = 3 * b_index;
+        for (i = 0; i < PGen_size; i++) {
+          b_PGen_data = (fL == PGen_data[0]);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-          b_index = 0;
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+          c_index = 0;
           exitg2 = 1;
         } else {
-          fL++;
+          b_index++;
         }
       } else {
-        fL = 0;
+        b_index = 0;
         exitg2 = 2;
       }
     } while (exitg2 == 0);
     if (exitg2 != 1) {
-      boolean_T exitg1;
+      bool exitg1;
       exitg1 = false;
-      while ((!exitg1) && (fL < 2)) {
-        i = 3 * fL + 1;
-        for (i1 = 0; i1 < PGen_size; i1++) {
-          b_PGen_data = (i == PGen_data[0]);
+      while ((!exitg1) && (b_index < 2)) {
+        fL = 3 * b_index + 1;
+        for (i = 0; i < PGen_size; i++) {
+          b_PGen_data = (fL == PGen_data[0]);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-          b_index = 1;
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+          c_index = 1;
           exitg1 = true;
         } else {
-          fL++;
+          b_index++;
         }
       }
     }
-    switch (b_index) {
+    switch (c_index) {
     case 0:
       /*  ETSI/FCC         */
       fc = 7.29E+9;

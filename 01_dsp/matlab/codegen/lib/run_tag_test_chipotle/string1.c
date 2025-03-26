@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: string1.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -18,13 +17,12 @@
 /*
  * Arguments    : const char obj2_Value_data[]
  *                const int obj2_Value_size[2]
- * Return Type  : boolean_T
+ * Return Type  : bool
  */
-boolean_T b_string_eq(const char obj2_Value_data[],
-                      const int obj2_Value_size[2])
+bool b_string_eq(const char obj2_Value_data[], const int obj2_Value_size[2])
 {
   static const char b_cv[7] = {'x', '1', '-', 'i', 'p', 'g', '1'};
-  boolean_T equal;
+  bool equal;
   equal = false;
   if (obj2_Value_size[1] == 7) {
     int kstr;
@@ -50,13 +48,12 @@ boolean_T b_string_eq(const char obj2_Value_data[],
 /*
  * Arguments    : const char obj2_Value_data[]
  *                const int obj2_Value_size[2]
- * Return Type  : boolean_T
+ * Return Type  : bool
  */
-boolean_T c_string_eq(const char obj2_Value_data[],
-                      const int obj2_Value_size[2])
+bool c_string_eq(const char obj2_Value_data[], const int obj2_Value_size[2])
 {
   static const char b_cv[2] = {'x', '2'};
-  boolean_T equal;
+  bool equal;
   equal = false;
   if (obj2_Value_size[1] == 2) {
     int kstr;
@@ -82,13 +79,12 @@ boolean_T c_string_eq(const char obj2_Value_data[],
 /*
  * Arguments    : const char obj2_Value_data[]
  *                const int obj2_Value_size[2]
- * Return Type  : boolean_T
+ * Return Type  : bool
  */
-boolean_T d_string_eq(const char obj2_Value_data[],
-                      const int obj2_Value_size[2])
+bool d_string_eq(const char obj2_Value_data[], const int obj2_Value_size[2])
 {
   static const char b_cv[2] = {'x', '4'};
-  boolean_T equal;
+  bool equal;
   equal = false;
   if (obj2_Value_size[1] == 2) {
     int kstr;
@@ -114,12 +110,12 @@ boolean_T d_string_eq(const char obj2_Value_data[],
 /*
  * Arguments    : const char obj2_Value_data[]
  *                const int obj2_Value_size[2]
- * Return Type  : boolean_T
+ * Return Type  : bool
  */
-boolean_T string_eq(const char obj2_Value_data[], const int obj2_Value_size[2])
+bool string_eq(const char obj2_Value_data[], const int obj2_Value_size[2])
 {
   static const char b_cv[7] = {'x', '1', '-', 'i', 'p', 'g', '0'};
-  boolean_T equal;
+  bool equal;
   equal = false;
   if (obj2_Value_size[1] == 7) {
     int kstr;

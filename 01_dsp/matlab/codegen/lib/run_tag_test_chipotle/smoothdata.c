@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: smoothdata.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -26,66 +25,66 @@ void smoothdata(emxArray_real_T *A)
   emxArray_real_T *Bd;
   double *A_data;
   double *Bd_data;
-  int i;
-  int ib;
+  int b_k;
   int ii;
   int k;
   A_data = A->data;
   emxInit_real_T(&Bd, 1);
   if (A->size[0] >= 2) {
-    int b_tmp;
+    int b;
+    int currentDimValue;
+    int i;
     int inds_data;
     int windowEnd;
     int windowStart;
-    b_tmp = A->size[0];
-    i = Bd->size[0];
-    Bd->size[0] = b_tmp;
-    emxEnsureCapacity_real_T(Bd, i);
+    b = A->size[0];
+    currentDimValue = Bd->size[0];
+    Bd->size[0] = b;
+    emxEnsureCapacity_real_T(Bd, currentDimValue);
     Bd_data = Bd->data;
     windowStart = 0;
     windowEnd = 1;
     i = A->size[0] - 1;
     for (ii = 0; ii <= i; ii++) {
       double y;
-      int counts;
-      int currentDimValue;
+      int b_ii;
       int indexInDimCount;
-      int lastBlockLength;
-      boolean_T exitg1;
+      bool exitg1;
       while ((windowStart + 1 < ii + 1) && (ii - windowStart > 5)) {
         windowStart++;
       }
       if (windowEnd < ii + 1) {
         windowEnd = ii + 1;
       }
-      while ((windowEnd < b_tmp) && (windowEnd - ii < 5)) {
+      while ((windowEnd < b) && (windowEnd - ii < 5)) {
         windowEnd++;
       }
       currentDimValue = 1;
       indexInDimCount = 1;
-      lastBlockLength = 0;
+      b_ii = 0;
       exitg1 = false;
-      while ((!exitg1) && (lastBlockLength <= A->size[0] - 1)) {
+      while ((!exitg1) && (b_ii <= A->size[0] - 1)) {
         if (indexInDimCount > 1) {
-          if (currentDimValue == b_tmp) {
+          if (currentDimValue == b) {
             currentDimValue = 1;
           } else {
             currentDimValue++;
           }
         }
         if (currentDimValue == ii + 1) {
-          inds_data = lastBlockLength + 1;
+          inds_data = b_ii + 1;
           exitg1 = true;
         } else {
           indexInDimCount = 2;
-          lastBlockLength++;
+          b_ii++;
         }
       }
       currentDimValue = windowEnd - windowStart;
       if (currentDimValue == 0) {
         y = 0.0;
-        counts = 0;
+        b_ii = 0;
       } else {
+        int lastBlockLength;
         int nblocks;
         int xoffset;
         if (currentDimValue <= 1024) {
@@ -94,7 +93,7 @@ void smoothdata(emxArray_real_T *A)
           nblocks = 1;
         } else {
           indexInDimCount = 1024;
-          nblocks = currentDimValue / 1024;
+          nblocks = (int)((unsigned int)currentDimValue >> 10);
           lastBlockLength = currentDimValue - (nblocks << 10);
           if (lastBlockLength > 0) {
             nblocks++;
@@ -104,51 +103,51 @@ void smoothdata(emxArray_real_T *A)
         }
         if (rtIsNaN(A_data[windowStart])) {
           y = 0.0;
-          counts = 0;
+          b_ii = 0;
         } else {
           y = A_data[windowStart];
-          counts = 1;
+          b_ii = 1;
         }
         for (k = 2; k <= indexInDimCount; k++) {
           xoffset = (windowStart + k) - 1;
           if (!rtIsNaN(A_data[xoffset])) {
             y += A_data[xoffset];
-            counts++;
+            b_ii++;
           }
         }
-        for (ib = 2; ib <= nblocks; ib++) {
+        for (k = 2; k <= nblocks; k++) {
           double bsum;
-          currentDimValue = windowStart + ((ib - 1) << 10);
+          currentDimValue = windowStart + ((k - 1) << 10);
           if (rtIsNaN(A_data[currentDimValue])) {
             bsum = 0.0;
           } else {
             bsum = A_data[currentDimValue];
-            counts++;
+            b_ii++;
           }
-          if (ib == nblocks) {
+          if (k == nblocks) {
             indexInDimCount = lastBlockLength;
           } else {
             indexInDimCount = 1024;
           }
-          for (k = 2; k <= indexInDimCount; k++) {
-            xoffset = (currentDimValue + k) - 1;
+          for (b_k = 2; b_k <= indexInDimCount; b_k++) {
+            xoffset = (currentDimValue + b_k) - 1;
             if (!rtIsNaN(A_data[xoffset])) {
               bsum += A_data[xoffset];
-              counts++;
+              b_ii++;
             }
           }
           y += bsum;
         }
       }
-      if (counts == 0) {
+      if (b_ii == 0) {
         y = rtNaN;
       } else {
-        y /= (double)counts;
+        y /= (double)b_ii;
       }
       Bd_data[inds_data - 1] = y;
     }
-    for (i = 0; i < b_tmp; i++) {
-      A_data[i] = Bd_data[i];
+    for (k = 0; k < b; k++) {
+      A_data[k] = Bd_data[k];
     }
   }
   emxFree_real_T(&Bd);

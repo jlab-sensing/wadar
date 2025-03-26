@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: ifWhileCond.h
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 #ifndef IFWHILECOND_H
@@ -21,7 +20,7 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-boolean_T ifWhileCond(const boolean_T x_data[], int x_size);
+bool ifWhileCond(const bool x_data[], int x_size);
 
 #ifdef __cplusplus
 }

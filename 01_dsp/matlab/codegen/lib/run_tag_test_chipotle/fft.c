@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: fft.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -33,15 +32,14 @@ void fft(const emxArray_creal_T *x, double varargin_1, emxArray_creal_T *y)
   emxArray_real_T *sintab;
   emxArray_real_T *sintabinv;
   const creal_T *x_data;
-  creal_T *xPerm_data;
+  creal_T *yPerm_data;
   creal_T *y_data;
   double *costab1q_data;
   double *costab_data;
   double *sintab_data;
   double *sintabinv_data;
-  int i;
+  int b_k;
   int k;
-  int pow2p;
   x_data = x->data;
   emxInit_creal_T(&xPerm, 2);
   emxInit_creal_T(&yPerm, 2);
@@ -50,131 +48,136 @@ void fft(const emxArray_creal_T *x, double varargin_1, emxArray_creal_T *y)
   emxInit_real_T(&sintab, 2);
   emxInit_real_T(&sintabinv, 2);
   if ((x->size[0] == 0) || (x->size[1] == 0) || ((int)varargin_1 == 0)) {
-    int pmin;
-    i = y->size[0] * y->size[1];
+    int nd2;
+    nd2 = y->size[0] * y->size[1];
     y->size[0] = x->size[0];
     y->size[1] = (int)varargin_1;
-    emxEnsureCapacity_creal_T(y, i);
+    emxEnsureCapacity_creal_T(y, nd2);
     y_data = y->data;
-    pmin = x->size[0] * (int)varargin_1;
-    for (i = 0; i < pmin; i++) {
-      y_data[i].re = 0.0;
-      y_data[i].im = 0.0;
+    nd2 = x->size[0] * (int)varargin_1;
+    for (k = 0; k < nd2; k++) {
+      y_data[k].re = 0.0;
+      y_data[k].im = 0.0;
     }
   } else {
     double e;
+    int b_n;
+    int b_n2;
     int n;
-    int pmax;
-    int pmin;
-    boolean_T useRadix2;
-    pmin = x->size[1];
-    i = xPerm->size[0] * xPerm->size[1];
+    int n2;
+    int nd2;
+    bool useRadix2;
+    n = x->size[1];
+    nd2 = xPerm->size[0] * xPerm->size[1];
     xPerm->size[0] = x->size[1];
-    pmax = x->size[0];
+    n2 = x->size[0];
     xPerm->size[1] = x->size[0];
-    emxEnsureCapacity_creal_T(xPerm, i);
-    xPerm_data = xPerm->data;
-    for (i = 0; i < pmax; i++) {
-      for (pow2p = 0; pow2p < pmin; pow2p++) {
-        xPerm_data[pow2p + xPerm->size[0] * i] = x_data[i + x->size[0] * pow2p];
+    emxEnsureCapacity_creal_T(xPerm, nd2);
+    y_data = xPerm->data;
+    for (k = 0; k < n2; k++) {
+      for (b_k = 0; b_k < n; b_k++) {
+        y_data[b_k + xPerm->size[0] * k] = x_data[k + x->size[0] * b_k];
       }
     }
     useRadix2 = (((int)varargin_1 > 0) &&
                  (((int)varargin_1 & ((int)varargin_1 - 1)) == 0));
-    pow2p = 1;
+    n2 = 1;
     if (useRadix2) {
-      pmin = (int)varargin_1;
+      nd2 = (int)varargin_1;
     } else {
       if ((int)varargin_1 > 0) {
-        n = ((int)varargin_1 + (int)varargin_1) - 1;
-        pmax = 31;
-        if (n <= 1) {
-          pmax = 0;
+        nd2 = ((int)varargin_1 + (int)varargin_1) - 1;
+        n = 31;
+        if (nd2 <= 1) {
+          n = 0;
         } else {
-          boolean_T exitg1;
-          pmin = 0;
+          bool exitg1;
+          n2 = 0;
           exitg1 = false;
-          while ((!exitg1) && (pmax - pmin > 1)) {
-            k = (pmin + pmax) >> 1;
-            pow2p = 1 << k;
-            if (pow2p == n) {
-              pmax = k;
+          while ((!exitg1) && (n - n2 > 1)) {
+            b_n = (n2 + n) >> 1;
+            b_n2 = 1 << b_n;
+            if (b_n2 == nd2) {
+              n = b_n;
               exitg1 = true;
-            } else if (pow2p > n) {
-              pmax = k;
+            } else if (b_n2 > nd2) {
+              n = b_n;
             } else {
-              pmin = k;
+              n2 = b_n;
             }
           }
         }
-        pow2p = 1 << pmax;
+        n2 = 1 << n;
       }
-      pmin = pow2p;
+      nd2 = n2;
     }
-    e = 6.2831853071795862 / (double)pmin;
-    n = (int)((unsigned int)pmin >> 1) >> 1;
-    i = costab1q->size[0] * costab1q->size[1];
+    e = 6.2831853071795862 / (double)nd2;
+    n = (int)(((unsigned int)nd2 >> 1) >> 1);
+    nd2 = costab1q->size[0] * costab1q->size[1];
     costab1q->size[0] = 1;
     costab1q->size[1] = n + 1;
-    emxEnsureCapacity_real_T(costab1q, i);
+    emxEnsureCapacity_real_T(costab1q, nd2);
     costab1q_data = costab1q->data;
     costab1q_data[0] = 1.0;
-    pmin = n / 2 - 1;
-    for (k = 0; k <= pmin; k++) {
+    nd2 = (int)((unsigned int)n >> 1) - 1;
+    for (k = 0; k <= nd2; k++) {
       costab1q_data[k + 1] = cos(e * ((double)k + 1.0));
     }
-    i = pmin + 2;
-    for (k = i; k < n; k++) {
-      costab1q_data[k] = sin(e * (double)(n - k));
+    nd2 += 2;
+    for (b_k = nd2; b_k < n; b_k++) {
+      costab1q_data[b_k] = sin(e * (double)(n - b_k));
     }
     costab1q_data[n] = 0.0;
     if (!useRadix2) {
-      n = costab1q->size[1] - 1;
-      pmax = (costab1q->size[1] - 1) << 1;
-      i = costab->size[0] * costab->size[1];
+      b_n = costab1q->size[1] - 1;
+      b_n2 = (costab1q->size[1] - 1) << 1;
+      nd2 = costab->size[0] * costab->size[1];
       costab->size[0] = 1;
-      costab->size[1] = pmax + 1;
-      emxEnsureCapacity_real_T(costab, i);
+      costab->size[1] = b_n2 + 1;
+      emxEnsureCapacity_real_T(costab, nd2);
       costab_data = costab->data;
-      i = sintab->size[0] * sintab->size[1];
+      nd2 = sintab->size[0] * sintab->size[1];
       sintab->size[0] = 1;
-      sintab->size[1] = pmax + 1;
-      emxEnsureCapacity_real_T(sintab, i);
+      sintab->size[1] = b_n2 + 1;
+      emxEnsureCapacity_real_T(sintab, nd2);
       sintab_data = sintab->data;
       costab_data[0] = 1.0;
       sintab_data[0] = 0.0;
-      i = sintabinv->size[0] * sintabinv->size[1];
+      nd2 = sintabinv->size[0] * sintabinv->size[1];
       sintabinv->size[0] = 1;
-      sintabinv->size[1] = pmax + 1;
-      emxEnsureCapacity_real_T(sintabinv, i);
+      sintabinv->size[1] = b_n2 + 1;
+      emxEnsureCapacity_real_T(sintabinv, nd2);
       sintabinv_data = sintabinv->data;
-      for (k = 0; k < n; k++) {
-        sintabinv_data[k + 1] = costab1q_data[(n - k) - 1];
+      for (k = 0; k < b_n; k++) {
+        sintabinv_data[k + 1] = costab1q_data[(b_n - k) - 1];
       }
-      i = costab1q->size[1];
-      for (k = i; k <= pmax; k++) {
-        sintabinv_data[k] = costab1q_data[k - n];
+      nd2 = costab1q->size[1];
+      for (k = nd2; k <= b_n2; k++) {
+        sintabinv_data[k] = costab1q_data[k - b_n];
       }
-      for (k = 0; k < n; k++) {
+      for (k = 0; k < b_n; k++) {
         costab_data[k + 1] = costab1q_data[k + 1];
-        sintab_data[k + 1] = -costab1q_data[(n - k) - 1];
+        sintab_data[k + 1] = -costab1q_data[(b_n - k) - 1];
       }
-      for (k = i; k <= pmax; k++) {
-        costab_data[k] = -costab1q_data[pmax - k];
-        sintab_data[k] = -costab1q_data[k - n];
+      for (k = nd2; k <= b_n2; k++) {
+        costab_data[k] = -costab1q_data[b_n2 - k];
+        sintab_data[k] = -costab1q_data[k - b_n];
       }
+      c_FFTImplementationCallback_dob(xPerm, n2, (int)varargin_1, costab,
+                                      sintab, sintabinv, yPerm);
+      yPerm_data = yPerm->data;
     } else {
       n = costab1q->size[1] - 1;
-      pmax = (costab1q->size[1] - 1) << 1;
-      i = costab->size[0] * costab->size[1];
+      n2 = (costab1q->size[1] - 1) << 1;
+      nd2 = costab->size[0] * costab->size[1];
       costab->size[0] = 1;
-      costab->size[1] = pmax + 1;
-      emxEnsureCapacity_real_T(costab, i);
+      costab->size[1] = n2 + 1;
+      emxEnsureCapacity_real_T(costab, nd2);
       costab_data = costab->data;
-      i = sintab->size[0] * sintab->size[1];
+      nd2 = sintab->size[0] * sintab->size[1];
       sintab->size[0] = 1;
-      sintab->size[1] = pmax + 1;
-      emxEnsureCapacity_real_T(sintab, i);
+      sintab->size[1] = n2 + 1;
+      emxEnsureCapacity_real_T(sintab, nd2);
       sintab_data = sintab->data;
       costab_data[0] = 1.0;
       sintab_data[0] = 0.0;
@@ -182,33 +185,25 @@ void fft(const emxArray_creal_T *x, double varargin_1, emxArray_creal_T *y)
         costab_data[k + 1] = costab1q_data[k + 1];
         sintab_data[k + 1] = -costab1q_data[(n - k) - 1];
       }
-      i = costab1q->size[1];
-      for (k = i; k <= pmax; k++) {
-        costab_data[k] = -costab1q_data[pmax - k];
+      nd2 = costab1q->size[1];
+      for (k = nd2; k <= n2; k++) {
+        costab_data[k] = -costab1q_data[n2 - k];
         sintab_data[k] = -costab1q_data[k - n];
       }
-      sintabinv->size[0] = 1;
-      sintabinv->size[1] = 0;
-    }
-    if (useRadix2) {
       c_FFTImplementationCallback_r2b(xPerm, (int)varargin_1, costab, sintab,
                                       yPerm);
-      xPerm_data = yPerm->data;
-    } else {
-      c_FFTImplementationCallback_dob(xPerm, pow2p, (int)varargin_1, costab,
-                                      sintab, sintabinv, yPerm);
-      xPerm_data = yPerm->data;
+      yPerm_data = yPerm->data;
     }
-    pmin = yPerm->size[1];
-    i = y->size[0] * y->size[1];
+    n = yPerm->size[1];
+    nd2 = y->size[0] * y->size[1];
     y->size[0] = yPerm->size[1];
-    pmax = yPerm->size[0];
+    n2 = yPerm->size[0];
     y->size[1] = yPerm->size[0];
-    emxEnsureCapacity_creal_T(y, i);
+    emxEnsureCapacity_creal_T(y, nd2);
     y_data = y->data;
-    for (i = 0; i < pmax; i++) {
-      for (pow2p = 0; pow2p < pmin; pow2p++) {
-        y_data[pow2p + y->size[0] * i] = xPerm_data[i + yPerm->size[0] * pow2p];
+    for (k = 0; k < n2; k++) {
+      for (b_k = 0; b_k < n; b_k++) {
+        y_data[b_k + y->size[0] * k] = yPerm_data[k + yPerm->size[0] * b_k];
       }
     }
   }

@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: hasIRIPrefix.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -18,11 +17,11 @@
 /* Function Definitions */
 /*
  * Arguments    : const emxArray_char_T *path
- * Return Type  : boolean_T
+ * Return Type  : bool
  */
-boolean_T hasIRIPrefix(const emxArray_char_T *path)
+bool hasIRIPrefix(const emxArray_char_T *path)
 {
-  static const boolean_T bv[128] = {
+  static const bool bv[128] = {
       false, false, false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false, false, false,
@@ -36,7 +35,7 @@ boolean_T hasIRIPrefix(const emxArray_char_T *path)
       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
       true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
       true,  true,  true,  false, false, false, false, false};
-  static const boolean_T bv1[128] = {
+  static const bool bv1[128] = {
       false, false, false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false, false, false,
@@ -52,14 +51,14 @@ boolean_T hasIRIPrefix(const emxArray_char_T *path)
       true,  true,  true,  false, false, false, false, false};
   emxArray_char_T *b_path;
   int b_i;
-  int pthSz_tmp;
+  int pthSz;
   const char *path_data;
   char *b_path_data;
-  boolean_T b;
+  bool b;
   path_data = path->data;
-  pthSz_tmp = path->size[1];
+  pthSz = path->size[1];
   emxInit_char_T(&b_path);
-  if (pthSz_tmp < 4) {
+  if (pthSz < 4) {
     b = false;
   } else if (!bv[(int)((unsigned char)path_data[0] & 127U)]) {
     b = false;
@@ -68,14 +67,14 @@ boolean_T hasIRIPrefix(const emxArray_char_T *path)
              (path_data[1] == '+')) {
     int colIdx;
     int i;
-    boolean_T guard1;
+    bool guard1;
     colIdx = 0;
     i = 2;
     guard1 = false;
     int exitg1;
     do {
       exitg1 = 0;
-      if (i + 1 <= pthSz_tmp) {
+      if (i + 1 <= pthSz) {
         if (bv1[(int)((unsigned char)path_data[i] & 127U)] ||
             (path_data[i] == '.') || (path_data[i] == '-') ||
             (path_data[i] == '+')) {
@@ -98,22 +97,22 @@ boolean_T hasIRIPrefix(const emxArray_char_T *path)
     if (guard1) {
       if (colIdx == 0) {
         b = false;
-      } else if (colIdx + 1 >= pthSz_tmp) {
+      } else if (colIdx + 1 >= pthSz) {
         b = false;
       } else if (path_data[colIdx] == '/') {
         b = true;
       } else {
         if (colIdx + 1 > path->size[1]) {
           colIdx = 0;
-          pthSz_tmp = 0;
+          pthSz = 0;
         }
-        b_i = b_path->size[0] * b_path->size[1];
+        i = b_path->size[0] * b_path->size[1];
         b_path->size[0] = 1;
-        i = pthSz_tmp - colIdx;
-        b_path->size[1] = i;
-        emxEnsureCapacity_char_T(b_path, b_i);
+        pthSz -= colIdx;
+        b_path->size[1] = pthSz;
+        emxEnsureCapacity_char_T(b_path, i);
         b_path_data = b_path->data;
-        for (b_i = 0; b_i < i; b_i++) {
+        for (b_i = 0; b_i < pthSz; b_i++) {
           b_path_data[b_i] = path_data[colIdx + b_i];
         }
         b = hasIRIPrefix(b_path);

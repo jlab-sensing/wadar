@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: mean.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -23,7 +22,7 @@ double b_mean(const emxArray_real_T *x)
 {
   const double *x_data;
   double y;
-  int ib;
+  int b_k;
   int k;
   x_data = x->data;
   if (x->size[1] == 0) {
@@ -50,18 +49,18 @@ double b_mean(const emxArray_real_T *x)
     for (k = 2; k <= firstBlockLength; k++) {
       y += x_data[k - 1];
     }
-    for (ib = 2; ib <= nblocks; ib++) {
+    for (k = 2; k <= nblocks; k++) {
       double bsum;
       int hi;
-      firstBlockLength = (ib - 1) << 10;
+      firstBlockLength = (k - 1) << 10;
       bsum = x_data[firstBlockLength];
-      if (ib == nblocks) {
+      if (k == nblocks) {
         hi = lastBlockLength;
       } else {
         hi = 1024;
       }
-      for (k = 2; k <= hi; k++) {
-        bsum += x_data[(firstBlockLength + k) - 1];
+      for (b_k = 2; b_k <= hi; b_k++) {
+        bsum += x_data[(firstBlockLength + b_k) - 1];
       }
       y += bsum;
     }
@@ -78,7 +77,7 @@ double mean(const emxArray_real_T *x)
 {
   const double *x_data;
   double y;
-  int ib;
+  int b_k;
   int k;
   x_data = x->data;
   if (x->size[0] == 0) {
@@ -105,18 +104,18 @@ double mean(const emxArray_real_T *x)
     for (k = 2; k <= firstBlockLength; k++) {
       y += x_data[k - 1];
     }
-    for (ib = 2; ib <= nblocks; ib++) {
+    for (k = 2; k <= nblocks; k++) {
       double bsum;
       int hi;
-      firstBlockLength = (ib - 1) << 10;
+      firstBlockLength = (k - 1) << 10;
       bsum = x_data[firstBlockLength];
-      if (ib == nblocks) {
+      if (k == nblocks) {
         hi = lastBlockLength;
       } else {
         hi = 1024;
       }
-      for (k = 2; k <= hi; k++) {
-        bsum += x_data[(firstBlockLength + k) - 1];
+      for (b_k = 2; b_k <= hi; b_k++) {
+        bsum += x_data[(firstBlockLength + b_k) - 1];
       }
       y += bsum;
     }

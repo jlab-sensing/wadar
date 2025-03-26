@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: run_tag_test_chipotle_types.h
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 #ifndef RUN_TAG_TEST_CHIPOTLE_TYPES_H
@@ -22,7 +21,7 @@ struct emxArray_real_T {
   int *size;
   int allocatedSize;
   int numDimensions;
-  boolean_T canFreeData;
+  bool canFreeData;
 };
 #endif /* struct_emxArray_real_T */
 #ifndef typedef_emxArray_real_T
@@ -37,7 +36,7 @@ typedef struct {
   int *size;
   int allocatedSize;
   int numDimensions;
-  boolean_T canFreeData;
+  bool canFreeData;
 } emxArray_creal_T;
 #endif /* typedef_emxArray_creal_T */
 
@@ -48,7 +47,7 @@ struct emxArray_char_T {
   int *size;
   int allocatedSize;
   int numDimensions;
-  boolean_T canFreeData;
+  bool canFreeData;
 };
 #endif /* struct_emxArray_char_T */
 #ifndef typedef_emxArray_char_T
@@ -63,7 +62,7 @@ struct emxArray_int32_T {
   int *size;
   int allocatedSize;
   int numDimensions;
-  boolean_T canFreeData;
+  bool canFreeData;
 };
 #endif /* struct_emxArray_int32_T */
 #ifndef typedef_emxArray_int32_T
@@ -74,11 +73,11 @@ typedef struct emxArray_int32_T emxArray_int32_T;
 #ifndef struct_emxArray_boolean_T
 #define struct_emxArray_boolean_T
 struct emxArray_boolean_T {
-  boolean_T *data;
+  bool *data;
   int *size;
   int allocatedSize;
   int numDimensions;
-  boolean_T canFreeData;
+  bool canFreeData;
 };
 #endif /* struct_emxArray_boolean_T */
 #ifndef typedef_emxArray_boolean_T

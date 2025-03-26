@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: run_tag_test_chipotle.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -24,7 +23,6 @@
 #include "mean.h"
 #include "minOrMax.h"
 #include "mrdivide_helper.h"
-#include "mtimes.h"
 #include "norm.h"
 #include "proc_frames.h"
 #include "pwd1.h"
@@ -102,28 +100,30 @@ void run_tag_test_chipotle(const char captureName_data[],
   emxArray_real_T *tagFT;
   emxArray_real_T *y;
   emxArray_real_T_1 c_fileid;
+  creal_T *b_captureFT_data;
   creal_T *captureFT_data;
   creal_T *framesBB_data;
   double corrArray[512];
   double dacMin_data;
   double dacStep_data;
   double frameRate_data;
+  double freqTag;
   double fs_hz;
-  double iterations_data;
   double magic_data;
   double numFrames_data;
   double pps_data;
-  double *b_frameTot_data;
   double *frameTot_data;
+  double *tagFT_data;
   int chipSet_Value_size[2];
-  int b_i;
-  int dacMin_size;
+  int b_freqTag;
+  int freqIndex;
   int i;
+  int j;
+  int loop_ub;
   int magic_size;
-  int pps_size;
   signed char fileid;
   char *fileName_data;
-  boolean_T b_magic_data;
+  bool b_magic_data;
   if (!isInitialized_run_tag_test_chipotle) {
     run_tag_test_chipotle_initialize();
   }
@@ -150,10 +150,10 @@ void run_tag_test_chipotle(const char captureName_data[],
   /*  Setting default parameters */
   /*  To make the MATLAB Coder stop complaining about execution paths. */
   emxInit_creal_T(&framesBB, 2);
-  i = framesBB->size[0] * framesBB->size[1];
+  magic_size = framesBB->size[0] * framesBB->size[1];
   framesBB->size[0] = 1;
   framesBB->size[1] = 1;
-  emxEnsureCapacity_creal_T(framesBB, i);
+  emxEnsureCapacity_creal_T(framesBB, magic_size);
   framesBB_data = framesBB->data;
   framesBB_data[0].re = 0.0;
   framesBB_data[0].im = 0.0;
@@ -168,23 +168,23 @@ void run_tag_test_chipotle(const char captureName_data[],
   fileid = cfopen(fileName);
   magic_size = b_fread(fileid, (double *)&magic_data);
   /*  Check the magic number */
-  for (i = 0; i < magic_size; i++) {
+  for (j = 0; j < magic_size; j++) {
     b_magic_data = (magic_data != 4.27805917E+9);
   }
   emxInit_real_T(&frameTot, 2);
   emxInit_real_T(&b_frameTot, 1);
-  emxInit_creal_T(&captureFT, 1);
   emxInit_real_T(&r1, 2);
+  emxInit_creal_T(&captureFT, 1);
   emxInit_real_T(&b_fileid, 1);
-  if (ifWhileCond((boolean_T *)&b_magic_data, magic_size)) {
-    i = fileName->size[0] * fileName->size[1];
+  if (ifWhileCond((bool *)&b_magic_data, magic_size)) {
+    magic_size = fileName->size[0] * fileName->size[1];
     fileName->size[0] = 1;
     fileName->size[1] = captureName_size[1] + 1;
-    emxEnsureCapacity_char_T(fileName, i);
+    emxEnsureCapacity_char_T(fileName, magic_size);
     fileName_data = fileName->data;
     magic_size = captureName_size[1];
-    for (i = 0; i < magic_size; i++) {
-      fileName_data[i] = captureName_data[i];
+    for (j = 0; j < magic_size; j++) {
+      fileName_data[j] = captureName_data[j];
     }
     fileName_data[captureName_size[1]] = '\x00';
     printf("Wrong data format: %s!\n", &fileName_data[0]);
@@ -192,12 +192,11 @@ void run_tag_test_chipotle(const char captureName_data[],
     fileManager();
   } else {
     double pgen_data;
-    int pgen_size;
     char chipSet_Value_data[7];
-    c_fread(fileid, (double *)&iterations_data);
+    c_fread(fileid, (double *)&freqTag);
     /*  Sweep controller settings */
-    pps_size = c_fread(fileid, (double *)&pps_data);
-    dacMin_size = c_fread(fileid, (double *)&dacMin_data);
+    b_freqTag = c_fread(fileid, (double *)&pps_data);
+    freqIndex = c_fread(fileid, (double *)&dacMin_data);
     c_fread(fileid, c_fileid.data);
     c_fread(fileid, (double *)&dacStep_data);
     magic_size = c_fread(fileid, (double *)&magic_data);
@@ -205,27 +204,27 @@ void run_tag_test_chipotle(const char captureName_data[],
     /*  Dummy variables because the MATLAB  Coder keeps yelling at me */
     chipSet_Value_size[0] = 1;
     chipSet_Value_size[1] = 7;
-    for (i = 0; i < 7; i++) {
-      chipSet_Value_data[i] = b_cv[i];
+    for (j = 0; j < 7; j++) {
+      chipSet_Value_data[j] = b_cv[j];
     }
-    pgen_size = 1;
+    loop_ub = 1;
     pgen_data = 0.0;
-    for (i = 0; i < magic_size; i++) {
+    for (j = 0; j < magic_size; j++) {
       b_magic_data = (magic_data == 2.0);
     }
-    if (ifWhileCond((boolean_T *)&b_magic_data, magic_size)) {
+    if (ifWhileCond((bool *)&b_magic_data, magic_size)) {
       magic_size = 0;
     } else {
-      for (i = 0; i < magic_size; i++) {
+      for (j = 0; j < magic_size; j++) {
         b_magic_data = (magic_data == 10.0);
       }
-      if (ifWhileCond((boolean_T *)&b_magic_data, magic_size)) {
+      if (ifWhileCond((bool *)&b_magic_data, magic_size)) {
         magic_size = 1;
       } else {
-        for (i = 0; i < magic_size; i++) {
+        for (j = 0; j < magic_size; j++) {
           b_magic_data = (magic_data == 11.0);
         }
-        if (ifWhileCond((boolean_T *)&b_magic_data, magic_size)) {
+        if (ifWhileCond((bool *)&b_magic_data, magic_size)) {
           magic_size = 2;
         } else {
           magic_size = -1;
@@ -240,7 +239,7 @@ void run_tag_test_chipotle(const char captureName_data[],
       chipSet_Value_data[1] = '2';
       d_fread(fileid, c_fileid.data);
       /*  Sampling Rate */
-      pgen_size = c_fread(fileid, (double *)&pgen_data);
+      loop_ub = c_fread(fileid, (double *)&pgen_data);
       /*  Radar Specifier settings */
       d_fread(fileid, c_fileid.data);
       d_fread(fileid, c_fileid.data);
@@ -248,12 +247,12 @@ void run_tag_test_chipotle(const char captureName_data[],
     case 1:
       chipSet_Value_size[0] = 1;
       chipSet_Value_size[1] = 7;
-      for (i = 0; i < 7; i++) {
-        chipSet_Value_data[i] = cv1[i];
+      for (j = 0; j < 7; j++) {
+        chipSet_Value_data[j] = cv1[j];
       }
       e_fread(fileid, c_fileid.data);
       /*  Sampling Rate */
-      pgen_size = c_fread(fileid, (double *)&pgen_data);
+      loop_ub = c_fread(fileid, (double *)&pgen_data);
       /*  Radar Specifier settings */
       c_fread(fileid, c_fileid.data);
       c_fread(fileid, c_fileid.data);
@@ -261,12 +260,12 @@ void run_tag_test_chipotle(const char captureName_data[],
     case 2:
       chipSet_Value_size[0] = 1;
       chipSet_Value_size[1] = 7;
-      for (i = 0; i < 7; i++) {
-        chipSet_Value_data[i] = cv2[i];
+      for (j = 0; j < 7; j++) {
+        chipSet_Value_data[j] = cv2[j];
       }
       e_fread(fileid, c_fileid.data);
       /*  Sampling Rate */
-      pgen_size = c_fread(fileid, (double *)&pgen_data);
+      loop_ub = c_fread(fileid, (double *)&pgen_data);
       /*  Radar Specifier settings */
       c_fread(fileid, c_fileid.data);
       c_fread(fileid, c_fileid.data);
@@ -278,75 +277,79 @@ void run_tag_test_chipotle(const char captureName_data[],
     /*  Number of frames in a capture */
     c_fread(fileid, c_fileid.data);
     /*  Number of runs in capture */
-    magic_size = c_fread(fileid, (double *)&frameRate_data);
+    c_fread(fileid, (double *)&frameRate_data);
     /*  Frames per second */
     f_fread(fileid, numFrames_data, b_fileid);
     g_fread(fileid, numFrames_data * magic_data, b_frameTot);
     /*  Radar frames */
     /*  DAC normalization */
-    for (i = 0; i < pps_size; i++) {
-      pps_data *= iterations_data;
+    for (j = 0; j < b_freqTag; j++) {
+      pps_data *= freqTag;
     }
-    mrdiv(b_frameTot, (double *)&pps_data, pps_size, r1);
-    mtimes(r1, (double *)&dacStep_data, b_frameTot);
-    frameTot_data = b_frameTot->data;
-    if (b_frameTot->size[0] == dacMin_size) {
-      pps_size = b_frameTot->size[0];
-      for (i = 0; i < pps_size; i++) {
-        frameTot_data[0] += dacMin_data;
+    mrdiv(b_frameTot, (double *)&pps_data, b_freqTag, r1);
+    tagFT_data = r1->data;
+    if (r1->size[0] == freqIndex) {
+      b_freqTag = r1->size[0];
+      magic_size = b_frameTot->size[0];
+      b_frameTot->size[0] = r1->size[0];
+      emxEnsureCapacity_real_T(b_frameTot, magic_size);
+      frameTot_data = b_frameTot->data;
+      for (j = 0; j < b_freqTag; j++) {
+        freqTag = 0.0;
+        magic_size = r1->size[1];
+        for (i = 0; i < magic_size; i++) {
+          freqTag += tagFT_data[0] * dacStep_data;
+        }
+        frameTot_data[0] = freqTag + dacMin_data;
       }
-      i = frameTot->size[0] * frameTot->size[1];
+      magic_size = frameTot->size[0] * frameTot->size[1];
       frameTot->size[0] = (int)magic_data;
       frameTot->size[1] = (int)numFrames_data;
-      emxEnsureCapacity_real_T(frameTot, i);
-      b_frameTot_data = frameTot->data;
+      emxEnsureCapacity_real_T(frameTot, magic_size);
+      tagFT_data = frameTot->data;
       magic_size = (int)magic_data * (int)numFrames_data;
-      for (i = 0; i < magic_size; i++) {
-        b_frameTot_data[i] = frameTot_data[i];
+      for (j = 0; j < magic_size; j++) {
+        tagFT_data[j] = frameTot_data[j];
       }
     } else {
-      binary_expand_op(frameTot, b_frameTot, (double *)&dacMin_data,
-                       &dacMin_size, (double *)&magic_data,
-                       (double *)&numFrames_data);
-      b_frameTot_data = frameTot->data;
+      binary_expand_op(frameTot, r1, (double *)&dacStep_data,
+                       (double *)&dacMin_data, &freqIndex,
+                       (double *)&magic_data, (double *)&numFrames_data);
+      tagFT_data = frameTot->data;
     }
     /*  Process out the weird spike */
-    i = (int)numFrames_data;
-    for (b_i = 0; b_i < i; b_i++) {
-      magic_size = frameTot->size[0];
-      dacMin_size = b_frameTot->size[0];
+    b_freqTag = (int)numFrames_data;
+    for (i = 0; i < b_freqTag; i++) {
+      freqIndex = frameTot->size[0];
+      magic_size = b_frameTot->size[0];
       b_frameTot->size[0] = frameTot->size[0];
-      emxEnsureCapacity_real_T(b_frameTot, dacMin_size);
+      emxEnsureCapacity_real_T(b_frameTot, magic_size);
       frameTot_data = b_frameTot->data;
-      for (dacMin_size = 0; dacMin_size < magic_size; dacMin_size++) {
-        frameTot_data[dacMin_size] =
-            b_frameTot_data[dacMin_size + frameTot->size[0] * b_i];
+      for (j = 0; j < freqIndex; j++) {
+        frameTot_data[j] = tagFT_data[j + frameTot->size[0] * i];
       }
       if (maximum(b_frameTot) > 8191.0) {
-        if ((unsigned int)b_i + 1U > 1U) {
-          dacMin_size = b_frameTot->size[0];
+        if (i > 0) {
+          magic_size = b_frameTot->size[0];
           b_frameTot->size[0] = frameTot->size[0];
-          emxEnsureCapacity_real_T(b_frameTot, dacMin_size);
+          emxEnsureCapacity_real_T(b_frameTot, magic_size);
           frameTot_data = b_frameTot->data;
-          for (dacMin_size = 0; dacMin_size < magic_size; dacMin_size++) {
-            frameTot_data[dacMin_size] =
-                b_frameTot_data[dacMin_size + frameTot->size[0] * (b_i - 1)];
+          for (j = 0; j < freqIndex; j++) {
+            frameTot_data[j] = tagFT_data[j + frameTot->size[0] * (i - 1)];
           }
-          for (dacMin_size = 0; dacMin_size < magic_size; dacMin_size++) {
-            b_frameTot_data[dacMin_size + frameTot->size[0] * b_i] =
-                frameTot_data[dacMin_size];
+          for (j = 0; j < freqIndex; j++) {
+            tagFT_data[j + frameTot->size[0] * i] = frameTot_data[j];
           }
         } else {
-          dacMin_size = b_frameTot->size[0];
+          magic_size = b_frameTot->size[0];
           b_frameTot->size[0] = frameTot->size[0];
-          emxEnsureCapacity_real_T(b_frameTot, dacMin_size);
+          emxEnsureCapacity_real_T(b_frameTot, magic_size);
           frameTot_data = b_frameTot->data;
-          for (dacMin_size = 0; dacMin_size < magic_size; dacMin_size++) {
-            frameTot_data[dacMin_size] =
-                b_frameTot_data[dacMin_size + frameTot->size[0]];
+          for (j = 0; j < freqIndex; j++) {
+            frameTot_data[j] = tagFT_data[j + frameTot->size[0]];
           }
-          for (dacMin_size = 0; dacMin_size < magic_size; dacMin_size++) {
-            b_frameTot_data[dacMin_size] = frameTot_data[dacMin_size];
+          for (j = 0; j < freqIndex; j++) {
+            tagFT_data[j] = frameTot_data[j];
           }
         }
       }
@@ -354,48 +357,46 @@ void run_tag_test_chipotle(const char captureName_data[],
     d_fread(fileid, c_fileid.data);
     /*  Estimated FPS (good to check against frameRate) */
     /*  TODO - insert comment here */
-    magic_data = h_fread(fileid, b_frameTot);
+    freqTag = h_fread(fileid, b_frameTot);
     cfclose(fileid);
-    if (magic_data != 0.0) {
+    if (freqTag != 0.0) {
       printf("FILE READ ERROR: %f data remains! Check that file format matches "
              "read code\n",
-             floor(magic_data));
+             floor(freqTag));
       fflush(stdout);
     } else {
       /*  Unused but potentially useful radar parameters */
       NoveldaChipParams(chipSet_Value_data, chipSet_Value_size,
-                        (double *)&pgen_data, pgen_size, &iterations_data,
-                        &pps_data, &dacMin_data, &dacStep_data, &numFrames_data,
-                        &magic_data, &fs_hz);
+                        (double *)&pgen_data, loop_ub, &freqTag, &pps_data,
+                        &magic_data, &dacMin_data, &dacStep_data,
+                        &numFrames_data, &fs_hz);
       /*  Baseband Conversion */
-      i = framesBB->size[0] * framesBB->size[1];
+      magic_size = framesBB->size[0] * framesBB->size[1];
       framesBB->size[0] = frameTot->size[0];
       framesBB->size[1] = frameTot->size[1];
-      emxEnsureCapacity_creal_T(framesBB, i);
+      emxEnsureCapacity_creal_T(framesBB, magic_size);
       framesBB_data = framesBB->data;
       magic_size = frameTot->size[0] * frameTot->size[1];
-      for (i = 0; i < magic_size; i++) {
-        framesBB_data[i].re = 0.0;
-        framesBB_data[i].im = 0.0;
+      for (j = 0; j < magic_size; j++) {
+        framesBB_data[j].re = 0.0;
+        framesBB_data[j].im = 0.0;
       }
-      i = frameTot->size[1];
-      for (b_i = 0; b_i < i; b_i++) {
-        magic_size = frameTot->size[0];
-        dacMin_size = b_frameTot->size[0];
+      freqIndex = frameTot->size[1];
+      for (i = 0; i < freqIndex; i++) {
+        b_freqTag = frameTot->size[0];
+        magic_size = b_frameTot->size[0];
         b_frameTot->size[0] = frameTot->size[0];
-        emxEnsureCapacity_real_T(b_frameTot, dacMin_size);
+        emxEnsureCapacity_real_T(b_frameTot, magic_size);
         frameTot_data = b_frameTot->data;
-        for (dacMin_size = 0; dacMin_size < magic_size; dacMin_size++) {
-          frameTot_data[dacMin_size] =
-              b_frameTot_data[dacMin_size + frameTot->size[0] * b_i];
+        for (j = 0; j < b_freqTag; j++) {
+          frameTot_data[j] = tagFT_data[j + frameTot->size[0] * i];
         }
         NoveldaDDC(b_frameTot, chipSet_Value_data, chipSet_Value_size,
-                   (double *)&pgen_data, pgen_size, fs_hz, captureFT);
-        captureFT_data = captureFT->data;
-        pps_size = framesBB->size[0];
-        for (dacMin_size = 0; dacMin_size < pps_size; dacMin_size++) {
-          framesBB_data[dacMin_size + framesBB->size[0] * b_i] =
-              captureFT_data[dacMin_size];
+                   (double *)&pgen_data, loop_ub, fs_hz, captureFT);
+        b_captureFT_data = captureFT->data;
+        magic_size = framesBB->size[0];
+        for (j = 0; j < magic_size; j++) {
+          framesBB_data[j + framesBB->size[0] * i] = b_captureFT_data[j];
         }
       }
     }
@@ -424,7 +425,7 @@ void run_tag_test_chipotle(const char captureName_data[],
   /*  Capture FT */
   emxInit_creal_T(&b_captureFT, 2);
   fft(framesBB, framesBB->size[1], b_captureFT);
-  framesBB_data = b_captureFT->data;
+  captureFT_data = b_captureFT->data;
   /*  Find Tag FT */
   /*  [tagFT, tagIndex] = tag_index(captureFT, frameRate, tagHz) */
   /*  */
@@ -439,39 +440,39 @@ void run_tag_test_chipotle(const char captureName_data[],
   /*  Outputs: */
   /*    tagFT: FFT of the tag signal */
   /*  Find Tag FT */
-  pps_data = tagHz / frameRate_data;
-  iterations_data = pps_data * (double)b_captureFT->size[1];
-  pps_size = b_captureFT->size[0];
-  i = captureFT->size[0];
+  dacMin_data = tagHz / frameRate_data;
+  freqTag = dacMin_data * (double)b_captureFT->size[1];
+  loop_ub = b_captureFT->size[0];
+  magic_size = captureFT->size[0];
   captureFT->size[0] = b_captureFT->size[0];
-  emxEnsureCapacity_creal_T(captureFT, i);
-  captureFT_data = captureFT->data;
-  for (i = 0; i < pps_size; i++) {
-    captureFT_data[i] =
-        framesBB_data[i + b_captureFT->size[0] * ((int)iterations_data - 1)];
+  emxEnsureCapacity_creal_T(captureFT, magic_size);
+  b_captureFT_data = captureFT->data;
+  for (j = 0; j < loop_ub; j++) {
+    b_captureFT_data[j] =
+        captureFT_data[j + b_captureFT->size[0] * ((int)freqTag - 1)];
   }
   emxInit_real_T(&tagFT, 1);
   b_abs(captureFT, tagFT);
-  for (b_i = 0; b_i < 5; b_i++) {
-    magic_size = (int)(iterations_data - 2.0) + b_i;
-    i = captureFT->size[0];
-    captureFT->size[0] = pps_size;
-    emxEnsureCapacity_creal_T(captureFT, i);
-    captureFT_data = captureFT->data;
-    for (i = 0; i < pps_size; i++) {
-      captureFT_data[i] =
-          framesBB_data[i + b_captureFT->size[0] * (magic_size - 1)];
+  for (i = 0; i < 5; i++) {
+    b_freqTag = (int)(freqTag - 2.0) + i;
+    magic_size = captureFT->size[0];
+    captureFT->size[0] = loop_ub;
+    emxEnsureCapacity_creal_T(captureFT, magic_size);
+    b_captureFT_data = captureFT->data;
+    for (j = 0; j < loop_ub; j++) {
+      b_captureFT_data[j] =
+          captureFT_data[j + b_captureFT->size[0] * (b_freqTag - 1)];
     }
     b_abs(captureFT, b_frameTot);
     frameTot_data = b_frameTot->data;
     if (maximum(b_frameTot) > maximum(tagFT)) {
-      magic_size = b_frameTot->size[0];
-      i = tagFT->size[0];
+      b_freqTag = b_frameTot->size[0];
+      magic_size = tagFT->size[0];
       tagFT->size[0] = b_frameTot->size[0];
-      emxEnsureCapacity_real_T(tagFT, i);
-      b_frameTot_data = tagFT->data;
-      for (i = 0; i < magic_size; i++) {
-        b_frameTot_data[i] = frameTot_data[i];
+      emxEnsureCapacity_real_T(tagFT, magic_size);
+      tagFT_data = tagFT->data;
+      for (j = 0; j < b_freqTag; j++) {
+        tagFT_data[j] = frameTot_data[j];
       }
     }
   }
@@ -498,13 +499,13 @@ void run_tag_test_chipotle(const char captureName_data[],
   /*  Outputs: */
   /*    tagPeakBin: Peak bin of the tag signal in the radar data capture. */
   /*  Find the bin corresponding to the largest peak in the correlated FT */
-  magic_data = maximum(tagFT);
+  freqTag = maximum(tagFT) * 0.9;
   emxInit_real_T(&correlatedTagFT, 1);
-  findpeaks(tagFT, magic_data * 0.9, b_frameTot, correlatedTagFT);
+  findpeaks(tagFT, freqTag, b_frameTot, correlatedTagFT);
   /*  Find the bin corresponding to the largest peak in the tag FT */
   emxInit_real_T(&b_tagFT, 1);
-  findpeaks(tagFT, magic_data * 0.9, b_frameTot, b_tagFT);
-  b_frameTot_data = b_tagFT->data;
+  findpeaks(tagFT, freqTag, b_frameTot, b_tagFT);
+  tagFT_data = b_tagFT->data;
   /*  Commented out for now */
   /*  if (size(tagFT, 1) > 1) */
   /*      if (tagFT(2) - tagFT(1) < 50)  % if double peak, invalid radar capture
@@ -514,61 +515,61 @@ void run_tag_test_chipotle(const char captureName_data[],
   /*      end */
   /*  end */
   /*  Select peak bin correlated to template capture */
-  magic_data = b_norm(correlatedTagFT);
-  iterations_data = magic_data - fabs(magic_data);
-  magic_data -= magic_data;
-  for (b_i = 0; b_i < 512; b_i++) {
+  freqTag = b_norm(correlatedTagFT);
+  pps_data = freqTag - fabs(freqTag);
+  freqTag -= freqTag;
+  for (j = 0; j < 512; j++) {
     /*  Pearson Correlation */
-    corrArray[b_i] =
-        iterations_data * magic_data /
-        sqrt(iterations_data * iterations_data * (magic_data * magic_data));
+    corrArray[j] =
+        pps_data * freqTag / sqrt(pps_data * pps_data * (freqTag * freqTag));
   }
   circshift(corrArray, correlatedTagFT);
   emxFree_real_T(&correlatedTagFT);
   b_maximum(corrArray, &magic_size);
-  *peakBin = b_frameTot_data[0];
-  i = b_tagFT->size[0];
-  for (b_i = 0; b_i < i; b_i++) {
-    if (fabs(b_frameTot_data[b_i] - (double)magic_size) < *peakBin) {
-      *peakBin = b_frameTot_data[b_i];
+  magic_data = tagFT_data[0];
+  b_freqTag = b_tagFT->size[0];
+  for (j = 0; j < b_freqTag; j++) {
+    if (fabs(tagFT_data[j] - (double)magic_size) < magic_data) {
+      magic_data = tagFT_data[j];
     }
   }
   emxFree_real_T(&b_tagFT);
+  *peakBin = magic_data;
   /*  Find tag frequency index */
-  iterations_data = pps_data * (double)framesBB->size[1];
+  freqTag = dacMin_data * (double)framesBB->size[1];
   emxFree_creal_T(&framesBB);
-  i = captureFT->size[0];
+  magic_size = captureFT->size[0];
   captureFT->size[0] = b_captureFT->size[0];
-  emxEnsureCapacity_creal_T(captureFT, i);
-  captureFT_data = captureFT->data;
-  for (i = 0; i < pps_size; i++) {
-    captureFT_data[i] =
-        framesBB_data[i + b_captureFT->size[0] * ((int)iterations_data - 1)];
+  emxEnsureCapacity_creal_T(captureFT, magic_size);
+  b_captureFT_data = captureFT->data;
+  for (j = 0; j < loop_ub; j++) {
+    b_captureFT_data[j] =
+        captureFT_data[j + b_captureFT->size[0] * ((int)freqTag - 1)];
   }
   b_abs(captureFT, tagFT);
-  magic_size = 0;
-  for (b_i = 0; b_i < 5; b_i++) {
-    magic_data = (iterations_data - 2.0) + (double)b_i;
-    i = captureFT->size[0];
-    captureFT->size[0] = pps_size;
-    emxEnsureCapacity_creal_T(captureFT, i);
-    captureFT_data = captureFT->data;
-    for (i = 0; i < pps_size; i++) {
-      captureFT_data[i] =
-          framesBB_data[i + b_captureFT->size[0] * ((int)magic_data - 1)];
+  freqIndex = 0;
+  for (i = 0; i < 5; i++) {
+    pps_data = (freqTag - 2.0) + (double)i;
+    magic_size = captureFT->size[0];
+    captureFT->size[0] = loop_ub;
+    emxEnsureCapacity_creal_T(captureFT, magic_size);
+    b_captureFT_data = captureFT->data;
+    for (j = 0; j < loop_ub; j++) {
+      b_captureFT_data[j] =
+          captureFT_data[j + b_captureFT->size[0] * ((int)pps_data - 1)];
     }
     b_abs(captureFT, b_frameTot);
     frameTot_data = b_frameTot->data;
     if (maximum(b_frameTot) > maximum(tagFT)) {
-      magic_size = b_frameTot->size[0];
-      i = tagFT->size[0];
+      b_freqTag = b_frameTot->size[0];
+      magic_size = tagFT->size[0];
       tagFT->size[0] = b_frameTot->size[0];
-      emxEnsureCapacity_real_T(tagFT, i);
-      b_frameTot_data = tagFT->data;
-      for (i = 0; i < magic_size; i++) {
-        b_frameTot_data[i] = frameTot_data[i];
+      emxEnsureCapacity_real_T(tagFT, magic_size);
+      tagFT_data = tagFT->data;
+      for (j = 0; j < b_freqTag; j++) {
+        tagFT_data[j] = frameTot_data[j];
       }
-      magic_size = (int)magic_data;
+      freqIndex = (int)pps_data;
     }
   }
   emxFree_creal_T(&captureFT);
@@ -587,46 +588,46 @@ void run_tag_test_chipotle(const char captureName_data[],
   /*  Outputs: */
   /*    SNRdb: Signal-to-noise ratio in decibels */
   emxInit_real_T(&y, 2);
-  magic_data = (double)magic_size * 0.945;
-  iterations_data = (double)magic_size * 0.955;
-  if (iterations_data < magic_data) {
+  freqTag = (double)freqIndex * 0.945;
+  pps_data = (double)freqIndex * 0.955;
+  if (pps_data < freqTag) {
     y->size[0] = 1;
     y->size[1] = 0;
-  } else if (floor(magic_data) == magic_data) {
-    i = y->size[0] * y->size[1];
+  } else if (floor(freqTag) == freqTag) {
+    magic_size = y->size[0] * y->size[1];
     y->size[0] = 1;
-    pps_size = (int)(iterations_data - magic_data);
-    y->size[1] = pps_size + 1;
-    emxEnsureCapacity_real_T(y, i);
-    b_frameTot_data = y->data;
-    for (i = 0; i <= pps_size; i++) {
-      b_frameTot_data[i] = magic_data + (double)i;
+    b_freqTag = (int)(pps_data - freqTag);
+    y->size[1] = b_freqTag + 1;
+    emxEnsureCapacity_real_T(y, magic_size);
+    tagFT_data = y->data;
+    for (j = 0; j <= b_freqTag; j++) {
+      tagFT_data[j] = freqTag + (double)j;
     }
   } else {
-    eml_float_colon(magic_data, iterations_data, y);
+    eml_float_colon(freqTag, pps_data, y);
   }
   b_round(y);
-  b_frameTot_data = y->data;
+  tagFT_data = y->data;
   emxInit_creal_T(&c_captureFT, 2);
-  i = c_captureFT->size[0] * c_captureFT->size[1];
+  magic_size = c_captureFT->size[0] * c_captureFT->size[1];
   c_captureFT->size[0] = 1;
-  pps_size = y->size[1];
+  b_freqTag = y->size[1];
   c_captureFT->size[1] = y->size[1];
-  emxEnsureCapacity_creal_T(c_captureFT, i);
-  captureFT_data = c_captureFT->data;
-  for (i = 0; i < pps_size; i++) {
-    captureFT_data[i] =
-        framesBB_data[((int)*peakBin +
-                       b_captureFT->size[0] * ((int)b_frameTot_data[i] - 1)) -
-                      1];
+  emxEnsureCapacity_creal_T(c_captureFT, magic_size);
+  framesBB_data = c_captureFT->data;
+  for (j = 0; j < b_freqTag; j++) {
+    framesBB_data[j] =
+        captureFT_data[((int)magic_data +
+                        b_captureFT->size[0] * ((int)tagFT_data[j] - 1)) -
+                       1];
   }
   d_abs(c_captureFT, y);
   emxFree_creal_T(&c_captureFT);
-  *SNRdB =
-      10.0 * log10(c_abs(framesBB_data[((int)*peakBin + b_captureFT->size[0] *
-                                                            (magic_size - 1)) -
-                                       1]) /
-                   b_mean(y));
+  *SNRdB = 10.0 *
+           log10(c_abs(captureFT_data[((int)magic_data +
+                                       b_captureFT->size[0] * (freqIndex - 1)) -
+                                      1]) /
+                 b_mean(y));
   emxFree_real_T(&y);
   emxFree_creal_T(&b_captureFT);
 }

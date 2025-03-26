@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: mrdivide_helper.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -13,7 +12,6 @@
 #include "rt_nonfinite.h"
 #include "run_tag_test_chipotle_emxutil.h"
 #include "run_tag_test_chipotle_types.h"
-#include <emmintrin.h>
 #include <string.h>
 
 /* Function Definitions */
@@ -35,44 +33,34 @@ void mrdiv(const emxArray_real_T *A, const double B_data[], int B_size,
   A_data = A->data;
   emxInit_real_T(&b_Y, 1);
   if ((A->size[0] == 0) || (B_size == 0)) {
-    int loop_ub;
-    i = Y->size[0] * Y->size[1];
+    int b_loop_ub;
+    b_loop_ub = Y->size[0] * Y->size[1];
     Y->size[0] = A->size[0];
     Y->size[1] = B_size;
-    emxEnsureCapacity_real_T(Y, i);
-    Y_data = Y->data;
-    loop_ub = A->size[0] * B_size;
-    for (i = 0; i < loop_ub; i++) {
-      Y_data[i] = 0.0;
+    emxEnsureCapacity_real_T(Y, b_loop_ub);
+    b_Y_data = Y->data;
+    b_loop_ub = A->size[0] * B_size;
+    for (i = 0; i < b_loop_ub; i++) {
+      b_Y_data[i] = 0.0;
     }
   } else {
-    double B;
+    int b_loop_ub;
     int loop_ub;
-    int scalarLB;
-    int vectorUB;
-    B = B_data[0];
     loop_ub = A->size[0];
-    i = b_Y->size[0];
+    b_loop_ub = b_Y->size[0];
     b_Y->size[0] = A->size[0];
-    emxEnsureCapacity_real_T(b_Y, i);
-    b_Y_data = b_Y->data;
-    scalarLB = (A->size[0] / 2) << 1;
-    vectorUB = scalarLB - 2;
-    for (i = 0; i <= vectorUB; i += 2) {
-      _mm_storeu_pd(&b_Y_data[i],
-                    _mm_div_pd(_mm_loadu_pd(&A_data[i]), _mm_set1_pd(B)));
-    }
-    for (i = scalarLB; i < loop_ub; i++) {
-      b_Y_data[i] = A_data[i] / B;
-    }
-    loop_ub = b_Y->size[0];
-    i = Y->size[0] * Y->size[1];
-    Y->size[0] = b_Y->size[0];
-    Y->size[1] = 1;
-    emxEnsureCapacity_real_T(Y, i);
-    Y_data = Y->data;
+    emxEnsureCapacity_real_T(b_Y, b_loop_ub);
+    Y_data = b_Y->data;
     for (i = 0; i < loop_ub; i++) {
-      Y_data[i] = b_Y_data[i];
+      Y_data[i] = A_data[i] / B_data[0];
+    }
+    b_loop_ub = Y->size[0] * Y->size[1];
+    Y->size[0] = A->size[0];
+    Y->size[1] = 1;
+    emxEnsureCapacity_real_T(Y, b_loop_ub);
+    b_Y_data = Y->data;
+    for (i = 0; i < loop_ub; i++) {
+      b_Y_data[i] = Y_data[i];
     }
   }
   emxFree_real_T(&b_Y);

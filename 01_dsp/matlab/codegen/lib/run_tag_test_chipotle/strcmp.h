@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: strcmp.h
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 #ifndef STRCMP_H
@@ -21,11 +20,11 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-boolean_T b_strcmp(const char b[3]);
+bool b_strcmp(const char b[3]);
 
-boolean_T c_strcmp(const char b[3]);
+bool c_strcmp(const char b[3]);
 
-boolean_T d_strcmp(const char b[3]);
+bool d_strcmp(const char b[3]);
 
 #ifdef __cplusplus
 }

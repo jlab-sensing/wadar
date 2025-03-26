@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: fread.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -174,8 +173,8 @@ void f_fread(double fileID, double sizeA, emxArray_real_T *A)
   size_t nBytes;
   double *A_data;
   int dims_idx_0;
-  int i;
-  boolean_T doEOF;
+  int k;
+  bool doEOF;
   if (sizeA >= 2.147483647E+9) {
     dims_idx_0 = 1024;
     doEOF = true;
@@ -189,32 +188,32 @@ void f_fread(double fileID, double sizeA, emxArray_real_T *A)
     if (filestar == NULL) {
       A->size[0] = 0;
     } else {
-      int c;
+      int bytesOut;
       int numRead;
       numRead = A->size[0];
       A->size[0] = (int)sizeA;
       emxEnsureCapacity_real_T(A, numRead);
       A_data = A->data;
-      c = 0;
+      bytesOut = 0;
       numRead = 1;
-      while ((c < dims_idx_0) && (numRead > 0)) {
+      while ((bytesOut < dims_idx_0) && (numRead > 0)) {
         size_t numReadSizeT;
-        numReadSizeT =
-            fread(&A_data[c], nBytes, (size_t)(dims_idx_0 - c), filestar);
+        numReadSizeT = fread(&A_data[bytesOut], nBytes,
+                             (size_t)(dims_idx_0 - bytesOut), filestar);
         numRead = (int)numReadSizeT;
-        c += (int)numReadSizeT;
+        bytesOut += (int)numReadSizeT;
       }
-      numRead = c + 1;
-      i = A->size[0];
-      for (dims_idx_0 = numRead; dims_idx_0 <= i; dims_idx_0++) {
-        A_data[dims_idx_0 - 1] = 0.0;
+      numRead = bytesOut + 1;
+      dims_idx_0 = A->size[0];
+      for (k = numRead; k <= dims_idx_0; k++) {
+        A_data[k - 1] = 0.0;
       }
-      if (c < sizeA) {
+      if (bytesOut < sizeA) {
         numRead = A->size[0];
-        if (c < 1) {
+        if (bytesOut < 1) {
           A->size[0] = 0;
         } else {
-          A->size[0] = c;
+          A->size[0] = bytesOut;
         }
         emxEnsureCapacity_real_T(A, numRead);
       }
@@ -226,6 +225,7 @@ void f_fread(double fileID, double sizeA, emxArray_real_T *A)
       c = 1;
       while (c > 0) {
         double tbuf[1024];
+        int bytesOut;
         int numRead;
         c = 0;
         numRead = 1;
@@ -240,13 +240,13 @@ void f_fread(double fileID, double sizeA, emxArray_real_T *A)
         } else {
           dims_idx_0 = c;
         }
+        bytesOut = A->size[0];
         numRead = A->size[0];
-        i = A->size[0];
         A->size[0] += dims_idx_0;
-        emxEnsureCapacity_real_T(A, i);
+        emxEnsureCapacity_real_T(A, numRead);
         A_data = A->data;
-        for (i = 0; i < dims_idx_0; i++) {
-          A_data[numRead + i] = tbuf[i];
+        for (k = 0; k < dims_idx_0; k++) {
+          A_data[bytesOut + k] = tbuf[k];
         }
       }
     }
@@ -265,9 +265,8 @@ void g_fread(double fileID, double sizeA, emxArray_real_T *A)
   size_t nBytes;
   double *A_data;
   int bdims_idx_0;
-  int c;
-  int num2Read;
-  boolean_T doEOF;
+  int k;
+  bool doEOF;
   if (sizeA >= 2.147483647E+9) {
     bdims_idx_0 = 1024;
     doEOF = true;
@@ -284,85 +283,91 @@ void g_fread(double fileID, double sizeA, emxArray_real_T *A)
       int bytesOut;
       int i;
       int numRequested;
+      int other2Read;
       numRequested = bdims_idx_0;
       i = (int)sizeA;
-      num2Read = A->size[0];
+      other2Read = A->size[0];
       A->size[0] = (int)sizeA;
-      emxEnsureCapacity_real_T(A, num2Read);
+      emxEnsureCapacity_real_T(A, other2Read);
       A_data = A->data;
       if (((int)sizeA == 0) || (bdims_idx_0 == 0)) {
         bytesOut = 0;
       } else {
-        int numRead;
+        int b_numRead;
         if (bdims_idx_0 > 1024) {
           bdims_idx_0 = 1024;
         }
         bytesOut = 0;
-        numRead = 1;
-        while ((bytesOut < numRequested) && (numRead > 0)) {
-          unsigned int tbuf[1024];
+        b_numRead = 1;
+        while ((bytesOut < numRequested) && (b_numRead > 0)) {
+          unsigned int buf_data[1024];
+          int num2Read;
+          int numRead;
           num2Read = bdims_idx_0;
-          numRead = numRequested - bytesOut;
-          if (bdims_idx_0 > numRead) {
-            num2Read = numRead;
+          other2Read = numRequested - bytesOut;
+          if (bdims_idx_0 > other2Read) {
+            num2Read = other2Read;
           }
-          numRead = 0;
-          c = 1;
-          while ((numRead < num2Read) && (c > 0)) {
+          b_numRead = 0;
+          numRead = 1;
+          while ((b_numRead < num2Read) && (numRead > 0)) {
             size_t numReadSizeT;
-            numReadSizeT = fread(&tbuf[numRead], nBytes,
-                                 (size_t)(num2Read - numRead), filestar);
-            c = (int)numReadSizeT;
-            numRead += (int)numReadSizeT;
+            numReadSizeT = fread(&buf_data[b_numRead], nBytes,
+                                 (size_t)(num2Read - b_numRead), filestar);
+            numRead = (int)numReadSizeT;
+            b_numRead += (int)numReadSizeT;
           }
-          for (c = 0; c < numRead; c++) {
-            A_data[c + bytesOut] = tbuf[c];
+          for (k = 0; k < b_numRead; k++) {
+            A_data[k + bytesOut] = buf_data[k];
           }
-          bytesOut += numRead;
+          bytesOut += b_numRead;
         }
-        num2Read = bytesOut + 1;
-        for (c = num2Read; c <= i; c++) {
-          A_data[c - 1] = 0.0;
+        other2Read = bytesOut + 1;
+        for (k = other2Read; k <= i; k++) {
+          A_data[k - 1] = 0.0;
         }
       }
       if (bytesOut < sizeA) {
-        i = A->size[0];
+        other2Read = A->size[0];
         if (bytesOut < 1) {
           A->size[0] = 0;
         } else {
           A->size[0] = bytesOut;
         }
-        emxEnsureCapacity_real_T(A, i);
+        emxEnsureCapacity_real_T(A, other2Read);
       }
     }
   } else {
     A->size[0] = 0;
     if (!(filestar == NULL)) {
-      c = 1;
-      while (c > 0) {
-        unsigned int tbuf[1024];
-        int i;
+      int num2Read;
+      num2Read = 1;
+      while (num2Read > 0) {
+        unsigned int buf_data[1024];
+        int b_numRead;
         int numRead;
-        c = 0;
-        numRead = 1;
-        while ((c < 1024) && (numRead > 0)) {
+        int other2Read;
+        num2Read = 0;
+        other2Read = 1;
+        while ((num2Read < 1024) && (other2Read > 0)) {
           size_t numReadSizeT;
-          numReadSizeT = fread(&tbuf[c], nBytes, (size_t)(1024 - c), filestar);
-          numRead = (int)numReadSizeT;
-          c += (int)numReadSizeT;
+          numReadSizeT = fread(&buf_data[num2Read], nBytes,
+                               (size_t)(1024 - num2Read), filestar);
+          other2Read = (int)numReadSizeT;
+          num2Read += (int)numReadSizeT;
         }
-        if (c < 1) {
+        if (num2Read < 1) {
           numRead = 0;
         } else {
-          numRead = c;
+          numRead = num2Read;
         }
-        i = A->size[0];
-        num2Read = A->size[0];
+        b_numRead = A->size[0];
+        other2Read = A->size[0];
         A->size[0] += numRead;
-        emxEnsureCapacity_real_T(A, num2Read);
+        emxEnsureCapacity_real_T(A, other2Read);
         A_data = A->data;
-        for (num2Read = 0; num2Read < numRead; num2Read++) {
-          A_data[i + num2Read] = tbuf[num2Read];
+        for (k = 0; k < numRead; k++) {
+          A_data[b_numRead + k] = buf_data[k];
         }
       }
     }
@@ -392,6 +397,7 @@ double h_fread(double fileID, emxArray_real_T *A)
     bytesOut = 0;
     while (c > 0) {
       int i;
+      int loop_ub;
       int numRead;
       unsigned char tbuf[1024];
       c = 0;
@@ -403,16 +409,16 @@ double h_fread(double fileID, emxArray_real_T *A)
         c += (int)numReadSizeT;
       }
       if (c < 1) {
-        numRead = 0;
+        loop_ub = 0;
       } else {
-        numRead = c;
+        loop_ub = c;
       }
       i = A->size[0];
-      i1 = A->size[0];
-      A->size[0] += numRead;
-      emxEnsureCapacity_real_T(A, i1);
+      numRead = A->size[0];
+      A->size[0] += loop_ub;
+      emxEnsureCapacity_real_T(A, numRead);
       A_data = A->data;
-      for (i1 = 0; i1 < numRead; i1++) {
+      for (i1 = 0; i1 < loop_ub; i1++) {
         A_data[i + i1] = tbuf[i1];
       }
       bytesOut += c;

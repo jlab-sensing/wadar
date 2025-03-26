@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: findpeaks.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -39,7 +38,7 @@ void findpeaks(const emxArray_real_T *Yin, double varargin_2,
   double ykfirst;
   double *Xpk_data;
   double *Ypk_data;
-  int i;
+  int b_nPk;
   int k;
   int kfirst;
   int nInf;
@@ -49,29 +48,29 @@ void findpeaks(const emxArray_real_T *Yin, double varargin_2,
   int *iPk_data;
   int *idx_data;
   char dir;
-  boolean_T isinfykfirst;
+  bool isinfykfirst;
   Yin_data = Yin->data;
   emxInit_int32_T(&fPk, 1);
-  i = Yin->size[0];
-  nPk = fPk->size[0];
+  nPk = Yin->size[0];
+  kfirst = fPk->size[0];
   fPk->size[0] = Yin->size[0];
-  emxEnsureCapacity_int32_T(fPk, nPk);
+  emxEnsureCapacity_int32_T(fPk, kfirst);
   fPk_data = fPk->data;
   emxInit_int32_T(&iInfinite, 1);
-  nPk = iInfinite->size[0];
+  kfirst = iInfinite->size[0];
   iInfinite->size[0] = Yin->size[0];
-  emxEnsureCapacity_int32_T(iInfinite, nPk);
+  emxEnsureCapacity_int32_T(iInfinite, kfirst);
   iPk_data = iInfinite->data;
   emxInit_int32_T(&idx, 1);
-  nPk = 0;
+  b_nPk = 0;
   nInf = 0;
   dir = 'n';
   kfirst = 0;
   ykfirst = rtInf;
   isinfykfirst = true;
-  for (k = 1; k <= i; k++) {
+  for (k = 1; k <= nPk; k++) {
     double yk;
-    boolean_T isinfyk;
+    bool isinfyk;
     yk = Yin_data[k - 1];
     if (rtIsNaN(yk)) {
       yk = rtInf;
@@ -91,8 +90,8 @@ void findpeaks(const emxArray_real_T *Yin, double varargin_2,
       } else if (yk < ykfirst) {
         dir = 'd';
         if (previousdir == 'i') {
-          nPk++;
-          fPk_data[nPk - 1] = kfirst;
+          b_nPk++;
+          fPk_data[b_nPk - 1] = kfirst;
         }
       } else {
         dir = 'i';
@@ -102,29 +101,27 @@ void findpeaks(const emxArray_real_T *Yin, double varargin_2,
       isinfykfirst = isinfyk;
     }
   }
-  if (nPk < 1) {
-    i = 0;
-  } else {
-    i = nPk;
+  if (b_nPk < 1) {
+    b_nPk = 0;
   }
-  nPk = fPk->size[0];
-  fPk->size[0] = i;
-  emxEnsureCapacity_int32_T(fPk, nPk);
+  kfirst = fPk->size[0];
+  fPk->size[0] = b_nPk;
+  emxEnsureCapacity_int32_T(fPk, kfirst);
   fPk_data = fPk->data;
-  nPk = iInfinite->size[0];
+  kfirst = iInfinite->size[0];
   if (nInf < 1) {
     iInfinite->size[0] = 0;
   } else {
     iInfinite->size[0] = nInf;
   }
-  emxEnsureCapacity_int32_T(iInfinite, nPk);
+  emxEnsureCapacity_int32_T(iInfinite, kfirst);
   emxInit_int32_T(&iPk, 1);
-  nPk = iPk->size[0];
-  iPk->size[0] = i;
-  emxEnsureCapacity_int32_T(iPk, nPk);
+  kfirst = iPk->size[0];
+  iPk->size[0] = b_nPk;
+  emxEnsureCapacity_int32_T(iPk, kfirst);
   iPk_data = iPk->data;
   nPk = 0;
-  for (k = 0; k < i; k++) {
+  for (k = 0; k < b_nPk; k++) {
     ykfirst = Yin_data[fPk_data[k] - 1];
     if ((ykfirst > varargin_2) &&
         (ykfirst - fmax(Yin_data[fPk_data[k] - 2], Yin_data[fPk_data[k]]) >=
@@ -133,71 +130,71 @@ void findpeaks(const emxArray_real_T *Yin, double varargin_2,
       iPk_data[nPk - 1] = fPk_data[k];
     }
   }
-  i = iPk->size[0];
+  kfirst = iPk->size[0];
   iPk->size[0] = nPk;
-  emxEnsureCapacity_int32_T(iPk, i);
+  emxEnsureCapacity_int32_T(iPk, kfirst);
   emxInit_int32_T(&c, 1);
   do_vectors(iPk, iInfinite, c, idx, fPk);
   c_data = c->data;
   emxFree_int32_T(&iInfinite);
   emxFree_int32_T(&iPk);
+  nPk = c->size[0];
   emxInit_int32_T(&y, 2);
-  kfirst = c->size[0];
-  i = y->size[0] * y->size[1];
+  kfirst = y->size[0] * y->size[1];
   y->size[0] = 1;
   y->size[1] = c->size[0];
-  emxEnsureCapacity_int32_T(y, i);
+  emxEnsureCapacity_int32_T(y, kfirst);
   iPk_data = y->data;
   if (c->size[0] > 0) {
     iPk_data[0] = 1;
-    nPk = 1;
-    for (k = 2; k <= kfirst; k++) {
-      nPk++;
-      iPk_data[k - 1] = nPk;
+    kfirst = 1;
+    for (k = 2; k <= nPk; k++) {
+      kfirst++;
+      iPk_data[k - 1] = kfirst;
     }
   }
-  i = idx->size[0];
+  kfirst = idx->size[0];
   idx->size[0] = c->size[0];
-  emxEnsureCapacity_int32_T(idx, i);
+  emxEnsureCapacity_int32_T(idx, kfirst);
   idx_data = idx->data;
-  for (i = 0; i < kfirst; i++) {
-    idx_data[i] = iPk_data[i];
+  for (k = 0; k < nPk; k++) {
+    idx_data[k] = iPk_data[k];
   }
   emxFree_int32_T(&y);
   if (idx->size[0] > Yin->size[0]) {
-    i = fPk->size[0];
+    kfirst = fPk->size[0];
     fPk->size[0] = Yin->size[0];
-    emxEnsureCapacity_int32_T(fPk, i);
-    i = idx->size[0];
+    emxEnsureCapacity_int32_T(fPk, kfirst);
+    kfirst = idx->size[0];
     idx->size[0] = Yin->size[0];
-    emxEnsureCapacity_int32_T(idx, i);
+    emxEnsureCapacity_int32_T(idx, kfirst);
     idx_data = idx->data;
   } else {
-    i = fPk->size[0];
+    kfirst = fPk->size[0];
     fPk->size[0] = c->size[0];
-    emxEnsureCapacity_int32_T(fPk, i);
+    emxEnsureCapacity_int32_T(fPk, kfirst);
   }
   nPk = fPk->size[0];
-  i = fPk->size[0];
+  kfirst = fPk->size[0];
   fPk->size[0] = nPk;
-  emxEnsureCapacity_int32_T(fPk, i);
+  emxEnsureCapacity_int32_T(fPk, kfirst);
   fPk_data = fPk->data;
-  for (i = 0; i < nPk; i++) {
-    fPk_data[i] = c_data[idx_data[i] - 1];
+  for (k = 0; k < nPk; k++) {
+    fPk_data[k] = c_data[idx_data[k] - 1];
   }
   emxFree_int32_T(&c);
   emxFree_int32_T(&idx);
-  i = Ypk->size[0];
+  kfirst = Ypk->size[0];
   Ypk->size[0] = nPk;
-  emxEnsureCapacity_real_T(Ypk, i);
+  emxEnsureCapacity_real_T(Ypk, kfirst);
   Ypk_data = Ypk->data;
-  i = Xpk->size[0];
+  kfirst = Xpk->size[0];
   Xpk->size[0] = nPk;
-  emxEnsureCapacity_real_T(Xpk, i);
+  emxEnsureCapacity_real_T(Xpk, kfirst);
   Xpk_data = Xpk->data;
-  for (i = 0; i < nPk; i++) {
-    Ypk_data[i] = Yin_data[fPk_data[i] - 1];
-    Xpk_data[i] = (unsigned int)fPk_data[i];
+  for (k = 0; k < nPk; k++) {
+    Ypk_data[k] = Yin_data[fPk_data[k] - 1];
+    Xpk_data[k] = (unsigned int)fPk_data[k];
   }
   emxFree_int32_T(&fPk);
 }

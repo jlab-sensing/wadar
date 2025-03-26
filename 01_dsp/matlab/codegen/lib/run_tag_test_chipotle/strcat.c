@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: strcat.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -25,7 +24,7 @@ static void sanitizeInputAndConvertToChar(emxArray_char_T *arg);
  */
 static void sanitizeInputAndConvertToChar(emxArray_char_T *arg)
 {
-  static const boolean_T bv[128] = {
+  static const bool bv[128] = {
       false, false, false, false, false, false, false, false, false, true,
       true,  true,  true,  true,  false, false, false, false, false, false,
       false, false, false, false, false, false, false, false, true,  true,
@@ -47,7 +46,7 @@ static void sanitizeInputAndConvertToChar(emxArray_char_T *arg)
     if ((u == 0) || bv[(int)(u & 127U)]) {
       int i;
       int ncols;
-      boolean_T exitg1;
+      bool exitg1;
       ncols = arg->size[1] - 1;
       exitg1 = false;
       while ((!exitg1) && (ncols + 1 > 0)) {
@@ -80,67 +79,66 @@ void b_strcat(const emxArray_char_T *varargin_1, const char varargin_2_data[],
               const int varargin_2_size[2], emxArray_char_T *t)
 {
   emxArray_char_T *input;
+  int b_loop_ub;
   int i;
-  int i1;
   int loop_ub;
   unsigned int unnamed_idx_1;
-  int varargin_2_tmp;
+  int varargin_2;
   const char *varargin_1_data;
   char *input_data;
   char *t_data;
   varargin_1_data = varargin_1->data;
   unnamed_idx_1 =
       (unsigned int)varargin_1->size[1] + (unsigned int)varargin_2_size[1];
-  i = t->size[0] * t->size[1];
+  loop_ub = t->size[0] * t->size[1];
   t->size[0] = 1;
   t->size[1] = (int)unnamed_idx_1;
-  emxEnsureCapacity_char_T(t, i);
+  emxEnsureCapacity_char_T(t, loop_ub);
   t_data = t->data;
   loop_ub = (int)unnamed_idx_1;
   for (i = 0; i < loop_ub; i++) {
     t_data[i] = ' ';
   }
   emxInit_char_T(&input);
-  i = input->size[0] * input->size[1];
+  loop_ub = input->size[0] * input->size[1];
   input->size[0] = 1;
-  loop_ub = varargin_1->size[1];
+  b_loop_ub = varargin_1->size[1];
   input->size[1] = varargin_1->size[1];
-  emxEnsureCapacity_char_T(input, i);
+  emxEnsureCapacity_char_T(input, loop_ub);
   input_data = input->data;
-  for (i = 0; i < loop_ub; i++) {
+  for (i = 0; i < b_loop_ub; i++) {
     input_data[i] = varargin_1_data[i];
   }
   sanitizeInputAndConvertToChar(input);
   input_data = input->data;
-  varargin_2_tmp = input->size[1];
-  for (i = 0; i < varargin_2_tmp; i++) {
+  varargin_2 = input->size[1];
+  for (i = 0; i < varargin_2; i++) {
     t_data[i] = input_data[i];
   }
-  i = input->size[0] * input->size[1];
+  loop_ub = input->size[0] * input->size[1];
   input->size[0] = 1;
-  loop_ub = varargin_2_size[1];
+  b_loop_ub = varargin_2_size[1];
   input->size[1] = varargin_2_size[1];
-  emxEnsureCapacity_char_T(input, i);
+  emxEnsureCapacity_char_T(input, loop_ub);
   input_data = input->data;
-  for (i = 0; i < loop_ub; i++) {
+  for (i = 0; i < b_loop_ub; i++) {
     input_data[i] = varargin_2_data[i];
   }
   sanitizeInputAndConvertToChar(input);
   input_data = input->data;
   if (input->size[1] < 1) {
-    i = 0;
+    loop_ub = 0;
   } else {
-    i = varargin_2_tmp;
+    loop_ub = varargin_2;
   }
-  loop_ub = input->size[1];
-  for (i1 = 0; i1 < loop_ub; i1++) {
-    t_data[i + i1] = input_data[i1];
+  b_loop_ub = input->size[1];
+  for (i = 0; i < b_loop_ub; i++) {
+    t_data[loop_ub + i] = input_data[i];
   }
-  i = t->size[0] * t->size[1];
-  t->size[1] =
-      (int)((unsigned int)varargin_2_tmp + (unsigned int)input->size[1]);
+  loop_ub = t->size[0] * t->size[1];
+  t->size[1] = (int)((unsigned int)varargin_2 + (unsigned int)input->size[1]);
   emxFree_char_T(&input);
-  emxEnsureCapacity_char_T(t, i);
+  emxEnsureCapacity_char_T(t, loop_ub);
 }
 
 /*

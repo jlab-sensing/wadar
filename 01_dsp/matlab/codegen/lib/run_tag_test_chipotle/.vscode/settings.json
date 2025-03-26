@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "rt_nonfinite.h": "c",
+        "cos.h": "c",
+        "string.h": "c",
+        "math.h": "c",
+        "run_tag_test_chipotle.h": "c",
+        "run_tag_test_chipotle_initialize.h": "c"
+    }
+}

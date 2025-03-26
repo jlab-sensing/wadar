@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: pwd1.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -26,25 +25,26 @@ void pwd(emxArray_char_T *wd)
   emxArray_char_T *wdTemp;
   int fileNameMax;
   int i;
+  int len;
   char *wdTemp_data;
   char *wd_data;
   fileNameMax = coderGetLenghtOfCwd() + 1;
   emxInit_char_T(&wdTemp);
-  i = wdTemp->size[0] * wdTemp->size[1];
+  len = wdTemp->size[0] * wdTemp->size[1];
   wdTemp->size[0] = 1;
   wdTemp->size[1] = fileNameMax;
-  emxEnsureCapacity_char_T(wdTemp, i);
+  emxEnsureCapacity_char_T(wdTemp, len);
   wdTemp_data = wdTemp->data;
-  fileNameMax = coderGetCurrentDirectory(&wdTemp_data[0], fileNameMax);
-  if (fileNameMax < 1) {
-    fileNameMax = 0;
+  len = coderGetCurrentDirectory(&wdTemp_data[0], fileNameMax);
+  if (len < 1) {
+    len = 0;
   }
-  i = wd->size[0] * wd->size[1];
+  fileNameMax = wd->size[0] * wd->size[1];
   wd->size[0] = 1;
-  wd->size[1] = fileNameMax;
-  emxEnsureCapacity_char_T(wd, i);
+  wd->size[1] = len;
+  emxEnsureCapacity_char_T(wd, fileNameMax);
   wd_data = wd->data;
-  for (i = 0; i < fileNameMax; i++) {
+  for (i = 0; i < len; i++) {
     wd_data[i] = wdTemp_data[i];
   }
   emxFree_char_T(&wdTemp);

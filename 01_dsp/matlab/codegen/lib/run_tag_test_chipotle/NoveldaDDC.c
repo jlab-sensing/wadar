@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: NoveldaDDC.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -22,7 +21,6 @@
 #include "sin.h"
 #include "strcmp.h"
 #include "string1.h"
-#include <emmintrin.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -64,9 +62,9 @@ static void binary_expand_op_1(emxArray_creal_T *in1,
   } else {
     loop_ub = in4->size[1];
   }
-  i = b_in2->size[0];
+  stride_0_0 = b_in2->size[0];
   b_in2->size[0] = loop_ub;
-  emxEnsureCapacity_creal_T(b_in2, i);
+  emxEnsureCapacity_creal_T(b_in2, stride_0_0);
   b_in2_data = b_in2->data;
   stride_0_0 = (in2->size[0] != 1);
   stride_1_0 = (in4->size[1] != 1);
@@ -131,17 +129,16 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
 {
   emxArray_creal_T *b_rfSignal;
   emxArray_real_T *r;
-  emxArray_real_T *r3;
+  emxArray_real_T *y;
   creal_T *b_rfSignal_data;
   const double *rfSignal_data;
-  double fH;
+  double CF;
   double *r1;
-  double *r4;
+  double *y_data;
   int switch_expression_Value_size[2];
-  int b_index;
   int fL;
+  int frameSize;
   int i;
-  int vectorUB;
   char switch_expression_Value_data[7];
   char Sampler_idx_0;
   rfSignal_data = rfSignal->data;
@@ -189,23 +186,23 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
   string_lower(chipSet_Value_data, chipSet_Value_size,
                switch_expression_Value_data, switch_expression_Value_size);
   if (string_eq(switch_expression_Value_data, switch_expression_Value_size)) {
-    b_index = 0;
+    frameSize = 0;
   } else if (b_string_eq(switch_expression_Value_data,
                          switch_expression_Value_size)) {
-    b_index = 1;
+    frameSize = 1;
   } else if (c_string_eq(switch_expression_Value_data,
                          switch_expression_Value_size)) {
-    b_index = 2;
+    frameSize = 2;
   } else if (d_string_eq(switch_expression_Value_data,
                          switch_expression_Value_size)) {
-    b_index = 3;
+    frameSize = 3;
   } else {
-    b_index = -1;
+    frameSize = -1;
   }
-  switch (b_index) {
+  switch (frameSize) {
   case 0: {
     char switch_expression[3];
-    boolean_T b_PGen_data;
+    bool b_PGen_data;
     /* -------------------NVA6100, Medium-Band PGen--------------------%% */
     /*  bwr dB down from normalized peak setting for fractional bandwidth
      * (changed to 6 dB power spectra bw, looks better) */
@@ -214,44 +211,44 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
     for (i = 0; i < PGen_size; i++) {
       b_PGen_data = (PGen_data[0] == 0.0);
     }
-    if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-      b_index = 0;
+    if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+      frameSize = 0;
     } else {
       for (i = 0; i < PGen_size; i++) {
         b_PGen_data = (PGen_data[0] == 1.0);
       }
-      if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-        b_index = 1;
+      if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+        frameSize = 1;
       } else {
         for (i = 0; i < PGen_size; i++) {
           b_PGen_data = (PGen_data[0] == 2.0);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-          b_index = 2;
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+          frameSize = 2;
         } else {
-          b_index = -1;
+          frameSize = -1;
         }
       }
     }
-    switch (b_index) {
+    switch (frameSize) {
     case 0:
       fL = 660000000;
       /*  -10 dB low cutoff */
-      fH = 7.145E+9;
+      CF = 7.145E+9;
       /*  -10 dB high cutoff */
       /*  470 mV instantaneous output amplitude (peak voltage)     */
       break;
     case 1:
       fL = 845000000;
       /*  -10 dB low cutoff */
-      fH = 9.55E+9;
+      CF = 9.55E+9;
       /*  -10 dB high cutoff */
       /*  450 mV instantaneous output amplitude (peak voltage)   */
       break;
     case 2:
       fL = 1060000000;
       /*  -10 dB low cutoff */
-      fH = 1.041E+10;
+      CF = 1.041E+10;
       /*  -10 dB high cutoff */
       /*  370 mV instantaneous output amplitude (peak voltage)   */
       break;
@@ -261,15 +258,15 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
     switch_expression[1] = cv[109];
     switch_expression[2] = cv[109];
     if (b_strcmp(switch_expression)) {
-      b_index = 0;
+      frameSize = 0;
     } else if (c_strcmp(switch_expression)) {
-      b_index = 1;
+      frameSize = 1;
     } else if (d_strcmp(switch_expression)) {
-      b_index = 2;
+      frameSize = 2;
     } else {
-      b_index = -1;
+      frameSize = -1;
     }
-    switch (b_index) {
+    switch (frameSize) {
     case 0:
       /*  mean system sampling rate for 4mm */
       break;
@@ -287,13 +284,13 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     }
     /*  Center frequency, bandwidth in hertz, and fractional bandwidth */
-    fH = (fH + (double)fL) / 2.0;
+    CF = (CF + (double)fL) / 2.0;
     /*  Mean/Average output power in dBm (i.e. true RMS), Nominal, */
     /*  function of PRF @ 50 MHz */
   } break;
   case 1: {
     char switch_expression[3];
-    boolean_T b_PGen_data;
+    bool b_PGen_data;
     /* ---------------------NVA6100, Low-Band PGen---------------------%% */
     /*  bwr dB down from normalized peak setting for fractional bandwidth
      * (change to 6 dB power spectra bw, looks better) */
@@ -303,42 +300,42 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
     for (i = 0; i < PGen_size; i++) {
       b_PGen_data = (PGen_data[0] == 0.0);
     }
-    if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-      b_index = 0;
+    if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+      frameSize = 0;
     } else {
       for (i = 0; i < PGen_size; i++) {
         b_PGen_data = (PGen_data[0] == 1.0);
       }
-      if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-        b_index = 1;
+      if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+        frameSize = 1;
       } else {
         for (i = 0; i < PGen_size; i++) {
           b_PGen_data = (PGen_data[0] == 2.0);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-          b_index = 2;
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+          frameSize = 2;
         } else {
-          b_index = -1;
+          frameSize = -1;
         }
       }
     }
-    switch (b_index) {
+    switch (frameSize) {
     case 0:
       fL = 435000000;
       /*  -10 dB low cutoff */
-      fH = 3.165E+9;
+      CF = 3.165E+9;
       /*  -10 dB high cutoff */
       break;
     case 1:
       fL = 450000000;
       /*  -10 dB low cutoff */
-      fH = 3.555E+9;
+      CF = 3.555E+9;
       /*  -10 dB high cutoff */
       break;
     case 2:
       fL = 485000000;
       /*  -10 dB low cutoff */
-      fH = 4.065E+9;
+      CF = 4.065E+9;
       /*  -10 dB high cutoff */
       break;
     }
@@ -347,15 +344,15 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
     switch_expression[1] = cv[109];
     switch_expression[2] = cv[109];
     if (b_strcmp(switch_expression)) {
-      b_index = 0;
+      frameSize = 0;
     } else if (c_strcmp(switch_expression)) {
-      b_index = 1;
+      frameSize = 1;
     } else if (d_strcmp(switch_expression)) {
-      b_index = 2;
+      frameSize = 2;
     } else {
-      b_index = -1;
+      frameSize = -1;
     }
-    switch (b_index) {
+    switch (frameSize) {
     case 0:
       /*  mean system sampling rate for 4mm */
       break;
@@ -373,12 +370,12 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     }
     /*  Center frequency, bandwidth in hertz, and fractional bandwidth */
-    fH = (fH + (double)fL) / 2.0;
+    CF = (CF + (double)fL) / 2.0;
     /*  Mean/Average output power in dBm (i.e. true RMS), Nominal, */
     /*  function of PRF @ 50 MHz */
   } break;
   case 2: {
-    boolean_T b_PGen_data;
+    bool b_PGen_data;
     /* -----------------------------NVA6201---------------------------%% */
     /*  bwr dB down from normalized peak setting for fractional bandwidth (5 dB
      * power spectra bw) */
@@ -388,77 +385,76 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
     for (i = 0; i < PGen_size; i++) {
       b_PGen_data = (PGen_data[0] == 0.0);
     }
-    if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-      b_index = 0;
+    if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+      frameSize = 0;
     } else {
       for (i = 0; i < PGen_size; i++) {
         b_PGen_data = (PGen_data[0] == 1.0);
       }
-      if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-        b_index = 1;
+      if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+        frameSize = 1;
       } else {
         for (i = 0; i < PGen_size; i++) {
           b_PGen_data = (PGen_data[0] == 2.0);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-          b_index = 2;
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+          frameSize = 2;
         } else {
           for (i = 0; i < PGen_size; i++) {
             b_PGen_data = (PGen_data[0] == 3.0);
           }
-          if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-            b_index = 3;
+          if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+            frameSize = 3;
           } else {
             for (i = 0; i < PGen_size; i++) {
               b_PGen_data = (PGen_data[0] == 4.0);
             }
-            if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-              b_index = 4;
+            if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+              frameSize = 4;
             } else {
               for (i = 0; i < PGen_size; i++) {
                 b_PGen_data = (PGen_data[0] == 5.0);
               }
-              if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-                b_index = 5;
+              if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+                frameSize = 5;
               } else {
                 for (i = 0; i < PGen_size; i++) {
                   b_PGen_data = (PGen_data[0] == 6.0);
                 }
-                if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-                  b_index = 6;
+                if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+                  frameSize = 6;
                 } else {
                   for (i = 0; i < PGen_size; i++) {
                     b_PGen_data = (PGen_data[0] == 7.0);
                   }
-                  if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-                    b_index = 7;
+                  if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+                    frameSize = 7;
                   } else {
                     for (i = 0; i < PGen_size; i++) {
                       b_PGen_data = (PGen_data[0] == 8.0);
                     }
-                    if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-                      b_index = 8;
+                    if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+                      frameSize = 8;
                     } else {
                       for (i = 0; i < PGen_size; i++) {
                         b_PGen_data = (PGen_data[0] == 9.0);
                       }
-                      if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-                        b_index = 9;
+                      if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+                        frameSize = 9;
                       } else {
                         for (i = 0; i < PGen_size; i++) {
                           b_PGen_data = (PGen_data[0] == 10.0);
                         }
-                        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
-                          b_index = 10;
+                        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+                          frameSize = 10;
                         } else {
                           for (i = 0; i < PGen_size; i++) {
                             b_PGen_data = (PGen_data[0] == 11.0);
                           }
-                          if (ifWhileCond((boolean_T *)&b_PGen_data,
-                                          PGen_size)) {
-                            b_index = 11;
+                          if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
+                            frameSize = 11;
                           } else {
-                            b_index = -1;
+                            frameSize = -1;
                           }
                         }
                       }
@@ -471,10 +467,10 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
         }
       }
     }
-    switch (b_index) {
+    switch (frameSize) {
     case 0:
       /*  PGSelect = 0; */
-      fH = 5.3E+9;
+      CF = 5.3E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~1.75 GHz @ 5.3 GHz) */
@@ -484,7 +480,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 1:
       /*  PGSelect = 1; */
-      fH = 5.4E+9;
+      CF = 5.4E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~1.80 GHz @ 5.4 GHz) */
@@ -494,7 +490,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 2:
       /*  PGSelect = 2; */
-      fH = 5.7E+9;
+      CF = 5.7E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~1.85 GHz @ 5.7 GHz) */
@@ -504,7 +500,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 3:
       /*  PGSelect = 3; */
-      fH = 6.1E+9;
+      CF = 6.1E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~2.05 GHz @ 6.1 GHz) */
@@ -514,7 +510,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 4:
       /*  PGSelect = 4; */
-      fH = 6.4E+9;
+      CF = 6.4E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~2.15 GHz @ 6.4 GHz) */
@@ -524,7 +520,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 5:
       /*  PGSelect = 5; */
-      fH = 6.8E+9;
+      CF = 6.8E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~2.30 GHz @ 6.8 GHz) */
@@ -534,7 +530,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 6:
       /*  PGSelect = 6; */
-      fH = 7.3E+9;
+      CF = 7.3E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~2.35 GHz @ 7.3 GHz) */
@@ -544,7 +540,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 7:
       /*  PGSelect = 7; */
-      fH = 7.7E+9;
+      CF = 7.7E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~2.50 GHz @ 7.7 GHz) */
@@ -554,7 +550,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 8:
       /*  PGSelect = 8; */
-      fH = 7.8E+9;
+      CF = 7.8E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~2.50 GHz @ 7.8 GHz) */
@@ -564,7 +560,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 9:
       /*  PGSelect = 9; */
-      fH = 8.2E+9;
+      CF = 8.2E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~2.65 GHz @ 8.2 GHz) */
@@ -574,7 +570,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 10:
       /*  PGSelect = 10 */
-      fH = 8.8E+9;
+      CF = 8.8E+9;
       /*  center frequency */
       /*  bandwidth in hertz */
       /*  fractional bandwidth (~3.10 GHz @ 8.8 GHz) */
@@ -584,7 +580,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 11:
       /*  PGSelect = 11 */
-      fH = 9.1E+9;
+      CF = 9.1E+9;
       /*  center frequency */
       /*  bandwidth in hertz....not sure about this? */
       /*  fractional bandwidth (~3.10 GHz @ 8.8 GHz) */
@@ -595,8 +591,9 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
     }
   } break;
   case 3: {
+    int b_index;
     int exitg2;
-    boolean_T b_PGen_data;
+    bool b_PGen_data;
     /* ------------------X4, Impulse Radar Transceiver SoC-----------------%% */
     /*  bwr dB down from normalized peak setting for fractional bandwidth (5 dB
      * power spectra bw) */
@@ -604,45 +601,45 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
     /*  mean system sampling rate, 23.328 GS/s */
     /*  Pulse Generator */
     b_index = -1;
-    fL = 0;
+    frameSize = 0;
     do {
       exitg2 = 0;
-      if (fL < 2) {
-        i = 3 * fL;
-        for (vectorUB = 0; vectorUB < PGen_size; vectorUB++) {
-          b_PGen_data = (i == PGen_data[0]);
+      if (frameSize < 2) {
+        fL = 3 * frameSize;
+        for (i = 0; i < PGen_size; i++) {
+          b_PGen_data = (fL == PGen_data[0]);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
           b_index = 0;
           exitg2 = 1;
         } else {
-          fL++;
+          frameSize++;
         }
       } else {
-        fL = 0;
+        frameSize = 0;
         exitg2 = 2;
       }
     } while (exitg2 == 0);
     if (exitg2 != 1) {
-      boolean_T exitg1;
+      bool exitg1;
       exitg1 = false;
-      while ((!exitg1) && (fL < 2)) {
-        i = 3 * fL + 1;
-        for (vectorUB = 0; vectorUB < PGen_size; vectorUB++) {
-          b_PGen_data = (i == PGen_data[0]);
+      while ((!exitg1) && (frameSize < 2)) {
+        fL = 3 * frameSize + 1;
+        for (i = 0; i < PGen_size; i++) {
+          b_PGen_data = (fL == PGen_data[0]);
         }
-        if (ifWhileCond((boolean_T *)&b_PGen_data, PGen_size)) {
+        if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
           b_index = 1;
           exitg1 = true;
         } else {
-          fL++;
+          frameSize++;
         }
       }
     }
     switch (b_index) {
     case 0:
       /*  ETSI/FCC         */
-      fH = 7.29E+9;
+      CF = 7.29E+9;
       /*  center frequency */
       /*  bandwidth in hertz....not sure about this? */
       /*  fractional bandwidth (~3.10 GHz @ 8.8 GHz) */
@@ -652,7 +649,7 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
       break;
     case 1:
       /*  KCC/FCC */
-      fH = 8.748E+9;
+      CF = 8.748E+9;
       /*  center frequency */
       /*  bandwidth in hertz....not sure about this? */
       /*  fractional bandwidth (~3.10 GHz @ 8.8 GHz) */
@@ -665,36 +662,29 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
   }
   /*  Find size of rf signal */
   /*  Frame Size according to input rf signal */
-  fL = rfSignal->size[0];
-  if (fL < 1) {
-    fL = 1;
+  frameSize = rfSignal->size[0];
+  if (frameSize < 1) {
+    frameSize = 1;
   }
   /*  Digital Down-Convert parameters (normalized frequency index) */
   /*  Generate the complex sinusoid LO (local oscillator) to mix into the signal
    */
   /* phi=-pi/3; */
-  fH = 6.2831853071795862 * (fH / Fs * (double)fL);
-  emxInit_real_T(&r, 2);
-  linspace(fL, r);
-  i = r->size[0] * r->size[1];
-  r->size[0] = 1;
-  emxEnsureCapacity_real_T(r, i);
-  r1 = r->data;
-  fL = r->size[1] - 1;
-  b_index = (r->size[1] / 2) << 1;
-  vectorUB = b_index - 2;
-  for (i = 0; i <= vectorUB; i += 2) {
-    __m128d r2;
-    r2 = _mm_loadu_pd(&r1[i]);
-    _mm_storeu_pd(&r1[i], _mm_mul_pd(_mm_set1_pd(fH), r2));
-  }
-  for (i = b_index; i <= fL; i++) {
-    r1[i] *= fH;
+  CF = 6.2831853071795862 * (CF / Fs * (double)frameSize);
+  emxInit_real_T(&y, 2);
+  linspace(frameSize, y);
+  frameSize = y->size[0] * y->size[1];
+  y->size[0] = 1;
+  emxEnsureCapacity_real_T(y, frameSize);
+  y_data = y->data;
+  frameSize = y->size[1] - 1;
+  for (i = 0; i <= frameSize; i++) {
+    y_data[i] *= CF;
   }
   /*  Adjust LO size, just in case */
   /*  Digital Downconvert (the DDC) via direct multiplication */
   /*  subtracting the mean removes DC offset */
-  fH = mean(rfSignal);
+  CF = mean(rfSignal);
   /*  % LPF Design to eliminate the upper mixing frequencies after the DDC (21
    */
   /*  % tap LPF, may need to be tuned based on the rate of desired roll-off) */
@@ -724,40 +714,40 @@ void NoveldaDDC(const emxArray_real_T *rfSignal,
   /*  normalized weights */
   /*  Baseband signal using convolution (provides downcoverted, filtered
    * analytic signal) */
-  emxInit_real_T(&r3, 2);
-  i = r3->size[0] * r3->size[1];
-  r3->size[0] = 1;
-  fL = r->size[1];
-  r3->size[1] = r->size[1];
-  emxEnsureCapacity_real_T(r3, i);
-  r4 = r3->data;
-  for (i = 0; i < fL; i++) {
-    r4[i] = r1[i];
-  }
-  b_sin(r3);
-  r4 = r3->data;
-  b_cos(r);
+  emxInit_real_T(&r, 2);
+  frameSize = r->size[0] * r->size[1];
+  r->size[0] = 1;
+  fL = y->size[1];
+  r->size[1] = y->size[1];
+  emxEnsureCapacity_real_T(r, frameSize);
   r1 = r->data;
-  if (rfSignal->size[0] == r3->size[1]) {
+  for (i = 0; i < fL; i++) {
+    r1[i] = y_data[i];
+  }
+  b_sin(r);
+  r1 = r->data;
+  b_cos(y);
+  y_data = y->data;
+  if (rfSignal->size[0] == r->size[1]) {
     emxInit_creal_T(&b_rfSignal, 1);
     fL = rfSignal->size[0];
-    i = b_rfSignal->size[0];
+    frameSize = b_rfSignal->size[0];
     b_rfSignal->size[0] = rfSignal->size[0];
-    emxEnsureCapacity_creal_T(b_rfSignal, i);
+    emxEnsureCapacity_creal_T(b_rfSignal, frameSize);
     b_rfSignal_data = b_rfSignal->data;
     for (i = 0; i < fL; i++) {
       double d;
-      d = rfSignal_data[i] - fH;
-      b_rfSignal_data[i].re = d * (r4[i] + 0.0 * r1[i]);
-      b_rfSignal_data[i].im = d * r1[i];
+      d = rfSignal_data[i] - CF;
+      b_rfSignal_data[i].re = d * (r1[i] + 0.0 * y_data[i]);
+      b_rfSignal_data[i].im = d * y_data[i];
     }
     conv(b_rfSignal, basebandSignal);
     emxFree_creal_T(&b_rfSignal);
   } else {
-    binary_expand_op_1(basebandSignal, rfSignal, fH, r3, r);
+    binary_expand_op_1(basebandSignal, rfSignal, CF, r, y);
   }
-  emxFree_real_T(&r3);
   emxFree_real_T(&r);
+  emxFree_real_T(&y);
 }
 
 /*

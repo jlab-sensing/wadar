@@ -1,11 +1,10 @@
 /*
- * Academic License - for use in teaching, academic research, and meeting
- * course requirements at degree granting institutions only.  Not for
- * government, commercial, or other organizational use.
+ * Prerelease License - for engineering feedback and testing purposes
+ * only. Not for sale.
  * File: conv.c
  *
- * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 26-Mar-2025 15:29:23
+ * MATLAB Coder version            : 25.1
+ * C/C++ source code generated on  : 26-Mar-2025 16:20:55
  */
 
 /* Include Files */
@@ -45,9 +44,9 @@ void conv(const emxArray_creal_T *A, emxArray_creal_T *C)
   C->size[0] = A->size[0];
   emxEnsureCapacity_creal_T(C, i);
   C_data = C->data;
-  for (i = 0; i < loop_ub; i++) {
-    C_data[i].re = 0.0;
-    C_data[i].im = 0.0;
+  for (k = 0; k < loop_ub; k++) {
+    C_data[k].re = 0.0;
+    C_data[k].im = 0.0;
   }
   if (A->size[0] > 0) {
     double d;
