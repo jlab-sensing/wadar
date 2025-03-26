@@ -25,7 +25,7 @@ for i = 1:length(listOfCaptures)
     captureName = string(listOfCaptures(i));
 
     [frameTot, framesBB, frameRate] = proc_frames(localDataPath, captureName);
-
+    
     [captureFT, tag1FT] = proc_fft(framesBB, frameRate, tag1Hz);
     [~, tag2FT] = proc_fft(framesBB, frameRate, tag2Hz);
     

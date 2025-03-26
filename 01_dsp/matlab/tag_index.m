@@ -17,6 +17,7 @@ frameCount = width(captureFT);
 % Find Tag FT
 freqTag = tagHz / frameRate * frameCount;
 tagFT = abs(captureFT(:, freqTag));
+tagIndex = freqTag;
 for i = (freqTag-2:1:freqTag+2)
     temp = abs(captureFT(:, i));
     if max(temp) > max(tagFT)
