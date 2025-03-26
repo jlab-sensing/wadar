@@ -23,6 +23,11 @@ arguments
     captureName = 'untitled1.frames'
 end
 
+% To make the MATLAB Coder stop complaining about execution paths.
+frameTot = 0;
+framesBB = 0;
+frameRate = 0;
+
 %% Load Capture
 
 fullDataPath = strcat(pwd, localDataPath);
@@ -34,8 +39,8 @@ fid = fopen(fileName,'r');
 
 magic = fread(fid,1,'uint32');              % Check the magic number
 if magic ~= FRAME_LOGGER_MAGIC_NUM
-    fprintf("Wrong data format: %s!\n", dataLogFile);
-    fclose(dataLog);
+    fprintf("Wrong data format: %s!\n", captureName);
+    fclose(fileName);
     return;
 end
 
@@ -46,6 +51,14 @@ dacMax = fread(fid,1,'int');
 dacStep = fread(fid,1,'int');
 
 radarSpecifier = fread(fid,1,'int');        % 2 for X2 (Ancho), 10 for X1-IPGO (Cayenne), 11 for X1-IPG1 (Chipotle)
+
+% Dummy variables because the MATLAB  Coder keeps yelling at me
+chipSet = "XX-XXXX";
+samplesPerSecond = 0;      
+pgen = 0;                      
+samplingRate = 0;
+clkDivider = 0;
+
 switch radarSpecifier
     case 2
         chipSet = "X2";
@@ -68,11 +81,14 @@ switch radarSpecifier
         clkDivider = fread(fid,1,'int');
 end
 
-numberOfSamplers = fread(fid,1,'int');                          % Number of samplers in a frame
-numFrames = fread(fid,1,'int');                                 % Number of frames in capture
+numberOfSamplers = fread(fid,1,'int'); 
+numberOfSamplers = numberOfSamplers(1,1);                       % Number of samplers in a frame
+numFrames = fread(fid, 1, 'int'); 
+numFrames = numFrames(1,1);                                     % Number of frames in a capture
 numRuns = fread(fid,1,'int');                                   % Number of runs in capture
-frameRate = fread(fid,1,'int');                                 % Frames per second
-times = fread(fid, numFrames, 'double');                        % Array of time data
+frameRate = fread(fid,1,'int');                                 
+frameRate = frameRate(1,1);                                     % Frames per second
+times = fread(fid, numFrames, 'double');
 frameTot = fread(fid, numFrames*numberOfSamplers, 'uint32');    % Radar frames
 
 % DAC normalization
@@ -97,7 +113,7 @@ fpsEst = fread(fid, 1, 'float');                % Estimated FPS (good to check a
 [A,count] = fread(fid);
 fclose(fid);
 if count ~= 0
-    fprintf("FILE READ ERROR: %i data remains! Check that file format matches read code\n",count)
+    fprintf("FILE READ ERROR: %f data remains! Check that file format matches read code\n", floor(count))
     return
 end
 
@@ -106,7 +122,7 @@ end
 
 % Baseband Conversion
 frameCount = size(frameTot, 2);
-framesBB = zeros(size(frameTot));
+framesBB = complex(zeros(size(frameTot)), zeros(size(frameTot)));
 for j = 1:frameCount
     framesBB(:,j) = NoveldaDDC(frameTot(:,j), chipSet, pgen, fs_hz);
 end

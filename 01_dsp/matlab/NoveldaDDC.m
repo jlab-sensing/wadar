@@ -68,11 +68,9 @@ freqIndex=freqIndex;
 t = linspace(0, 1, frameSize);
 %phi=-pi/3;
 phi=0;
-LO = sin(2 * pi * freqIndex * t+phi)  +  1i * cos(2 * pi * freqIndex * t+phi);
+LO_ = sin(2 * pi * freqIndex * t+phi)  +  1i * cos(2 * pi * freqIndex * t+phi);
 % Adjust LO size, just in case
-if row > col
-    LO = LO.';
-end
+LO = LO_.';
 
 % Digital Downconvert (the DDC) via direct multiplication
 % subtracting the mean removes DC offset
