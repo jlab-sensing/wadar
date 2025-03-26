@@ -190,7 +190,7 @@ static double *timedelta;
 // -----------------------------------------------------------------------------
 // Utility Functions
 // -----------------------------------------------------------------------------
-void processAndPrintVWC_FileBased(RadarHelper *rh, int numSamplers) {
+void processAndPrintVWC_FileBased(radarHelper *rh, int numSamplers) {
     FILE *dataLog = fopen(FRAME_FILE, "wb");
     if (!dataLog) {
         fprintf(stderr, "Unable to open file %s for writing!\n", FRAME_FILE);
@@ -328,7 +328,7 @@ int main(int argc, char **argv)
   int pgSelect; //Ancho...
   float offsetDistance;
   float sampleDelayToReference;
-  float temperature;
+  //float temperature;
 
   int pulseGenFineTune; //Cayenne or Chipotle...
   int samplingRate;
