@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: colon.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /* Include Files */
@@ -56,7 +57,7 @@ void eml_float_colon(double a, double b, emxArray_real_T *y)
     y_data[0] = a;
     if (n > 1) {
       y_data[n - 1] = apnd;
-      nm1d2 = (int)((unsigned int)(n - 1) >> 1);
+      nm1d2 = (n - 1) / 2;
       for (k = 0; k <= nm1d2 - 2; k++) {
         y_data[k + 1] = a + ((double)k + 1.0);
         y_data[(n - k) - 2] = apnd - ((double)k + 1.0);

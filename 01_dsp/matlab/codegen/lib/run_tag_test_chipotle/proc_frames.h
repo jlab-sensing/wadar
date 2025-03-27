@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: proc_frames.h
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 #ifndef PROC_FRAMES_H
@@ -22,9 +23,8 @@ extern "C" {
 
 /* Function Declarations */
 void binary_expand_op(emxArray_real_T *in1, const emxArray_real_T *in2,
-                      const double in3_data[], const double in4_data[],
-                      const int *in4_size, const double in5_data[],
-                      const double in6_data[]);
+                      const double in3_data[], const int *in3_size,
+                      const double in4_data[], const double in5_data[]);
 
 #ifdef __cplusplus
 }

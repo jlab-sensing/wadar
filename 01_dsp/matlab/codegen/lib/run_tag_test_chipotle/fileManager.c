@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: fileManager.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /* Include Files */
@@ -101,15 +102,15 @@ signed char cfopen(const emxArray_char_T *cfilename)
   fileid = -1;
   j = filedata();
   if (j >= 1) {
-    int loop_ub;
+    int loop_ub_tmp;
     emxInit_char_T(&ccfilename);
-    loop_ub = ccfilename->size[0] * ccfilename->size[1];
+    i = ccfilename->size[0] * ccfilename->size[1];
     ccfilename->size[0] = 1;
     ccfilename->size[1] = cfilename->size[1] + 1;
-    emxEnsureCapacity_char_T(ccfilename, loop_ub);
+    emxEnsureCapacity_char_T(ccfilename, i);
     ccfilename_data = ccfilename->data;
-    loop_ub = cfilename->size[1];
-    for (i = 0; i < loop_ub; i++) {
+    loop_ub_tmp = cfilename->size[1];
+    for (i = 0; i < loop_ub_tmp; i++) {
       ccfilename_data[i] = cfilename_data[i];
     }
     ccfilename_data[cfilename->size[1]] = '\x00';
@@ -117,11 +118,11 @@ signed char cfopen(const emxArray_char_T *cfilename)
     emxFree_char_T(&ccfilename);
     if (filestar != NULL) {
       eml_openfiles[j - 1] = filestar;
-      loop_ub = j + 2;
+      i = j + 2;
       if (j + 2 > 127) {
-        loop_ub = 127;
+        i = 127;
       }
-      fileid = (signed char)loop_ub;
+      fileid = (signed char)i;
     }
   }
   return fileid;

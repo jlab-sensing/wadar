@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: _coder_run_tag_test_chipotle_info.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /* Include Files */
@@ -23,39 +24,37 @@ static const mxArray *c_emlrtMexFcnResolvedFunctionsI(void);
 static const mxArray *c_emlrtMexFcnResolvedFunctionsI(void)
 {
   const mxArray *nameCaptureInfo;
-  const char_T *data[9] = {
-      "789ced5a4d73d240180e4eed97535b0f7af2aa47a050299de93803a1806d696b69a7a58e"
-      "0369b224a1f980cd86528ffe01af1e7b71c693577f843fc283fe008f"
-      "1e3c481a96266933310617c9e4bd2c2f4fb2cfc3bbec9337012af6a212a328ea3e65c6cf"
-      "a4392e0cf2a5c17887b287138f0dc639478ee32e35653b0fe3ef0623",
-      "ab2a08f49099288c0c866772aa2c2a8c820e2eda80824053a52ee0ae90a6288103510655"
-      "6bb2636472d1020d1303325ed30260cfaaba4c4141bb56285993613d"
-      "1a2e9f77caa31ece70d6c3791ce6ebfd251f9effa1071fc6a1aed411c3d711d0509d15c4"
-      "b68a244005ffdc31c771377598082b3090b2f07d0cc89777e5b3e3af",
-      "365e2704550609004596eb02946849cc69e29ce11898482ed739ad9d901964bc776b89e2"
-      "b2398f579d16ff50b773bc3e7ef66a9c79fb9d27c9b7b9fe6b86241f"
-      "8e71f191da6fc9d67632755c6105b8b75529755b8572126a161d7b1e3c5e3a28979cd4fc"
-      "93ba7fdb0175dff3d08df13654d97a13f62f6c9a8dbf1190dfafcfbe",
-      "0fc89775e5b3e33ed6c9529ab81cf9ea68f8704caaaf3e72e15b72e0c52e9de3e95d5aac"
-      "824a4ee96a357565bf560c8faf4eca7e0dbade0f3c74627c47ed0289"
-      "63e8be9def317d0db867277d3d67550ec0b8d8bf69810a23c535044585b7e8b80ca8e3b9"
-      "870e8cfb58b71ba533ae85a4fce15bf30359bf7d2ccf93e4c31176bf",
-      "3d4cd77afab9985b3d39be482349d4c55cb9958ffc96b4df06ed5be73d74627c601a8502"
-      "6de6ff9bcf065daf550f1d18f7efb3fd92f50d36acfdecd3852fd324"
-      "f97084dd5f952d7e4dca2c974f527a69ad724c5739e14db31cf92be9fd1af5b3513f7b9b"
-      "dea89f25c317f5b3a3997f529fcb3602ea9e75e4d7ba4dc46caa9b68",
-      "547cd3ae7c26c2a9faa9f103dba8ae83cf5cf9ecb8effb8c26ba5a0a52fb7e8e26dbb77e"
-      "fd443f21c98723ec3eda855a7e632d4bd395d466b95aeae4b3e94e27"
-      "ea5b89efd7a0cf05dcfebfb1e4c00d0317150ee0efd7a4fa68c695cf8efb5897616948f6"
-      "a3a47df4f38ffdc847a97f70ffaf9776797a3977d0120e8bf2e15935",
-      "dd5b4916c2e3a393da8f06f5d54547eed48d714308ab4208240689aa32365fbd0cc8b7ee"
-      "ca67c77dfaaaa534e60a45fe3a1a3e1c61f7d71c2f1652955695e9bc"
-      "6c96b8731da9ba2e6e44fe3a6e7f6d04d43de3aadb440c019a0227b64f5d71e5b3e33efd"
-      "b45f92c84747c98723ec3eba7d94d1b29dd211dad5f3e98cc2d74a60",
-      "9509419ffa1b6da4a7f1",
+  const char_T *data[8] = {
+      "789ced59cb6ed3401475a0bc054d176587c412688992b64a29ac1ca76d4a9bbedc88b80d"
+      "4a1d7b9c381d3fea479a941f4042a24880c406566cd8f11bac90d8b2"
+      "e01b9090582111634f121b598ee468da58b99bc9cdb17d4eee78ce5c3b446c251f2308e2"
+      "0661c7ed297bbceee471673c47b8c38bc79cf1b22747718118739d87",
+      "f01367e414d9004dc34e6456029d33794512655636765a2a2034a02bb001f87f882042b0"
+      "234a80ee4dd6ad4c5aea813a8905599fa91ae00e685322b49ade5508"
+      "7b934e3ddef9fcdeb13eeb91f6a947dc83ef2d3ea51e96ea90ad948e589ed54ac95499d7"
+      "d592c41ad6779a29970db65a36806e94b99aa82a060409a9ab530da9",
+      "f35a804e84ab9ac29505ad3d4176b510ff7e48fe314fdee5b711aec66abd7caf42f24dfb"
+      "f2b9f18079e92987351bc1f518ef539f77ec1e6fafb0930fdf6338f9"
+      "5e70bf1671f2a1382dbea6cff5fabdbf6efaf0c53df8528322abd40625d2204fca0d9d51"
+      "e6b699a5ae8ecd009e201d844f8eebfa677d9d869de789007d085f57",
+      "1a00f22cd5b6ee4db6ad03ed3583d23119a003e19cc2032d21b6375b4d666142373451ae"
+      "1283dbef660274203c60befe2b973d6bf8fce0cb7bbcfefae7f5b3af"
+      "38f95044dd5f0bb34cd33c12c9f9dd626bd680a22992b97a66e4afb8fc356c5f7a35401f"
+      "c21dc3c866293b3f6bbe1a769ea6027420bc3f5f6d97c931545cebff",
+      "25e67ef5cd934a01271f8aa8fba9bc5a5d80e9546e77c65c5ec817299aaf1d0bb9919fe2"
+      "5aa7a37e75d4afba8f1ff5ab38f846fdea60ae3f2cef53f743eaf47b"
+      "0f1e7710bb61168c41f15df4e5b3115e312b100c6e9fbbebcbe7c6fb7a6e100c6497d8d6"
+      "b78ab91ffdf4e31b89930f45d4fd5227d55ceb30b93c671e2a857ae6",
+      "182eaf6c3523e497677d9d867dbebf12a00fe196598b320fd07d35acbe79cf97cf8d07cc"
+      "47a71cb8fb4cdcbef9fbbccee3e4431175dfcc92bba698df6636d26b"
+      "c2ce833cdf6a302bb5c5e8f8e6b0f49961fd73dc937b7522dc12c1299a06206b888a3cb4"
+      "fe99f4e573e37df8674f391212aef53e81d93fa7df3e9ac4c98722ea",
+      "feb996528d7a436fd0cc3cb75594d364f2f1cc6c84feb71f16ffdc0fa9f392af4e1bb1c8"
+      "75593b35bf7c1e92ef8e2f9f1befc32fdb65c0e793b730fbe4cffb1f"
+      "3fe3e44311759f2c1417320730935acdae415aa8d0cc215c2d44c027ff021225341e",
       ""};
   nameCaptureInfo = NULL;
-  emlrtNameCaptureMxArrayR2016a(&data[0], 12560U, &nameCaptureInfo);
+  emlrtNameCaptureMxArrayR2016a(&data[0], 11064U, &nameCaptureInfo);
   return nameCaptureInfo;
 }
 
@@ -68,33 +67,20 @@ mxArray *emlrtMexFcnProperties(void)
   mxArray *xEntryPoints;
   mxArray *xInputs;
   mxArray *xResult;
-  const char_T *epFieldName[7] = {
+  const char_T *propFieldName[9] = {"Version",
+                                    "ResolvedFunctions",
+                                    "Checksum",
+                                    "EntryPoints",
+                                    "CoverageInfo",
+                                    "IsPolymorphic",
+                                    "PropertyList",
+                                    "UUID",
+                                    "ClassEntryPointIsHandle"};
+  const char_T *epFieldName[8] = {
       "QualifiedName",    "NumberOfInputs", "NumberOfOutputs", "ConstantInputs",
-      "ResolvedFilePath", "TimeStamp",      "Visible"};
-  const char_T *propFieldName[7] = {
-      "Version",      "ResolvedFunctions", "Checksum", "EntryPoints",
-      "CoverageInfo", "IsPolymorphic",     "AuxData"};
-  uint8_T v[216] = {
-      0U,   1U,   73U,  77U,  0U,   0U,   0U,   0U,   14U,  0U,   0U,   0U,
-      200U, 0U,   0U,   0U,   6U,   0U,   0U,   0U,   8U,   0U,   0U,   0U,
-      2U,   0U,   0U,   0U,   0U,   0U,   0U,   0U,   5U,   0U,   0U,   0U,
-      8U,   0U,   0U,   0U,   1U,   0U,   0U,   0U,   1U,   0U,   0U,   0U,
-      1U,   0U,   0U,   0U,   0U,   0U,   0U,   0U,   5U,   0U,   4U,   0U,
-      17U,  0U,   0U,   0U,   1U,   0U,   0U,   0U,   17U,  0U,   0U,   0U,
-      67U,  108U, 97U,  115U, 115U, 69U,  110U, 116U, 114U, 121U, 80U,  111U,
-      105U, 110U, 116U, 115U, 0U,   0U,   0U,   0U,   0U,   0U,   0U,   0U,
-      14U,  0U,   0U,   0U,   112U, 0U,   0U,   0U,   6U,   0U,   0U,   0U,
-      8U,   0U,   0U,   0U,   2U,   0U,   0U,   0U,   0U,   0U,   0U,   0U,
-      5U,   0U,   0U,   0U,   8U,   0U,   0U,   0U,   1U,   0U,   0U,   0U,
-      0U,   0U,   0U,   0U,   1U,   0U,   0U,   0U,   0U,   0U,   0U,   0U,
-      5U,   0U,   4U,   0U,   14U,  0U,   0U,   0U,   1U,   0U,   0U,   0U,
-      56U,  0U,   0U,   0U,   81U,  117U, 97U,  108U, 105U, 102U, 105U, 101U,
-      100U, 78U,  97U,  109U, 101U, 0U,   77U,  101U, 116U, 104U, 111U, 100U,
-      115U, 0U,   0U,   0U,   0U,   0U,   0U,   0U,   80U,  114U, 111U, 112U,
-      101U, 114U, 116U, 105U, 101U, 115U, 0U,   0U,   0U,   0U,   72U,  97U,
-      110U, 100U, 108U, 101U, 0U,   0U,   0U,   0U,   0U,   0U,   0U,   0U};
+      "ResolvedFilePath", "TimeStamp",      "Constructor",     "Visible"};
   xEntryPoints =
-      emlrtCreateStructMatrix(1, 1, 7, (const char_T **)&epFieldName[0]);
+      emlrtCreateStructMatrix(1, 1, 8, (const char_T **)&epFieldName[0]);
   xInputs = emlrtCreateLogicalMatrix(1, 3);
   emlrtSetField(xEntryPoints, 0, "QualifiedName",
                 emlrtMxCreateString("run_tag_test_chipotle"));
@@ -106,22 +92,21 @@ mxArray *emlrtMexFcnProperties(void)
   emlrtSetField(
       xEntryPoints, 0, "ResolvedFilePath",
       emlrtMxCreateString(
-          "/home/ericdvet/jlab/wadar/01_dsp/matlab/run_tag_test_chipotle.m"));
+          "C:\\jlab\\wadar\\01_dsp\\matlab\\run_tag_test_chipotle.m"));
   emlrtSetField(xEntryPoints, 0, "TimeStamp",
-                emlrtMxCreateDoubleScalar(739702.6521180555));
+                emlrtMxCreateDoubleScalar(739702.53746527783));
+  emlrtSetField(xEntryPoints, 0, "Constructor",
+                emlrtMxCreateLogicalScalar(false));
   emlrtSetField(xEntryPoints, 0, "Visible", emlrtMxCreateLogicalScalar(true));
   xResult =
-      emlrtCreateStructMatrix(1, 1, 7, (const char_T **)&propFieldName[0]);
-  emlrtSetField(
-      xResult, 0, "Version",
-      emlrtMxCreateString("25.1.0.2852912 (R2025a) Prerelease Update 3"));
+      emlrtCreateStructMatrix(1, 1, 9, (const char_T **)&propFieldName[0]);
+  emlrtSetField(xResult, 0, "Version",
+                emlrtMxCreateString("24.2.0.2712019 (R2024b)"));
   emlrtSetField(xResult, 0, "ResolvedFunctions",
                 (mxArray *)c_emlrtMexFcnResolvedFunctionsI());
   emlrtSetField(xResult, 0, "Checksum",
-                emlrtMxCreateString("kWGGO1XpHKiarhnnmywLlB"));
+                emlrtMxCreateString("4WoUKMhGaUiWqfOVlG2edC"));
   emlrtSetField(xResult, 0, "EntryPoints", xEntryPoints);
-  emlrtSetField(xResult, 0, "AuxData",
-                emlrtMxCreateRowVectorUINT8((const uint8_T *)&v, 216U));
   return xResult;
 }
 

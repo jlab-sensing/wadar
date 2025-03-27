@@ -2,14 +2,14 @@
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
- * File: FFTImplementationCallback.h
+ * File: mtimes.h
  *
  * MATLAB Coder version            : 24.2
  * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
-#ifndef FFTIMPLEMENTATIONCALLBACK_H
-#define FFTIMPLEMENTATIONCALLBACK_H
+#ifndef MTIMES_H
+#define MTIMES_H
 
 /* Include Files */
 #include "rtwtypes.h"
@@ -22,11 +22,8 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-void c_FFTImplementationCallback_dob(const emxArray_creal_T *x, int n2blue,
-                                     int nfft, const emxArray_real_T *costab,
-                                     const emxArray_real_T *sintab,
-                                     const emxArray_real_T *sintabinv,
-                                     emxArray_creal_T *y);
+void mtimes(const emxArray_real_T *A, const double B_data[],
+            emxArray_real_T *C);
 
 #ifdef __cplusplus
 }
@@ -34,7 +31,7 @@ void c_FFTImplementationCallback_dob(const emxArray_creal_T *x, int n2blue,
 
 #endif
 /*
- * File trailer for FFTImplementationCallback.h
+ * File trailer for mtimes.h
  *
  * [EOF]
  */

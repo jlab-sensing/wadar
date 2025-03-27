@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: hasIRIPrefix.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /* Include Files */
@@ -51,14 +52,14 @@ bool hasIRIPrefix(const emxArray_char_T *path)
       true,  true,  true,  false, false, false, false, false};
   emxArray_char_T *b_path;
   int b_i;
-  int pthSz;
+  int pthSz_tmp;
   const char *path_data;
   char *b_path_data;
   bool b;
   path_data = path->data;
-  pthSz = path->size[1];
+  pthSz_tmp = path->size[1];
   emxInit_char_T(&b_path);
-  if (pthSz < 4) {
+  if (pthSz_tmp < 4) {
     b = false;
   } else if (!bv[(int)((unsigned char)path_data[0] & 127U)]) {
     b = false;
@@ -74,7 +75,7 @@ bool hasIRIPrefix(const emxArray_char_T *path)
     int exitg1;
     do {
       exitg1 = 0;
-      if (i + 1 <= pthSz) {
+      if (i + 1 <= pthSz_tmp) {
         if (bv1[(int)((unsigned char)path_data[i] & 127U)] ||
             (path_data[i] == '.') || (path_data[i] == '-') ||
             (path_data[i] == '+')) {
@@ -97,22 +98,22 @@ bool hasIRIPrefix(const emxArray_char_T *path)
     if (guard1) {
       if (colIdx == 0) {
         b = false;
-      } else if (colIdx + 1 >= pthSz) {
+      } else if (colIdx + 1 >= pthSz_tmp) {
         b = false;
       } else if (path_data[colIdx] == '/') {
         b = true;
       } else {
         if (colIdx + 1 > path->size[1]) {
           colIdx = 0;
-          pthSz = 0;
+          pthSz_tmp = 0;
         }
-        i = b_path->size[0] * b_path->size[1];
+        b_i = b_path->size[0] * b_path->size[1];
         b_path->size[0] = 1;
-        pthSz -= colIdx;
-        b_path->size[1] = pthSz;
-        emxEnsureCapacity_char_T(b_path, i);
+        i = pthSz_tmp - colIdx;
+        b_path->size[1] = i;
+        emxEnsureCapacity_char_T(b_path, b_i);
         b_path_data = b_path->data;
-        for (b_i = 0; b_i < pthSz; b_i++) {
+        for (b_i = 0; b_i < i; b_i++) {
           b_path_data[b_i] = path_data[colIdx + b_i];
         }
         b = hasIRIPrefix(b_path);

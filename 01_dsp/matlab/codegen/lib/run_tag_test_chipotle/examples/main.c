@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: main.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /*************************************************************************/
@@ -36,7 +37,6 @@
 #include "main.h"
 #include "rt_nonfinite.h"
 #include "run_tag_test_chipotle.h"
-#include "run_tag_test_chipotle_initialize.h"
 #include "run_tag_test_chipotle_terminate.h"
 #include <string.h>
 
@@ -95,9 +95,8 @@ int main(int argc, char **argv)
 {
   (void)argc;
   (void)argv;
-  /* Initialize the application.
-You do not need to do this more than one time. */
-  run_tag_test_chipotle_initialize();
+  /* The initialize function is being called automatically from your entry-point
+   * function. So, a call to initialize is not included here. */
   /* Invoke the entry-point functions.
 You can call entry-point functions multiple times. */
   main_run_tag_test_chipotle();

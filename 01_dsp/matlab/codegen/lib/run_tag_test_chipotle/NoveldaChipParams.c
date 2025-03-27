@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: NoveldaChipParams.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /* Include Files */
@@ -75,6 +76,7 @@ double NoveldaChipParams(const char chipSet_Value_data[],
   int b_index;
   int fL;
   int i;
+  int i1;
   char switch_expression_Value_data[7];
   string_lower(chipSet_Value_data, chipSet_Value_size,
                switch_expression_Value_data, switch_expression_Value_size);
@@ -493,7 +495,6 @@ double NoveldaChipParams(const char chipSet_Value_data[],
     }
   } break;
   case 3: {
-    int c_index;
     int exitg2;
     bool b_PGen_data;
     /* ------------------X4, Impulse Radar Transceiver SoC-----------------%% */
@@ -505,43 +506,43 @@ double NoveldaChipParams(const char chipSet_Value_data[],
     *fs_hz = 2.3328E+10;
     /*  mean system sampling rate, 23.328 GS/s */
     /*  Pulse Generator */
-    c_index = -1;
-    b_index = 0;
+    b_index = -1;
+    fL = 0;
     do {
       exitg2 = 0;
-      if (b_index < 2) {
-        fL = 3 * b_index;
-        for (i = 0; i < PGen_size; i++) {
-          b_PGen_data = (fL == PGen_data[0]);
+      if (fL < 2) {
+        i = 3 * fL;
+        for (i1 = 0; i1 < PGen_size; i1++) {
+          b_PGen_data = (i == PGen_data[0]);
         }
         if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
-          c_index = 0;
+          b_index = 0;
           exitg2 = 1;
         } else {
-          b_index++;
+          fL++;
         }
       } else {
-        b_index = 0;
+        fL = 0;
         exitg2 = 2;
       }
     } while (exitg2 == 0);
     if (exitg2 != 1) {
       bool exitg1;
       exitg1 = false;
-      while ((!exitg1) && (b_index < 2)) {
-        fL = 3 * b_index + 1;
-        for (i = 0; i < PGen_size; i++) {
-          b_PGen_data = (fL == PGen_data[0]);
+      while ((!exitg1) && (fL < 2)) {
+        i = 3 * fL + 1;
+        for (i1 = 0; i1 < PGen_size; i1++) {
+          b_PGen_data = (i == PGen_data[0]);
         }
         if (ifWhileCond((bool *)&b_PGen_data, PGen_size)) {
-          c_index = 1;
+          b_index = 1;
           exitg1 = true;
         } else {
-          b_index++;
+          fL++;
         }
       }
     }
-    switch (c_index) {
+    switch (b_index) {
     case 0:
       /*  ETSI/FCC         */
       fc = 7.29E+9;

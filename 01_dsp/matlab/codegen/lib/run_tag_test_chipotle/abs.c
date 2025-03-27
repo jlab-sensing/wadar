@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: abs.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /* Include Files */
@@ -26,16 +27,15 @@ void b_abs(const emxArray_creal_T *x, emxArray_real_T *y)
 {
   const creal_T *x_data;
   double *y_data;
-  int i;
   int k;
-  int nx;
+  int nx_tmp;
   x_data = x->data;
-  nx = x->size[0];
-  i = y->size[0];
+  nx_tmp = x->size[0];
+  k = y->size[0];
   y->size[0] = x->size[0];
-  emxEnsureCapacity_real_T(y, i);
+  emxEnsureCapacity_real_T(y, k);
   y_data = y->data;
-  for (k = 0; k < nx; k++) {
+  for (k = 0; k < nx_tmp; k++) {
     double a;
     double b;
     a = fabs(x_data[k].re);
@@ -87,17 +87,16 @@ void d_abs(const emxArray_creal_T *x, emxArray_real_T *y)
 {
   const creal_T *x_data;
   double *y_data;
-  int i;
   int k;
-  int nx;
+  int nx_tmp;
   x_data = x->data;
-  nx = x->size[1];
-  i = y->size[0] * y->size[1];
+  nx_tmp = x->size[1];
+  k = y->size[0] * y->size[1];
   y->size[0] = 1;
   y->size[1] = x->size[1];
-  emxEnsureCapacity_real_T(y, i);
+  emxEnsureCapacity_real_T(y, k);
   y_data = y->data;
-  for (k = 0; k < nx; k++) {
+  for (k = 0; k < nx_tmp; k++) {
     double a;
     double b;
     a = fabs(x_data[k].re);

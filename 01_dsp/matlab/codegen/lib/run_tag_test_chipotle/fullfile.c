@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: fullfile.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /* Include Files */
@@ -67,10 +68,10 @@ void fullfile(const emxArray_char_T *varargin_1, const char varargin_2_data[],
         if ((t != 0) && (c == '/')) {
           guard1 = true;
         } else {
-          t = fTemp->size[0] * fTemp->size[1];
+          i = fTemp->size[0] * fTemp->size[1];
           fTemp->size[0] = 1;
           fTemp->size[1] = varargin_1->size[1] + 1;
-          emxEnsureCapacity_char_T(fTemp, t);
+          emxEnsureCapacity_char_T(fTemp, i);
           fTemp_data = fTemp->data;
           t = varargin_1->size[1];
           for (i = 0; i < t; i++) {
@@ -85,32 +86,32 @@ void fullfile(const emxArray_char_T *varargin_1, const char varargin_2_data[],
       guard1 = true;
     }
     if (guard1) {
-      t = fTemp->size[0] * fTemp->size[1];
+      i = fTemp->size[0] * fTemp->size[1];
       fTemp->size[0] = 1;
       loop_ub = varargin_1->size[1];
       fTemp->size[1] = varargin_1->size[1];
-      emxEnsureCapacity_char_T(fTemp, t);
+      emxEnsureCapacity_char_T(fTemp, i);
       fTemp_data = fTemp->data;
       for (i = 0; i < loop_ub; i++) {
         fTemp_data[i] = varargin_1_data[i];
       }
     }
   } else {
-    t = fTemp->size[0] * fTemp->size[1];
+    i = fTemp->size[0] * fTemp->size[1];
     fTemp->size[0] = 1;
     loop_ub = varargin_1->size[1];
     fTemp->size[1] = varargin_1->size[1];
-    emxEnsureCapacity_char_T(fTemp, t);
+    emxEnsureCapacity_char_T(fTemp, i);
     fTemp_data = fTemp->data;
     for (i = 0; i < loop_ub; i++) {
       fTemp_data[i] = varargin_1_data[i];
     }
   }
-  t = fOut->size[0] * fOut->size[1];
+  i = fOut->size[0] * fOut->size[1];
   fOut->size[0] = 1;
   loop_ub = fTemp->size[1] + varargin_2_size[1];
   fOut->size[1] = loop_ub;
-  emxEnsureCapacity_char_T(fOut, t);
+  emxEnsureCapacity_char_T(fOut, i);
   fOut_data = fOut->data;
   t = fTemp->size[1];
   for (i = 0; i < t; i++) {
@@ -121,16 +122,16 @@ void fullfile(const emxArray_char_T *varargin_1, const char varargin_2_data[],
     fOut_data[i + fTemp->size[1]] = varargin_2_data[i];
   }
   if (fs != '/') {
-    for (i = 0; i < loop_ub; i++) {
-      if (fOut_data[i] == '/') {
-        fOut_data[i] = fs;
+    for (t = 0; t < loop_ub; t++) {
+      if (fOut_data[t] == '/') {
+        fOut_data[t] = fs;
       }
     }
   }
-  t = fTemp->size[0] * fTemp->size[1];
+  i = fTemp->size[0] * fTemp->size[1];
   fTemp->size[0] = 1;
   fTemp->size[1] = loop_ub;
-  emxEnsureCapacity_char_T(fTemp, t);
+  emxEnsureCapacity_char_T(fTemp, i);
   fTemp_data = fTemp->data;
   for (i = 0; i < loop_ub; i++) {
     fTemp_data[i] = ' ';
@@ -197,10 +198,10 @@ void fullfile(const emxArray_char_T *varargin_1, const char varargin_2_data[],
     } else {
       loop_ub = (int)(k - 1.0);
     }
-    t = fOut->size[0] * fOut->size[1];
+    i = fOut->size[0] * fOut->size[1];
     fOut->size[0] = 1;
     fOut->size[1] = loop_ub;
-    emxEnsureCapacity_char_T(fOut, t);
+    emxEnsureCapacity_char_T(fOut, i);
     fOut_data = fOut->data;
     for (i = 0; i < loop_ub; i++) {
       fOut_data[i] = fTemp_data[i];
@@ -208,11 +209,11 @@ void fullfile(const emxArray_char_T *varargin_1, const char varargin_2_data[],
   }
   if (!isIRI) {
     j = 1U;
-    t = fTemp->size[0] * fTemp->size[1];
+    i = fTemp->size[0] * fTemp->size[1];
     fTemp->size[0] = 1;
     loop_ub = fOut->size[1];
     fTemp->size[1] = fOut->size[1];
-    emxEnsureCapacity_char_T(fTemp, t);
+    emxEnsureCapacity_char_T(fTemp, i);
     fTemp_data = fTemp->data;
     for (i = 0; i < loop_ub; i++) {
       fTemp_data[i] = ' ';
@@ -268,10 +269,10 @@ void fullfile(const emxArray_char_T *varargin_1, const char varargin_2_data[],
       } else {
         loop_ub = (int)(k - 1.0);
       }
-      t = fOut->size[0] * fOut->size[1];
+      i = fOut->size[0] * fOut->size[1];
       fOut->size[0] = 1;
       fOut->size[1] = loop_ub;
-      emxEnsureCapacity_char_T(fOut, t);
+      emxEnsureCapacity_char_T(fOut, i);
       fOut_data = fOut->data;
       for (i = 0; i < loop_ub; i++) {
         fOut_data[i] = fTemp_data[i];

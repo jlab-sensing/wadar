@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: run_tag_test_chipotle_emxutil.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /* Include Files */
@@ -33,19 +34,18 @@ void emxEnsureCapacity_boolean_T(emxArray_boolean_T *emxArray, int oldNumel)
     newNumel *= emxArray->size[i];
   }
   if (newNumel > emxArray->allocatedSize) {
-    int newCapacity;
-    newCapacity = emxArray->allocatedSize;
-    if (newCapacity < 16) {
-      newCapacity = 16;
+    i = emxArray->allocatedSize;
+    if (i < 16) {
+      i = 16;
     }
-    while (newCapacity < newNumel) {
-      if (newCapacity > 1073741823) {
-        newCapacity = MAX_int32_T;
+    while (i < newNumel) {
+      if (i > 1073741823) {
+        i = MAX_int32_T;
       } else {
-        newCapacity *= 2;
+        i *= 2;
       }
     }
-    newData = malloc((unsigned int)newCapacity * sizeof(bool));
+    newData = malloc((unsigned int)i * sizeof(bool));
     if (emxArray->data != NULL) {
       memcpy(newData, emxArray->data, sizeof(bool) * (unsigned int)oldNumel);
       if (emxArray->canFreeData) {
@@ -53,7 +53,7 @@ void emxEnsureCapacity_boolean_T(emxArray_boolean_T *emxArray, int oldNumel)
       }
     }
     emxArray->data = (bool *)newData;
-    emxArray->allocatedSize = newCapacity;
+    emxArray->allocatedSize = i;
     emxArray->canFreeData = true;
   }
 }
@@ -76,19 +76,18 @@ void emxEnsureCapacity_char_T(emxArray_char_T *emxArray, int oldNumel)
     newNumel *= emxArray->size[i];
   }
   if (newNumel > emxArray->allocatedSize) {
-    int newCapacity;
-    newCapacity = emxArray->allocatedSize;
-    if (newCapacity < 16) {
-      newCapacity = 16;
+    i = emxArray->allocatedSize;
+    if (i < 16) {
+      i = 16;
     }
-    while (newCapacity < newNumel) {
-      if (newCapacity > 1073741823) {
-        newCapacity = MAX_int32_T;
+    while (i < newNumel) {
+      if (i > 1073741823) {
+        i = MAX_int32_T;
       } else {
-        newCapacity *= 2;
+        i *= 2;
       }
     }
-    newData = malloc((unsigned int)newCapacity * sizeof(char));
+    newData = malloc((unsigned int)i * sizeof(char));
     if (emxArray->data != NULL) {
       memcpy(newData, emxArray->data, sizeof(char) * (unsigned int)oldNumel);
       if (emxArray->canFreeData) {
@@ -96,7 +95,7 @@ void emxEnsureCapacity_char_T(emxArray_char_T *emxArray, int oldNumel)
       }
     }
     emxArray->data = (char *)newData;
-    emxArray->allocatedSize = newCapacity;
+    emxArray->allocatedSize = i;
     emxArray->canFreeData = true;
   }
 }
@@ -119,19 +118,18 @@ void emxEnsureCapacity_creal_T(emxArray_creal_T *emxArray, int oldNumel)
     newNumel *= emxArray->size[i];
   }
   if (newNumel > emxArray->allocatedSize) {
-    int newCapacity;
-    newCapacity = emxArray->allocatedSize;
-    if (newCapacity < 16) {
-      newCapacity = 16;
+    i = emxArray->allocatedSize;
+    if (i < 16) {
+      i = 16;
     }
-    while (newCapacity < newNumel) {
-      if (newCapacity > 1073741823) {
-        newCapacity = MAX_int32_T;
+    while (i < newNumel) {
+      if (i > 1073741823) {
+        i = MAX_int32_T;
       } else {
-        newCapacity *= 2;
+        i *= 2;
       }
     }
-    newData = malloc((unsigned int)newCapacity * sizeof(creal_T));
+    newData = malloc((unsigned int)i * sizeof(creal_T));
     if (emxArray->data != NULL) {
       memcpy(newData, emxArray->data, sizeof(creal_T) * (unsigned int)oldNumel);
       if (emxArray->canFreeData) {
@@ -139,7 +137,7 @@ void emxEnsureCapacity_creal_T(emxArray_creal_T *emxArray, int oldNumel)
       }
     }
     emxArray->data = (creal_T *)newData;
-    emxArray->allocatedSize = newCapacity;
+    emxArray->allocatedSize = i;
     emxArray->canFreeData = true;
   }
 }
@@ -162,19 +160,18 @@ void emxEnsureCapacity_int32_T(emxArray_int32_T *emxArray, int oldNumel)
     newNumel *= emxArray->size[i];
   }
   if (newNumel > emxArray->allocatedSize) {
-    int newCapacity;
-    newCapacity = emxArray->allocatedSize;
-    if (newCapacity < 16) {
-      newCapacity = 16;
+    i = emxArray->allocatedSize;
+    if (i < 16) {
+      i = 16;
     }
-    while (newCapacity < newNumel) {
-      if (newCapacity > 1073741823) {
-        newCapacity = MAX_int32_T;
+    while (i < newNumel) {
+      if (i > 1073741823) {
+        i = MAX_int32_T;
       } else {
-        newCapacity *= 2;
+        i *= 2;
       }
     }
-    newData = malloc((unsigned int)newCapacity * sizeof(int));
+    newData = malloc((unsigned int)i * sizeof(int));
     if (emxArray->data != NULL) {
       memcpy(newData, emxArray->data, sizeof(int) * (unsigned int)oldNumel);
       if (emxArray->canFreeData) {
@@ -182,7 +179,7 @@ void emxEnsureCapacity_int32_T(emxArray_int32_T *emxArray, int oldNumel)
       }
     }
     emxArray->data = (int *)newData;
-    emxArray->allocatedSize = newCapacity;
+    emxArray->allocatedSize = i;
     emxArray->canFreeData = true;
   }
 }
@@ -205,19 +202,18 @@ void emxEnsureCapacity_real_T(emxArray_real_T *emxArray, int oldNumel)
     newNumel *= emxArray->size[i];
   }
   if (newNumel > emxArray->allocatedSize) {
-    int newCapacity;
-    newCapacity = emxArray->allocatedSize;
-    if (newCapacity < 16) {
-      newCapacity = 16;
+    i = emxArray->allocatedSize;
+    if (i < 16) {
+      i = 16;
     }
-    while (newCapacity < newNumel) {
-      if (newCapacity > 1073741823) {
-        newCapacity = MAX_int32_T;
+    while (i < newNumel) {
+      if (i > 1073741823) {
+        i = MAX_int32_T;
       } else {
-        newCapacity *= 2;
+        i *= 2;
       }
     }
-    newData = malloc((unsigned int)newCapacity * sizeof(double));
+    newData = malloc((unsigned int)i * sizeof(double));
     if (emxArray->data != NULL) {
       memcpy(newData, emxArray->data, sizeof(double) * (unsigned int)oldNumel);
       if (emxArray->canFreeData) {
@@ -225,7 +221,7 @@ void emxEnsureCapacity_real_T(emxArray_real_T *emxArray, int oldNumel)
       }
     }
     emxArray->data = (double *)newData;
-    emxArray->allocatedSize = newCapacity;
+    emxArray->allocatedSize = i;
     emxArray->canFreeData = true;
   }
 }

@@ -1,10 +1,11 @@
 /*
- * Prerelease License - for engineering feedback and testing purposes
- * only. Not for sale.
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
  * File: circshift.c
  *
- * MATLAB Coder version            : 25.1
- * C/C++ source code generated on  : 26-Mar-2025 16:20:55
+ * MATLAB Coder version            : 24.2
+ * C/C++ source code generated on  : 27-Mar-2025 00:17:05
  */
 
 /* Include Files */
@@ -49,20 +50,20 @@ void circshift(double a[512], const emxArray_real_T *p)
     memset(&buffer[0], 0, 256U * sizeof(double));
     if (ns > 0) {
       if (shiftright) {
-        int u0;
+        int i;
         for (k = 0; k < ns; k++) {
           buffer[k] = a[(k - ns) + 512];
         }
-        u0 = ns + 1;
-        for (k = 512; k >= u0; k--) {
+        i = ns + 1;
+        for (k = 512; k >= i; k--) {
           a[k - 1] = a[(k - ns) - 1];
         }
         memcpy(&a[0], &buffer[0], (unsigned int)ns * sizeof(double));
       } else {
-        int u0;
+        int i;
         memcpy(&buffer[0], &a[0], (unsigned int)ns * sizeof(double));
-        u0 = 512 - ns;
-        for (k = 0; k < u0; k++) {
+        i = 512 - ns;
+        for (k = 0; k < i; k++) {
           a[k] = a[k + ns];
         }
         for (k = 0; k < ns; k++) {
@@ -71,57 +72,61 @@ void circshift(double a[512], const emxArray_real_T *p)
       }
     }
   } else {
-    int ns;
+    int i;
+    int i1;
+    int i2;
     int stride;
-    int u0;
     emxInit_int32_T(&absp, 1);
-    stride = p->size[0];
-    u0 = absp->size[0];
+    i = p->size[0];
+    i1 = absp->size[0];
     absp->size[0] = p->size[0];
-    emxEnsureCapacity_int32_T(absp, u0);
+    emxEnsureCapacity_int32_T(absp, i1);
     absp_data = absp->data;
     emxInit_boolean_T(&b_shiftright);
-    u0 = b_shiftright->size[0];
+    i1 = b_shiftright->size[0];
     b_shiftright->size[0] = p->size[0];
-    emxEnsureCapacity_boolean_T(b_shiftright, u0);
+    emxEnsureCapacity_boolean_T(b_shiftright, i1);
     shiftright_data = b_shiftright->data;
-    for (k = 0; k < stride; k++) {
-      u0 = (int)p_data[k];
+    for (k = 0; k < i; k++) {
+      stride = (int)p_data[k];
       shiftright_data[k] = true;
       if (k + 1 <= 2) {
-        ns = 511 * k + 1;
+        i1 = 511 * k + 1;
       } else {
-        ns = 1;
+        i1 = 1;
       }
-      if (ns <= 1) {
-        u0 = 0;
+      if (i1 <= 1) {
+        stride = 0;
       } else {
-        if (u0 > ns) {
-          u0 -= ns * (int)((unsigned int)u0 / (unsigned short)ns);
+        if (stride > i1) {
+          if ((unsigned short)i1 == 0) {
+            i2 = MAX_int32_T;
+          } else {
+            i2 = (int)((unsigned int)stride / (unsigned short)i1);
+          }
+          stride -= i1 * i2;
         }
-        if (u0 > (ns >> 1)) {
-          u0 = ns - u0;
+        if (stride > (i1 >> 1)) {
+          stride = i1 - stride;
           shiftright_data[k] = false;
         }
       }
-      absp_data[k] = u0;
+      absp_data[k] = stride;
     }
     stride = 1;
-    ns = (int)fmin(2.0, p->size[0]);
-    for (dim = 0; dim < ns; dim++) {
-      int b_ns;
-      int i;
-      int i1;
+    i = (int)fmin(2.0, p->size[0]);
+    for (dim = 0; dim < i; dim++) {
       int npages;
-      int nv;
+      int ns;
+      int nv_tmp;
       int pagesize;
-      i = 511 * dim;
-      nv = 511 * dim + 1;
-      i1 = absp_data[dim];
-      b_ns = absp_data[dim] - 1;
-      pagesize = stride * nv;
+      i1 = 511 * dim;
+      nv_tmp = 511 * dim + 1;
+      i2 = absp_data[dim];
+      ns = absp_data[dim] - 1;
+      pagesize = stride * nv_tmp;
       npages = -511 * dim + 511;
-      if ((511 * dim > 0) && (absp_data[dim] > 0)) {
+      if ((nv_tmp > 1) && (absp_data[dim] > 0)) {
         for (b_i = 0; b_i <= npages; b_i++) {
           int pageroot;
           pageroot = b_i * pagesize;
@@ -129,26 +134,28 @@ void circshift(double a[512], const emxArray_real_T *p)
             int b_i1;
             b_i1 = pageroot + j;
             if (shiftright_data[dim]) {
-              for (k = 0; k <= b_ns; k++) {
-                buffer[k] = a[b_i1 + (((k + i) - i1) + 1) * stride];
+              int i3;
+              for (k = 0; k <= ns; k++) {
+                buffer[k] = a[b_i1 + (((k + i1) - i2) + 1) * stride];
               }
-              u0 = i1 + 1;
-              for (k = nv; k >= u0; k--) {
-                a[b_i1 + (k - 1) * stride] = a[b_i1 + ((k - i1) - 1) * stride];
+              i3 = i2 + 1;
+              for (k = nv_tmp; k >= i3; k--) {
+                a[b_i1 + (k - 1) * stride] = a[b_i1 + ((k - i2) - 1) * stride];
               }
-              for (k = 0; k <= b_ns; k++) {
+              for (k = 0; k <= ns; k++) {
                 a[b_i1 + k * stride] = buffer[k];
               }
             } else {
-              for (k = 0; k <= b_ns; k++) {
+              int i3;
+              for (k = 0; k <= ns; k++) {
                 buffer[k] = a[b_i1 + k * stride];
               }
-              u0 = (i - i1) + 1;
-              for (k = 0; k < u0; k++) {
-                a[b_i1 + k * stride] = a[b_i1 + (k + i1) * stride];
+              i3 = (i1 - i2) + 1;
+              for (k = 0; k < i3; k++) {
+                a[b_i1 + k * stride] = a[b_i1 + (k + i2) * stride];
               }
-              for (k = 0; k <= b_ns; k++) {
-                a[b_i1 + (((k + i) - i1) + 1) * stride] = buffer[k];
+              for (k = 0; k <= ns; k++) {
+                a[b_i1 + (((k + i1) - i2) + 1) * stride] = buffer[k];
               }
             }
           }
