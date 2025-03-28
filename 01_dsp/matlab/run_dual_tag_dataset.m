@@ -1,4 +1,4 @@
-function results = run_dual_tag_dataset(localDataPath, tag1Hz, tag2Hz)
+function results = run_dual_tag_dataset(localDataPath, tag1Hz, tag2Hz, viz)
 % results = run_dual_tag_dataset(localDataPath, tag1Hz, tag2Hz)
 %
 % Function to run the dual tag test on Novelda radar data captures and
@@ -49,11 +49,13 @@ tableHeader = {'Capture Name', strcat(tag1Name, ' Peak Bin'), strcat(tag1Name, '
 results = table(transpose(listOfCaptures), transpose(peakBin1), transpose(SNRdB1), transpose(peakBin2), transpose(SNRdB2), transpose(peakDifference), ...
     'VariableNames', tableHeader);
 
-viz_frames(frameTot, framesBB)
-viz_dual_tag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
-
-dataName = localDataPath;
-
-viz_box(peakDifference,dataName);
+if (viz)
+    viz_frames(frameTot, framesBB)
+    viz_dual_tag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
+    
+    dataName = localDataPath;
+    
+    viz_box(peakDifference,dataName);
+end
 
 end
