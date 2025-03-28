@@ -3,7 +3,7 @@
 Welcome to the MATLAB code repository for interfacing with radar(s). This codebase primarily interacts with FlatEarth libraries, demo code, and the WADAR scripts. If you are new here, I'd recommend looking at the *test*.m* functions first to get an idea of how to use this MATLAB codebase.
 
 ![DSP_pipline_viz](DSP_pipline_viz.png)
-*Visualization of the DSP pipeline*
+*Visualization of DSP depedencies for an example run*
 
 ## Directory Structure
 
