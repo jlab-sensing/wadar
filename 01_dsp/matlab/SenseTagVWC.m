@@ -1,4 +1,4 @@
-function VWC = sense_vwc(wetPeakBin, airPeakBin, soilType, distance)
+function VWC = SenseTagVWC(wetPeakBin, airPeakBin, soilType, distance)
 % VWC = proc_vwc(wetPeakBin, airPeakBin, soilType, distance)
 %
 % Function calculates VWC from ToF sensor measurements.

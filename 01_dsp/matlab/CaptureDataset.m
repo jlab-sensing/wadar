@@ -1,5 +1,5 @@
-function fileName = acq_dataset(captureName, localDataPath, numCaptures, frameCount, frameRate, radarType)
-% fileName = acq_dataset(captureName, localDataPath, numCaptures, frameCount, frameRate, radarType)
+function fileName = CaptureDataset(captureName, localDataPath, numCaptures, frameCount, frameRate, radarType)
+% fileName = CaptureDataset(captureName, localDataPath, numCaptures, frameCount, frameRate, radarType)
 %
 % Function to acquire a radar capture and save it to a file. This function
 % sends a command to the radar to start a capture and then waits for the

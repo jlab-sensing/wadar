@@ -1,5 +1,5 @@
-function viz_fft(captureFT, tagFT, frameRate)
-% viz_fft(captureFT, tagFT, frameRate)
+function PlotTag(captureFT, tagFT, frameRate)
+% PlotTag(captureFT, tagFT, frameRate)
 %
 % Function to visualize the FFT of Novelda radar data captures. This function reads in
 % the pre-processed FFT of the radar data frames and the FFT of the tag signal and

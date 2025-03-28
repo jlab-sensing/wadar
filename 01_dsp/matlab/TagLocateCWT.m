@@ -1,5 +1,5 @@
-function [tagPeakBin] = tag_cwt(tagFT, displayPlot)
-% [tagPeakBin] = tag_cwt(tagFT, displayPlot)
+function [tagPeakBin] = TagLocateCWT(tagFT, displayPlot)
+% [tagPeakBin] = TagLocateCWT(tagFT, displayPlot)
 %
 % Function to get the peak bin of the tag signal in the radar data capture. 
 % This function uses the the continuous wavelet transform-based pattern

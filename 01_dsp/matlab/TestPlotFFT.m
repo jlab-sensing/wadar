@@ -10,11 +10,11 @@ captureName = '2024-4-17_DualTag7980_T3retest2_C1.frames';
 tagHz = 80;
 
 % First, we will process the radar frames to extract the baseband signal and the raw radar frames
-[frameTot, framesBB, frameRate] = proc_frames('/data', '2024-4-17_DualTag7980_T3retest2_C1.frames');
+[frameTot, framesBB, frameRate] = ProcessFrames('/data', '2024-4-17_DualTag7980_T3retest2_C1.frames');
 
 % Next, we will process the FFT of the radar frames
-[captureFT, tagFT] = proc_fft(framesBB, frameRate, tagHz);
+[captureFT, tagFT] = ProcessFFT(framesBB, frameRate, tagHz);
 
 % Finally, we will visualize the raw radar frames and the FFT of the radar frames
-viz_frames(frameTot, framesBB)
-viz_fft(captureFT, tagFT, frameRate)
+PlotFrames(frameTot, framesBB)
+PlotTag(captureFT, tagFT, frameRate)

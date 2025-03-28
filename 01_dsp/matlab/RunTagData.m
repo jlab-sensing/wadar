@@ -1,5 +1,5 @@
-function results = run_tag_test(captureName, localDataPath, tagHz)
-% results = run_tag_test(captureName, localDataPath, tagHz)
+function results = RunTagData(captureName, localDataPath, tagHz)
+% results = RunTagData(captureName, localDataPath, tagHz)
 %
 % Function to run the tag test on Novelda radar data captures and visualize
 % the results. 
@@ -12,9 +12,9 @@ function results = run_tag_test(captureName, localDataPath, tagHz)
 % Outputs:
 %   results: Table containing the capture name, peak bin, and SNR (dB).
 
-[frameTot, framesBB, frameRate] = proc_frames(localDataPath, captureName);
-[captureFT, tagFT] = proc_fft(framesBB, frameRate, tagHz);
-[peakBin] = tag_cwt(tagFT, false);
+[frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
+[captureFT, tagFT] = ProcessFFT(framesBB, frameRate, tagHz);
+[peakBin] = TagLocateCWT(tagFT, false);
 
 frameCount = width(framesBB);
 
@@ -30,13 +30,13 @@ for i = (freqTag-2:1:freqTag+2)
     end
 end
 
-SNRdB = tag_snr(captureFT, freqIndex, peakBin);
+SNRdB = TagSNR(captureFT, freqIndex, peakBin);
 
 tableHeader = {'Capture Name', 'Peak Bin', 'SNR (dB)'};
 results = table({captureName}, peakBin, SNRdB, ...
     'VariableNames', tableHeader);
 
-viz_frames(frameTot, framesBB)
-viz_fft(captureFT, tagFT, frameRate)
+PlotFrames(frameTot, framesBB)
+PlotTag(captureFT, tagFT, frameRate)
 
 end

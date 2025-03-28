@@ -1,5 +1,5 @@
-function viz_box(rangeBins, dataName)
-% viz_box(x, dataName)
+function PlotBox(rangeBins, dataName)
+% PlotBox(x, dataName)
 %
 % Visualize the range bin consistency of the radar data.
 %

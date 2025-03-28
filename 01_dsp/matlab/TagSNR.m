@@ -1,5 +1,5 @@
-function SNRdb = tag_snr(captureFT, freqIndex, peakBin)
-% SNRdb = tag_snr(captureFT, freqIndex, peakBin)
+function SNRdb = TagSNR(captureFT, freqIndex, peakBin)
+% SNRdb = TagSNR(captureFT, freqIndex, peakBin)
 %
 % Function to calculate the signal-to-noise ratio (SNR) in decibels of a
 % tag signal in the FFT of radar data captures.

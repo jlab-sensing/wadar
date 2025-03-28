@@ -1,5 +1,5 @@
-function [tagPeakBin] = tag_correlation(correlatedTagFT, tagFT)
-% [tagPeakBin] = tag_correlation(correlatedTagFT, tagFT)
+function [tagPeakBin] = TagLocateCorrelation(correlatedTagFT, tagFT)
+% [tagPeakBin] = TagLocateCorrelation(correlatedTagFT, tagFT)
 %
 % Function to get the peak bin of the tag signal in the radar data capture. 
 % This function uses the correlatedTagFT and tagFT to find the peak bin of 

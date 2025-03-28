@@ -1,5 +1,5 @@
-function [frameTot, framesBB, frameRate] = proc_frames(localDataPath, captureName)
-% [frameTot, framesBB, captureFT, tagFT] = proc_frames(localDataPath, captureName, tagHz, frameRate)
+function [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName)
+% [frameTot, framesBB, captureFT, tagFT] = ProcessFrames(localDataPath, captureName, tagHz, frameRate)
 %
 % Function to process Novelda radar data captures. This function reads in a 
 % radar data capture file and processes the data to extract the radar frames

@@ -1,5 +1,5 @@
-function results = run_dual_tag_dataset(localDataPath, tag1Hz, tag2Hz, viz)
-% results = run_dual_tag_dataset(localDataPath, tag1Hz, tag2Hz)
+function results = RunDualTagDataset(localDataPath, tag1Hz, tag2Hz, viz)
+% results = RunDualTagDataset(localDataPath, tag1Hz, tag2Hz)
 %
 % Function to run the dual tag test on Novelda radar data captures and
 % visualize the results.
@@ -24,19 +24,19 @@ peakDifference = zeros(1, length(listOfCaptures));
 for i = 1:length(listOfCaptures)
     captureName = string(listOfCaptures(i));
 
-    [frameTot, framesBB, frameRate] = proc_frames(localDataPath, captureName);
+    [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
     
-    [captureFT, tag1FT] = proc_fft(framesBB, frameRate, tag1Hz);
-    [~, tag2FT] = proc_fft(framesBB, frameRate, tag2Hz);
+    [captureFT, tag1FT] = ProcessFFT(framesBB, frameRate, tag1Hz);
+    [~, tag2FT] = ProcessFFT(framesBB, frameRate, tag2Hz);
     
-    peakBin1(i) = tag_cwt(tag1FT, false);
-    peakBin2(i) = tag_cwt(tag2FT, false);
+    peakBin1(i) = TagLocateCWT(tag1FT, false);
+    peakBin2(i) = TagLocateCWT(tag2FT, false);
     
-    [~, freq1Index] = tag_index(captureFT, frameRate, tag1Hz);
-    [~, freq2Index] = tag_index(captureFT, frameRate, tag2Hz);
+    [~, freq1Index] = TagIndex(captureFT, frameRate, tag1Hz);
+    [~, freq2Index] = TagIndex(captureFT, frameRate, tag2Hz);
     
-    SNRdB1(i) = tag_snr(captureFT, freq1Index, peakBin1(i));
-    SNRdB2(i) = tag_snr(captureFT, freq2Index, peakBin2(i));
+    SNRdB1(i) = TagSNR(captureFT, freq1Index, peakBin1(i));
+    SNRdB2(i) = TagSNR(captureFT, freq2Index, peakBin2(i));
 
     peakDifference(i) = abs(peakBin1(i) - peakBin2(i));
 end
@@ -50,12 +50,12 @@ results = table(transpose(listOfCaptures), transpose(peakBin1), transpose(SNRdB1
     'VariableNames', tableHeader);
 
 if (viz)
-    viz_frames(frameTot, framesBB)
-    viz_dual_tag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
+    PlotFrames(frameTot, framesBB)
+    PlotDualTag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
     
     dataName = localDataPath;
     
-    viz_box(peakDifference,dataName);
+    PlotBox(peakDifference,dataName);
 end
 
 end

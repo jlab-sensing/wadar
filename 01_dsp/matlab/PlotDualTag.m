@@ -1,5 +1,5 @@
-function viz_dual_tag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
-% viz_dual_tag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
+function PlotDualTag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
+% PlotDualTag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
 %
 % Function to visualize the FFT of the radar data captures and the isolated
 % tag frequencies.

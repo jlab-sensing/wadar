@@ -10,13 +10,13 @@ captureName = '2024-4-17_DualTag7980_T3retest2_C1.frames';
 tagHz = 79;
 
 % First, we will process the radar frames to extract the baseband signal and the raw radar frames
-[frameTot, framesBB, frameRate] = proc_frames('/data', '2024-4-17_DualTag7980_T3retest2_C1.frames');
+[frameTot, framesBB, frameRate] = ProcessFrames('/data', '2024-4-17_DualTag7980_T3retest2_C1.frames');
 
 % Next, we will process the FFT of the radar frames
-[captureFT, tagFT] = proc_fft(framesBB, frameRate, tagHz);
+[captureFT, tagFT] = ProcessFFT(framesBB, frameRate, tagHz);
 
-[tagPeakBinCWT] = tag_cwt(tagFT, false);
-[tagPeakBinCorrelation] = tag_correlation(tagFT, tagFT);
+[tagPeakBinCWT] = TagLocateCWT(tagFT, false);
+[tagPeakBinCorrelation] = TagLocateCorrelation(tagFT, tagFT);
 
 fprintf("CWT method results in peak bin #%d\n", tagPeakBinCWT)
 fprintf("Correlation method results in peak bin #%d\n", tagPeakBinCorrelation)

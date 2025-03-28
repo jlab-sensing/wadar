@@ -1,5 +1,5 @@
-function results = run_dual_tag_test(captureName, localDataPath, tag1Hz, tag2Hz)
-% results = run_dual_tag_test(captureName, localDataPath, tag1Hz, tag2Hz)
+function results = RunDualTagData(captureName, localDataPath, tag1Hz, tag2Hz)
+% results = RunDualTagData(captureName, localDataPath, tag1Hz, tag2Hz)
 %
 % Function to run the dual tag test on Novelda radar data captures and
 % visualize the results.
@@ -12,19 +12,19 @@ function results = run_dual_tag_test(captureName, localDataPath, tag1Hz, tag2Hz)
 % Outputs:
 %   results: Table containing the capture name, peak bins, and SNR (dB).
 
-[frameTot, framesBB, frameRate] = proc_frames(localDataPath, captureName);
+[frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
 
-[captureFT, tag1FT] = proc_fft(framesBB, frameRate, tag1Hz);
-[~, tag2FT] = proc_fft(framesBB, frameRate, tag2Hz);
+[captureFT, tag1FT] = ProcessFFT(framesBB, frameRate, tag1Hz);
+[~, tag2FT] = ProcessFFT(framesBB, frameRate, tag2Hz);
 
-[peakBin1] = tag_cwt(tag1FT, false);
-[peakBin2] = tag_cwt(tag2FT, false);
+[peakBin1] = TagLocateCWT(tag1FT, false);
+[peakBin2] = TagLocateCWT(tag2FT, false);
 
-[~, freq1Index] = tag_index(captureFT, frameRate, tag1Hz);
-[~, freq2Index] = tag_index(captureFT, frameRate, tag2Hz);
+[~, freq1Index] = TagIndex(captureFT, frameRate, tag1Hz);
+[~, freq2Index] = TagIndex(captureFT, frameRate, tag2Hz);
 
-SNRdB1 = tag_snr(captureFT, freq1Index, peakBin1);
-SNRdB2 = tag_snr(captureFT, freq2Index, peakBin2);
+SNRdB1 = TagSNR(captureFT, freq1Index, peakBin1);
+SNRdB2 = TagSNR(captureFT, freq2Index, peakBin2);
 
 peakDifference = abs(peakBin1 - peakBin2);
 
@@ -36,7 +36,7 @@ tableHeader = {'Capture Name', strcat(tag1Name, ' Peak Bin'), strcat(tag1Name, '
 results = table({captureName}, peakBin1, SNRdB1, peakBin2, SNRdB2, peakDifference, ...
     'VariableNames', tableHeader);
 
-viz_frames(frameTot, framesBB)
-viz_dual_tag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
+PlotFrames(frameTot, framesBB)
+PlotDualTag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
 
 end

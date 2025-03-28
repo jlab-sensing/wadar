@@ -1,5 +1,5 @@
-function [captureFT, tagFT] = proc_fft(framesBB, frameRate, tagHz)
-% [captureFT, tagFT] = proc_fft(framesBB, frameRate, tagHz)
+function [captureFT, tagFT] = ProcessFFT(framesBB, frameRate, tagHz)
+% [captureFT, tagFT] = ProcessFFT(framesBB, frameRate, tagHz)
 %
 % Function to process the FFT of Novelda radar data captures. This function reads in
 % the already processed radar data frames and processes the data to extract the FFT
@@ -20,6 +20,6 @@ frameCount = width(framesBB);
 captureFT = fft(framesBB, frameCount , 2); 
 
 % Find Tag FT
-[tagFT, ~] = tag_index(captureFT, frameRate, tagHz);
+[tagFT, ~] = TagIndex(captureFT, frameRate, tagHz);
 
 end

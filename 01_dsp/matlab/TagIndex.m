@@ -1,5 +1,5 @@
-function [tagFT, tagIndex] = tag_index(captureFT, frameRate, tagHz)
-% [tagFT, tagIndex] = tag_index(captureFT, frameRate, tagHz)
+function [tagFT, tagIndex] = TagIndex(captureFT, frameRate, tagHz)
+% [tagFT, tagIndex] = TagIndex(captureFT, frameRate, tagHz)
 %
 % Function to find the tag frequency index in the FFT of the radar data
 % captures. 
