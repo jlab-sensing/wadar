@@ -52,4 +52,8 @@ results = table(transpose(listOfCaptures), transpose(peakBin1), transpose(SNRdB1
 viz_frames(frameTot, framesBB)
 viz_dual_tag(captureFT, tag1FT, tag2FT, tag1Name, tag2Name, frameRate)
 
+dataName = localDataPath;
+
+viz_box(peakDifference,dataName);
+
 end
