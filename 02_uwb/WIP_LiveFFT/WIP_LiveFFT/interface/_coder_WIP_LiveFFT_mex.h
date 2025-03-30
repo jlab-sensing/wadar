@@ -5,7 +5,7 @@
  * File: _coder_WIP_LiveFFT_mex.h
  *
  * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 30-Mar-2025 02:59:58
+ * C/C++ source code generated on  : 30-Mar-2025 04:43:50
  */
 
 #ifndef _CODER_WIP_LIVEFFT_MEX_H
@@ -26,7 +26,7 @@ MEXFUNCTION_LINKAGE void mexFunction(int32_T nlhs, mxArray *plhs[],
 
 emlrtCTX mexFunctionCreateRootTLS(void);
 
-void unsafe_WIP_LiveFFT_mexFunction(int32_T nlhs, mxArray *plhs[2],
+void unsafe_WIP_LiveFFT_mexFunction(int32_T nlhs, mxArray *plhs[1],
                                     int32_T nrhs, const mxArray *prhs[1]);
 
 #ifdef __cplusplus

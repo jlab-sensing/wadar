@@ -5,7 +5,7 @@
  * File: main.c
  *
  * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 30-Mar-2025 02:59:58
+ * C/C++ source code generated on  : 30-Mar-2025 04:43:50
  */
 
 /*************************************************************************/
@@ -40,23 +40,23 @@
 #include "rt_nonfinite.h"
 
 /* Function Declarations */
-static void argInit_512x1_real_T(double result[512]);
+static void argInit_1x1024000_real_T(double result[1024000]);
 
 static double argInit_real_T(void);
 
 /* Function Definitions */
 /*
- * Arguments    : double result[512]
+ * Arguments    : double result[1024000]
  * Return Type  : void
  */
-static void argInit_512x1_real_T(double result[512])
+static void argInit_1x1024000_real_T(double result[1024000])
 {
-  int idx0;
+  int idx1;
   /* Loop over the array to initialize each element. */
-  for (idx0 = 0; idx0 < 512; idx0++) {
+  for (idx1 = 0; idx1 < 1024000; idx1++) {
     /* Set the value of the array element.
 Change this value to the value that the application requires. */
-    result[idx0] = argInit_real_T();
+    result[idx1] = argInit_real_T();
   }
 }
 
@@ -95,14 +95,13 @@ You do not need to do this more than one time. */
  */
 void main_WIP_LiveFFT(void)
 {
-  double b_dv[512];
-  double peakLocation;
-  double peakStrength;
+  static double b_dv[1024000];
+  double outFFT[2000];
   /* Initialize function 'WIP_LiveFFT' input arguments. */
-  /* Initialize function input argument 'newFrameBB'. */
+  /* Initialize function input argument 'frameTotFlat'. */
   /* Call the entry-point 'WIP_LiveFFT'. */
-  argInit_512x1_real_T(b_dv);
-  WIP_LiveFFT(b_dv, &peakStrength, &peakLocation);
+  argInit_1x1024000_real_T(b_dv);
+  WIP_LiveFFT(b_dv, outFFT);
 }
 
 /*

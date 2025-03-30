@@ -5,13 +5,11 @@
  * File: WIP_LiveFFT_initialize.c
  *
  * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 30-Mar-2025 02:59:58
+ * C/C++ source code generated on  : 30-Mar-2025 04:43:50
  */
 
 /* Include Files */
 #include "WIP_LiveFFT_initialize.h"
-#include "WIP_LiveFFT.h"
-#include "WIP_LiveFFT_data.h"
 #include "rt_nonfinite.h"
 
 /* Function Definitions */
@@ -21,8 +19,6 @@
  */
 void WIP_LiveFFT_initialize(void)
 {
-  WIP_LiveFFT_init();
-  isInitialized_WIP_LiveFFT = true;
 }
 
 /*

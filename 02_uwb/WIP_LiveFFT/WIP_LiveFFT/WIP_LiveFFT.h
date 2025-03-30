@@ -5,7 +5,7 @@
  * File: WIP_LiveFFT.h
  *
  * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 30-Mar-2025 02:59:58
+ * C/C++ source code generated on  : 30-Mar-2025 04:43:50
  */
 
 #ifndef WIP_LIVEFFT_H
@@ -21,10 +21,8 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-extern void WIP_LiveFFT(const double newFrameBB[512], double *peakStrength,
-                        double *peakLocation);
-
-void WIP_LiveFFT_init(void);
+extern void WIP_LiveFFT(const double frameTotFlat[1024000],
+                        double outFFT[2000]);
 
 #ifdef __cplusplus
 }

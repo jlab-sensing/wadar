@@ -2,7 +2,7 @@
 ## Makefile generated for component 'WIP_LiveFFT'. 
 ## 
 ## Makefile     : WIP_LiveFFT_rtw.mk
-## Generated on : Sun Mar 30 03:00:08 2025
+## Generated on : Sun Mar 30 04:44:01 2025
 ## Final product: ./WIP_LiveFFT.lib
 ## Product type : static-library
 ## 
@@ -175,7 +175,7 @@ DEFINES = $(DEFINES_) $(DEFINES_CUSTOM) $(DEFINES_SKIPFORSIL) $(DEFINES_STANDARD
 ## SOURCE FILES
 ###########################################################################
 
-SRCS = WIP_LiveFFT_data.c rt_nonfinite.c rtGetNaN.c rtGetInf.c WIP_LiveFFT_initialize.c WIP_LiveFFT_terminate.c WIP_LiveFFT.c mod.c fft.c abs.c minOrMax.c FFTImplementationCallback.c
+SRCS = WIP_LiveFFT_data.c rt_nonfinite.c rtGetNaN.c rtGetInf.c WIP_LiveFFT_initialize.c WIP_LiveFFT_terminate.c WIP_LiveFFT.c fft.c abs.c minOrMax.c FFTImplementationCallback.c
 
 ALL_SRCS = $(SRCS)
 
@@ -183,7 +183,7 @@ ALL_SRCS = $(SRCS)
 ## OBJECTS
 ###########################################################################
 
-OBJS = WIP_LiveFFT_data.c.o rt_nonfinite.c.o rtGetNaN.c.o rtGetInf.c.o WIP_LiveFFT_initialize.c.o WIP_LiveFFT_terminate.c.o WIP_LiveFFT.c.o mod.c.o fft.c.o abs.c.o minOrMax.c.o FFTImplementationCallback.c.o
+OBJS = WIP_LiveFFT_data.c.o rt_nonfinite.c.o rtGetNaN.c.o rtGetInf.c.o WIP_LiveFFT_initialize.c.o WIP_LiveFFT_terminate.c.o WIP_LiveFFT.c.o fft.c.o abs.c.o minOrMax.c.o FFTImplementationCallback.c.o
 
 ALL_OBJS = $(OBJS)
 
@@ -360,10 +360,6 @@ WIP_LiveFFT_terminate.c.o : WIP_LiveFFT_terminate.c
 
 
 WIP_LiveFFT.c.o : WIP_LiveFFT.c
-	$(CC) $(CFLAGS) -o "$@" "$<"
-
-
-mod.c.o : mod.c
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 

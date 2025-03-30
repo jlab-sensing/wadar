@@ -5,7 +5,7 @@
  * File: _coder_WIP_LiveFFT_info.c
  *
  * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 30-Mar-2025 02:59:58
+ * C/C++ source code generated on  : 30-Mar-2025 04:43:50
  */
 
 /* Include Files */
@@ -61,13 +61,13 @@ mxArray *emlrtMexFcnProperties(void)
   emlrtSetField(xEntryPoints, 0, "NumberOfInputs",
                 emlrtMxCreateDoubleScalar(1.0));
   emlrtSetField(xEntryPoints, 0, "NumberOfOutputs",
-                emlrtMxCreateDoubleScalar(2.0));
+                emlrtMxCreateDoubleScalar(1.0));
   emlrtSetField(xEntryPoints, 0, "ConstantInputs", xInputs);
   emlrtSetField(
       xEntryPoints, 0, "ResolvedFilePath",
       emlrtMxCreateString("C:\\jlab\\wadar\\01_dsp\\matlab\\WIP_LiveFFT.m"));
   emlrtSetField(xEntryPoints, 0, "TimeStamp",
-                emlrtMxCreateDoubleScalar(739706.12121527782));
+                emlrtMxCreateDoubleScalar(739706.195925926));
   emlrtSetField(xEntryPoints, 0, "Constructor",
                 emlrtMxCreateLogicalScalar(false));
   emlrtSetField(xEntryPoints, 0, "Visible", emlrtMxCreateLogicalScalar(true));

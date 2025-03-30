@@ -5,7 +5,7 @@
  * File: _coder_WIP_LiveFFT_api.c
  *
  * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 30-Mar-2025 02:59:58
+ * C/C++ source code generated on  : 30-Mar-2025 04:43:50
  */
 
 /* Include Files */
@@ -28,30 +28,31 @@ emlrtContext emlrtContextGlobal = {
 };
 
 /* Function Declarations */
-static real_T (*b_emlrt_marshallIn(const emlrtStack *sp, const mxArray *u,
-                                   const emlrtMsgIdentifier *parentId))[512];
+static real_T (
+    *b_emlrt_marshallIn(const emlrtStack *sp, const mxArray *u,
+                        const emlrtMsgIdentifier *parentId))[1024000];
 
 static real_T (*c_emlrt_marshallIn(const emlrtStack *sp, const mxArray *src,
-                                   const emlrtMsgIdentifier *msgId))[512];
+                                   const emlrtMsgIdentifier *msgId))[1024000];
 
 static void emlrtExitTimeCleanupDtorFcn(const void *r);
 
 static real_T (*emlrt_marshallIn(const emlrtStack *sp, const mxArray *nullptr,
-                                 const char_T *identifier))[512];
+                                 const char_T *identifier))[1024000];
 
-static const mxArray *emlrt_marshallOut(const real_T u);
+static const mxArray *emlrt_marshallOut(real_T u[2000]);
 
 /* Function Definitions */
 /*
  * Arguments    : const emlrtStack *sp
  *                const mxArray *u
  *                const emlrtMsgIdentifier *parentId
- * Return Type  : real_T (*)[512]
+ * Return Type  : real_T (*)[1024000]
  */
 static real_T (*b_emlrt_marshallIn(const emlrtStack *sp, const mxArray *u,
-                                   const emlrtMsgIdentifier *parentId))[512]
+                                   const emlrtMsgIdentifier *parentId))[1024000]
 {
-  real_T(*y)[512];
+  real_T(*y)[1024000];
   y = c_emlrt_marshallIn(sp, emlrtAlias(u), parentId);
   emlrtDestroyArray(&u);
   return y;
@@ -61,18 +62,18 @@ static real_T (*b_emlrt_marshallIn(const emlrtStack *sp, const mxArray *u,
  * Arguments    : const emlrtStack *sp
  *                const mxArray *src
  *                const emlrtMsgIdentifier *msgId
- * Return Type  : real_T (*)[512]
+ * Return Type  : real_T (*)[1024000]
  */
 static real_T (*c_emlrt_marshallIn(const emlrtStack *sp, const mxArray *src,
-                                   const emlrtMsgIdentifier *msgId))[512]
+                                   const emlrtMsgIdentifier *msgId))[1024000]
 {
-  static const int32_T dims = 512;
-  real_T(*ret)[512];
-  int32_T i;
-  boolean_T b = false;
-  emlrtCheckVsBuiltInR2012b((emlrtConstCTX)sp, msgId, src, "double", false, 1U,
-                            (const void *)&dims, &b, &i);
-  ret = (real_T(*)[512])emlrtMxGetData(src);
+  static const int32_T dims[2] = {1, 1024000};
+  real_T(*ret)[1024000];
+  int32_T iv[2];
+  boolean_T bv[2] = {false, false};
+  emlrtCheckVsBuiltInR2012b((emlrtConstCTX)sp, msgId, src, "double", false, 2U,
+                            (const void *)&dims[0], &bv[0], &iv[0]);
+  ret = (real_T(*)[1024000])emlrtMxGetData(src);
   emlrtDestroyArray(&src);
   return ret;
 }
@@ -90,13 +91,13 @@ static void emlrtExitTimeCleanupDtorFcn(const void *r)
  * Arguments    : const emlrtStack *sp
  *                const mxArray *nullptr
  *                const char_T *identifier
- * Return Type  : real_T (*)[512]
+ * Return Type  : real_T (*)[1024000]
  */
 static real_T (*emlrt_marshallIn(const emlrtStack *sp, const mxArray *nullptr,
-                                 const char_T *identifier))[512]
+                                 const char_T *identifier))[1024000]
 {
   emlrtMsgIdentifier thisId;
-  real_T(*y)[512];
+  real_T(*y)[1024000];
   thisId.fIdentifier = (const char_T *)identifier;
   thisId.fParent = NULL;
   thisId.bParentIsCell = false;
@@ -106,45 +107,45 @@ static real_T (*emlrt_marshallIn(const emlrtStack *sp, const mxArray *nullptr,
 }
 
 /*
- * Arguments    : const real_T u
+ * Arguments    : real_T u[2000]
  * Return Type  : const mxArray *
  */
-static const mxArray *emlrt_marshallOut(const real_T u)
+static const mxArray *emlrt_marshallOut(real_T u[2000])
 {
+  static const int32_T iv[2] = {0, 0};
+  static const int32_T iv1[2] = {1, 2000};
   const mxArray *m;
   const mxArray *y;
   y = NULL;
-  m = emlrtCreateDoubleScalar(u);
+  m = emlrtCreateNumericArray(2, (const void *)&iv[0], mxDOUBLE_CLASS, mxREAL);
+  emlrtMxSetData((mxArray *)m, &u[0]);
+  emlrtSetDimensions((mxArray *)m, &iv1[0], 2);
   emlrtAssign(&y, m);
   return y;
 }
 
 /*
  * Arguments    : const mxArray *prhs
- *                int32_T nlhs
- *                const mxArray *plhs[2]
+ *                const mxArray **plhs
  * Return Type  : void
  */
-void WIP_LiveFFT_api(const mxArray *prhs, int32_T nlhs, const mxArray *plhs[2])
+void WIP_LiveFFT_api(const mxArray *prhs, const mxArray **plhs)
 {
   emlrtStack st = {
       NULL, /* site */
       NULL, /* tls */
       NULL  /* prev */
   };
-  real_T(*newFrameBB)[512];
-  real_T peakLocation;
-  real_T peakStrength;
+  real_T(*frameTotFlat)[1024000];
+  real_T(*outFFT)[2000];
   st.tls = emlrtRootTLSGlobal;
+  outFFT = (real_T(*)[2000])mxMalloc(sizeof(real_T[2000]));
   /* Marshall function inputs */
-  newFrameBB = emlrt_marshallIn(&st, emlrtAlias(prhs), "newFrameBB");
+  frameTotFlat = emlrt_marshallIn(&st, emlrtAlias(prhs), "frameTotFlat");
   /* Invoke the target function */
-  WIP_LiveFFT(*newFrameBB, &peakStrength, &peakLocation);
+  WIP_LiveFFT(*frameTotFlat, *outFFT);
   /* Marshall function outputs */
-  plhs[0] = emlrt_marshallOut(peakStrength);
-  if (nlhs > 1) {
-    plhs[1] = emlrt_marshallOut(peakLocation);
-  }
+  *plhs = emlrt_marshallOut(*outFFT);
 }
 
 /*

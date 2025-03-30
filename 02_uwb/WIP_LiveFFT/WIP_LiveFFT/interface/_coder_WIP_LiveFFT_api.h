@@ -5,7 +5,7 @@
  * File: _coder_WIP_LiveFFT_api.h
  *
  * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 30-Mar-2025 02:59:58
+ * C/C++ source code generated on  : 30-Mar-2025 04:43:50
  */
 
 #ifndef _CODER_WIP_LIVEFFT_API_H
@@ -26,10 +26,9 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-void WIP_LiveFFT(real_T newFrameBB[512], real_T *peakStrength,
-                 real_T *peakLocation);
+void WIP_LiveFFT(real_T frameTotFlat[1024000], real_T outFFT[2000]);
 
-void WIP_LiveFFT_api(const mxArray *prhs, int32_T nlhs, const mxArray *plhs[2]);
+void WIP_LiveFFT_api(const mxArray *prhs, const mxArray **plhs);
 
 void WIP_LiveFFT_atexit(void);
 

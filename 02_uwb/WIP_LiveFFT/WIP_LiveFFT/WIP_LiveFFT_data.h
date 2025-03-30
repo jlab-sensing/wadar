@@ -5,7 +5,7 @@
  * File: WIP_LiveFFT_data.h
  *
  * MATLAB Coder version            : 24.2
- * C/C++ source code generated on  : 30-Mar-2025 02:59:58
+ * C/C++ source code generated on  : 30-Mar-2025 04:43:50
  */
 
 #ifndef WIP_LIVEFFT_DATA_H
@@ -18,7 +18,6 @@
 
 /* Variable Declarations */
 extern const double dv[2049];
-extern bool isInitialized_WIP_LiveFFT;
 
 #endif
 /*
