@@ -1,0 +1,10 @@
+[
+  {"DACMin" : 1000},
+  {"DACMax" : 7000},
+  {"DACStep" : 32},
+  {"Iterations" : 200},
+  {"PulsesPerStep" : 16},
+  {"FrameStitch" : 1},
+  {"ClkDivider" : 1},
+  {"SamplingRate" : 1}
+]
