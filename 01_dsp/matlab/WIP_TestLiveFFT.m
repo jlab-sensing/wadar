@@ -5,24 +5,19 @@ clear all; close; clc
 localDataPath = '/data';
 captureName = '2024-5-3_DualTag8060_TConfig3_C2.frames';
 
-[frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
+[frameTot, ~, frameRate] = ProcessFrames(localDataPath, captureName);
 
-frameCount = width(framesBB);
+frameCount = width(frameTot);
 
 totalFramesBB = [];
 
-for i = 1:length(frameTot)
-    newFrameBB = framesBB(:, i);
-    WIP_LiveFFT(abs(newFrameBB));
+for i = 1:1
+    frameSnippet = frameTot(:, 1:1000);
+    [peakStrength, peakLocation] = WIP_LiveFFT(frameSnippet);
+    fprintf("1: %.2f %.2f\n", peakStrength, peakLocation)
     
-    % totalFramesBB(:, end + 1) = newFrameBB;
-    % if mod(i, 100) == 0
-    %     captureFT = fft(totalFramesBB, frameCount , 2); 
-    % 
-    %     liveOutput = max(abs(captureFT));
-    %     liveOutput(1:100) = zeros(1, 100);
-    %     liveOutput(end-99:end) = zeros(1, 100);
-    % 
-    %     plot(liveOutput); hold on;
-    % end
+    frameSnippet = frameTot(:, 1001:end);
+    [peakStrength, peakLocation] = WIP_LiveFFT(frameSnippet);
+    fprintf("3: %.2f %.2f\n", peakStrength, peakLocation)
+    
 end
