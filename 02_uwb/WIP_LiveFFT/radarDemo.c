@@ -86,6 +86,7 @@ GNU GCC
 #include <getopt.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <time.h>
 
 // SalsaLib include
 #include "chipotleHelper.h"
@@ -97,6 +98,13 @@ GNU GCC
 // Local include
 #include "../../Common/inc/utility.h"
 #include "../../Common/inc/normalize.h"
+
+// From WIP_LiveFFT.lib
+#include "WIP_LiveFFT.h"
+#include "WIP_LiveFFT_terminate.h"
+#include "rt_nonfinite.h"
+
+#define CLOCKID CLOCK_REALTIME
 
 // -----------------------------------------------------------------------------
 // Special Flags
@@ -143,7 +151,8 @@ static int numberOfSamplers;
 
 // Pointers to arrays for signal storage
 static uint32_t * radarCounters;
-static double * radarScaled;
+static uint32_t * radarFrames;
+static double *timedelta;
 
 // -----------------------------------------------------------------------------
 // Utility Functions
@@ -160,6 +169,14 @@ Usage()
   printf("\n");
   printf("If the -o option is used, the output file will be a JSON file, ");
   printf("but the .json extension will not be automatically added.\n\n");
+}
+
+/* Returns the number of milliseconds elapsed */
+inline
+double ms_diff(struct timespec *end, struct timespec *start) {
+  double ms = end->tv_nsec/1000000.0 - start->tv_nsec/1000000.0;
+  ms += end->tv_sec*1000.0 - start->tv_sec*1000.0;
+  return ms;
 }
 
 // =============================================================================
@@ -179,7 +196,7 @@ int main(int argc, char **argv)
 
   // Loop counters
   int i;
-  int numTrials = 1;
+  int numTrials = 2000;
 
   // Used to determine when to quit (based on user keypress)
   int quit = 0;
@@ -198,6 +215,12 @@ int main(int argc, char **argv)
   const char *inFile_stage1 = "stage1.json";
   const char *inFile_stage2 = "stage2.json";
   const char *outFile;
+
+  double b_dv[2000 * 512];  // Input to WIP_LiveFFT
+  double outFFT[2000];      // Output from WIP_LiveFFT  
+
+  int frameRate = 200;
+  float fpsEst;
 
   //
   // Initiate a radar handle
@@ -290,7 +313,8 @@ int main(int argc, char **argv)
   // Allocate memory for signal storage
   //  
   radarCounters = (uint32_t *)malloc(numberOfSamplers * sizeof (uint32_t));
-  radarScaled = (double *)malloc(numberOfSamplers * sizeof (double));
+  radarFrames = (uint32_t *)malloc(2000 * 512 * sizeof (uint32_t));
+  timedelta = (double *) malloc(2000 * sizeof(double));
 
 
 
@@ -308,6 +332,58 @@ int main(int argc, char **argv)
 
 
   //
+  // Operate the radar until uses quits
+  //
+  if (quitAfterNTrials) {
+    fprintf(stderr, "Starting radar loop... (#trials = %d)\n", numTrials);
+  } else {
+    fprintf(stderr, "Starting radar loop... (hit ESC key to quit)\n");
+  }
+
+  struct timespec now, start, tstart = {0};
+  double ms_wait;
+  clock_gettime(CLOCKID, &start);
+
+  int t;
+  for (t = 0; t < numTrials; t++) {
+    clock_gettime(CLOCKID, &tstart);
+    //printf("%f\n",ms_diff(&tstart, &end));
+    timedelta[t] = (double)(ms_diff(&tstart, &start)/1000.0);
+
+    // Get a radar frame
+    status = radarHelper_getFrameRaw(rh, radarFrames + t * 512, 512);
+    if (status) return 1;
+
+    for (i = 0; i < 512; i++)
+    {
+      b_dv[i + t * 512] = (double)radarFrames[i + t * 512];
+    }
+
+    do {
+      clock_gettime(CLOCKID, &now);
+       ms_wait = (t+1) * 1000.0/frameRate - ms_diff(&now, &start);
+   } while (ms_wait > 0);
+
+  }
+
+  //frames per second
+  fpsEst = numTrials/(ms_diff(&now, &start)/1000.0);
+  fprintf(stderr, "estimated fps: %f\n", fpsEst);
+
+  /* Call the entry-point 'WIP_LiveFFT'. */
+  WIP_LiveFFT(b_dv, outFFT);
+
+  double maxOutFFT = 0;
+  double minOutFFT = 100000000000;
+  for (i = 100; i < 2000 - 100; i++)
+  {
+    if (outFFT[i] > maxOutFFT) maxOutFFT = outFFT[i];
+    if (outFFT[i] < minOutFFT) minOutFFT = outFFT[i];
+  }
+  printf("maxOutFFT = %f\n", maxOutFFT);
+  printf("minOutFFT = %f\n", minOutFFT);
+
+  //
   // Setup Gnuplot if necessary
   //
   FILE * gnuplotPipe;
@@ -320,81 +396,21 @@ int main(int argc, char **argv)
     fprintf(gnuplotPipe, "set title \"%s - Radar Demo\" \n", CAPE_NAME);
     fprintf(gnuplotPipe, "set xlabel \"sample#\" \n");
     fprintf(gnuplotPipe, "set ylabel \"Normalized DAC\" \n");
-    fprintf(gnuplotPipe, "set xrange [0:%d] \n", numberOfSamplers - 1);
-#ifdef SHOW_FULL_Y_AXIS_RANGE
-    fprintf(gnuplotPipe, "set yrange [%d:%d] \n", GNUPLOT_SCALED_Y_MIN, GNUPLOT_SCALED_Y_MAX);
-#else
-    fprintf(gnuplotPipe, "set yrange [%d:%d] \n", GNUPLOT_PRACTICAL_Y_MIN, GNUPLOT_PRACTICAL_Y_MAX);
-#endif
+    fprintf(gnuplotPipe, "set xrange [0:%d] \n", 2000 - 1);
+    fprintf(gnuplotPipe, "set yrange [%f:%f] \n", minOutFFT, maxOutFFT);
   }
 
-
-
-  //
-  // Operate the radar until uses quits
-  //
-  if (quitAfterNTrials) {
-    fprintf(stderr, "Starting radar loop... (#trials = %d)\n", numTrials);
-  } else {
-    fprintf(stderr, "Starting radar loop... (hit ESC key to quit)\n");
-  }
-
-  // This loops forever until user presses the ESC key to quit
-  nonblock(NB_ENABLE);
-  while(!quit)
-  {
-    // Get user input
-    usleep(1);
-    quit = kbhit();
-    if (quit != 0)
+  if (showGnuPlot) {
+    // Plot the radar frame
+    fprintf(gnuplotPipe, "plot '-' using 1:2 with lines \n");
+    for (i = 0; i < 2000 - 1; i++)
     {
-      c = fgetc(stdin);
-      if (0x1B == c) {  /* ESC key is 0x1B */
-        quit = 1;
-      }
+      fprintf(gnuplotPipe, "%lf %lf\n", (double)i, (double)outFFT[i]);
     }
-    
-
-
-    // Turn ON the Blue LED while getting a frame
-    chipotleHelper_setLED(LED_Blue, 1);
-
-    // Get a radar frame
-    status = radarHelper_getFrameRaw(rh, radarCounters, numberOfSamplers);
-    if (status) return 1;
-    
-    // Convert radar counters to double before scaling
-    for (i = 0; i < numberOfSamplers; i++) {
-      radarScaled[i] = (double)radarCounters[i];
-    }
-    
-    // Scale radar counters into DAC range (0 - 8191)
-    normalizeDAC(rh, radarScaled, radarScaled, numberOfSamplers);
-
-    // Turn OFF the Blue LED while getting a frame
-    chipotleHelper_setLED(LED_Blue, 0);
-
-
-    if (showGnuPlot) {
-      // Plot the radar frame
-      fprintf(gnuplotPipe, "plot '-' using 1:2 with lines \n");
-      for (i = 0; i < numberOfSamplers - 1; i++)
-      {
-        fprintf(gnuplotPipe, "%lf %lf\n", (double)i, (double)radarScaled[i]);
-      }
-      fprintf(gnuplotPipe, "e\n");
-      fflush(gnuplotPipe);
-    }
-
-
-
-    if (quitAfterNTrials) {
-      numTrials--;
-
-      // Break out of while loop if we've run enough trials
-      if (numTrials == 0) break;
-    }
+    fprintf(gnuplotPipe, "e\n");
+    fflush(gnuplotPipe);
   }
+
   nonblock(NB_DISABLE);
 
   //
@@ -412,7 +428,9 @@ int main(int argc, char **argv)
 
   // Free memory allocated for radar signals
   free (radarCounters);
-  free (radarScaled);
+  free (radarFrames);
+
+  WIP_LiveFFT_terminate();
 
   return 0;
 }

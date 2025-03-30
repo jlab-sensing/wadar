@@ -15,7 +15,7 @@ LDFLAGS=-L$(SALSA_LIB_DIR)/libRadarlib3.so -lRadarlib3 \
 -L$(SALSA_LIB_DIR)/chipotleHelper.so -lchipotleHelper
 
 all: radarDemo.o utility.o normalize.o
-	$(CC) $(CFLAGS) radarDemo.o utility.o normalize.o $(LDFLAGS) -o RadarDemo
+	$(CC) $(CFLAGS) radarDemo.o utility.o normalize.o $(LDFLAGS) WIP_LiveFFT.lib -o RadarDemo -lm
 
 radarDemo.o: radarDemo.c $(UTILITY_DIR)/inc/utility.h $(UTILITY_DIR)/inc/normalize.h
 	$(CC) $(CFLAGS) -c radarDemo.c $(LDFLAGS)

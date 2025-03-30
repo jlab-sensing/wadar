@@ -3,7 +3,7 @@
 clear all; close; clc
 
 localDataPath = '/data';
-captureName = '2024-4-17_DualTag7980_T3retest2_C1.frames';
+captureName = 'comp1.frames';
 
 [frameTot, ~, frameRate] = ProcessFrames(localDataPath, captureName);
 
