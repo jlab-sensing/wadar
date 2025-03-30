@@ -6,11 +6,11 @@ close all; clear; clc
 
 % You can change these parameters to match the radar capture you want to
 localDataPath = '/data';
-captureName = '2024-4-17_DualTag7980_T3retest2_C1.frames';
+captureName = 'test1.frames';
 tagHz = 80;
 
 % First, we will process the radar frames to extract the baseband signal and the raw radar frames
-[frameTot, framesBB, frameRate] = ProcessFrames('/data', '2024-4-17_DualTag7980_T3retest2_C1.frames');
+[frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
 
 % Next, we will process the FFT of the radar frames
 [captureFT, tagFT] = ProcessFFT(framesBB, frameRate, tagHz);

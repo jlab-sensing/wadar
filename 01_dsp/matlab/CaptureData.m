@@ -25,10 +25,14 @@ arguments
     radarType = 'Chipotle'
 end
 
+if localDataPath(1) == '/'
+    error("ERROR: Do not preface local data path with /")
+end
+
 % Data path generation
 [~, hostname] = system('whoami');
 hostname(end) = '';
-fullDataPath = sprintf("%s@192.168.7.1:%s", hostname, localDataPath);
+fullDataPath = sprintf("%s@192.168.7.1:%s/%s", hostname, pwd, localDataPath);
 
 % Check for existing files with the same name to prevent overwrite
 existingFiles = dir(localDataPath);
@@ -48,7 +52,10 @@ frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c
     frameLoggerOptions);
 [status,~] = system(frameLoggerCommand);
 
-pause(frameCount/frameRate + frameCount/frameRate/5);
+waitTime = frameCount/frameRate + frameCount/frameRate;
+fprintf("Radar scan in progress. Expected wait time is %.2f seconds.\n", waitTime);
+pause(waitTime);
+fprintf("Checking data transfer success.\n")
 
 % Verify that the capture is saved
 i = 1;
@@ -82,5 +89,7 @@ if (~strcmp(localchecksum, md5checksum))
     fprintf('BBB checksum is %s.\n', md5checksum);
     error('ERROR: There has been an error in the file transfer. The md5 hashes do not match.\n')
 end
+
+fprintf("Done =)\n\n")
 
 end
