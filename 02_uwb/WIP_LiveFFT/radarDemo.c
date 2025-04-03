@@ -87,6 +87,7 @@ GNU GCC
 #include <unistd.h>
 #include <stdbool.h>
 #include <time.h>
+#include <stdint.h>
 
 // SalsaLib include
 #include "chipotleHelper.h"
@@ -340,78 +341,94 @@ int main(int argc, char **argv)
     fprintf(stderr, "Starting radar loop... (hit ESC key to quit)\n");
   }
 
-  struct timespec now, start, tstart = {0};
-  double ms_wait;
-  clock_gettime(CLOCKID, &start);
-
-  int t;
-  for (t = 0; t < numTrials; t++) {
-    clock_gettime(CLOCKID, &tstart);
-    //printf("%f\n",ms_diff(&tstart, &end));
-    timedelta[t] = (double)(ms_diff(&tstart, &start)/1000.0);
-
-    // Get a radar frame
-    status = radarHelper_getFrameRaw(rh, radarFrames + t * 512, 512);
-    if (status) return 1;
-
-    for (i = 0; i < 512; i++)
-    {
-      b_dv[i + t * 512] = (double)radarFrames[i + t * 512];
-    }
-
-    do {
-      clock_gettime(CLOCKID, &now);
-       ms_wait = (t+1) * 1000.0/frameRate - ms_diff(&now, &start);
-   } while (ms_wait > 0);
-
-  }
-
-  //frames per second
-  fpsEst = numTrials/(ms_diff(&now, &start)/1000.0);
-  fprintf(stderr, "estimated fps: %f\n", fpsEst);
-
-  /* Call the entry-point 'WIP_LiveFFT'. */
-  WIP_LiveFFT(b_dv, outFFT);
-
-  double maxOutFFT = 0;
-  double minOutFFT = 100000000000;
-  for (i = 100; i < 2000 - 100; i++)
-  {
-    if (outFFT[i] > maxOutFFT) maxOutFFT = outFFT[i];
-    if (outFFT[i] < minOutFFT) minOutFFT = outFFT[i];
-  }
-  printf("maxOutFFT = %f\n", maxOutFFT);
-  printf("minOutFFT = %f\n", minOutFFT);
-
   //
   // Setup Gnuplot if necessary
   //
   FILE * gnuplotPipe;
-  if (showGnuPlot) {
-    // Open a pipe to gnuplot
-    gnuplotPipe = popen("gnuplot -persistant", "w");
 
-    // Set up Gnuplot
-    fprintf(gnuplotPipe, "set term x11 noraise \n");  
-    fprintf(gnuplotPipe, "set title \"%s - Radar Demo\" \n", CAPE_NAME);
-    fprintf(gnuplotPipe, "set xlabel \"sample#\" \n");
-    fprintf(gnuplotPipe, "set ylabel \"Normalized DAC\" \n");
-    fprintf(gnuplotPipe, "set xrange [0:%d] \n", 2000 - 1);
-    fprintf(gnuplotPipe, "set yrange [%f:%f] \n", minOutFFT, maxOutFFT);
-  }
+  bool gnuPlotOpen = false;
 
-  if (showGnuPlot) {
-    // Plot the radar frame
-    fprintf(gnuplotPipe, "plot '-' using 1:2 with lines \n");
-    for (i = 0; i < 2000 - 1; i++)
-    {
-      fprintf(gnuplotPipe, "%lf %lf\n", (double)i, (double)outFFT[i]);
+  while(1) {
+
+    struct timespec now, start, tstart = {0};
+    double ms_wait;
+    clock_gettime(CLOCKID, &start);
+
+    int t;
+    for (t = 0; t < numTrials; t++) {
+      clock_gettime(CLOCKID, &tstart);
+      //printf("%f\n",ms_diff(&tstart, &end));
+      timedelta[t] = (double)(ms_diff(&tstart, &start)/1000.0);
+
+      // Get a radar frame
+      status = radarHelper_getFrameRaw(rh, radarFrames + t * 512, 512);
+      if (status) return 1;
+
+      for (i = 0; i < 512; i++)
+      {
+        b_dv[i + t * 512] = (double)radarFrames[i + t * 512];
+      }
+
+      do {
+        clock_gettime(CLOCKID, &now);
+        ms_wait = (t+1) * 1000.0/frameRate - ms_diff(&now, &start);
+    } while (ms_wait > 0);
+
     }
-    fprintf(gnuplotPipe, "e\n");
-    fflush(gnuplotPipe);
-  }
 
-  nonblock(NB_DISABLE);
+    //frames per second
+    fpsEst = numTrials/(ms_diff(&now, &start)/1000.0);
+    fprintf(stderr, "estimated fps: %f\n", fpsEst);
+
+    /* Call the entry-point 'WIP_LiveFFT'. */
+    WIP_LiveFFT(b_dv, outFFT);
+
+    double maxOutFFT = 0;
+    double minOutFFT = 100000000000;
+    for (i = 100; i < 2000 - 100; i++)
+    {
+      if (outFFT[i] > maxOutFFT) maxOutFFT = outFFT[i];
+      if (outFFT[i] < minOutFFT) minOutFFT = outFFT[i];
+    }
+    // printf("maxOutFFT = %f\n", maxOutFFT);
+    // printf("minOutFFT = %f\n", minOutFFT);
+
+    double peakStrength = outFFT[800];
+    double randomNoise = outFFT[1000];
+    double SNR = 20 * log10(peakStrength / randomNoise);
+
+    printf("SNR: %f dB\n", SNR);
+    
+    if (showGnuPlot) {
+      if (!gnuPlotOpen) {
+        // Open a pipe to gnuplot
+        gnuplotPipe = popen("gnuplot -persistant", "w");
+        gnuPlotOpen = true;
+      }
+  
+      // Set up Gnuplot
+      fprintf(gnuplotPipe, "set term x11 noraise \n");  
+      fprintf(gnuplotPipe, "set title \"%s - Radar Demo\" \n", CAPE_NAME);
+      fprintf(gnuplotPipe, "set xlabel \"sample#\" \n");
+      fprintf(gnuplotPipe, "set ylabel \"Normalized DAC\" \n");
+      fprintf(gnuplotPipe, "set xrange [0:%d] \n", 2000 - 1);
+      fprintf(gnuplotPipe, "set yrange [%f:%f] \n", minOutFFT, maxOutFFT);
+    }
+
+    if (showGnuPlot) {
+      // Plot the radar frame
+      fprintf(gnuplotPipe, "plot '-' using 1:2 with lines \n");
+      for (i = 0; i < 2000 - 1; i++)
+      {
+        fprintf(gnuplotPipe, "%lf %lf\n", (double)i, (double)outFFT[i]);
+      }
+      fprintf(gnuplotPipe, "e\n");
+      fflush(gnuplotPipe);
+    }
+
+    nonblock(NB_DISABLE);
+
+  }
 
   //
   // All done, clean up time...
