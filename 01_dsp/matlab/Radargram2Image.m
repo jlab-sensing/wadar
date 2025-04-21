@@ -1,58 +1,93 @@
-% localDataPath = '/data/compact';
-% tag1Hz = 64;
-% tag2Hz = 105;
-% 
-% d = strcat(pwd, localDataPath);
-% files = dir(fullfile(d, '*.frames'));
-% listOfCaptures = {files.name};
-% 
-% captureName = 'compact2.frames';
-% 
-% figure(1)
-% hold on;
-% for i = 1:length(listOfCaptures)
-%     captureName = string(listOfCaptures(i));
-% 
-%     [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
-%     % [compactCaptureFT, compactTag1FT] = ProcessFFT(compactFramesBB, frameRate, tag1Hz);
-%     % [~, compactTag2FT] = ProcessFFT(compactFramesBB, frameRate, tag2Hz);
-%     % [compactPeakBin1] = TagLocateCWT(compactTag1FT, false);
-%     % [compactPeakBin2] = TagLocateCWT(compactTag2FT, false);
-% 
-%     frameRadargram = abs(framesBB ./ max(max(framesBB)));
-%     frameRadargram = imresize(frameRadargram, [512 512]);
-% 
-%     dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
-%     imwrite(frameRadargram, dataStorage)
-%     imshow(dataStorage)
-% end
-% legend
+clear; close all; clc
 
-imds = imageDatastore('data/compact','IncludeSubfolders', true, 'LabelSource', 'foldernames');
-classNames = categories(imds.Labels);
-[imdsTrain, imdsValidation, imdsTest] = splitEachLabel(imds, 0.7, 0.15, 0.15, "randomized");
+c = 2.998e8;
+f = 3e9;
+lambda = c / f;
 
-options = trainingOptions("sgdm", ...
-    MaxEpochs=4, ...
-    ValidationData=imdsValidation, ...
-    ValidationFrequency=30, ...
-    Plots="training-progress", ...
-    Metrics="accuracy", ...
-    Verbose=false);
-net = trainnet(imdsTrain,net_1,"crossentropy",options);
-accuracy = testnet(net,imdsValidation,"accuracy")
+r = 1:512;
+r = r ./ 512 .* 2;
+pathLoss = (4*pi*r/lambda).^2;
+pathLoss = pathLoss ./ max(pathLoss);
+pathLoss = 1 - pathLoss;
 
-scores = minibatchpredict(net,imdsValidation);
-YValidation = scores2label(scores,classNames);
+localDataPath = '/data/compact/compact';
+d = strcat(pwd, localDataPath);
+files = dir(fullfile(d, '*.frames'));
+listOfCaptures = {files.name};
 
-numValidationObservations = numel(imdsValidation.Files);
-idx = randi(numValidationObservations,9,1);
+figure(1)
+title("Compact Soil")
+for i = 1:length(listOfCaptures)
+% for i = 1:3
+    captureName = string(listOfCaptures(i));
+    fprintf("Processing %s...\n", captureName)
 
-figure
-tiledlayout("flow")
-for i = 1:9
-    nexttile
-    img = readimage(imdsValidation,idx(i));
-    imshow(img)
-    title("Predicted Class: " + string(YValidation(idx(i))))
+    [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
+    
+    radargram_envelope = abs(framesBB);
+    radargram_envelope = movmedian(radargram_envelope, 10, 2);
+    radargram_envelope = radargram_envelope .* transpose(pathLoss);
+    radargram_envelope = radargram_envelope(128:end, :);
+    normalizer = max(mean(radargram_envelope, 2));
+    radargram_envelope = radargram_envelope / normalizer;
+    radargram_envelope = resize(radargram_envelope, [512 512 1]);
+    % radargram = radargram ./ (4900 - 3800);
+    
+    figure(1)
+    % nexttile; imagesc(radargram_envelope)
+    nexttile; plot(abs(transpose(framesBB)))
+
+    radargram_IQ = imag(framesBB);
+    radargram_IQ = radargram_IQ(128:end, :);
+
+    % figure(2)
+    % nexttile; imagesc(radargram_IQ)
+
+    % plot(median(imag(framesBB),2))
+
+    dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
+    fprintf("%s saved...\n", dataStorage)
+    imwrite(radargram_envelope, dataStorage)
+    title("Compact Soil")
+end
+
+
+
+localDataPath = '/data/compact/loose';
+d = strcat(pwd, localDataPath);
+files = dir(fullfile(d, '*.frames'));
+listOfCaptures = {files.name};
+
+for i = 1:length(listOfCaptures)
+% for i = 1:3
+    captureName = string(listOfCaptures(i));
+    fprintf("Processing %s...\n", captureName)
+
+    [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
+    
+    radargram_envelope = abs(framesBB);
+    radargram_envelope = movmedian(radargram_envelope, 10, 2);
+    radargram_envelope = radargram_envelope .* transpose(pathLoss);
+    radargram_envelope = radargram_envelope(128:end, :);
+    normalizer = max(mean(radargram_envelope, 2));
+    radargram_envelope = radargram_envelope / normalizer;
+    radargram_envelope = resize(radargram_envelope, [512 512 1]);
+    % radargram = radargram ./ (4900 - 3800);
+    
+    figure(1)
+    % nexttile; imagesc(radargram_envelope)
+    nexttile; plot(abs(transpose(framesBB)))
+
+    radargram_IQ = imag(framesBB);
+    radargram_IQ = radargram_IQ(128:end, :);
+
+    % figure(2)
+    % nexttile; imagesc(radargram_IQ)
+
+    % plot(median(imag(framesBB),2))
+
+    dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
+    fprintf("%s saved...\n", dataStorage)
+    imwrite(radargram_envelope, dataStorage)
+    title("Loose Soil")
 end
