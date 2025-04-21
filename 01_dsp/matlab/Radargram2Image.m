@@ -1,93 +1,171 @@
-clear; close all; clc
+close all; clear all; clc
 
-c = 2.998e8;
-f = 3e9;
-lambda = c / f;
+% localDataPath = '/data/compact/compact';
+% 
+% d = strcat(pwd, localDataPath);
+% files = dir(fullfile(d, '*.frames'));
+% listOfCaptures = {files.name};
+% 
+% figure(1)
+% for i = 1:length(listOfCaptures)
+%     captureName = string(listOfCaptures(i));
+% 
+%     [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
+%     % [compactCaptureFT, compactTag1FT] = ProcessFFT(compactFramesBB, frameRate, tag1Hz);
+%     % [~, compactTag2FT] = ProcessFFT(compactFramesBB, frameRate, tag2Hz);
+%     % [compactPeakBin1] = TagLocateCWT(compactTag1FT, false);
+%     % [compactPeakBin2] = TagLocateCWT(compactTag2FT, false);
+% 
+%     frameRadargram = abs(framesBB ./ max(max(framesBB)));
+%     frameRadargram = imresize(frameRadargram, 'OutputSize', [227 227]);
+%     imgOut = cat(3, frameRadargram, frameRadargram, frameRadargram);
+% 
+%     dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
+% 
+%     % set(gca, 'Visible', 'off');
+%     % gcf = imagesc(frameRadargram);
+%     % saveas(gcf, dataStorage)
+%     fprintf("Saving %s...\n", dataStorage)
+%     imwrite(imgOut, dataStorage)
+% end
+% 
+% localDataPath = '/data/compact/loose';
+% 
+% d = strcat(pwd, localDataPath);
+% files = dir(fullfile(d, '*.frames'));
+% listOfCaptures = {files.name};
+% 
+% figure(2)
+% for i = 1:length(listOfCaptures)
+%     captureName = string(listOfCaptures(i));
+% 
+%     [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
+%     % [compactCaptureFT, compactTag1FT] = ProcessFFT(compactFramesBB, frameRate, tag1Hz);
+%     % [~, compactTag2FT] = ProcessFFT(compactFramesBB, frameRate, tag2Hz);
+%     % [compactPeakBin1] = TagLocateCWT(compactTag1FT, false);
+%     % [compactPeakBin2] = TagLocateCWT(compactTag2FT, false);
+% 
+%     frameRadargram = abs(framesBB ./ max(max(framesBB)));
+%     frameRadargram = imresize(frameRadargram, 'OutputSize', [227 227]);
+%     imgOut = cat(3, frameRadargram, frameRadargram, frameRadargram);
+% 
+%     dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
+% 
+%     % set(gca, 'Visible', 'off');
+%     % gcf = imagesc(frameRadargram);
+%     % saveas(gcf, dataStorage)
+%     fprintf("Saving %s...\n", dataStorage)
+%     imwrite(imgOut, dataStorage)
+% end
 
-r = 1:512;
-r = r ./ 512 .* 2;
-pathLoss = (4*pi*r/lambda).^2;
-pathLoss = pathLoss ./ max(pathLoss);
-pathLoss = 1 - pathLoss;
+% =========================================================================
 
-localDataPath = '/data/compact/compact';
-d = strcat(pwd, localDataPath);
-files = dir(fullfile(d, '*.frames'));
-listOfCaptures = {files.name};
+folderName = 'data/compact';
+imds = imageDatastore(folderName, ...
+    IncludeSubfolders=true, ...
+    LabelSource="foldernames");
 
-figure(1)
-title("Compact Soil")
-for i = 1:length(listOfCaptures)
-% for i = 1:3
-    captureName = string(listOfCaptures(i));
-    fprintf("Processing %s...\n", captureName)
+numImages = numel(imds.Labels);
+idx = randperm(numImages,20);
+I = imtile(imds,Frames=idx);
+figure
+imshow(I)
 
-    [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
-    
-    radargram_envelope = abs(framesBB);
-    radargram_envelope = movmedian(radargram_envelope, 10, 2);
-    radargram_envelope = radargram_envelope .* transpose(pathLoss);
-    radargram_envelope = radargram_envelope(128:end, :);
-    normalizer = max(mean(radargram_envelope, 2));
-    radargram_envelope = radargram_envelope / normalizer;
-    radargram_envelope = resize(radargram_envelope, [512 512 1]);
-    % radargram = radargram ./ (4900 - 3800);
-    
-    figure(1)
-    % nexttile; imagesc(radargram_envelope)
-    nexttile; plot(abs(transpose(framesBB)))
+classNames = categories(imds.Labels);
+numClasses = numel(classNames);
+disp(classNames);
+disp(numClasses);
+[imdsTrain, imdsValidation, imdsTest] = splitEachLabel(imds,0.7,0.15,"randomized");
 
-    radargram_IQ = imag(framesBB);
-    radargram_IQ = radargram_IQ(128:end, :);
+net = imagePretrainedNetwork(NumClasses=numClasses);
+inputSize = net.Layers(1).InputSize;
+disp(inputSize);
 
-    % figure(2)
-    % nexttile; imagesc(radargram_IQ)
+net = setLearnRateFactor(net,"conv10/Weights",10);
+net = setLearnRateFactor(net,"conv10/Bias",10);
 
-    % plot(median(imag(framesBB),2))
+pixelRange = [-30 30];
 
-    dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
-    fprintf("%s saved...\n", dataStorage)
-    imwrite(radargram_envelope, dataStorage)
-    title("Compact Soil")
-end
+imageAugmenter = imageDataAugmenter( ...
+    RandXReflection=true, ...
+    RandXTranslation=pixelRange, ...
+    RandYTranslation=pixelRange);
 
+augimdsTrain = augmentedImageDatastore(inputSize(1:2),imdsTrain, ...
+    DataAugmentation=imageAugmenter);
 
+augimdsValidation = augmentedImageDatastore(inputSize(1:2),imdsValidation);
+augimdsTest = augmentedImageDatastore(inputSize(1:2),imdsTest);
 
-localDataPath = '/data/compact/loose';
-d = strcat(pwd, localDataPath);
-files = dir(fullfile(d, '*.frames'));
-listOfCaptures = {files.name};
+options = trainingOptions("adam", ...
+    InitialLearnRate=0.0001, ...
+    ValidationData=augimdsValidation, ...
+    ValidationFrequency=5, ...
+    Plots="training-progress", ...
+    Metrics="accuracy", ...
+    Verbose=false);
 
-for i = 1:length(listOfCaptures)
-% for i = 1:3
-    captureName = string(listOfCaptures(i));
-    fprintf("Processing %s...\n", captureName)
+net = trainnet(augimdsTrain,net,"crossentropy",options);
 
-    [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
-    
-    radargram_envelope = abs(framesBB);
-    radargram_envelope = movmedian(radargram_envelope, 10, 2);
-    radargram_envelope = radargram_envelope .* transpose(pathLoss);
-    radargram_envelope = radargram_envelope(128:end, :);
-    normalizer = max(mean(radargram_envelope, 2));
-    radargram_envelope = radargram_envelope / normalizer;
-    radargram_envelope = resize(radargram_envelope, [512 512 1]);
-    % radargram = radargram ./ (4900 - 3800);
-    
-    figure(1)
-    % nexttile; imagesc(radargram_envelope)
-    nexttile; plot(abs(transpose(framesBB)))
+accuracy = testnet(net,augimdsTest,"accuracy")
 
-    radargram_IQ = imag(framesBB);
-    radargram_IQ = radargram_IQ(128:end, :);
+im = imread("data/compact/compact/compact1.frames.png");
 
-    % figure(2)
-    % nexttile; imagesc(radargram_IQ)
+X = single(im);
 
-    % plot(median(imag(framesBB),2))
+scores = predict(net,X);
+label = scores2label(scores,classNames);
 
-    dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
-    fprintf("%s saved...\n", dataStorage)
-    imwrite(radargram_envelope, dataStorage)
-    title("Loose Soil")
-end
+figure
+imshow(im)
+title("Prediction: " + string(label))
+
+% =========================================================================
+
+% classificationData = table;
+% 
+% localDataPath = '/data/compact/compact';
+% 
+% d = strcat(pwd, localDataPath);
+% files = dir(fullfile(d, '*.frames'));
+% listOfCaptures = {files.name};
+% 
+% figure(1)
+% hold on;
+% for i = 1:length(listOfCaptures)
+%     captureName = string(listOfCaptures(i));
+% 
+%     [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
+% 
+%     dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
+% 
+%     fprintf("%d/%d\n", i, length(listOfCaptures))
+%     data = median(abs(framesBB), 2);
+%     % plot(data); hold on;
+% 
+%     classificationData(:, end+1) = {'Compact'; data};
+% end
+% 
+% localDataPath = '/data/compact/loose';
+% 
+% d = strcat(pwd, localDataPath);
+% files = dir(fullfile(d, '*.frames'));
+% listOfCaptures = {files.name};
+% 
+% figure(2)
+% for i = 1:length(listOfCaptures)
+%     captureName = string(listOfCaptures(i));
+% 
+%     [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
+% 
+%     frameRadargram = abs(framesBB ./ max(max(framesBB)));
+%     frameRadargram = imresize(frameRadargram, [512 512]);
+% 
+%     dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
+% 
+%     fprintf("%d/%d\n", i, length(listOfCaptures))
+%     data = median(abs(framesBB), 2);
+%     % plot(data); hold on;
+% 
+%     classificationData(:, end+1) = {'Compact'; data};
+% end
