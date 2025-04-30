@@ -9,9 +9,16 @@ listOfCaptures = {files.name};
 
 widthFrames = width(frameTot);
 
-for i = 2:length(listOfCaptures)
-    captureName = string(listOfCaptures(i));
-    [frameTot(:, end+1:end+widthFrames), framesBB(:, end+1:end+widthFrames), ~] = ProcessFrames(databaseName, captureName);
+if widthFrames < 20000
+    for i = 2:length(listOfCaptures)
+        captureName = string(listOfCaptures(i));
+        [frameTot(:, end+1:end+widthFrames), framesBB(:, end+1:end+widthFrames), ~] = ProcessFrames(databaseName, captureName);
+    end
+else
+    for i = 2:3
+        captureName = string(listOfCaptures(i));
+        [frameTot(:, end+1:end+widthFrames), framesBB(:, end+1:end+widthFrames), ~] = ProcessFrames(databaseName, captureName);
+    end
 end
 
 [captureFT, tag1FT] = ProcessFFT(framesBB, frameRate, tag1Hz);

@@ -13,6 +13,8 @@ for i = 1:length(listOfCaptures)
     imagesPerScan = width(framesBB) / framesPerImage;
     for j = 1:imagesPerScan
         frameRadargram = framesBB(:, j*framesPerImage-(framesPerImage-1):j*framesPerImage);
+        frameRadargram = PreprocessRadargram(frameRadargram);
+        % frameRadargram = abs(frameRadargram) ./ max(max(abs(frameRadargram)));
         frameRadargram = abs(frameRadargram) ./ 8e2;
         frameRadargram = imresize(frameRadargram, 'OutputSize', [227 227]);
         imgOut = cat(3, frameRadargram, frameRadargram, frameRadargram);
@@ -30,7 +32,7 @@ listOfImages = {imageFiles.name};
 listOfImagePaths = strcat(pwd, localDataPath, '/', listOfImages);
 out = imtile(listOfImagePaths);
 
-figure(1)
+figure
 imshow(out)
 
 end
