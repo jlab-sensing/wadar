@@ -9,21 +9,36 @@ for i = 1:length(listOfCaptures)
 
     [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
     
-    framesPerImage = 2000;
-    imagesPerScan = width(framesBB) / framesPerImage;
-    for j = 1:imagesPerScan
-        frameRadargram = framesBB(:, j*framesPerImage-(framesPerImage-1):j*framesPerImage);
-        frameRadargram = PreprocessRadargram(frameRadargram);
-        % frameRadargram = abs(frameRadargram) ./ max(max(abs(frameRadargram)));
-        frameRadargram = abs(frameRadargram) ./ 8e2;
-        frameRadargram = imresize(frameRadargram, 'OutputSize', [227 227]);
-        imgOut = cat(3, frameRadargram, frameRadargram, frameRadargram);
+    frameRadargram = abs(framesBB);
+    % frameRadargram = PreprocessRadargram(frameRadargram);
+    % frameRadargram = abs(frameRadargram) ./ max(max(abs(frameRadargram)));
+    % frameRadargram = abs(frameRadargram) ./ 8e2;
+    % frameRadargram = imresize(frameRadargram, 'OutputSize', [227 227]);
     
-        dataStorage = strcat(localDataPath(2:end), '/', captureName, '-', num2str(j), '.png');
-    
-        fprintf("||")
-        imwrite(imgOut, dataStorage)
+    % Linear scaling. Tentative.
+    for j = 1:height(frameRadargram)
+        frameRadargram(j, :) = frameRadargram(j, :) * j / 512;
     end
+
+    frameRadargram = imresize(frameRadargram, 'OutputSize', [227 227]);
+
+    frameRadargram = mat2gray(frameRadargram);
+
+    % nColors = 256;
+    % yellowToBlue = [linspace(0, 1, nColors)', ...    % Red goes from 1 to 0
+    %                 linspace(0, 1, nColors)', ...    % Green goes from 1 to 0
+    %                 linspace(1, 0, nColors)'];       % Blue goes from 0 to 1
+    % indexedImg = gray2ind(frameRadargram, nColors);
+    % 
+    % imgOut = ind2rgb(indexedImg, yellowToBlue);
+
+    imgOut = cat(3, frameRadargram, frameRadargram, frameRadargram);
+    
+
+    dataStorage = strcat(localDataPath(2:end), '/', captureName, '.png');
+
+    fprintf("||")
+    imwrite(imgOut, dataStorage)
     fprintf("]\n")
 end
 
