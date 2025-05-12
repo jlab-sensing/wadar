@@ -1,5 +1,6 @@
 function net = Image2BulkDensity(folderName)
 
+
 imds = imageDatastore(folderName, ...
     IncludeSubfolders=true, ...
     LabelSource="foldernames");
@@ -7,8 +8,8 @@ imds = imageDatastore(folderName, ...
 numImages = numel(imds.Labels);
 idx = randperm(numImages,20);
 I = imtile(imds,Frames=idx);
-figure
-imshow(I)
+% figure
+% imshow(I)
 
 [imdsTrain, imdsValidation, imdsTest] = splitEachLabel(imds,0.7,0.15,"randomized");
 

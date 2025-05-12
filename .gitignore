@@ -17,6 +17,7 @@ tramp
 /FlatEarth/c_code/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/usr/include/linux/*
 *.md5
 /01_dsp/matlab/data/*
+/01_dsp/python/data/*
 *.asv
 *.csv
 *.frames
