@@ -24,17 +24,15 @@ class Image2Compaction:
 
     def load_data(self):
 
-        df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
-        df = df.sort_values(by="filename")
+        df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")            # This dataset is created by dataset.py such that each image has a regression label.
         labels = df["label"].tolist()
         filenames = df["filename"].tolist()
 
-        filepaths = filenames
-        dataset = tf.data.Dataset.from_tensor_slices((filepaths, labels))
-        dataset = dataset.map(load_image_and_label)
+        dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))   # Dataset stored as a tuple of (filename, label)
+        dataset = dataset.map(load_data)
         
         DISPLAY_IMAGES = False
-        if DISPLAY_IMAGES:                                          # This just spams all the images in the dataset. I left it here for debugging.
+        if DISPLAY_IMAGES:                                                  # This just spams all the images in the dataset. I left it here for debugging.
             for image, label in dataset:
                 plt.imshow(image.numpy())
                 plt.title(f"Label: {label.numpy():.2f}")
@@ -42,13 +40,13 @@ class Image2Compaction:
                 plt.show()
 
         dataset = dataset.shuffle(buffer_size=len(df), seed=self.seed)
-        dataset = dataset.shuffle(buffer_size=1000, seed=self.seed)         # Shuffle the dataset
+        dataset = dataset.shuffle(buffer_size=1000, seed=self.seed)         # Shuffle the dataset to ensure that the training and validation sets are not biased.
 
-        val_size = int(len(df) * self.validation_split)
+        val_size = int(len(df) * self.validation_split)                     # Split the dataset into training and validation sets.
         train_ds = dataset.skip(val_size)
         val_ds = dataset.take(val_size)
 
-        train_ds = train_ds.batch(self.batch_size).prefetch(tf.data.AUTOTUNE)
+        train_ds = train_ds.batch(self.batch_size).prefetch(tf.data.AUTOTUNE)   # TODO: Figure out what this does.
         val_ds = val_ds.batch(self.batch_size).prefetch(tf.data.AUTOTUNE)
 
         self.train_ds = train_ds
@@ -56,10 +54,10 @@ class Image2Compaction:
 
     def build_model(self):
 
-        # Model stolen from https://www.tensorflow.org/tutorials/images/classification
+        
         num_classes = len(self.class_names)
         self.model = Sequential([
-            layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)),
+            layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)), # Model stolen from https://www.tensorflow.org/tutorials/images/classification
             layers.Conv2D(16, 3, padding='same', activation='relu'),
             layers.MaxPooling2D(),
             layers.Conv2D(32, 3, padding='same', activation='relu'),
@@ -67,13 +65,13 @@ class Image2Compaction:
             layers.Conv2D(64, 3, padding='same', activation='relu'),
             layers.MaxPooling2D(),
             layers.Flatten(),
-            layers.Dense(1)
+            layers.Dense(1)                                                             # Regression model, so only one output neuron.                                          
         ])
 
         self.model.compile(
             optimizer='adam',
-            loss='mse',
-            metrics=['mae']
+            loss='mse',             # Mean Squared Error for regression                             
+            metrics=['mae']         # Mean Absolute Error for regression
         )
 
         self.model.summary()
@@ -89,7 +87,6 @@ class Image2Compaction:
         )
 
     def plot_training_results(self):
-        # I miss MATLAB's plot function why did I need this many lines to plot.
         if self.history is None:
             raise ValueError("No training history found. Train the model first.")
 
@@ -111,6 +108,7 @@ class Image2Compaction:
         plt.plot(epochs_range, val_loss, label='Validation Loss')
         plt.legend(loc='upper right')
         plt.title('Training and Validation Loss')
+
         plt.show()
     
     def save_model(self, save_path):
@@ -118,12 +116,16 @@ class Image2Compaction:
             raise ValueError("No model found. Train the model first.")
         self.model.save(save_path)
 
-def load_image_and_label(filename, label):
+def load_data(filename, label, img_height=227, img_width=227):
+    image = load_image(filename, img_height, img_width)
+    return image, tf.cast(label, tf.float32)
+
+def load_image(filename, img_height=227, img_width=227):
     image = tf.io.read_file(filename)
     image = tf.image.decode_jpeg(image, channels=3) 
-    image = tf.image.resize(image, [227, 227])  # Use self.img_height/width if needed
+    image = tf.image.resize(image, (img_height, img_width))  # Resize the image to fit the model's needs
     image = image / 255.0
-    return image, tf.cast(label, tf.float32)
+    return image
 
 # ===========================================================
 # TEST HARNESS
@@ -145,13 +147,8 @@ if __name__ == "__main__":
     df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
     image_files = df["filename"].tolist()
     for i in range(len(image_files)):
-        test_image = load_image_and_label(image_files[i], 0)[0]
+        test_image = load_image(image_files[i])
         test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension because
 
         prediction = run_model.predict(test_image)
-        print(prediction)
-
-    plt.imshow(test_image.numpy())
-    plt.title(f"Label: 1.2")
-    plt.axis('off')
-    plt.show()
+        print(f"Expected: {df['label'][i]}, Predicted: {prediction[0][0]}")
