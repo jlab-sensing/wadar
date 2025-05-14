@@ -253,22 +253,25 @@ if __name__ == "__main__":
     df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
     image_files = df["filename"].tolist()
     labels = df["label"].tolist()
-    num_correct = 0
-    for i in range(len(image_files)):
-        test_image = load_image(image_files[i], img_height=224, img_width=224)
-        test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension because
 
-        prediction = run_model.predict(test_image)
-        if approach == "regression":
-            print(f"Image: {image_files[i]}, Predicted: {prediction[0][0]}")
-        else:
-            labels[i] = bulk_density_to_class(labels[i])
-            prediction = tf.argmax(prediction, axis=1)
-            prediction = tf.cast(prediction, tf.int32)
-            print(f"Image: {image_files[i]}")
-            print(f"Predicted class: {prediction[0].numpy()}")
-            if prediction[0].numpy() == labels[i]:
-                num_correct += 1
-            print(f"Actual class: {labels[i]}")
+    # Copilot generated.
+    for i in range(0, len(image_files), 25):  # Process in batches of 25 (5x5 grid)
+        plt.figure(figsize=(15, 15))
+        for j in range(25):
+            if i + j >= len(image_files):                               # Avoid index out of range
+                break
+            test_image = load_image(image_files[i + j], img_height=224, img_width=224)
+            test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension
 
-    print(f"Accuracy: {num_correct / len(image_files) * 100:.2f}%")
+            prediction = run_model.predict(test_image)
+            plt.subplot(5, 5, j + 1)
+            plt.imshow(test_image[0].numpy())
+            if approach == "regression":
+                plt.title(f"Pred: {prediction[0][0]:.2f}\nActual: {labels[i + j]:.2f}")
+            else:
+                labels[i + j] = bulk_density_to_class(labels[i + j])
+                predicted_class = tf.argmax(prediction, axis=1).numpy()[0]
+                plt.title(f"Pred: {predicted_class}\nActual: {labels[i + j]}")
+            plt.axis('off')
+        plt.tight_layout()
+        plt.show()
