@@ -37,7 +37,7 @@ def create_dataset(data_dir):
 # ==========
 TEST_HARNESS = True
 if TEST_HARNESS:
-    data_dir = "data/compact-2-binary"
+    data_dir = "data/compact-3"
     create_dataset(data_dir)
     df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
     print(df)

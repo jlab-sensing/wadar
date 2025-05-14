@@ -6,6 +6,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # 3 to ignore all TensorFlow warnings
 from tensorflow.keras import layers, Sequential
 import pathlib
 import pandas as pd
+import cv2
 
 class Image2Compaction:
     def __init__(self, data_dir, img_height=227, img_width=227, batch_size=4, validation_split=0.2, seed=123):
@@ -19,7 +20,7 @@ class Image2Compaction:
         self.train_ds = None
         self.val_ds = None
         self.model = None
-        self.history = None
+        self.history = None 
 
     def load_data(self):
 
@@ -66,7 +67,7 @@ class Image2Compaction:
             layers.Conv2D(64, 3, padding='same', activation='relu'),
             layers.MaxPooling2D(),
             layers.Flatten(),
-            layers.Dense(1, activation='relu')
+            layers.Dense(1)
         ])
 
         self.model.compile(
@@ -111,6 +112,11 @@ class Image2Compaction:
         plt.legend(loc='upper right')
         plt.title('Training and Validation Loss')
         plt.show()
+    
+    def save_model(self, save_path):
+        if self.model is None:
+            raise ValueError("No model found. Train the model first.")
+        self.model.save(save_path)
 
 def load_image_and_label(filename, label):
     image = tf.io.read_file(filename)
@@ -119,15 +125,33 @@ def load_image_and_label(filename, label):
     image = image / 255.0
     return image, tf.cast(label, tf.float32)
 
-
-
 # ===========================================================
 # TEST HARNESS
 # ==========================================================
 if __name__ == "__main__":
-    data_dir = "data/compact-2-binary"
+    data_dir = "data/compact-3"
+
     img2compaction = Image2Compaction(data_dir)
     img2compaction.load_data()
     img2compaction.build_model()
     img2compaction.train_model(epochs=10)
     img2compaction.plot_training_results()
+    img2compaction.save_model("model.keras")
+
+    # Run the model
+    model_path = "model.keras"
+    run_model = tf.keras.models.load_model(model_path)
+
+    df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
+    image_files = df["filename"].tolist()
+    for i in range(len(image_files)):
+        test_image = load_image_and_label(image_files[i], 0)[0]
+        test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension because
+
+        prediction = run_model.predict(test_image)
+        print(prediction)
+
+    plt.imshow(test_image.numpy())
+    plt.title(f"Label: 1.2")
+    plt.axis('off')
+    plt.show()
