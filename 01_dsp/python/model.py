@@ -9,24 +9,32 @@ import pandas as pd
 import cv2
 
 class Image2Compaction:
-    def __init__(self, data_dir, img_height=227, img_width=227, batch_size=4, validation_split=0.2, seed=123):
+    def __init__(self, data_dir, approach, img_height=227, img_width=227, batch_size=4, validation_split=0.2, seed=123):
         self.data_dir = pathlib.Path(data_dir)
         self.img_height = img_height
         self.img_width = img_width
         self.batch_size = batch_size
         self.validation_split = validation_split
         self.seed = seed
-        self.class_names = []
+        self.class_names = [0, 1, 2]
         self.train_ds = None
         self.val_ds = None
         self.model = None
         self.history = None 
+
+        self.approach = approach
+        if self.approach != "regression" and self.approach != "classification":
+            raise ValueError("Approach must be either 'regression' or 'classification'.")
 
     def load_data(self):
 
         df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")            # This dataset is created by dataset.py such that each image has a regression label.
         labels = df["label"].tolist()
         filenames = df["filename"].tolist()
+
+        if self.approach == "classification":
+            for i in range(len(labels)):
+                labels[i] = bulk_density_to_class(labels[i])                # Convert the regression labels to classification labels. 
 
         dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))   # Dataset stored as a tuple of (filename, label)
         dataset = dataset.map(load_data)
@@ -54,8 +62,27 @@ class Image2Compaction:
 
     def build_model(self):
 
-        
-        num_classes = len(self.class_names)
+        # num_classes = len(self.class_names)
+        # self.model = Sequential([
+        #     layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)), # Model stolen from https://www.tensorflow.org/tutorials/images/classification
+        #     layers.Conv2D(16, 3, padding='same', activation='relu'),
+        #     layers.MaxPooling2D(),
+        #     layers.Conv2D(32, 3, padding='same', activation='relu'),
+        #     layers.MaxPooling2D(),
+        #     layers.Conv2D(64, 3, padding='same', activation='relu'),
+        #     layers.MaxPooling2D(),
+        #     layers.Flatten(),
+        #     layers.Dense(1)                                                             # Regression model, so only one output neuron.                                          
+        # ])
+
+        # self.model.compile(
+        #     optimizer='adam',
+        #     loss='mse',             # Mean Squared Error for regression                             
+        #     metrics=['mae']         # Mean Absolute Error for regression
+        # )
+
+        # self.model.summary()
+
         self.model = Sequential([
             layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)), # Model stolen from https://www.tensorflow.org/tutorials/images/classification
             layers.Conv2D(16, 3, padding='same', activation='relu'),
@@ -64,19 +91,31 @@ class Image2Compaction:
             layers.MaxPooling2D(),
             layers.Conv2D(64, 3, padding='same', activation='relu'),
             layers.MaxPooling2D(),
-            layers.Flatten(),
-            layers.Dense(1)                                                             # Regression model, so only one output neuron.                                          
+            layers.Flatten()                                       
         ])
 
-        self.model.compile(
-            optimizer='adam',
-            loss='mse',             # Mean Squared Error for regression                             
-            metrics=['mae']         # Mean Absolute Error for regression
-        )
-
+        if self.approach == "regression":
+            self.model.add(layers.Dense(1))                         # Regression model, so only one output neuron.   
+        else:
+            self.model.add(layers.Dense(128, activation='relu'))
+            self.model.add(layers.Dense(len(self.class_names)))        
         self.model.summary()
 
-    def train_model(self, epochs=10):
+        if self.approach == "regression":
+            self.model.compile(
+                optimizer='adam',
+                loss='mse',             # Mean Squared Error for regression                             
+                metrics=['mae']         # Mean Absolute Error for regression
+            )
+        else:
+            self.model.compile(
+                optimizer='adam',
+                loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                metrics=['accuracy']
+            )
+
+
+    def train_model(self, epochs=30):
         if self.model is None:
             raise ValueError("Call build_model() before train_model().")
 
@@ -90,16 +129,25 @@ class Image2Compaction:
         if self.history is None:
             raise ValueError("No training history found. Train the model first.")
 
-        mae = self.history.history['mae']
-        val_mae = self.history.history['val_mae']
+        if self.approach == "regression":
+            mae = self.history.history['mae']
+            val_mae = self.history.history['val_mae']
+        else:
+            mae = self.history.history['accuracy']
+            val_mae = self.history.history['val_accuracy']
+
         loss = self.history.history['loss']
         val_loss = self.history.history['val_loss']
         epochs_range = range(len(mae))
 
         plt.figure(figsize=(8, 8))
         plt.subplot(1, 2, 1)
-        plt.plot(epochs_range, mae, label='Training MAE')
-        plt.plot(epochs_range, val_mae, label='Validation MSE')
+        if self.approach == "regression":
+            plt.plot(epochs_range, mae, label='Training MAE')
+            plt.plot(epochs_range, val_mae, label='Validation MSE')
+        else:
+            plt.plot(epochs_range, mae, label='Training Accuracy')
+            plt.plot(epochs_range, val_mae, label='Validation Accuracy')
         plt.legend(loc='lower right')
         plt.title('Training and Validation MSE')
 
@@ -116,9 +164,15 @@ class Image2Compaction:
             raise ValueError("No model found. Train the model first.")
         self.model.save(save_path)
 
-def load_data(filename, label, img_height=227, img_width=227):
+def load_data(filename, label, img_height=227, img_width=227, approach="regression"):
     image = load_image(filename, img_height, img_width)
-    return image, tf.cast(label, tf.float32)
+    if approach == "regression":
+        return image, tf.cast(label, tf.float32)
+    elif approach == "classification":
+        return image, tf.cast(label, tf.int32)
+    else:
+        raise ValueError("Approach must be either 'regression' or 'classification'.")
+    
 
 def load_image(filename, img_height=227, img_width=227):
     image = tf.io.read_file(filename)
@@ -127,16 +181,25 @@ def load_image(filename, img_height=227, img_width=227):
     image = image / 255.0
     return image
 
+def bulk_density_to_class(bulk_density):
+    if bulk_density <= 1.4:
+        return 0                # "good"
+    elif bulk_density <= 1.8:
+        return 1                # "non-ideal"
+    elif bulk_density < 2.0:
+        return 2                # "unviable" for root growth
+
 # ===========================================================
 # TEST HARNESS
 # ==========================================================
 if __name__ == "__main__":
-    data_dir = "data/compact-3"
+    data_dir = "data/compact-2-binary"
+    approach = "classification" 
 
-    img2compaction = Image2Compaction(data_dir)
+    img2compaction = Image2Compaction(data_dir, approach=approach) 
     img2compaction.load_data()
     img2compaction.build_model()
-    img2compaction.train_model(epochs=10)
+    img2compaction.train_model(epochs=30)               # Should be higher for real training?
     img2compaction.plot_training_results()
     img2compaction.save_model("model.keras")
 
@@ -147,8 +210,14 @@ if __name__ == "__main__":
     df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
     image_files = df["filename"].tolist()
     for i in range(len(image_files)):
-        test_image = load_image(image_files[i])
+        test_image = load_image(image_files[i], img_height=227, img_width=227)
         test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension because
 
         prediction = run_model.predict(test_image)
-        print(f"Expected: {df['label'][i]}, Predicted: {prediction[0][0]}")
+        if approach == "regression":
+            print(f"Image: {image_files[i]}, Predicted: {prediction[0][0]}")
+        else:
+            prediction = tf.argmax(prediction, axis=1)
+            prediction = tf.cast(prediction, tf.int32)
+            print(f"Image: {image_files[i]}")
+            print(f"Predicted class: {prediction[0].numpy()}")
