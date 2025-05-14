@@ -9,7 +9,24 @@ import pandas as pd
 import cv2
 
 class Image2Compaction:
+    """
+    Class to load, preprocess, and train a model on images for soil compaction prediction.
+    The model can be used for either regression or classification tasks.
+    """
+
     def __init__(self, data_dir, approach, img_height=227, img_width=227, batch_size=4, validation_split=0.2, seed=123):
+        """
+        Initialize the TENTATIVE_NAME class.
+
+        :param data_dir: str, path to the directory containing the dataset.
+        :param approach: str, either "regression" or "classification".
+        :param img_height: int, height of the images.
+        :param img_width: int, width of the images.
+        :param batch_size: int, size of the batches for training.
+        :param validation_split: float, fraction of the data to use for validation.
+        :param seed: int, random seed for shuffling the dataset.
+        """
+
         self.data_dir = pathlib.Path(data_dir)
         self.img_height = img_height
         self.img_width = img_width
@@ -27,6 +44,11 @@ class Image2Compaction:
             raise ValueError("Approach must be either 'regression' or 'classification'.")
 
     def load_data(self):
+        """
+        Load the dataset from the specified directory and preprocess the images.
+        The dataset is expected to be in a CSV file with columns "filename" and "label".
+        The images are resized to the specified height and width.
+        """
 
         df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")            # This dataset is created by dataset.py such that each image has a regression label.
         labels = df["label"].tolist()
@@ -61,27 +83,10 @@ class Image2Compaction:
         self.val_ds = val_ds
 
     def build_model(self):
-
-        # num_classes = len(self.class_names)
-        # self.model = Sequential([
-        #     layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)), # Model stolen from https://www.tensorflow.org/tutorials/images/classification
-        #     layers.Conv2D(16, 3, padding='same', activation='relu'),
-        #     layers.MaxPooling2D(),
-        #     layers.Conv2D(32, 3, padding='same', activation='relu'),
-        #     layers.MaxPooling2D(),
-        #     layers.Conv2D(64, 3, padding='same', activation='relu'),
-        #     layers.MaxPooling2D(),
-        #     layers.Flatten(),
-        #     layers.Dense(1)                                                             # Regression model, so only one output neuron.                                          
-        # ])
-
-        # self.model.compile(
-        #     optimizer='adam',
-        #     loss='mse',             # Mean Squared Error for regression                             
-        #     metrics=['mae']         # Mean Absolute Error for regression
-        # )
-
-        # self.model.summary()
+        """
+        Build the model architecture. For now, it is a simple CNN with 3 convolutional layers and 2 dense layers.
+        The model is compiled with the appropriate loss function and metrics based on the approach (regression or classification).
+        """
 
         self.model = Sequential([
             layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)), # Model stolen from https://www.tensorflow.org/tutorials/images/classification
@@ -114,8 +119,16 @@ class Image2Compaction:
                 metrics=['accuracy']
             )
 
-
     def train_model(self, epochs=30):
+        """
+        Train the model on the training dataset and validate it on the validation dataset.
+        The training history is stored for later analysis.
+
+        :param epochs: int, number of epochs to train the model.
+        """
+
+        if self.train_ds is None or self.val_ds is None:
+            raise ValueError("Call load_data() before train_model().")
         if self.model is None:
             raise ValueError("Call build_model() before train_model().")
 
@@ -126,6 +139,11 @@ class Image2Compaction:
         )
 
     def plot_training_results(self):
+        """
+        Plot the training and validation loss and accuracy (or MAE) over epochs.
+        This function requires the training history to be available.
+        """
+
         if self.history is None:
             raise ValueError("No training history found. Train the model first.")
 
@@ -160,11 +178,27 @@ class Image2Compaction:
         plt.show()
     
     def save_model(self, save_path):
+        """
+        Save the trained model to the specified path.
+
+        :param save_path: str, path to save the model.
+        """
+
         if self.model is None:
             raise ValueError("No model found. Train the model first.")
         self.model.save(save_path)
 
-def load_data(filename, label, img_height=227, img_width=227, approach="regression"):
+def load_data(filename, label, img_height=224, img_width=224, approach="regression"):
+    """
+    Load and preprocess the image and label.
+    :param filename: str, path to the image file.
+    :param label: float or int, label for the image.
+    :param img_height: int, height of the image.
+    :param img_width: int, width of the image.
+    :param approach: str, either "regression" or "classification".
+    :return: tuple, (image, label) where image is a preprocessed image and label is the corresponding label.
+    """
+
     image = load_image(filename, img_height, img_width)
     if approach == "regression":
         return image, tf.cast(label, tf.float32)
@@ -175,6 +209,15 @@ def load_data(filename, label, img_height=227, img_width=227, approach="regressi
     
 
 def load_image(filename, img_height=227, img_width=227):
+    """
+    Load and preprocess the image.
+
+    :param filename: str, path to the image file.
+    :param img_height: int, height of the image.
+    :param img_width: int, width of the image.
+
+    :return: preprocessed image.
+    """
     image = tf.io.read_file(filename)
     image = tf.image.decode_jpeg(image, channels=3) 
     image = tf.image.resize(image, (img_height, img_width))  # Resize the image to fit the model's needs
@@ -209,15 +252,23 @@ if __name__ == "__main__":
 
     df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
     image_files = df["filename"].tolist()
+    labels = df["label"].tolist()
+    num_correct = 0
     for i in range(len(image_files)):
-        test_image = load_image(image_files[i], img_height=227, img_width=227)
+        test_image = load_image(image_files[i], img_height=224, img_width=224)
         test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension because
 
         prediction = run_model.predict(test_image)
         if approach == "regression":
             print(f"Image: {image_files[i]}, Predicted: {prediction[0][0]}")
         else:
+            labels[i] = bulk_density_to_class(labels[i])
             prediction = tf.argmax(prediction, axis=1)
             prediction = tf.cast(prediction, tf.int32)
             print(f"Image: {image_files[i]}")
             print(f"Predicted class: {prediction[0].numpy()}")
+            if prediction[0].numpy() == labels[i]:
+                num_correct += 1
+            print(f"Actual class: {labels[i]}")
+
+    print(f"Accuracy: {num_correct / len(image_files) * 100:.2f}%")
