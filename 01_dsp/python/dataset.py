@@ -4,6 +4,7 @@ import pandas as pd
 import pathlib
 import json
 import sys
+import numpy as np
 
 def create_labels(data_dir):
     """
@@ -62,6 +63,7 @@ def create_dataset(data_dir):
 
                 parsed = json.loads(data)
                 label = parsed.get("bulk-density")   
+                label = np.median(label) if isinstance(label, list) else label
                 
                 for img_file in item.glob("*.png"):
                     data_path = data_dir / item.name / img_file.name
