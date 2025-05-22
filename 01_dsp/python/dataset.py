@@ -3,6 +3,47 @@
 import pandas as pd 
 import pathlib
 import json
+import sys
+
+def create_labels(data_dir):
+    """
+    Create the json labels for the dataset using the csv file.
+    """
+
+    data_dir = pathlib.Path(data_dir)
+    df = pd.read_csv(data_dir / "data-log.csv")
+    
+    for index, row in df.iterrows():
+        sample_dir = data_dir / row["Sample #"]
+        bulk_density = row["Bulk Density (g/cm^3)"]
+        if sample_dir.exists():
+            json_file = sample_dir / "data_params.json"
+            if not json_file.exists():
+                with open(json_file, 'w') as f:
+                    json.dump({"bulk-density": [bulk_density]}, f)
+            else:
+                with open(json_file, 'r') as f:
+                    data = f.read()
+                parsed = json.loads(data)
+                parsed["bulk-density"].append(bulk_density)
+                with open(json_file, 'w') as f:
+                    json.dump(parsed, f)
+        else:
+            print(f"Warning: {sample_dir} does not exist. Skipping.")
+
+def delete_labels(data_dir):
+    """
+    Purging labels from the dataset for relabeling.
+    """
+
+    data_dir = pathlib.Path(data_dir)
+    df = pd.read_csv(data_dir / "data-log.csv")
+    
+    for index, row in df.iterrows():
+        sample_dir = data_dir / row["Sample #"]
+        json_file = sample_dir / "data_params.json"
+        if json_file.exists():
+            json_file.unlink()
 
 def create_dataset(data_dir):
 
@@ -32,12 +73,20 @@ def create_dataset(data_dir):
     # Save the DataFrame to a CSV file
     df.to_csv(data_dir / "dataset.csv", index=False)
 
-# ==========
-# Test harness
-# ==========
-TEST_HARNESS = True
-if TEST_HARNESS:
-    data_dir = "data/compact-3"
+def main(argc, arc):
+    args = sys.argv[1:]
+
+    if len(args) == 1:
+        data_dir = args[0]
+    else:
+        print("Usage: python dataset.py <data_dir>")
+        return
+
+    delete_labels(data_dir)
+    create_labels(data_dir)
     create_dataset(data_dir)
     df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
     print(df)
+
+if __name__ == '__main__':
+    main(sys.argv, len(sys.argv))
