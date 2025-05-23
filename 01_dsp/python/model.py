@@ -7,6 +7,8 @@ from tensorflow.keras import layers, Sequential
 import pathlib
 import pandas as pd
 import cv2
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+from sklearn.metrics import confusion_matrix
 
 class Image2Compaction:
     """
@@ -56,7 +58,7 @@ class Image2Compaction:
 
         if self.approach == "classification":
             for i in range(len(labels)):
-                labels[i] = bulk_density_to_class(labels[i])                # Convert the regression labels to classification labels. 
+                labels[i] = bulk_density_to_class(labels[i])                # Convert the regression labels to classification labels.
 
         dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))   # Dataset stored as a tuple of (filename, label)
         dataset = dataset.map(load_data)
@@ -70,7 +72,7 @@ class Image2Compaction:
                 plt.show()
 
         dataset = dataset.shuffle(buffer_size=len(df), seed=self.seed)
-        dataset = dataset.shuffle(buffer_size=1000, seed=self.seed)         # Shuffle the dataset to ensure that the training and validation sets are not biased.
+        # dataset = dataset.shuffle(buffer_size=1000, seed=self.seed)         # Shuffle the dataset to ensure that the training and validation sets are not biased.
 
         val_size = int(len(df) * self.validation_split)                     # Split the dataset into training and validation sets.
         train_ds = dataset.skip(val_size)
@@ -82,61 +84,100 @@ class Image2Compaction:
         self.train_ds = train_ds
         self.val_ds = val_ds
 
-    def build_model(self):
+    def build_model(self, epochs=30):
         """
-        Build the model architecture. For now, it is a simple CNN with 3 convolutional layers and 2 dense layers.
-        The model is compiled with the appropriate loss function and metrics based on the approach (regression or classification).
+        Build and compile the model architecture. We use transfer learning with MobileNetV2. 
         """
 
-        self.model = Sequential([
-            layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)), # Model stolen from https://www.tensorflow.org/tutorials/images/classification
-            layers.Conv2D(16, 3, padding='same', activation='relu'),
-            layers.MaxPooling2D(),
-            layers.Conv2D(32, 3, padding='same', activation='relu'),
-            layers.MaxPooling2D(),
-            layers.Conv2D(64, 3, padding='same', activation='relu'),
-            layers.MaxPooling2D(),
-            layers.Flatten()                                       
+        # Almost everything here has been stolen from https://www.tensorflow.org/tutorials/images/transfer_learning
+
+        data_augmentation = tf.keras.Sequential([                               # Augmenting the data to improve the model's performance.
+            tf.keras.layers.RandomFlip('horizontal'),
+        #   tf.keras.layers.RandomRotation(0.2),                                # Not relevant for radargrams.
         ])
 
-        if self.approach == "regression":
-            self.model.add(layers.Dense(1))                         # Regression model, so only one output neuron.   
-        else:
-            self.model.add(layers.Dense(128, activation='relu'))
-            self.model.add(layers.Dense(len(self.class_names)))        
-        self.model.summary()
 
-        if self.approach == "regression":
-            self.model.compile(
-                optimizer='adam',
-                loss='mse',             # Mean Squared Error for regression                             
-                metrics=['mae']         # Mean Absolute Error for regression
-            )
-        else:
-            self.model.compile(
-                optimizer='adam',
-                loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input  # Not used because I don't know what it does.
+
+
+        IMG_SIZE = (160, 160)
+        IMG_SHAPE = IMG_SIZE + (3,)
+        base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
+                                               include_top=False,           
+                                               weights='imagenet')              # Using a pre-trained model.
+        
+        image_batch, label_batch = next(iter(self.train_ds))
+        feature_batch = base_model(image_batch)                                 # Feature extraction. TODO: Feature extraction???
+
+        base_model.trainable = False                                            # Freezing the base model we are not doing any fine-tuning.
+        base_model.summary()
+
+        if (self.approach == "classification"):
+
+            global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
+            feature_batch_average = global_average_layer(feature_batch)             # Classification head.
+
+            # prediction_layer = tf.keras.layers.Dense(1, activation='sigmoid')     # Ew, sigmoid.
+            prediction_layer = tf.keras.layers.Dense(3, activation='relu')          # relu is better according to Professor Marinescu.
+            prediction_batch = prediction_layer(feature_batch_average)              
+            print(prediction_batch.shape)                                           # Not entirely sure what this tells us.
+
+            inputs = tf.keras.Input(shape=(160, 160, 3))                            # Assembling the model here.
+            x = base_model(inputs, training=False)
+            x = global_average_layer(x)
+            x = tf.keras.layers.Dropout(0.2)(x)
+            outputs = prediction_layer(x)
+            self.model = tf.keras.Model(inputs, outputs)                    
+
+            self.model.summary()
+
+            base_learning_rate = 0.0001                                             # Compiling the model.
+            self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
+                loss=tf.keras.losses.SparseCategoricalCrossentropy(),
                 metrics=['accuracy']
             )
+            
+            loss0, accuracy0 = self.model.evaluate(self.train_ds)
 
-    def train_model(self, epochs=30):
-        """
-        Train the model on the training dataset and validate it on the validation dataset.
-        The training history is stored for later analysis.
+            print("initial loss: {:.2f}".format(loss0))
+            print("initial accuracy: {:.2f}".format(accuracy0))     
 
-        :param epochs: int, number of epochs to train the model.
-        """
+            self.history = self.model.fit(self.train_ds,
+                        epochs=epochs,
+                        validation_data=self.val_ds)                                # Beep boop machine is learning.
+        
+        elif (self.approach == "regression"):
+            global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
+            feature_batch_average = global_average_layer(feature_batch)             # Regression head.
 
-        if self.train_ds is None or self.val_ds is None:
-            raise ValueError("Call load_data() before train_model().")
-        if self.model is None:
-            raise ValueError("Call build_model() before train_model().")
+            prediction_layer = tf.keras.layers.Dense(1, activation='relu')
+            prediction_batch = prediction_layer(feature_batch_average)
+            print(prediction_batch.shape)                                           # Still not entirely sure what this tells us.
 
-        self.history = self.model.fit(
-            self.train_ds,
-            validation_data=self.val_ds,
-            epochs=epochs
-        )
+            inputs = tf.keras.Input(shape=(160, 160, 3))                            # Assembling the model here.
+            x = base_model(inputs, training=False)
+            x = global_average_layer(x)
+            x = tf.keras.layers.Dropout(0.2)(x)
+            outputs = prediction_layer(x)
+            self.model = tf.keras.Model(inputs, outputs)
+
+            self.model.summary()
+            base_learning_rate = 0.0001                                             # Compiling the model.
+
+            self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
+                loss=tf.keras.losses.MeanAbsoluteError(),
+                metrics=['mae']
+            )
+            loss0, mae0 = self.model.evaluate(self.train_ds)
+            print("initial loss: {:.2f}".format(loss0))
+            print("initial mae: {:.2f}".format(mae0))
+            self.history = self.model.fit(self.train_ds,
+                        epochs=epochs,
+                        validation_data=self.val_ds)                                # Beep boop machine is learning.
+            
+        else:
+            error_message = "Beep boop. What is a " + self.approach
+            raise ValueError(error_message)
 
     def plot_training_results(self):
         """
@@ -146,37 +187,67 @@ class Image2Compaction:
 
         if self.history is None:
             raise ValueError("No training history found. Train the model first.")
+        
+        if self.approach == "classification":
 
-        if self.approach == "regression":
+            acc = self.history.history['accuracy']
+            val_acc = self.history.history['val_accuracy']
+
+            loss = self.history.history['loss']
+            val_loss = self.history.history['val_loss']
+
+            plt.figure(figsize=(8, 8))
+            plt.subplot(2, 1, 1)
+            plt.plot(acc, label='Training Accuracy')
+            plt.plot(val_acc, label='Validation Accuracy')
+            plt.legend(loc='lower right')
+            plt.ylabel('Accuracy')
+            plt.ylim([min(plt.ylim()),1])
+            plt.title('Training and Validation Accuracy')
+
+            plt.subplot(2, 1, 2)
+            plt.plot(loss, label='Training Loss')
+            plt.plot(val_loss, label='Validation Loss')
+            plt.legend(loc='upper right')
+            plt.ylabel('Cross Entropy')
+            plt.ylim([0,1.0])
+            plt.title('Training and Validation Loss')
+            plt.xlabel('epoch')
+            plt.show()
+
+            plt.show()
+        
+        elif self.approach == "regression":
+
             mae = self.history.history['mae']
             val_mae = self.history.history['val_mae']
+
+            loss = self.history.history['loss']
+            val_loss = self.history.history['val_loss']
+
+            plt.figure(figsize=(8, 8))
+            plt.subplot(2, 1, 1)
+            plt.plot(mae, label='Training MAE')
+            plt.plot(val_mae, label='Validation MAE')
+            plt.legend(loc='lower right')
+            plt.ylabel('MAE')
+            plt.ylim([min(plt.ylim()),1])
+            plt.title('Training and Validation MAE')
+
+            plt.subplot(2, 1, 2)
+            plt.plot(loss, label='Training Loss')
+            plt.plot(val_loss, label='Validation Loss')
+            plt.legend(loc='upper right')
+            plt.ylabel('MAE Loss')
+            plt.ylim([0,1.0])
+            plt.title('Training and Validation Loss')
+            plt.xlabel('epoch')
+            plt.show()
+        
         else:
-            mae = self.history.history['accuracy']
-            val_mae = self.history.history['val_accuracy']
-
-        loss = self.history.history['loss']
-        val_loss = self.history.history['val_loss']
-        epochs_range = range(len(mae))
-
-        plt.figure(figsize=(8, 8))
-        plt.subplot(1, 2, 1)
-        if self.approach == "regression":
-            plt.plot(epochs_range, mae, label='Training MAE')
-            plt.plot(epochs_range, val_mae, label='Validation MSE')
-        else:
-            plt.plot(epochs_range, mae, label='Training Accuracy')
-            plt.plot(epochs_range, val_mae, label='Validation Accuracy')
-        plt.legend(loc='lower right')
-        plt.title('Training and Validation MSE')
-
-        plt.subplot(1, 2, 2)
-        plt.plot(epochs_range, loss, label='Training Loss')
-        plt.plot(epochs_range, val_loss, label='Validation Loss')
-        plt.legend(loc='upper right')
-        plt.title('Training and Validation Loss')
-
-        plt.show()
-    
+            error_message = "Beep boop. What is a " + self.approach
+            raise ValueError(error_message)
+        
     def save_model(self, save_path):
         """
         Save the trained model to the specified path.
@@ -188,7 +259,7 @@ class Image2Compaction:
             raise ValueError("No model found. Train the model first.")
         self.model.save(save_path)
 
-def load_data(filename, label, img_height=224, img_width=224, approach="regression"):
+def load_data(filename, label, img_height=160, img_width=160, approach="regression"):
     """
     Load and preprocess the image and label.
     :param filename: str, path to the image file.
@@ -208,7 +279,7 @@ def load_data(filename, label, img_height=224, img_width=224, approach="regressi
         raise ValueError("Approach must be either 'regression' or 'classification'.")
     
 
-def load_image(filename, img_height=227, img_width=227):
+def load_image(filename, img_height=160, img_width=160):
     """
     Load and preprocess the image.
 
@@ -221,7 +292,8 @@ def load_image(filename, img_height=227, img_width=227):
     image = tf.io.read_file(filename)
     image = tf.image.decode_jpeg(image, channels=3) 
     image = tf.image.resize(image, (img_height, img_width))  # Resize the image to fit the model's needs
-    image = image / 255.0
+    # image = image / 255.0
+    # image = preprocess_input(image)
     return image
 
 def bulk_density_to_class(bulk_density):
@@ -237,41 +309,122 @@ def bulk_density_to_class(bulk_density):
 # ==========================================================
 if __name__ == "__main__":
     data_dir = "data/compact-4-dry"
-    approach = "classification" 
+    approach = "regression" 
 
-    img2compaction = Image2Compaction(data_dir, approach=approach) 
-    img2compaction.load_data()
-    img2compaction.build_model()
-    img2compaction.train_model(epochs=1000)               # Should be higher for real training?
-    img2compaction.plot_training_results()
+    # img2compaction = Image2Compaction(data_dir, approach=approach) 
+    # img2compaction.load_data()
+    # img2compaction.build_model()
+    # img2compaction.plot_training_results()
     # img2compaction.save_model("model.keras")
 
-    # # Run the model
-    # model_path = "model.keras"
-    # run_model = tf.keras.models.load_model(model_path)
+    # Run the model
+    model_path = "model.keras"
+    run_model = tf.keras.models.load_model(model_path)
 
-    # df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
-    # image_files = df["filename"].tolist()
-    # labels = df["label"].tolist()
+    df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
+    image_files = df["filename"].tolist()
+    labels = df["label"].tolist()
+    predictions = []
 
-    # # Copilot generated.
-    # for i in range(0, len(image_files), 25):  # Process in batches of 25 (5x5 grid)
-    #     plt.figure(figsize=(15, 15))
-    #     for j in range(25):
-    #         if i + j >= len(image_files):                               # Avoid index out of range
-    #             break
-    #         test_image = load_image(image_files[i + j], img_height=224, img_width=224)
-    #         test_image = tf.expand_dims(test_image, axis=0)  # Add batch dimension
+    for i in range(len(image_files)):
+        image = load_image(image_files[i], img_height=160, img_width=160)
+        image = tf.expand_dims(image, axis=0)
+        prediction = run_model.predict(image)
+        print(f"Image: {image_files[i]}, Prediction: {prediction[0][0]:.2f}, Actual: {labels[i]:.2f}")
+        predictions.append(prediction[0][0])
+    
+    goodActual = []
+    goodPred = []
+    goodCorrect = 0
+    goodIncorrect = 0
+    nonIdealActual = []
+    nonIdealPred = []
+    nonIdealCorrect = 0
+    nonIdealIncorrect = 0
+    unviableActual = []
+    unviablePred = []
+    unviableCorrect = 0
+    unviableIncorrect = 0
+    for i in range(len(image_files)):
+        if labels[i] <= 1.4:
+            goodActual.append(labels[i])
+            goodPred.append(predictions[i])
+            if predictions[i] <= 1.4:
+                goodCorrect += 1
+            else:
+                goodIncorrect += 1
+        elif labels[i] <= 1.8:
+            nonIdealActual.append(labels[i])
+            nonIdealPred.append(predictions[i])
+            if predictions[i] <= 1.8:
+                nonIdealCorrect += 1
+            else:
+                nonIdealIncorrect += 1
+        elif labels[i] < 2.0:
+            unviableActual.append(labels[i])
+            unviablePred.append(predictions[i])
+            if predictions[i] < 2.0:
+                unviableCorrect += 1
+            else:
+                unviableIncorrect += 1
 
-    #         prediction = run_model.predict(test_image)
-    #         plt.subplot(5, 5, j + 1)
-    #         plt.imshow(test_image[0].numpy())
-    #         if approach == "regression":
-    #             plt.title(f"Pred: {prediction[0][0]:.2f}\nActual: {labels[i + j]:.2f}")
-    #         else:
-    #             labels[i + j] = bulk_density_to_class(labels[i + j])
-    #             predicted_class = tf.argmax(prediction, axis=1).numpy()[0]
-    #             plt.title(f"Pred: {predicted_class}\nActual: {labels[i + j]}")
-    #         plt.axis('off')
-    #     plt.tight_layout()
-    #     plt.show()
+    # print(f"Good: {goodCorrect} correct, {goodIncorrect} incorrect")
+    # print(f"Non-Ideal: {nonIdealCorrect} correct, {nonIdealIncorrect} incorrect")
+    # print(f"Unviable: {unviableCorrect} correct, {unviableIncorrect} incorrect")
+    # print(f"Good: {goodCorrect/(goodCorrect+goodIncorrect):.2f} correct")
+    # print(f"Non-Ideal: {nonIdealCorrect/(nonIdealCorrect+nonIdealIncorrect):.2f} correct")
+    # print(f"Unviable: {unviableCorrect/(unviableCorrect+unviableIncorrect):.2f} correct")
+
+    # Confusion matrix assembly (only for good and non-ideal)
+    totalGood = goodCorrect + goodIncorrect
+    totalNonIdeal = nonIdealCorrect + nonIdealIncorrect
+    mtx = np.array([[goodCorrect, goodIncorrect],
+                    [nonIdealIncorrect, nonIdealCorrect]])
+    mtx = mtx.astype('float') / mtx.sum(axis=1)[:, np.newaxis]  # Normalize by row (i.e. by the number of samples in each class)
+    print(mtx)
+
+    goodActual = np.array(goodActual)
+    goodPred = np.array(goodPred)
+    nonIdealActual = np.array(nonIdealActual)
+    nonIdealPred = np.array(nonIdealPred)
+    unviableActual = np.array(unviableActual)
+    unviablePred = np.array(unviablePred)
+
+    # Confusion matrix plot (CoPilot go brr...)
+    plt.figure(figsize=(8, 8))
+    plt.subplot(1, 2, 1)
+    plt.imshow(mtx, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title('Confusion matrix')
+    plt.colorbar()
+    tick_marks = np.arange(len(["Good", "Non-Ideal"]))
+    plt.xticks(tick_marks, ["Good", "Non-Ideal"], rotation=45)
+    plt.yticks(tick_marks, ["Good", "Non-Ideal"])
+    plt.tight_layout()
+    plt.ylabel('True label')    
+
+
+    # Box and whisker plots for each class (CoPilot again)
+    plt.figure(figsize=(10, 6))
+    plt.subplot(1, 3, 1)
+    plt.boxplot(goodActual, positions=[1], widths=0.5)
+    plt.boxplot(goodPred, positions=[2], widths=0.5)
+    plt.title("Good")
+    plt.xticks([1, 2], ["Actual", "Predicted"])
+    plt.ylabel("Bulk Density (g/cm^3)")
+    plt.ylim([0, 2.5])
+    plt.subplot(1, 3, 2)
+    plt.boxplot(nonIdealActual, positions=[1], widths=0.5)
+    plt.boxplot(nonIdealPred, positions=[2], widths=0.5)
+    plt.title("Non-Ideal")
+    plt.xticks([1, 2], ["Actual", "Predicted"])
+    plt.ylabel("Bulk Density (g/cm^3)")
+    plt.ylim([0, 2.5])
+    plt.subplot(1, 3, 3)
+    plt.boxplot(unviableActual, positions=[1], widths=0.5)
+    plt.boxplot(unviablePred, positions=[2], widths=0.5)
+    plt.title("Unviable")
+    plt.xticks([1, 2], ["Actual", "Predicted"])
+    plt.ylabel("Bulk Density (g/cm^3)")
+    plt.ylim([0, 2.5])
+    plt.tight_layout()
+    plt.show()
