@@ -52,7 +52,7 @@ class Image2Compaction:
         The images are resized to the specified height and width.
         """
 
-        df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")            # This dataset is created by dataset.py such that each image has a regression label.
+        df = pd.read_csv(pathlib.Path(self.data_dir) / "dataset.csv")            # This dataset is created by dataset.py such that each image has a regression label.
         labels = df["label"].tolist()
         filenames = df["filename"].tolist()
 
@@ -259,6 +259,35 @@ class Image2Compaction:
             raise ValueError("No model found. Train the model first.")
         self.model.save(save_path)
 
+    def load_model(self, load_path):
+        """
+        Load a model from the specified path.
+
+        :param load_path: str, path to load the model from.
+        """
+
+        self.model = tf.keras.models.load_model(load_path)
+
+    def predict(self, image):
+        """
+        Predict the label for a given image using the trained model.
+
+        :param image: preprocessed image.
+        :return: predicted label.
+        """
+
+        if self.model is None:
+            raise ValueError("No model found. Train the model first.")
+        
+        image = tf.expand_dims(image, axis=0)
+        prediction = run_model.predict(image)
+
+        return prediction[0][0]
+    
+# ===========================================================
+# DATA LOADING FUNCTIONS
+# ==========================================================
+
 def load_data(filename, label, img_height=160, img_width=160, approach="regression"):
     """
     Load and preprocess the image and label.
@@ -319,7 +348,8 @@ if __name__ == "__main__":
 
     # Run the model
     model_path = "model.keras"
-    run_model = tf.keras.models.load_model(model_path)
+    img2compaction = Image2Compaction(data_dir, approach=approach)
+    img2compaction.load_model(model_path)
 
     df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
     image_files = df["filename"].tolist()
@@ -329,7 +359,7 @@ if __name__ == "__main__":
     for i in range(len(image_files)):
         image = load_image(image_files[i], img_height=160, img_width=160)
         image = tf.expand_dims(image, axis=0)
-        prediction = run_model.predict(image)
+        prediction = img2compaction.model.predict(image)
         print(f"Image: {image_files[i]}, Prediction: {prediction[0][0]:.2f}, Actual: {labels[i]:.2f}")
         predictions.append(prediction[0][0])
     
