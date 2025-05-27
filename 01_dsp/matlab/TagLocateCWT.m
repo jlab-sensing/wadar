@@ -27,7 +27,7 @@ if displayPlot == true
     figure
     subplot(3,1,1)
     plot(tagFT)
-    title("80 Hz FT Isolated")
+    title("FT Isolated")
     ylabel("Magnitude")
     xlabel("Range Bin")
 end
