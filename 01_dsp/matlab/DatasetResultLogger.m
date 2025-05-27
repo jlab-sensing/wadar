@@ -13,19 +13,26 @@ tag1Hz = label.tagFrequencies(1);
 tag2Hz = label.tagFrequencies(2);
 distance = label.tagDistance;
 
-results = RunDualTagDataset(localDataPath, tag1Hz, tag2Hz, false);
+[peakDifference, SNRdB1, SNRdB2] = DatasetFramesProc(localDataPath, tag1Hz, tag2Hz, label.scansPerDatum);
 
-peakDifferences = results.("Peak Difference");
+for i = 1:length(peakDifference) % Removing obvious weird scans
+    if abs(peakDifference(i) - median(peakDifference)) > 10
+        peakDifference(i) = mean(peakDifference);
+    end
+end
 
-t = ((peakDifferences + ...
+t = ((peakDifference + ...
     distance/resolution) * resolution) / c; % Time of Flight (ToF) from on tag to the other (s)
 radar_perm = ((c*t)/distance).^2;           % ToF converted to permittivity
 
-TEROS_raw = CalibrateVWC2RAW(3.28e-2);      % TODO: document
+VWC = label.VWC / 100;
+TEROS_raw = CalibrateVWC2RAW(VWC);      % Not calibrated
 
-S.peakDifferences = peakDifferences;
+S.peakDifferences = peakDifference;
 S.radarPermmitivity = radar_perm;
 S.adjacentTEROS = TEROS_raw;
+S.SNRdB1 = SNRdB1;
+S.SNRdB2 = SNRdB2;
 
 resultPath = strcat(localDataPath(2:end), '/results.json');
 
