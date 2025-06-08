@@ -12,6 +12,10 @@ def create_labels(data_dir):
     """
 
     data_dir = pathlib.Path(data_dir)
+    print(f"Creating labels in {data_dir}")
+    if not data_dir.exists():
+        print(f"Error: The directory {data_dir} does not exist.")
+        return
     df = pd.read_csv(data_dir / "data-log.csv")
     
     for index, row in df.iterrows():
@@ -38,6 +42,9 @@ def delete_labels(data_dir):
     """
 
     data_dir = pathlib.Path(data_dir)
+    if not data_dir.exists():
+        print(f"Error: The directory {data_dir} does not exist.")
+        return
     df = pd.read_csv(data_dir / "data-log.csv")
     
     for index, row in df.iterrows():

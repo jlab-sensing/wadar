@@ -79,6 +79,11 @@ class HydrosFrameLoader:
         y = np.load(os.path.join(self.dataset_dir, "y_raw.npy"))
         print(f"Loaded raw dataset with shape {X.shape} and labels shape {y.shape}")
         return X, y
+    
+    def update_dataset(self, X, y):
+        if X.shape[0] != y.shape[0]:
+            raise ValueError("Number of samples in X and y must match.")
+        self.save_raw_data(X, y)
 
 # ===========================
 # Test Harness
@@ -88,13 +93,13 @@ if __name__ == "__main__":
     # Example usage:
 
     # To load data from a dataset directory and save it as raw data
-    # dataset_dir = "data/compact-4-dry"
-    # hydros = HydrosFrameLoader(dataset_dir)
-    # X, y = hydros.load_from_dataset()
-    # if X is not None and y is not None:
-    #     hydros.save_raw_data(X, y)
+    dataset_dir = "data/compact-4-dry"
+    hydros = HydrosFrameLoader(dataset_dir)
+    X, y = hydros.load_from_dataset()
+    if X is not None and y is not None:
+        hydros.save_raw_data(X, y)
 
     # To load raw data from saved files
-    dataset_dir = "data/compact-4-dry"
-    hydros_loader = HydrosFrameLoader(dataset_dir)
-    X, y = hydros_loader.load_raw_data()
+    # dataset_dir = "data/compact-4-dry"
+    # hydros = HydrosFrameLoader(dataset_dir)
+    # X, y = hydros.load_raw_data()
