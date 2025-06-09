@@ -16,51 +16,6 @@ X, y = hydros.load_from_dataset()
 test_frame = X[0]
 test_frame = np.median(test_frame, axis=1)
 
-def novelda_digital_downconvert(raw_frame):
-    """
-    Function to apply a digital downcovert (DDC) to a high frequency radar
-    signal. Brings signal to baseband frequencies and provides an analytic
-    signal (i.e. I & Q, in-phase & quadrature, outputs). Inherited from
-    NoveldaDDC.m.
-
-    :param raw_frame:   high-frequency sampled UWB radar signal
-    :return:            baseband, and filtered IQ radar 
-                        signal, note: use abs() on output to get envelope
-                        magnitude
-    """
-
-    # These parameters are for true the X1-IPG1
-    Fs = 39e9           # Mean system sampling rate for 4mm
-    fL = 435e6;         # -10 dB low cutoff for pgen 0
-    fH = 3165e6;        # -10 dB high cutoff
-    Fc = (fH + fL) / 2
-
-    # Digital Down-Convert parameters (normalized frequency index)
-    N = len(raw_frame)                             
-    freqIndex = Fc / Fs * N
-    t = np.linspace(0, 1, N, endpoint=False)
-
-    # Generate the complex sinusoid LO (local oscillator) to mix into the signal 
-    phi = 0         # Phase offset?
-    LO = np.sin(2 * np.pi * freqIndex * t + phi) + 1j * np.cos(2 * np.pi * freqIndex * t + phi)
-
-    # Digital Downconvert (the DDC) via direct multiplication subtracting the mean removes DC offset
-    rf_signal = raw_frame - np.mean(raw_frame)
-    mixed = rf_signal * LO
-
-    # LPF Design to eliminate the upper mixing frequencies after the DDC (21- tap hamming window)
-    M = 20                                  # Filter order, equal to # of filter taps - 1. Inherited this from NoveldaDDC.m.
-    window = np.hamming(M + 1)
-    window /= np.sum(window[:(M//2 + 1)])   # Normalize the weights
-
-    # Baseband signal using convolution (provides downcoverted, filtered analytic signal)
-    baseband_signal = signal.convolve(mixed, window, mode='same')
-
-    return baseband_signal
-
-baseband_signal = novelda_digital_downconvert(test_frame)
-
 plt.figure()
-plt.plot(np.abs(baseband_signal), label='Demodulated Signal')
-# plt.plot(test_frame, label='Original Signal', alpha=0.5)
+plt.plot(np.abs(test_frame), label='Original Signal', alpha=0.5)
 plt.show()
