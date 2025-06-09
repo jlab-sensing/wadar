@@ -75,7 +75,7 @@ class EosDenoising:
         return self.transform_local(X)
 
     def plot_variance(self, X, max_components=10):
-        X_flat = X.reshape(X.shape[0], -1)
+        X_flat = np.abs(X.reshape(X.shape[0], -1))
         X_scaled = self.scaler.fit_transform(X_flat)
         nums = np.arange(1, max_components + 1)
         var_ratio = []
@@ -115,16 +115,17 @@ def viz_noise_removal(X, cleaned, y):
 # Test Harness
 # ===========================
 if __name__ == "__main__":
-    hydros = HydrosFrameLoader("data/compact-4-dry")
-    X, y = hydros.load_from_dataset()
+    hydros = HydrosFrameLoader("data/compact-4-dry", new_dataset=False)
+    X, y = hydros.X, hydros.y
+    
     eos = EosDenoising(n_components=2)
 
-    # reducer.plot_variance(X, max_components=10)
+    eos.plot_variance(X, max_components=10)
 
-    # cleaned = eos.global_pca_denoise(X)
+    # # cleaned = eos.global_pca_denoise(X)
+    # # hydros.update_dataset(cleaned, y)
+    # # viz_noise_removal(X.T, cleaned, y)
+
+    # cleaned = eos.local_pca_denoise(X)
     # hydros.update_dataset(cleaned, y)
-    # viz_noise_removal(X.T, cleaned, y)
-
-    cleaned = eos.local_pca_denoise(X)
-    hydros.update_dataset(cleaned, y)
-    viz_noise_removal(X, cleaned, y)
+    # viz_noise_removal(X, cleaned, y)

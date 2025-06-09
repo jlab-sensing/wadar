@@ -10,8 +10,16 @@ import pathlib
 from scipy import signal
 
 class HydrosFrameLoader:
-    def __init__(self, dataset_dir):
+    def __init__(self, dataset_dir, new_dataset=True):
         self.dataset_dir = dataset_dir
+        self.X = None
+        self.y = None
+        if new_dataset:
+            self.X, self.y = self.load_from_dataset()
+            if self.X is not None and self.y is not None:
+                self.save_raw_data(self.X, self.y)
+        else:
+            self.X, self.y = self.load_raw_data()
 
     @staticmethod
     def extract_label(data_dir):
@@ -47,7 +55,6 @@ class HydrosFrameLoader:
             all_labels.append(label)
         X = np.stack(all_features)
         y = np.array(all_labels, dtype='float32')
-        print(f"Loaded {len(X)} samples with shape {X.shape} and labels shape {y.shape}")
         return X, y
 
     def load_from_dataset(self):
@@ -61,10 +68,11 @@ class HydrosFrameLoader:
                 if X is not None and y is not None:
                     all_X.append(X)
                     all_y.append(y)
+                # print(f"Loaded {len(X)} frames from {folder_path} with label {y[0] if len(y) > 0 else 'N/A'}")
         if all_X and all_y:
             all_X = np.concatenate(all_X, axis=0)
             all_y = np.concatenate(all_y, axis=0)
-            print(f"Total samples loaded: {len(all_X)} with shape {all_X.shape} and labels shape {all_y.shape}")
+            print("All data loaded successfully.")
             return all_X, all_y
         else:
             print("il n'y a pas de data")
@@ -88,7 +96,10 @@ class HydrosFrameLoader:
     def load_raw_data(self):
         X = np.load(os.path.join(self.dataset_dir, "X_raw.npy"))
         y = np.load(os.path.join(self.dataset_dir, "y_raw.npy"))
-        print(f"Loaded raw dataset with shape {X.shape} and labels shape {y.shape}")
+        if X is None or y is None:
+            raise ValueError("X_raw.npy and y_raw.npy not found in the dataset directory.")
+        print("Loaded from existing dataset.")
+
         return X, y
     
     def update_dataset(self, X, y):
@@ -148,12 +159,10 @@ if __name__ == "__main__":
 
     # To load data from a dataset directory and save it as raw data
     dataset_dir = "data/compact-4-dry"
-    hydros = HydrosFrameLoader(dataset_dir)
-    X, y = hydros.load_from_dataset()
-    if X is not None and y is not None:
-        hydros.save_raw_data(X, y)
+    hydros = HydrosFrameLoader(dataset_dir, new_dataset=True)
+    X, y = hydros.X, hydros.y
 
     # To load raw data from saved files
-    # dataset_dir = "data/compact-4-dry"
-    # hydros = HydrosFrameLoader(dataset_dir)
-    # X, y = hydros.load_raw_data()
+    dataset_dir = "data/compact-4-dry"
+    hydros = HydrosFrameLoader(dataset_dir, new_dataset=False)
+    X, y = hydros.X, hydros.y
