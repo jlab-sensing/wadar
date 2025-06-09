@@ -54,7 +54,7 @@ class Image2Compaction:
         The images are resized to the specified height and width.
         """
 
-        df = pd.read_csv(pathlib.Path(self.data_dir) / "cwt_dataset.csv")            # This dataset is created by dataset.py such that each image has a regression label.
+        df = pd.read_csv(pathlib.Path(self.data_dir) / "radargram_dataset.csv")            # This dataset is created by dataset.py such that each image has a regression label.
         labels = df["label"].tolist()
         filenames = df["image_path"].tolist()
 

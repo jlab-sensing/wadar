@@ -9,7 +9,39 @@ from eos import EosDenoising
 import os
 import pandas as pd
 
-class PrometheusFeatureExtractor:
+class PrometheusRadargramFeatureExtractor:
+    def __init__(self):
+        pass
+
+    def build_image_dataset(self, X, output_dir="data/image_dataset"):
+        N, R, T = X.shape
+        if os.path.exists(output_dir):
+            print(f"Warning: {output_dir} already exists. It will be overwritten.")
+            for file in os.listdir(output_dir):
+                file_path = os.path.join(output_dir, file)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+        os.makedirs(output_dir, exist_ok=True)
+        image_paths = []
+
+        for i in range(N):
+            frame = X[i]
+            plt.figure(figsize=(4, 3))
+            plt.imshow(frame, aspect='auto', cmap='viridis')
+            plt.axis('off')
+            img_path = os.path.join(output_dir, f"image_{i}.png")
+            plt.savefig(img_path, bbox_inches='tight', pad_inches=0)
+            plt.close()
+            image_paths.append(img_path)
+
+        return image_paths
+    
+    def full_monty(self, X, y, output_dir="data/image_dataset"):
+        image_paths = self.build_image_dataset(X, output_dir)
+        df = pd.DataFrame({'image_path': image_paths, 'label': y})
+        df.to_csv(os.path.join(output_dir, 'radargram_dataset.csv'), index=False)
+
+class PrometheusWaveletFeatureExtractor:
     def __init__(self, wavelet="mexh", min_scale=1, max_scale=200, num_scales=100):
         self.wavelet = wavelet
         self.min_scale = min_scale
@@ -55,10 +87,12 @@ if __name__ == "__main__":
     dataset_dir = "data/compact-4-dry"
     hydros = HydrosFrameLoader(dataset_dir)
     X, y = hydros.load_from_dataset()
-    eos = EosDenoising(n_components=2)
-    X = eos.local_pca_denoise(X)
+    eos = EosDenoising(n_components=1)
+    # X = eos.local_pca_denoise(X)
 
-    prometheus = PrometheusFeatureExtractor()
+    # prometheus = PrometheusWaveletFeatureExtractor()
+    # prometheus.full_monty(X, y)
+    prometheus = PrometheusRadargramFeatureExtractor()
     prometheus.full_monty(X, y)
 
     # test_frame = X[0]  
