@@ -83,12 +83,18 @@ class HephaestusPCA:
 
 if __name__ == "__main__":
 
-    dataset_dir = "data/compact-4-dry"
+    dataset_dir = "data/full_monty"
     hydros = HydrosFrameLoader(dataset_dir, new_dataset=False)
     X, y = hydros.X, hydros.y
 
     hephaestus = HephaestusPCA(X, n_components=3)
     temp = hephaestus.dimensionality_reduction()
+
+    # for i, j in enumerate(y):
+    #     if y[i] < 1.4:
+    #         y[i] = 0
+    #     else:
+    #         y[i] = 1
 
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
