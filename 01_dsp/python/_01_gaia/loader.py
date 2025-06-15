@@ -9,7 +9,7 @@ import sys
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)) # https://stackoverflow.com/questions/21005822/what-does-os-path-abspathos-path-joinos-path-dirname-file-os-path-pardir
 sys.path.insert(0, parent_dir)
-from _02_poseidon.ddc import novelda_digital_downconvert
+from _02_poseidon import ddc
 
 class FrameLoader:
     """
@@ -22,13 +22,15 @@ class FrameLoader:
     new_dataset (bool): If True, the class will load data from the dataset directory and save it as raw data. If False, it will load the raw data from saved files.
     ddc (bool): If True, the class will perform digital downconversion on the frames. Default is True.
     """
-    def __init__(self, dataset_dir, new_dataset=True, ddc=True):
+    def __init__(self, dataset_dir, new_dataset=True, ddc_flag=True):
         self.dataset_dir = dataset_dir
         self.X = None
         self.y = None
-        self.ddc = ddc 
+        self.ddc = ddc_flag 
         if new_dataset:
             self.X, self.y = self.load_from_dataset()
+            print("Beginning anomoly removal process. Estimated time: 1-2 minutes.")
+            self.X = ddc.remove_anomalies(self.X) 
             if self.X is not None and self.y is not None:
                 self.save_raw_data(self.X, self.y)
         else:
@@ -98,7 +100,7 @@ class FrameLoader:
         for i in range(X.shape[0]):
             temp = X[i]
             for j in range(temp.shape[1]):
-                temp[:, j] = novelda_digital_downconvert(temp[:, j])
+                temp[:, j] = ddc.novelda_digital_downconvert(temp[:, j])
             X[i] = temp
         return X
 

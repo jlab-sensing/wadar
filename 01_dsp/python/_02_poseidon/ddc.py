@@ -42,3 +42,24 @@ def novelda_digital_downconvert(raw_frame):
     baseband_signal = signal.convolve(mixed, window, mode='same')
 
     return baseband_signal
+
+def remove_anomalies(X, threshold=50):
+    """
+    Replace values in X that deviate from the median by more than threshold with the median. This
+    is something that has been done since the beginning of the project.
+
+    Args:
+        X (np.ndarray): Input array of shape (frames, range_bins, time_bins).
+        threshold (float): Threshold for anomaly detection.
+    Returns:
+        np.ndarray: Array with anomalies replaced by the median.
+    """
+    
+    X_clean = X.copy()
+    for i in range(X_clean.shape[0]):
+        for j in range(X_clean.shape[1]):
+            med = np.median(X_clean[i, j, :])
+            for k in range(X_clean.shape[2]):
+                if np.abs(X_clean[i, j, k] - med) > threshold:
+                    X_clean[i, j, k] = med
+    return X_clean
