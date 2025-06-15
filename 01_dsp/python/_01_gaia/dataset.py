@@ -1,0 +1,1 @@
+# TODO: This file needs to process .frames files and extract the data as .csv as well create .json files for each folder with the corresponding labels.

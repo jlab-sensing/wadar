@@ -10,10 +10,10 @@ if __name__ == "__main__":
 
     # To load data from a dataset directory and save it as raw data
     dataset_dir = "../data/compact-4-dry"
-    hydros = FrameLoader(dataset_dir, new_dataset=True)
+    hydros = FrameLoader(dataset_dir, new_dataset=True, ddc=True)
     X, y = hydros.X, hydros.y
 
     # To load raw data from saved files
     dataset_dir = "../data/compact-4-dry"
-    hydros = FrameLoader(dataset_dir, new_dataset=False)
+    hydros = FrameLoader(dataset_dir, new_dataset=False, ddc=True)
     X, y = hydros.X, hydros.y

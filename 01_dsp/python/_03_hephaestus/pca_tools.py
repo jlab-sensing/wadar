@@ -1,17 +1,12 @@
-# Hephaestus (Ἥφαιστος): God of blacksmiths, metalworking, and craftsmanship. This file sses functions for shaping, forging, and 
-# transforming data into features.
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from hydros import HydrosFrameLoader
-from eos import EosDenoising
 import os
 from scipy import signal
 from sklearn.decomposition import PCA
 from mpl_toolkits.mplot3d import Axes3D
 
-class HephaestusPCA:
+class PCAProcessor:
     def __init__(self, X, n_components=1):
         self.n_components = n_components
         self.pca = PCA(n_components=self.n_components)
@@ -80,46 +75,3 @@ class HephaestusPCA:
         plt.title('Variance Explained (Per-Sample Dimensionality Reduction)')
         plt.grid()
         plt.show()
-
-if __name__ == "__main__":
-
-    dataset_dir = "data/full_monty"
-    hydros = HydrosFrameLoader(dataset_dir, new_dataset=False)
-    X, y = hydros.X, hydros.y
-
-    hephaestus = HephaestusPCA(X, n_components=3)
-    temp = hephaestus.dimensionality_reduction()
-
-    # for i, j in enumerate(y):
-    #     if y[i] < 1.4:
-    #         y[i] = 0
-    #     else:
-    #         y[i] = 1
-
-    fig = plt.figure(figsize=(10, 7))
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(temp[:, 0], temp[:, 1], temp[:, 2], c=y, cmap='viridis', alpha=0.5)
-    ax.set_xlabel('PCA Component 1')
-    ax.set_ylabel('PCA Component 2')
-    ax.set_zlabel('PCA Component 3')
-    ax.set_title('3D PCA Dimensionality Reduction')
-    plt.colorbar(ax.scatter(temp[:, 0], temp[:, 1], temp[:, 2], c=y, cmap='viridis', alpha=0.5), label='Label')
-    plt.show()
-
-    # plt.figure(figsize=(10, 5))
-    # plt.scatter(temp[:, 0], temp[:, 1], c=y, cmap='viridis', alpha=0.5)
-    # plt.colorbar(label='Label')
-    # plt.xlabel('PCA Component 1')
-    # plt.ylabel('PCA Component 2')
-    # plt.title('PCA Dimensionality Reduction')
-    # plt.show()
-
-    # back_to_original_shape = hephaestus.pca_denoise()
-
-    # X = np.abs(X)
-    # plt.plot(np.median(back_to_original_shape[3, :, :], axis=1), label='Denoised Frame 0')
-    # plt.plot(np.median(X[3, :, :], axis=1), label='Original Frame 0')
-    # plt.legend()
-    # plt.show()
-
-    # hephaestus.plot_variance_columnwise()
