@@ -1,3 +1,5 @@
+# Metis (Μῆτις): Titaness of wisdom, prudence, and deep thought. Excellent for the intelligent and careful decision-making of an ML model.
+
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -52,9 +54,9 @@ class Image2Compaction:
         The images are resized to the specified height and width.
         """
 
-        df = pd.read_csv(pathlib.Path(self.data_dir) / "dataset.csv")            # This dataset is created by dataset.py such that each image has a regression label.
+        df = pd.read_csv(pathlib.Path(self.data_dir) / "radargram_dataset.csv")            # This dataset is created by dataset.py such that each image has a regression label.
         labels = df["label"].tolist()
-        filenames = df["filename"].tolist()
+        filenames = df["image_path"].tolist()
 
         if self.approach == "classification":
             for i in range(len(labels)):
@@ -84,7 +86,7 @@ class Image2Compaction:
         self.train_ds = train_ds
         self.val_ds = val_ds
 
-    def build_model(self, epochs=30):
+    def build_model(self, epochs=100):
         """
         Build and compile the model architecture. We use transfer learning with MobileNetV2. 
         """
@@ -337,124 +339,126 @@ def bulk_density_to_class(bulk_density):
 # TEST HARNESS
 # ==========================================================
 if __name__ == "__main__":
-    data_dir = "data/compact-4-dry"
-    approach = "regression" 
+    data_dir = "data/image_dataset" 
+    approach = "regression"  # or "regression"
 
-    # img2compaction = Image2Compaction(data_dir, approach=approach) 
-    # img2compaction.load_data()
-    # img2compaction.build_model()
-    # img2compaction.plot_training_results()
-    # img2compaction.save_model("model.keras")
+    img2compaction = Image2Compaction(data_dir, approach=approach) 
+    img2compaction.load_data()
+    img2compaction.build_model()
+    img2compaction.plot_training_results()
+    img2compaction.save_model("model.keras")
 
-    # Run the model
-    model_path = "model.keras"
-    img2compaction = Image2Compaction(data_dir, approach=approach)
-    img2compaction.load_model(model_path)
+    # # Run the model
+    # model_path = "model.keras"
+    # img2compaction = Image2Compaction(data_dir, approach=approach)
+    # img2compaction.load_model(model_path)
 
-    df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
-    image_files = df["filename"].tolist()
-    labels = df["label"].tolist()
-    predictions = []
+    # # Loading test set (taken in field)
+    # data_dir = "data/test_set"
+    # df = pd.read_csv(pathlib.Path(data_dir) / "dataset.csv")
+    # image_files = df["filename"].tolist()
+    # labels = df["label"].tolist()
+    # predictions = []
 
-    for i in range(len(image_files)):
-        image = load_image(image_files[i], img_height=160, img_width=160)
-        image = tf.expand_dims(image, axis=0)
-        prediction = img2compaction.model.predict(image)
-        print(f"Image: {image_files[i]}, Prediction: {prediction[0][0]:.2f}, Actual: {labels[i]:.2f}")
-        predictions.append(prediction[0][0])
+    # for i in range(len(image_files)):
+    #     image = load_image(image_files[i], img_height=160, img_width=160)
+    #     image = tf.expand_dims(image, axis=0)
+    #     prediction = img2compaction.model.predict(image)
+    #     print(f"Image: {image_files[i]}, Prediction: {prediction[0][0]:.2f}, Actual: {labels[i]:.2f}")
+    #     predictions.append(prediction[0][0])
     
-    goodActual = []
-    goodPred = []
-    goodCorrect = 0
-    goodIncorrect = 0
-    nonIdealActual = []
-    nonIdealPred = []
-    nonIdealCorrect = 0
-    nonIdealIncorrect = 0
-    unviableActual = []
-    unviablePred = []
-    unviableCorrect = 0
-    unviableIncorrect = 0
-    for i in range(len(image_files)):
-        if labels[i] <= 1.4:
-            goodActual.append(labels[i])
-            goodPred.append(predictions[i])
-            if predictions[i] <= 1.4:
-                goodCorrect += 1
-            else:
-                goodIncorrect += 1
-        elif labels[i] <= 1.8:
-            nonIdealActual.append(labels[i])
-            nonIdealPred.append(predictions[i])
-            if predictions[i] <= 1.8:
-                nonIdealCorrect += 1
-            else:
-                nonIdealIncorrect += 1
-        elif labels[i] < 2.0:
-            unviableActual.append(labels[i])
-            unviablePred.append(predictions[i])
-            if predictions[i] < 2.0:
-                unviableCorrect += 1
-            else:
-                unviableIncorrect += 1
+    # goodActual = []
+    # goodPred = []
+    # goodCorrect = 0
+    # goodIncorrect = 0
+    # nonIdealActual = []
+    # nonIdealPred = []
+    # nonIdealCorrect = 0
+    # nonIdealIncorrect = 0
+    # unviableActual = []
+    # unviablePred = []
+    # unviableCorrect = 0
+    # unviableIncorrect = 0
+    # for i in range(len(image_files)):
+    #     if labels[i] <= 1.4:
+    #         goodActual.append(labels[i])
+    #         goodPred.append(predictions[i])
+    #         if predictions[i] <= 1.4:
+    #             goodCorrect += 1
+    #         else:
+    #             goodIncorrect += 1
+    #     elif labels[i] <= 1.8:
+    #         nonIdealActual.append(labels[i])
+    #         nonIdealPred.append(predictions[i])
+    #         if predictions[i] <= 1.8:
+    #             nonIdealCorrect += 1
+    #         else:
+    #             nonIdealIncorrect += 1
+    #     elif labels[i] < 2.0:
+    #         unviableActual.append(labels[i])
+    #         unviablePred.append(predictions[i])
+    #         if predictions[i] < 2.0:
+    #             unviableCorrect += 1
+    #         else:
+    #             unviableIncorrect += 1
 
-    # print(f"Good: {goodCorrect} correct, {goodIncorrect} incorrect")
-    # print(f"Non-Ideal: {nonIdealCorrect} correct, {nonIdealIncorrect} incorrect")
-    # print(f"Unviable: {unviableCorrect} correct, {unviableIncorrect} incorrect")
-    # print(f"Good: {goodCorrect/(goodCorrect+goodIncorrect):.2f} correct")
-    # print(f"Non-Ideal: {nonIdealCorrect/(nonIdealCorrect+nonIdealIncorrect):.2f} correct")
-    # print(f"Unviable: {unviableCorrect/(unviableCorrect+unviableIncorrect):.2f} correct")
+    # # print(f"Good: {goodCorrect} correct, {goodIncorrect} incorrect")
+    # # print(f"Non-Ideal: {nonIdealCorrect} correct, {nonIdealIncorrect} incorrect")
+    # # print(f"Unviable: {unviableCorrect} correct, {unviableIncorrect} incorrect")
+    # # print(f"Good: {goodCorrect/(goodCorrect+goodIncorrect):.2f} correct")
+    # # print(f"Non-Ideal: {nonIdealCorrect/(nonIdealCorrect+nonIdealIncorrect):.2f} correct")
+    # # print(f"Unviable: {unviableCorrect/(unviableCorrect+unviableIncorrect):.2f} correct")
 
-    # Confusion matrix assembly (only for good and non-ideal)
-    totalGood = goodCorrect + goodIncorrect
-    totalNonIdeal = nonIdealCorrect + nonIdealIncorrect
-    mtx = np.array([[goodCorrect, goodIncorrect],
-                    [nonIdealIncorrect, nonIdealCorrect]])
-    mtx = mtx.astype('float') / mtx.sum(axis=1)[:, np.newaxis]  # Normalize by row (i.e. by the number of samples in each class)
-    print(mtx)
+    # # Confusion matrix assembly (only for good and non-ideal)
+    # totalGood = goodCorrect + goodIncorrect
+    # totalNonIdeal = nonIdealCorrect + nonIdealIncorrect
+    # mtx = np.array([[goodCorrect, goodIncorrect],
+    #                 [nonIdealIncorrect, nonIdealCorrect]])
+    # mtx = mtx.astype('float') / mtx.sum(axis=1)[:, np.newaxis]  # Normalize by row (i.e. by the number of samples in each class)
+    # print(mtx)
 
-    goodActual = np.array(goodActual)
-    goodPred = np.array(goodPred)
-    nonIdealActual = np.array(nonIdealActual)
-    nonIdealPred = np.array(nonIdealPred)
-    unviableActual = np.array(unviableActual)
-    unviablePred = np.array(unviablePred)
+    # goodActual = np.array(goodActual)
+    # goodPred = np.array(goodPred)
+    # nonIdealActual = np.array(nonIdealActual)
+    # nonIdealPred = np.array(nonIdealPred)
+    # unviableActual = np.array(unviableActual)
+    # unviablePred = np.array(unviablePred)
 
-    # Confusion matrix plot (CoPilot go brr...)
-    plt.figure(figsize=(8, 8))
-    plt.subplot(1, 2, 1)
-    plt.imshow(mtx, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title('Confusion matrix')
-    plt.colorbar()
-    tick_marks = np.arange(len(["Good", "Non-Ideal"]))
-    plt.xticks(tick_marks, ["Good", "Non-Ideal"], rotation=45)
-    plt.yticks(tick_marks, ["Good", "Non-Ideal"])
-    plt.tight_layout()
-    plt.ylabel('True label')    
+    # # Confusion matrix plot (CoPilot go brr...)
+    # plt.figure(figsize=(8, 8))
+    # plt.subplot(1, 2, 1)
+    # plt.imshow(mtx, interpolation='nearest', cmap=plt.cm.Blues)
+    # plt.title('Confusion matrix')
+    # plt.colorbar()
+    # tick_marks = np.arange(len(["Good", "Non-Ideal"]))
+    # plt.xticks(tick_marks, ["Good", "Non-Ideal"], rotation=45)
+    # plt.yticks(tick_marks, ["Good", "Non-Ideal"])
+    # plt.tight_layout()
+    # plt.ylabel('True label')    
 
 
-    # Box and whisker plots for each class (CoPilot again)
-    plt.figure(figsize=(10, 6))
-    plt.subplot(1, 3, 1)
-    plt.boxplot(goodActual, positions=[1], widths=0.5)
-    plt.boxplot(goodPred, positions=[2], widths=0.5)
-    plt.title("Good")
-    plt.xticks([1, 2], ["Actual", "Predicted"])
-    plt.ylabel("Bulk Density (g/cm^3)")
-    plt.ylim([0, 2.5])
-    plt.subplot(1, 3, 2)
-    plt.boxplot(nonIdealActual, positions=[1], widths=0.5)
-    plt.boxplot(nonIdealPred, positions=[2], widths=0.5)
-    plt.title("Non-Ideal")
-    plt.xticks([1, 2], ["Actual", "Predicted"])
-    plt.ylabel("Bulk Density (g/cm^3)")
-    plt.ylim([0, 2.5])
-    plt.subplot(1, 3, 3)
-    plt.boxplot(unviableActual, positions=[1], widths=0.5)
-    plt.boxplot(unviablePred, positions=[2], widths=0.5)
-    plt.title("Unviable")
-    plt.xticks([1, 2], ["Actual", "Predicted"])
-    plt.ylabel("Bulk Density (g/cm^3)")
-    plt.ylim([0, 2.5])
-    plt.tight_layout()
-    plt.show()
+    # # Box and whisker plots for each class (CoPilot again)
+    # plt.figure(figsize=(10, 6))
+    # plt.subplot(1, 3, 1)
+    # plt.boxplot(goodActual, positions=[1], widths=0.5)
+    # plt.boxplot(goodPred, positions=[2], widths=0.5)
+    # plt.title("Good")
+    # plt.xticks([1, 2], ["Actual", "Predicted"])
+    # plt.ylabel("Bulk Density (g/cm^3)")
+    # plt.ylim([0, 2.5])
+    # plt.subplot(1, 3, 2)
+    # plt.boxplot(nonIdealActual, positions=[1], widths=0.5)
+    # plt.boxplot(nonIdealPred, positions=[2], widths=0.5)
+    # plt.title("Non-Ideal")
+    # plt.xticks([1, 2], ["Actual", "Predicted"])
+    # plt.ylabel("Bulk Density (g/cm^3)")
+    # plt.ylim([0, 2.5])
+    # plt.subplot(1, 3, 3)
+    # plt.boxplot(unviableActual, positions=[1], widths=0.5)
+    # plt.boxplot(unviablePred, positions=[2], widths=0.5)
+    # plt.title("Unviable")
+    # plt.xticks([1, 2], ["Actual", "Predicted"])
+    # plt.ylabel("Bulk Density (g/cm^3)")
+    # plt.ylim([0, 2.5])
+    # plt.tight_layout()
+    # plt.show()
