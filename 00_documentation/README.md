@@ -53,6 +53,10 @@ In order to correctly set up communication between a device and the radar, the S
 - Adding `PubkeyAcceptedAlgorithms +ssh-rsa` to `/etc/ssh/ssh_config` when the SSH key isn't being accepted.
 - Call `sudo systemctl restart ssh` to restart the SSH server after the config file is changed.
 - Validate the setup by SSHing into the radar and SSHing back to our device without a password prompt.
+- If you are on an Apple product, you will likely need to manually start an SSH server. To do this:
+    1. Open "System Settings" > "General" > "Sharing".
+    2. If disabled, enable "Remote Login".
+    - Note that you will also need to use "192.168.6.1/2" rather than "192.168.7.1/2" with `ssh`.
 
 ---
 
