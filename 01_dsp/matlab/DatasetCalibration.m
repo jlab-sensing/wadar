@@ -41,8 +41,15 @@ ylabel("RAW")
 title("Permittivity to RAW Calibration")
 
 radarDataPoints = polyval(perm2VWC, radarPermittivity);
+writematrix(perm2VWC, fullfile(fullfile(pwd, localDataPath), 'perm2VWC.csv'));
 
-terosDataPoints = (5.12018081e-10)*terosDataPoints.^3 - (0.000003854251138)*terosDataPoints.^2 + (0.009950433112)*terosDataPoints - 8.508168835941; 
+% This is TEROS' medium specific calibration process.
+RAW2VWC = polyfit(terosDataPoints, expectedVWC, height(terosDataPoints) - 2);
+terosDataPoints = polyval(RAW2VWC, terosDataPoints);
+writematrix(RAW2VWC, fullfile(fullfile(pwd, localDataPath), 'RAW2VWC.csv'));
+
+% This is the generic formula that can be used if there are not enough
+% data points to perform a calibration.
 % terosDataPoints = 3.879e-4 * terosDataPoints - 0.6956;
 
 figure
@@ -54,7 +61,7 @@ for i = 1:length(groundTruth) % chaos...
     if i == 1
         b = boxchart(ones(1,3) * groundTruth(i), radarDataPoints(i,:), ...
                      'BoxWidth', 0.5, 'DisplayName', "Radar");
-        t = boxchart(ones(1,3) * groundTruth(i), terosDataPoints(i,:)*100, ...
+        t = boxchart(ones(1,3) * groundTruth(i), terosDataPoints(i,:), ...
                      'BoxWidth', 0.5, 'DisplayName', "Commercial Sensor");
         firstBox = b;
         secondBox = t;
@@ -62,7 +69,7 @@ for i = 1:length(groundTruth) % chaos...
     else
         b = boxchart(ones(1,3) * groundTruth(i), radarDataPoints(i,:), ...
                      'BoxWidth', 0.5);
-        t = boxchart(ones(1,3) * groundTruth(i), terosDataPoints(i,:)*100, ...
+        t = boxchart(ones(1,3) * groundTruth(i), terosDataPoints(i,:), ...
              'BoxWidth', 0.5);
     end
     b.BoxFaceColor = [0 0.6 0];  % Set green
@@ -73,5 +80,17 @@ xlabel("Ground truth soil moisture level (%)")
 ylabel("Sensor soil moisture level (%)")
 
 legend([firstBox secondBox], 'Location', 'northwest');
+
+%% Results table
+
+radarMean  = mean(radarDataPoints,   2);      
+terosMean  = mean(terosDataPoints, 2);   
+
+resultsTbl = table(groundTruth', radarMean, terosMean, ...
+        'VariableNames', {'GroundTruthVWC', 'RadarMean', 'TerosMean'} );
+
+disp(resultsTbl)  
+
+writetable(resultsTbl, fullfile(fullfile(pwd, localDataPath), 'dataset_results.csv'));
 
 end
