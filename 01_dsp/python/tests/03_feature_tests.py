@@ -11,9 +11,9 @@ from _05_apollo import viz_tools
 
 if __name__ == "__main__":
 
-    VIZ = False  # Set to True to visualize features, False to save them
+    VIZ = True  # Set to True to visualize features, False to save them
 
-    dataset_dir = "../data/compact-4-dry"
+    dataset_dir = "../data/dry-bulk-density-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
@@ -83,15 +83,15 @@ if __name__ == "__main__":
         plt.title('Peak Width FWHM vs Bulk Density')
         plt.grid()
 
-        signal_skewness, signal_kurtosis = features.signal_skewness_kurtosis()
-        plt.figure()
-        plt.plot(y, signal_skewness, 'o', label='Skewness')
-        plt.plot(y, signal_kurtosis, 'o', label='Kurtosis')
-        plt.xlabel('Bulk Density')
-        plt.ylabel('Signal Skewness/Kurtosis')
-        plt.title('Signal Skewness and Kurtosis vs Bulk Density')
-        plt.legend()
-        plt.grid()
+        # signal_skewness, signal_kurtosis = features.signal_skewness_kurtosis()
+        # plt.figure()
+        # plt.plot(y, signal_skewness, 'o', label='Skewness')
+        # plt.plot(y, signal_kurtosis, 'o', label='Kurtosis')
+        # plt.xlabel('Bulk Density')
+        # plt.ylabel('Signal Skewness/Kurtosis')
+        # plt.title('Signal Skewness and Kurtosis vs Bulk Density')
+        # plt.legend()
+        # plt.grid()
 
         # centroid, bandwidth = features.spectral_centroid_bandwidth()          # Black box. Not going to use it until I understand it.
         # plt.figure()

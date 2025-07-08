@@ -8,11 +8,23 @@ from _01_gaia.loader import FrameLoader
 from _03_hephaestus import feature_tools
 from _04_athena import linear_regression
 
+def plot_feature_importance(model, feature_names):
+    importances = model.coef_
+    indices = np.argsort(importances)[::-1]
+
+    plt.figure(figsize=(10, 6))
+    plt.barh(np.array(feature_names)[indices], importances[indices])
+    plt.xlabel("Feature Importance")
+    plt.title("Linear Regression Feature Importances")
+    plt.gca().invert_yaxis()
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
 
     VIZ = False  # Set to True to visualize features, False to save them
 
-    dataset_dir = "../data/compact-4-dry"
+    dataset_dir = "../data/full_monty"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
@@ -21,9 +33,7 @@ if __name__ == "__main__":
     features.save_features(dataset_dir, normalize=True)
 
     soil_compaction_targets = y
+
     model, metrics = linear_regression.model_linear_regression(dataset_dir, target=soil_compaction_targets)
 
-    print("Trained model:", model)
-    print("Model coefficients:", model.coef_)
-    print("Model intercept:", model.intercept_)
-    print("Metrics:", metrics)
+    plot_feature_importance(model, feature_names=list(features.feature_names))

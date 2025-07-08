@@ -168,6 +168,7 @@ class FeatureTools:
     
     def signal_attenuation(self):
         # TODO: Implement this.
+        return
 
     def save_features(self, dataset_dir, normalize=True):
         """
@@ -181,8 +182,8 @@ class FeatureTools:
             'signal_energy',
             'peak_delay',
             'peak_width_fwhm',
-            'signal_skewness',
-            'signal_kurtosis',
+            # 'signal_skewness',
+            # 'signal_kurtosis',
             'spectral_centroid',
             'spectral_bandwidth',
             'entropy_to_energy_ratio',
@@ -197,8 +198,8 @@ class FeatureTools:
                 'signal_energy': self.signal_energy() / np.max(self.signal_energy()),
                 'peak_delay': self.peak_delay() / np.max(np.abs(self.peak_delay())),
                 'peak_width_fwhm': self.peak_width_fwhm() / np.max(self.peak_width_fwhm()),
-                'signal_skewness': self.signal_skewness_kurtosis()[0] / np.max(np.abs(self.signal_skewness_kurtosis()[0])),
-                'signal_kurtosis': self.signal_skewness_kurtosis()[1] / np.max(np.abs(self.signal_skewness_kurtosis()[1])),
+                # 'signal_skewness': self.signal_skewness_kurtosis()[0] / np.max(np.abs(self.signal_skewness_kurtosis()[0])),
+                # 'signal_kurtosis': self.signal_skewness_kurtosis()[1] / np.max(np.abs(self.signal_skewness_kurtosis()[1])),
                 'spectral_centroid': self.spectral_centroid_bandwidth()[0] / np.max(np.abs(self.spectral_centroid_bandwidth()[0])),
                 'spectral_bandwidth': self.spectral_centroid_bandwidth()[1] / np.max(np.abs(self.spectral_centroid_bandwidth()[1])),
                 'entropy_to_energy_ratio': self.entropy_to_energy_ratio() / np.max(np.abs(self.entropy_to_energy_ratio())),
@@ -212,8 +213,8 @@ class FeatureTools:
                 'signal_energy': self.signal_energy(),
                 'peak_delay': self.peak_delay(),
                 'peak_width_fwhm': self.peak_width_fwhm(),
-                'signal_skewness': self.signal_skewness_kurtosis()[0],
-                'signal_kurtosis': self.signal_skewness_kurtosis()[1],
+                # 'signal_skewness': self.signal_skewness_kurtosis()[0],
+                # 'signal_kurtosis': self.signal_skewness_kurtosis()[1],
                 'spectral_centroid': self.spectral_centroid_bandwidth()[0],
                 'spectral_bandwidth': self.spectral_centroid_bandwidth()[1],
                 'entropy_to_energy_ratio': self.entropy_to_energy_ratio(),

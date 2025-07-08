@@ -12,7 +12,7 @@ from _01_gaia.loader import FrameLoader
 if __name__ == "__main__":
 
     # Load the dataset
-    dataset_dir = "../data/full_monty"
+    dataset_dir = "../data/dry-bulk-density-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False)
     X, y = hydros.X, hydros.y
 

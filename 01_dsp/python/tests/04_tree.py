@@ -7,6 +7,7 @@ sys.path.insert(0, parent_dir)
 from _01_gaia.loader import FrameLoader
 from _03_hephaestus import feature_tools
 from _04_athena import tree
+from sklearn.tree import plot_tree
 
 def plot_feature_importance(model, feature_names):
     importances = model.feature_importances_
@@ -30,7 +31,7 @@ if __name__ == "__main__":
 
     features = feature_tools.FeatureTools(X, soil_index=200)
 
-    features.save_features(dataset_dir, normalize=True)
+    features.save_features(dataset_dir, normalize=False)
 
     soil_compaction_targets = y
     
@@ -46,7 +47,17 @@ if __name__ == "__main__":
     print("Trained Decision Tree model:", model)
     print("Metrics:", metrics)
 
-    plot_feature_importance(model, feature_names=list(features.feature_names))
+    # plot_feature_importance(model, feature_names=list(features.feature_names))
+
+    plot_tree(
+        model,
+        feature_names=features.feature_names,
+        filled=True,         
+        precision=3,        
+        fontsize=10
+    )
+    plt.title("Decision Tree Structure")
+    plt.show()
 
     # Train Random Forest model
     model_rf, metrics_rf = tree.train_random_forest_model(
@@ -60,4 +71,14 @@ if __name__ == "__main__":
     print("Trained Random Forest model:", model_rf)
     print("Metrics (Random Forest):", metrics_rf)
 
-    plot_feature_importance(model_rf, feature_names=list(features.feature_names))
+    # plot_feature_importance(model_rf, feature_names=list(features.feature_names))
+
+    plot_tree(
+        model,
+        feature_names=features.feature_names,
+        filled=True,         
+        precision=3,        
+        fontsize=10
+    )
+    plt.title("Decision Tree Structure")
+    plt.show()

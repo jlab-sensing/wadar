@@ -129,9 +129,10 @@ def process_frames(file_path, capture_name):
             return np.fromfile(f, dtype=fmt, count=count)
 
         magic = fread(np.uint32)[0]
-        # if magic != FRAME_LOGGER_MAGIC_NUM:
-        #     print(f"Wrong data format: {capture_name}!")
-        #     return None
+        FRAME_LOGGER_MAGIC_NUM = 0xFEFE00A2
+        if magic != FRAME_LOGGER_MAGIC_NUM:
+            print(f"Wrong data format: {capture_name}!")
+            return None
 
         iterations = fread(np.int32)[0]
         pps = fread(np.int32)[0]
@@ -164,7 +165,8 @@ def process_frames(file_path, capture_name):
 
         raw_data = fread(np.uint32, num_frames * num_samplers).astype(np.float64)
         raw_data = raw_data / (pps * iterations) * dac_step + dac_min
-        frame_tot = raw_data.reshape((num_samplers, num_frames))
+        frame_tot = raw_data.reshape((num_samplers, num_frames), order='F') # Each signal is a column. This was fun to debug :|
+                                                                            # MATLAB stores matrices in column-major order by default.
 
         for i in range(num_frames):
             if np.max(frame_tot[:, i]) > 8191:

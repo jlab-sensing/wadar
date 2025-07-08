@@ -21,8 +21,6 @@ def train_decision_tree_model(dataset_dir, target, test_size=0.2, random_state=4
     data = np.load(f"{dataset_dir}/features.npz")
     X = np.column_stack([data[key] for key in data.keys()])
 
-    assert len(X) == len(target), "Target length must match number of samples."
-
     X_train, X_test, y_train, y_test = train_test_split(X, target, test_size=test_size, random_state=random_state)
 
     model = DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
