@@ -11,8 +11,8 @@ from _01_gaia.loader import FrameLoader
 
 if __name__ == "__main__":
 
-    NORMAL_PCA = False
-    KERNEL_PCA = True
+    NORMAL_PCA = True
+    KERNEL_PCA = False
 
     # Load the dataset
     dataset_dir = "../data/dry-soil-compaction-dataset"

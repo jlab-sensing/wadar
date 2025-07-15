@@ -6,7 +6,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.par
 sys.path.insert(0, parent_dir)
 from _01_gaia.loader import FrameLoader
 from _03_hephaestus import feature_tools
-from _04_athena import linear_regression
+from _04_athena import regression
 
 import pandas as pd
 
@@ -37,11 +37,32 @@ if __name__ == "__main__":
 
     features = feature_tools.lasso_minimize_features(dataset_dir, X, y)
 
-    model, metrics = linear_regression.model_linear_regression(dataset_dir, feature_file_name)
-    print("Model Metrics:", metrics)
-    print("Model Coefficients:", model.coef_)
+    # print("Linear Regression Model:")
+    # model, metrics = regression.model_linear_regression(dataset_dir, feature_file_name)
+    # print("Model Metrics:", metrics)
+    # print("Model Coefficients:", model.coef_)
+    # print()
+
+    print("Polynomial Regression Model")
+    print()
+
+    print("Degree 1:")
+    poly_model, poly_metrics = regression.polynomial_regression(
+        dataset_dir, feature_file_name, degree=1)
+    print("Model Metrics:", poly_metrics)
+
+    print("Degree 2:")
+    poly_model, poly_metrics = regression.polynomial_regression(
+        dataset_dir, feature_file_name, degree=2)
+    print("Model Metrics:", poly_metrics)
+
+    print("Degree 3:")
+    poly_model, poly_metrics = regression.polynomial_regression(
+        dataset_dir, feature_file_name, degree=3)
+    print("Model Metrics:", poly_metrics)
     
-    if VIZ:
-        data = pd.read_csv(dataset_dir + '/' + feature_file_name)
-        feature_names = data.drop(columns=['label']).columns.tolist()
-        plot_feature_importance(model, feature_names=feature_names)
+    # Doesn't work for polynomial regression
+    # if VIZ:
+    #     data = pd.read_csv(dataset_dir + '/' + feature_file_name)
+    #     feature_names = data.drop(columns=['label']).columns.tolist()
+    #     plot_feature_importance(poly_model, feature_names=feature_names)
