@@ -8,15 +8,21 @@ from _01_gaia.loader import FrameLoader
 from _03_hephaestus import feature_tools
 from _04_athena import linear_regression
 
+import pandas as pd
+
 def plot_feature_importance(model, feature_names):
-    importances = model.coef_
-    indices = np.argsort(importances)[::-1]
+    """
+    Plots the feature importance from a linear regression model.
+    """
+    importance = model.coef_
+    indices = np.argsort(np.abs(importance))[::-1]
 
     plt.figure(figsize=(10, 6))
-    plt.barh(np.array(feature_names)[indices], importances[indices])
-    plt.xlabel("Feature Importance")
-    plt.title("Linear Regression Feature Importances")
-    plt.gca().invert_yaxis()
+    plt.title("Feature Importance")
+    plt.bar(range(len(importance)), importance[indices], align='center')
+    plt.xticks(range(len(importance)), np.array(feature_names)[indices], rotation=90)
+    plt.xlabel("Features")
+    plt.ylabel("Importance")
     plt.tight_layout()
     plt.show()
 
@@ -25,18 +31,17 @@ if __name__ == "__main__":
     VIZ = True  # Set to True to visualize features
     
     dataset_dir = "../data/dry-soil-compaction-dataset"
+    feature_file_name = "features_selected.csv"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
-    features = feature_tools.FeatureTools(X, soil_index=100)
+    features = feature_tools.get_feature_dataframe(X, y, destination=dataset_dir)
 
-    features.save_features(dataset_dir, normalize=True)
-
-    soil_compaction_targets = y
-
-    model, metrics = linear_regression.model_linear_regression(dataset_dir, target=soil_compaction_targets)
+    model, metrics = linear_regression.model_linear_regression(dataset_dir, feature_file_name)
     print("Model Metrics:", metrics)
     print("Model Coefficients:", model.coef_)
     
     if VIZ:
-        plot_feature_importance(model, feature_names=list(features.feature_names))
+        data = pd.read_csv(dataset_dir + '/' + feature_file_name)
+        feature_names = data.drop(columns=['label']).columns.tolist()
+        plot_feature_importance(model, feature_names=feature_names)

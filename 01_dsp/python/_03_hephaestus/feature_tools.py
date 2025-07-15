@@ -10,6 +10,9 @@ from scipy.signal import find_peaks
 import os
 from scipy.signal import peak_widths
 import pandas as pd
+from sklearn.linear_model import Lasso, LassoCV
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 class FeatureTools:
     def __init__(self, X):
@@ -354,3 +357,63 @@ def get_feature_dataframe(X, labels, destination=None):
         df.to_csv(os.path.join(destination, 'features.csv'), index=False)
 
     return df
+
+def lasso_minimize_features(dataset_dir, X, y):
+    df = get_feature_dataframe(X, y, destination=dataset_dir)
+
+    # Sourced from 
+    # https://medium.com/@agrawalsam1997/feature-selection-using-lasso-regression-10f49c973f08
+    X = df.drop(columns=['label']).values
+    y = df['label'].values
+
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
+
+    print("Shape of Train Features: {}".format(X_train.shape))
+    print("Shape of Test Features: {}".format(X_test.shape))
+    print("Shape of Train Target: {}".format(y_train.shape))
+    print("Shape of Test Target: {}".format(y_test.shape))
+
+
+
+    # parameters to be tested on GridSearchCV
+    params = {"alpha": np.logspace(-6, 1, 100)}
+    lasso_cv = LassoCV(alphas=np.logspace(-6, 1, 100), cv=5, max_iter=100000)
+    lasso_cv.fit(X_train, y_train)
+    print("Best Alpha:", lasso_cv.alpha_)
+
+    # Get coefficients and feature names
+    coef = lasso_cv.coef_
+    names = df.drop(columns=['label']).columns
+    selected_features = [name for coef_value, name in zip(coef, names) if coef_value != 0]
+    print("Selected Features:", selected_features)
+
+    # calling the model with the best parameter
+    lasso1 = Lasso(alpha=lasso_cv.alpha_, max_iter=100000)
+    lasso1.fit(X_train, y_train)
+
+    # Using np.abs() to make coefficients positive.  
+    lasso1_coef = np.abs(lasso1.coef_)
+
+    # plotting the Column Names and Importance of Columns. 
+    plt.bar(names, lasso1_coef)
+    plt.xticks(rotation=90)
+    plt.grid()
+    plt.title("Feature Selection Based on Lasso")
+    plt.xlabel("Features")
+    plt.ylabel("Importance")
+    plt.ylim(0, 0.15)
+    plt.show()
+
+    # Subsetting the features which has more than 0.001 importance.
+    feature_subset=np.array(names)[lasso1_coef>0.001]
+    print("Selected Feature Columns: {}".format(feature_subset))
+
+    # Adding the target to the list of feaatures. 
+    feature_subset=np.append(feature_subset, "label")
+    print("Selected Columns: {}".format(feature_subset))
+
+    df_new = df[feature_subset]
+    df_new.to_csv(os.path.join(dataset_dir, 'features_selected.csv'), index=False)
