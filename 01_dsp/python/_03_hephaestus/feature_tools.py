@@ -293,3 +293,64 @@ class FeatureTools:
             self.phase_jitter(peak_idxs[1])
         ]
 
+def get_feature_dataframe(X, labels, destination=None):
+    ft = FeatureTools(X)
+
+    peak_amps = ft.peak_amplitude()             # shape (N, 2)
+    peak_vars = ft.peak_variance()              # list of two arrays (N,)
+    peak_entropy = ft.peak_entropy()            # list of two arrays (N,)
+    peak_amp2var = ft.peak_amplitude2variance_ratio()   # shape (2, N)
+    peak_amp2ent = ft.peak_amplitude2entropy_ratio()    # shape (2, N)
+    peak_delay = ft.peak_delay()                # shape (3, N)
+    peak_width = ft.peak_width()                # shape (2, N)
+    peak_skew, peak_kurt = ft.peak_shape_stats()   # both (2, N)
+    peak_energy = ft.peak_signal_energy()       # list of two arrays (N,)
+    decay_rate = ft.decay_rate()                # shape (2, N)
+    ascend_rate = ft.ascend_rate()              # shape (2, N)
+    phase_var = ft.peak_phase_variance()        # list of two arrays (N,)
+    circ_coeff = ft.peak_circularity_coefficient()  # list of two arrays (N,)
+    phase_jitter = ft.peak_phase_jitter()       # list of two arrays (N,)
+
+    feature_dict = {
+        'amp1': peak_amps[:, 0],
+        'amp2': peak_amps[:, 1],
+        'var1': peak_vars[0],
+        'var2': peak_vars[1],
+        'entropy1': peak_entropy[0],
+        'entropy2': peak_entropy[1],
+        'amp2var1': peak_amp2var[0, :],
+        'amp2var2': peak_amp2var[1, :],
+        'amp2ent1': peak_amp2ent[0, :],
+        'amp2ent2': peak_amp2ent[1, :],
+        'delay1': peak_delay[0, :],
+        'delay2': peak_delay[1, :],
+        'delay_diff': peak_delay[2, :],
+        'width1': peak_width[0, :],
+        'width2': peak_width[1, :],
+        'skew1': peak_skew[0, :],
+        'skew2': peak_skew[1, :],
+        'kurt1': peak_kurt[0, :],
+        'kurt2': peak_kurt[1, :],
+        'energy1': peak_energy[0],
+        'energy2': peak_energy[1],
+        'decay1': decay_rate[0, :],
+        'decay2': decay_rate[1, :],
+        'ascend1': ascend_rate[0, :],
+        'ascend2': ascend_rate[1, :],
+        'phase_var1': phase_var[0],
+        'phase_var2': phase_var[1],
+        'circ_coeff1': circ_coeff[0],
+        'circ_coeff2': circ_coeff[1],
+        'phase_jitter1': phase_jitter[0],
+        'phase_jitter2': phase_jitter[1],
+        'label': labels
+    }
+
+    df = pd.DataFrame(feature_dict)
+
+    if destination is not None:
+        if not os.path.exists(destination):
+            os.makedirs(destination)
+        df.to_csv(os.path.join(destination, 'features.csv'), index=False)
+
+    return df

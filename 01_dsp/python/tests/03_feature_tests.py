@@ -7,7 +7,13 @@ sys.path.insert(0, parent_dir)
 from _01_gaia.loader import FrameLoader
 from _03_hephaestus import feature_tools
 from _05_apollo import viz_tools
+
 import seaborn as sns
+from sklearn.linear_model import Lasso, LassoCV
+from sklearn.model_selection import train_test_split
+import pandas as pd
+from sklearn.model_selection import GridSearchCV, KFold
+from sklearn.preprocessing import StandardScaler
 
 def eval_corr(y, feature):
     """
@@ -38,13 +44,13 @@ if __name__ == "__main__":
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
-    feature_tools = feature_tools.FeatureTools(X)
+    hephaestus_features = feature_tools.FeatureTools(X)
 
     # ==========
     # Peak Amplitude
     # ==========
 
-    peak_amplitude = feature_tools.peak_amplitude()
+    peak_amplitude = hephaestus_features.peak_amplitude()
 
     print("Peak Amplitude Correlation:")
     print("Correlation with Peak Amplitude 1:", eval_corr(y, peak_amplitude[:, 0]))
@@ -66,12 +72,12 @@ if __name__ == "__main__":
     # ==========
 
     print("Peak Variance Correlation:")
-    top_corrs = eval_top_correlation(y, X, feature_tools.signal_variance, num_of_corrs=10)
+    top_corrs = eval_top_correlation(y, X, hephaestus_features.signal_variance, num_of_corrs=10)
 
     if VIZ:
         plt.figure(figsize=(10, 6))
         for coef, idx in top_corrs:
-            sns.scatterplot(x=y, y=feature_tools.signal_variance(idx), label=f'Idx {idx} (r={coef:.2f})')
+            sns.scatterplot(x=y, y=hephaestus_features.signal_variance(idx), label=f'Idx {idx} (r={coef:.2f})')
         plt.xlabel('Soil Compaction Level')
         plt.ylabel('Peak Variance')
         plt.title(f'Top Correlated Peak Variance Features')
@@ -82,7 +88,7 @@ if __name__ == "__main__":
     # ==========
 
     print("Peak Variance Correlation:")
-    peak_variances = feature_tools.peak_variance()
+    peak_variances = hephaestus_features.peak_variance()
     peak_1_variance = peak_variances[0]
     peak_2_variance = peak_variances[1]
     print("Correlation with Peak Variance 1:", eval_corr(y, peak_1_variance))
@@ -102,7 +108,7 @@ if __name__ == "__main__":
     # Peak amplitude to peak variance ratios
     # ==========
 
-    peak_amplitude_variance_ratio = feature_tools.peak_amplitude2variance_ratio()
+    peak_amplitude_variance_ratio = hephaestus_features.peak_amplitude2variance_ratio()
     print("Peak Amplitude to Peak Variance Ratio Correlation:")
     print("Correlation with Peak Amplitude to Peak Variance Ratio 1:", eval_corr(y, peak_amplitude_variance_ratio[0]))
     print("Correlation with Peak Amplitude to Peak Variance Ratio 2:", eval_corr(y, peak_amplitude_variance_ratio[1]))
@@ -123,7 +129,7 @@ if __name__ == "__main__":
 
     corr_coefs = []
     for i in range(X.shape[1]):
-        signal_entropy = feature_tools.signal_entropy(i)
+        signal_entropy = hephaestus_features.signal_entropy(i)
         corr_coef = eval_corr(y, signal_entropy)
         corr_coefs.append((corr_coef, i))
 
@@ -137,7 +143,7 @@ if __name__ == "__main__":
     if VIZ:
         plt.figure(figsize=(10, 6))
         for coef, idx in top_corrs:
-            sns.scatterplot(x=y, y=feature_tools.signal_entropy(idx), label=f'Idx {idx} (r={coef:.2f})')
+            sns.scatterplot(x=y, y=hephaestus_features.signal_entropy(idx), label=f'Idx {idx} (r={coef:.2f})')
         plt.xlabel('Soil Compaction Level')
         plt.ylabel('Peak Entropy')
         plt.title(f'Top Correlated Peak Entropy Features')
@@ -148,7 +154,7 @@ if __name__ == "__main__":
     # ==========
 
     print("Peak Entropy Correlation:")
-    peak_entropy = feature_tools.peak_entropy()
+    peak_entropy = hephaestus_features.peak_entropy()
     print("Correlation with Peak Entropy 1:", eval_corr(y, peak_entropy[0]))
     print("Correlation with Peak Entropy 2:", eval_corr(y, peak_entropy[1]))
     print()
@@ -166,7 +172,7 @@ if __name__ == "__main__":
     # Peak Amplitude to Peak Entropy Ratios
     # ==========
 
-    peak_amplitude_entropy_ratio = feature_tools.peak_amplitude2entropy_ratio()
+    peak_amplitude_entropy_ratio = hephaestus_features.peak_amplitude2entropy_ratio()
     print("Peak Amplitude to Peak Entropy Ratio Correlation:")
     print("Correlation with Peak Amplitude to Peak Entropy Ratio 1:", eval_corr(y, peak_amplitude_entropy_ratio[0]))
     print("Correlation with Peak Amplitude to Peak Entropy Ratio 2:", eval_corr(y, peak_amplitude_entropy_ratio[1]))
@@ -185,7 +191,7 @@ if __name__ == "__main__":
     # Peak delays
     # ==========
 
-    peak_delays = feature_tools.peak_delay()
+    peak_delays = hephaestus_features.peak_delay()
     print("Peak Delays Correlation:")
     print("Correlation with Peak Delay 1:", eval_corr(y, peak_delays[0]))
     print("Correlation with Peak Delay 2:", eval_corr(y, peak_delays[1]))
@@ -206,7 +212,7 @@ if __name__ == "__main__":
     # Peak widths
     # ==========
 
-    peak_widths = feature_tools.peak_width()
+    peak_widths = hephaestus_features.peak_width()
     print("Peak Widths Correlation:")
     print("Correlation with Peak Width 1:", eval_corr(y, peak_widths[0]))
     print("Correlation with Peak Width 2:", eval_corr(y, peak_widths[1]))
@@ -225,7 +231,7 @@ if __name__ == "__main__":
     # Peak shapes
     # ==========
 
-    skewness, kurtosis = feature_tools.peak_shape_stats()
+    skewness, kurtosis = hephaestus_features.peak_shape_stats()
 
     print("Peak Shapes Correlation:")
     print("Correlation with Peak Shape Skewness 1:", eval_corr(y, skewness[0]))
@@ -249,7 +255,7 @@ if __name__ == "__main__":
     # Peak energy
     # ==========
 
-    peak_energy = feature_tools.peak_signal_energy()
+    peak_energy = hephaestus_features.peak_signal_energy()
     print("Peak Energy Correlation:")
     print("Correlation with Peak Energy 1:", eval_corr(y, peak_energy[0]))
     print("Correlation with Peak Energy 2:", eval_corr(y, peak_energy[1]))
@@ -268,7 +274,7 @@ if __name__ == "__main__":
     # Decay rate
     # ==========
 
-    decay_rate = feature_tools.decay_rate()
+    decay_rate = hephaestus_features.decay_rate()
     print("Decay Rate Correlation:")
     print("Correlation with Decay Rate 1:", eval_corr(y, decay_rate[0]))
     print("Correlation with Decay Rate 2:", eval_corr(y, decay_rate[1]))
@@ -287,7 +293,7 @@ if __name__ == "__main__":
     # Ascend rate
     # ==========
 
-    ascend_rate = feature_tools.ascend_rate()
+    ascend_rate = hephaestus_features.ascend_rate()
     print("Ascend Rate Correlation:")
     print("Correlation with Ascend Rate 1:", eval_corr(y, ascend_rate[0]))
     print("Correlation with Ascend Rate 2:", eval_corr(y, ascend_rate[1]))
@@ -306,41 +312,100 @@ if __name__ == "__main__":
     # Peak phrase variance
     # ==========
 
-    peak_phase_variance = feature_tools.peak_phase_variance()
+    peak_phase_variance = hephaestus_features.peak_phase_variance()
     print("Peak Phase Variance Correlation:")
     print("Correlation with Peak Phase Variance 1:", eval_corr(y, peak_phase_variance[0]))
     print("Correlation with Peak Phase Variance 2:", eval_corr(y, peak_phase_variance[1]))
 
-    top_corrs = eval_top_correlation(y, X, feature_tools.phase_variance, num_of_corrs=10)
+    top_corrs = eval_top_correlation(y, X, hephaestus_features.phase_variance, num_of_corrs=10)
     print()
 
     # ==========
     # Circularity coefficient
     # ==========
 
-    circularity_coefficient = feature_tools.peak_circularity_coefficient()
+    circularity_coefficient = hephaestus_features.peak_circularity_coefficient()
     print("Circularity Coefficient Correlation:")
     print("Correlation with Circularity Coefficient 1:", eval_corr(y, circularity_coefficient[0]))
     print("Correlation with Circularity Coefficient 2:", eval_corr(y, circularity_coefficient[1]))
 
-    top_corrs = eval_top_correlation(y, X, feature_tools.circularity_coefficient, num_of_corrs=10)
-    print()
+    top_corrs = eval_top_correlation(y, X, hephaestus_features.circularity_coefficient, num_of_corrs=10)
 
     # ==========
     # Phase jitter
     # ==========
 
-    phase_jitter = feature_tools.peak_phase_jitter()
+    phase_jitter = hephaestus_features.peak_phase_jitter()
     print("Phase Jitter Correlation:")
     print("Correlation with Phase Jitter 1:", eval_corr(y, phase_jitter[0]))
     print("Correlation with Phase Jitter 2:", eval_corr(y, phase_jitter[1]))
 
-    top_corrs = eval_top_correlation(y, X, feature_tools.phase_jitter, num_of_corrs=10)
-    print()
+    top_corrs = eval_top_correlation(y, X, hephaestus_features.phase_jitter, num_of_corrs=10)
 
+        
     # ==========
     # Plot median frame
     # ==========
 
     # This function calls plt.show() internally so don't call it anywhere else
     viz_tools.plot_median_unique(X, y)
+
+    # ==========
+    # Save all features and commit feature selection using lasso regression
+    # ==========
+
+    # df = feature_tools.get_feature_dataframe(X, y, destination=dataset_dir)
+
+    # # Sourced from 
+    # # https://medium.com/@agrawalsam1997/feature-selection-using-lasso-regression-10f49c973f08
+    # X = df.drop(columns=['label']).values
+    # y = df['label'].values
+
+    # scaler = StandardScaler()
+    # X = scaler.fit_transform(X)
+
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
+
+    # print("Shape of Train Features: {}".format(X_train.shape))
+    # print("Shape of Test Features: {}".format(X_test.shape))
+    # print("Shape of Train Target: {}".format(y_train.shape))
+    # print("Shape of Test Target: {}".format(y_test.shape))
+
+
+
+    # # parameters to be tested on GridSearchCV
+    # params = {"alpha": np.logspace(-6, 1, 100)}
+    # lasso_cv = LassoCV(alphas=np.logspace(-6, 1, 100), cv=5, max_iter=100000)
+    # lasso_cv.fit(X_train, y_train)
+    # print("Best Alpha:", lasso_cv.alpha_)
+
+    # # Get coefficients and feature names
+    # coef = lasso_cv.coef_
+    # names = df.drop(columns=['label']).columns
+    # selected_features = [name for coef_value, name in zip(coef, names) if coef_value != 0]
+    # print("Selected Features:", selected_features)
+
+    # # calling the model with the best parameter
+    # lasso1 = Lasso(alpha=lasso_cv.alpha_, max_iter=100000)
+    # lasso1.fit(X_train, y_train)
+
+    # # Using np.abs() to make coefficients positive.  
+    # lasso1_coef = np.abs(lasso1.coef_)
+
+    # # plotting the Column Names and Importance of Columns. 
+    # plt.bar(names, lasso1_coef)
+    # plt.xticks(rotation=90)
+    # plt.grid()
+    # plt.title("Feature Selection Based on Lasso")
+    # plt.xlabel("Features")
+    # plt.ylabel("Importance")
+    # plt.ylim(0, 0.15)
+    # plt.show()
+
+    # # Subsetting the features which has more than 0.001 importance.
+    # feature_subset=np.array(names)[lasso1_coef>0.001]
+    # print("Selected Feature Columns: {}".format(feature_subset))
+
+    # # Adding the target to the list of feaatures. 
+    # feature_subset=np.append(feature_subset, "Outcome")
+    # print("Selected Columns: {}".format(feature_subset))
