@@ -16,9 +16,23 @@ def eval_corr(y, feature):
     corr = np.corrcoef(y, feature)[0, 1]
     return corr
 
+def eval_top_correlation(y, X, feature_func, num_of_corrs=10):
+
+    corr_coefs = []
+    for i in range(X.shape[1]):
+        feature = feature_func(i)
+        corr_coef = eval_corr(y, feature)
+        corr_coefs.append((corr_coef, i))
+
+    top_corrs = sorted(corr_coefs, key=lambda x: abs(x[0]), reverse=True)[:num_of_corrs]
+
+    for rank, (coef, idx) in enumerate(top_corrs, 1):
+        print(f"{rank}. Correlation Coefficient: {coef:.4f} @ {idx}")
+    print()
+
 if __name__ == "__main__":
 
-    VIZ = True
+    VIZ = False
 
     dataset_dir = "../data/dry-soil-compaction-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
@@ -51,29 +65,17 @@ if __name__ == "__main__":
     # This is commented out because it takes forever to run.
     # ==========
 
-    # corr_coefs = []
-    # for i in range(X.shape[1]):
-    #     signal_variance = feature_tools.signal_variance(i)
-    #     corr_coef = eval_corr(y, signal_variance)
-    #     corr_coefs.append((corr_coef, i))
+    print("Peak Variance Correlation:")
+    top_corrs = eval_top_correlation(y, X, feature_tools.signal_variance, num_of_corrs=10)
 
-    # num_of_corrs = 10
-    # # Sort by absolute correlation (already correct)
-    # top_corrs = sorted(corr_coefs, key=lambda x: abs(x[0]), reverse=True)[:num_of_corrs]
-
-    # print(f"Peak Variance - Top {num_of_corrs} Correlations:")
-    # for rank, (coef, idx) in enumerate(top_corrs, 1):
-    #     print(f"{rank}. Correlation Coefficient: {coef:.4f} @ {idx}")
-    # print()
-
-    # if VIZ:
-    #     plt.figure(figsize=(10, 6))
-    #     for coef, idx in top_corrs:
-    #         sns.scatterplot(x=y, y=feature_tools.signal_variance(idx), label=f'Idx {idx} (r={coef:.2f})')
-    #     plt.xlabel('Soil Compaction Level')
-    #     plt.ylabel('Peak Variance')
-    #     plt.title(f'Top {num_of_corrs} Correlated Peak Variance Features')
-    #     plt.legend()
+    if VIZ:
+        plt.figure(figsize=(10, 6))
+        for coef, idx in top_corrs:
+            sns.scatterplot(x=y, y=feature_tools.signal_variance(idx), label=f'Idx {idx} (r={coef:.2f})')
+        plt.xlabel('Soil Compaction Level')
+        plt.ylabel('Peak Variance')
+        plt.title(f'Top Correlated Peak Variance Features')
+        plt.legend()
 
     # ==========
     # Peak Variance
@@ -119,27 +121,27 @@ if __name__ == "__main__":
     # Find the range bin with the peak entropy correlated most with the labels.
     # ==========
 
-    # corr_coefs = []
-    # for i in range(X.shape[1]):
-    #     signal_entropy = feature_tools.signal_entropy(i)
-    #     corr_coef = eval_corr(y, signal_entropy)
-    #     corr_coefs.append((corr_coef, i))
+    corr_coefs = []
+    for i in range(X.shape[1]):
+        signal_entropy = feature_tools.signal_entropy(i)
+        corr_coef = eval_corr(y, signal_entropy)
+        corr_coefs.append((corr_coef, i))
 
-    # num_of_corrs = 10
-    # top_corrs = sorted(corr_coefs, key=lambda x: abs(x[0]), reverse=True)[:num_of_corrs]
-    # print(f"Peak Entropy - Top {num_of_corrs} Correlations:")
-    # for rank, (coef, idx) in enumerate(top_corrs, 1):
-    #     print(f"{rank}. Correlation Coefficient: {coef:.4f} @ {idx}")
-    # print()
+    num_of_corrs = 10
+    top_corrs = sorted(corr_coefs, key=lambda x: abs(x[0]), reverse=True)[:num_of_corrs]
+    print(f"Peak Entropy - Top {num_of_corrs} Correlations:")
+    for rank, (coef, idx) in enumerate(top_corrs, 1):
+        print(f"{rank}. Correlation Coefficient: {coef:.4f} @ {idx}")
+    print()
 
-    # if VIZ:
-    #     plt.figure(figsize=(10, 6))
-    #     for coef, idx in top_corrs:
-    #         sns.scatterplot(x=y, y=feature_tools.signal_entropy(idx), label=f'Idx {idx} (r={coef:.2f})')
-    #     plt.xlabel('Soil Compaction Level')
-    #     plt.ylabel('Peak Entropy')
-    #     plt.title(f'Top {num_of_corrs} Correlated Peak Entropy Features')
-    #     plt.legend()
+    if VIZ:
+        plt.figure(figsize=(10, 6))
+        for coef, idx in top_corrs:
+            sns.scatterplot(x=y, y=feature_tools.signal_entropy(idx), label=f'Idx {idx} (r={coef:.2f})')
+        plt.xlabel('Soil Compaction Level')
+        plt.ylabel('Peak Entropy')
+        plt.title(f'Top Correlated Peak Entropy Features')
+        plt.legend()
     
     # ==========
     # Peak Entropy
@@ -165,7 +167,6 @@ if __name__ == "__main__":
     # ==========
 
     peak_amplitude_entropy_ratio = feature_tools.peak_amplitude2entropy_ratio()
-    print(peak_amplitude_entropy_ratio.shape)
     print("Peak Amplitude to Peak Entropy Ratio Correlation:")
     print("Correlation with Peak Amplitude to Peak Entropy Ratio 1:", eval_corr(y, peak_amplitude_entropy_ratio[0]))
     print("Correlation with Peak Amplitude to Peak Entropy Ratio 2:", eval_corr(y, peak_amplitude_entropy_ratio[1]))
@@ -180,5 +181,166 @@ if __name__ == "__main__":
         plt.title('Peak Amplitude to Peak Entropy Ratio vs Soil Compaction')
         plt.legend()
 
-    if VIZ:  # This function calls plt.show() internally so don't call it anywhere else
-        viz_tools.plot_median_unique(X, y)
+    # ==========
+    # Peak delays
+    # ==========
+
+    peak_delays = feature_tools.peak_delay()
+    print("Peak Delays Correlation:")
+    print("Correlation with Peak Delay 1:", eval_corr(y, peak_delays[0]))
+    print("Correlation with Peak Delay 2:", eval_corr(y, peak_delays[1]))
+    print("Correlation with Peak Delay 3:", eval_corr(y, peak_delays[2]))
+    print()
+
+    if VIZ:
+        plt.figure()
+        plt.plot(y, peak_delays[0], 'o', label='Peak Delay 1')
+        plt.plot(y, peak_delays[1], 'o', label='Peak Delay 2')
+        plt.plot(y, peak_delays[2], 'o', label='Peak Delay 3')
+        plt.xlabel('Soil Compaction Level')
+        plt.ylabel('Peak Delay')
+        plt.title('Peak Delays vs Soil Compaction')
+        plt.legend() 
+
+    # ==========
+    # Peak widths
+    # ==========
+
+    peak_widths = feature_tools.peak_width()
+    print("Peak Widths Correlation:")
+    print("Correlation with Peak Width 1:", eval_corr(y, peak_widths[0]))
+    print("Correlation with Peak Width 2:", eval_corr(y, peak_widths[1]))
+    print()
+
+    if VIZ:
+        plt.figure()
+        plt.plot(y, peak_widths[0], 'o', label='Peak Width 1')
+        plt.plot(y, peak_widths[1], 'o', label='Peak Width 2')
+        plt.xlabel('Soil Compaction Level')
+        plt.ylabel('Peak Width')
+        plt.title('Peak Widths vs Soil Compaction')
+        plt.legend()
+    
+    # ==========
+    # Peak shapes
+    # ==========
+
+    skewness, kurtosis = feature_tools.peak_shape_stats()
+
+    print("Peak Shapes Correlation:")
+    print("Correlation with Peak Shape Skewness 1:", eval_corr(y, skewness[0]))
+    print("Correlation with Peak Shape Skewness 2:", eval_corr(y, skewness[1]))
+    print("Correlation with Peak Shape Kurtosis 1:", eval_corr(y, kurtosis[0]))
+    print("Correlation with Peak Shape Kurtosis 2:", eval_corr(y, kurtosis[1]))
+    print()
+
+    if VIZ:
+        plt.figure()
+        plt.plot(y, skewness[0], 'o', label='Peak Shape Skewness 1')
+        plt.plot(y, skewness[1], 'o', label='Peak Shape Skewness 2')
+        plt.plot(y, kurtosis[0], 'o', label='Peak Shape Kurtosis 1')
+        plt.plot(y, kurtosis[1], 'o', label='Peak Shape Kurtosis 2')
+        plt.xlabel('Soil Compaction Level')
+        plt.ylabel('Peak Shape')
+        plt.title('Peak Shapes vs Soil Compaction')
+        plt.legend()
+
+    # ==========
+    # Peak energy
+    # ==========
+
+    peak_energy = feature_tools.peak_signal_energy()
+    print("Peak Energy Correlation:")
+    print("Correlation with Peak Energy 1:", eval_corr(y, peak_energy[0]))
+    print("Correlation with Peak Energy 2:", eval_corr(y, peak_energy[1]))
+    print()
+
+    if VIZ:
+        plt.figure()
+        plt.plot(y, peak_energy[0], 'o', label='Peak Energy 1')
+        plt.plot(y, peak_energy[1], 'o', label='Peak Energy 2')
+        plt.xlabel('Soil Compaction Level')
+        plt.ylabel('Peak Energy')
+        plt.title('Peak Energy vs Soil Compaction')
+        plt.legend()
+
+    # ==========
+    # Decay rate
+    # ==========
+
+    decay_rate = feature_tools.decay_rate()
+    print("Decay Rate Correlation:")
+    print("Correlation with Decay Rate 1:", eval_corr(y, decay_rate[0]))
+    print("Correlation with Decay Rate 2:", eval_corr(y, decay_rate[1]))
+    print()
+
+    if VIZ:
+        plt.figure()
+        plt.plot(y, decay_rate[0], 'o', label='Decay Rate 1')
+        plt.plot(y, decay_rate[1], 'o', label='Decay Rate 2')
+        plt.xlabel('Soil Compaction Level')
+        plt.ylabel('Decay Rate')
+        plt.title('Decay Rate vs Soil Compaction')
+        plt.legend()
+
+    # ==========
+    # Ascend rate
+    # ==========
+
+    ascend_rate = feature_tools.ascend_rate()
+    print("Ascend Rate Correlation:")
+    print("Correlation with Ascend Rate 1:", eval_corr(y, ascend_rate[0]))
+    print("Correlation with Ascend Rate 2:", eval_corr(y, ascend_rate[1]))
+    print()
+
+    if VIZ:
+        plt.figure()
+        plt.plot(y, ascend_rate[0], 'o', label='Ascend Rate 1')
+        plt.plot(y, ascend_rate[1], 'o', label='Ascend Rate 2')
+        plt.xlabel('Soil Compaction Level')
+        plt.ylabel('Ascend Rate')
+        plt.title('Ascend Rate vs Soil Compaction')
+        plt.legend()
+
+    # ==========
+    # Peak phrase variance
+    # ==========
+
+    peak_phase_variance = feature_tools.peak_phase_variance()
+    print("Peak Phase Variance Correlation:")
+    print("Correlation with Peak Phase Variance 1:", eval_corr(y, peak_phase_variance[0]))
+    print("Correlation with Peak Phase Variance 2:", eval_corr(y, peak_phase_variance[1]))
+
+    top_corrs = eval_top_correlation(y, X, feature_tools.phase_variance, num_of_corrs=10)
+    print()
+
+    # ==========
+    # Circularity coefficient
+    # ==========
+
+    circularity_coefficient = feature_tools.peak_circularity_coefficient()
+    print("Circularity Coefficient Correlation:")
+    print("Correlation with Circularity Coefficient 1:", eval_corr(y, circularity_coefficient[0]))
+    print("Correlation with Circularity Coefficient 2:", eval_corr(y, circularity_coefficient[1]))
+
+    top_corrs = eval_top_correlation(y, X, feature_tools.circularity_coefficient, num_of_corrs=10)
+    print()
+
+    # ==========
+    # Phase jitter
+    # ==========
+
+    phase_jitter = feature_tools.peak_phase_jitter()
+    print("Phase Jitter Correlation:")
+    print("Correlation with Phase Jitter 1:", eval_corr(y, phase_jitter[0]))
+    print("Correlation with Phase Jitter 2:", eval_corr(y, phase_jitter[1]))
+
+    top_corrs = eval_top_correlation(y, X, feature_tools.phase_jitter, num_of_corrs=10)
+    print()
+
+    # ==========
+    # Plot median frame
+    # ==========
+
+    # This function calls plt.show() internally so don't call it anywhere else
+    viz_tools.plot_median_unique(X, y)

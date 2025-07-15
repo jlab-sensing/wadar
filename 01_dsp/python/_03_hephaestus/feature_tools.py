@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis
 from scipy.signal import find_peaks
 import os
+from scipy.signal import peak_widths
+import pandas as pd
 
 class FeatureTools:
     def __init__(self, X):
@@ -121,168 +123,173 @@ class FeatureTools:
             ratios[0, i] = self._get_amplitude2entropy_ratio(i, peak_idxs[0])
             ratios[1, i] = self._get_amplitude2entropy_ratio(i, peak_idxs[1])
         return ratios
-
-    # def signal_energy(self):
-    #     """
-    #     Computes the total energy of the signal, defined as the sum of squared 
-    #     amplitudes. Signal energy represents the overall power reflected from 
-    #     the soil layer. More compact soil may yield higher energy due to stronger 
-    #     reflections caused by tighter packing and reduced attenuation.
-    #     """
-    #     signal, _ = self._get_peak_signal()
-    #     return np.sum(signal**2, axis=1)
-
-    # def peak_delay(self):
-    #     """
-    #     Computes the time delay of the peak reflection relative to the expected 
-    #     soil index. A smaller delay implies an earlier reflection, which may 
-    #     indicate shallower or more compacted soil. This feature can help estimate 
-    #     changes in dielectric properties that affect wave propagation speed.
-    #     """
-    #     _, peak_idxs = self._get_peak_signal()
-    #     return peak_idxs - self.soil_index
-
-    # def peak_width_fwhm(self):
-    #     """
-    #     Computes the Full Width at Half Maximum (FWHM) of the reflected signal 
-    #     around the soil region. A lower FWHM implies a sharper, more distinct 
-    #     reflection, which may hint at a more compacted or uniform soil layer.
-    #     """
-
-    #     N, T, C = self.X.shape
-    #     fwhm_list = np.zeros(N)
-    #     for i in range(N):
-    #         region = np.abs(self.X[i, self.soil_index:self.soil_index + 100, :])        # Get magnitude of waveform averaged across channels
-    #         waveform = np.mean(region, axis=1)
-    #         peak_val = np.max(waveform)                                                 # Find the peak value and compute FWHM
-    #         half_max = peak_val / 2.0
-    #         indices = np.where(waveform >= half_max)[0]                                 # Indices where waveform crosses half max
-    #         if len(indices) >= 2:
-    #             fwhm_list[i] = indices[-1] - indices[0]
-    #         else:
-    #             fwhm_list[i] = 0
-
-    #     return fwhm_list
-
-    # def signal_skewness_kurtosis(self):
-    #     """
-    #     Computes the skewness and kurtosis of the signal. 
-    #     - Skewness captures asymmetry of the signal distribution.
-    #     - Kurtosis measures the 'peakedness' or presence of heavy tails.
-    #     These higher-order statistics help characterize the shape of the 
-    #     reflected waveform, offering insight into the soil surface texture 
-    #     or subsurface structure.
-    #     """
-    #     signal, _ = self._get_peak_signal()
-    #     skewness = np.zeros(signal.shape[0])
-    #     kurt_vals = np.zeros(signal.shape[0])
-    #     for i in range(signal.shape[0]):
-    #         skewness[i] = skew(signal[i])
-    #         kurt_vals[i] = kurtosis(signal[i])
-    #     return skewness, kurt_vals
-
-    # def spectral_centroid_bandwidth(self):
-    #     """
-    #     Computes the spectral centroid and bandwidth of the signal using the FFT.
-    #     - The centroid indicates where most of the signal’s energy is concentrated 
-    #       in frequency space.
-    #     - Bandwidth quantifies the spread of frequencies.
-    #     These frequency-domain features can be linked to subsurface scattering 
-    #     and material transitions, both influenced by compaction. I don't fully
-    #     understand how these relate to soil compaction, but I've seen them
-    #     used in permittivity estimation in literature.
-    #     """
-    #     signal, _ = self._get_peak_signal()
-    #     centroid = np.zeros(signal.shape[0])
-    #     bandwidth = np.zeros(signal.shape[0])
-    #     for i in range(signal.shape[0]):
-    #         spec = np.fft.fft(signal[i])
-    #         mag = np.abs(spec[:len(spec)//2])
-    #         freqs = np.fft.fftfreq(len(signal[i]))[:len(mag)]
-    #         mag_sum = np.sum(mag) + 1e-10
-    #         centroid[i] = np.sum(freqs * mag) / mag_sum
-    #         bandwidth[i] = np.sqrt(np.sum(((freqs - centroid[i])**2) * mag) / mag_sum)
-    #     return centroid, bandwidth
-
-    # def entropy_to_energy_ratio(self):
-    #     """
-    #     Computes the ratio of signal entropy to energy. 
-    #     This hybrid feature captures the balance between signal complexity 
-    #     and intensity. High values may indicate weak but noisy returns, while 
-    #     low values suggest strong and structured reflections — both of which 
-    #     may relate to changes in soil density.
-    #     """
-    #     entropy = self.signal_entropy()
-    #     energy = self.signal_energy()
-    #     return entropy / (energy + 1e-10)
-
-    # def peak_to_entropy_ratio(self):
-    #     """
-    #     Computes the ratio of peak amplitude to entropy. 
-    #     A high ratio reflects a dominant, sharp reflection (e.g., from compacted 
-    #     soil), while a lower ratio indicates a flatter or noisier return. 
-    #     This is a useful composite measure of signal sharpness and structure.
-    #     """
-    #     peak = self.peak_amplitude()
-    #     entropy = self.signal_entropy()
-    #     return peak / (entropy + 1e-10)
     
-    # def signal_attenuation(self):
-    #     # TODO: Implement this.
-    #     return
-
-    # def save_features(self, dataset_dir, normalize=True):
-    #     """
-    #     Saves the computed features to a file.
-    #     """
-
-    #     self.feature_names = [
-    #         'peak_amplitude',
-    #         'signal_variance',
-    #         'signal_entropy',
-    #         'signal_energy',
-    #         'peak_delay',
-    #         'peak_width_fwhm',
-    #         # 'signal_skewness',
-    #         # 'signal_kurtosis',
-    #         'spectral_centroid',
-    #         'spectral_bandwidth',
-    #         'entropy_to_energy_ratio',
-    #         'peak_to_entropy_ratio'
-    #     ]
-
-    #     if normalize:
-    #         features = {
-    #             'peak_amplitude': self.peak_amplitude() / np.max(self.peak_amplitude()),
-    #             'signal_variance': self.signal_variance() / np.max(self.signal_variance()),
-    #             'signal_entropy': self.signal_entropy() / np.max(self.signal_entropy()),
-    #             'signal_energy': self.signal_energy() / np.max(self.signal_energy()),
-    #             'peak_delay': self.peak_delay() / np.max(np.abs(self.peak_delay())),
-    #             'peak_width_fwhm': self.peak_width_fwhm() / np.max(self.peak_width_fwhm()),
-    #             # 'signal_skewness': self.signal_skewness_kurtosis()[0] / np.max(np.abs(self.signal_skewness_kurtosis()[0])),
-    #             # 'signal_kurtosis': self.signal_skewness_kurtosis()[1] / np.max(np.abs(self.signal_skewness_kurtosis()[1])),
-    #             'spectral_centroid': self.spectral_centroid_bandwidth()[0] / np.max(np.abs(self.spectral_centroid_bandwidth()[0])),
-    #             'spectral_bandwidth': self.spectral_centroid_bandwidth()[1] / np.max(np.abs(self.spectral_centroid_bandwidth()[1])),
-    #             'entropy_to_energy_ratio': self.entropy_to_energy_ratio() / np.max(np.abs(self.entropy_to_energy_ratio())),
-    #             'peak_to_entropy_ratio': self.peak_to_entropy_ratio() / np.max(np.abs(self.peak_to_entropy_ratio()))
-    #         }
-    #     else:
-    #         features = {
-    #             'peak_amplitude': self.peak_amplitude(),
-    #             'signal_variance': self.signal_variance(),
-    #             'signal_entropy': self.signal_entropy(),
-    #             'signal_energy': self.signal_energy(),
-    #             'peak_delay': self.peak_delay(),
-    #             'peak_width_fwhm': self.peak_width_fwhm(),
-    #             # 'signal_skewness': self.signal_skewness_kurtosis()[0],
-    #             # 'signal_kurtosis': self.signal_skewness_kurtosis()[1],
-    #             'spectral_centroid': self.spectral_centroid_bandwidth()[0],
-    #             'spectral_bandwidth': self.spectral_centroid_bandwidth()[1],
-    #             'entropy_to_energy_ratio': self.entropy_to_energy_ratio(),
-    #             'peak_to_entropy_ratio': self.peak_to_entropy_ratio()
-    #         }
+    def peak_delay(self):
+        """
+        A bunch of delays
+        """
+        delays = np.zeros((3, self.X.shape[0]))
+        for i in range(self.X.shape[0]):
+            peak_idxs = self._get_peak_idx(i)
+            delays[0, i] = peak_idxs[0]                 # distance to first peak
+            delays[1, i] = peak_idxs[1]                 # distance to second peak
+            delays[2, i] = peak_idxs[1] - peak_idxs[0]  # distance between peaks
+        
+        return delays
     
-    #     fileName = f"{dataset_dir}/features.npz"
-    #     if os.path.exists(fileName):
-    #         print(f"Warning: {fileName} already exists. Overwriting.")
-    #     np.savez(fileName, **features)
+    def _get_peak_width(self, scan_idx=0):
+        signal = self._average_frame(scan_idx)
+        peaks = self._get_peak_idx(scan_idx)
+        peak1, peak2 = peaks[0], peaks[1]
+        width1 = peak_widths(signal, [peak1], rel_height=0.5)[0][0]
+        width2 = peak_widths(signal, [peak2], rel_height=0.5)[0][0]
+        return width1, width2
+    
+    def peak_width(self):
+        widths = np.zeros((2, self.X.shape[0]))
+        for i in range(self.X.shape[0]):
+            widths[0, i], widths[1, i] = self._get_peak_width(i)
+        return widths
+    
+    def _get_peak_shape_stats(self, scan_idx=0, window=5):
+        peak_idxs = self._get_peak_idx(scan_idx)
+        signal = self._average_frame(scan_idx)
+        start1 = max(0, peak_idxs[0] - window)
+        end1 = min(len(signal), peak_idxs[0] + window)
+        window_signal1 = signal[start1:end1]
+        start2 = max(0, peak_idxs[1] - window)
+        end2 = min(len(signal), peak_idxs[1] + window)
+        window_signal2 = signal[start2:end2]
+        return skew(window_signal1), kurtosis(window_signal1), skew(window_signal2), kurtosis(window_signal2)
+
+    def peak_shape_stats(self):
+        skewness = np.zeros((2, self.X.shape[0]))
+        kurtosis_vals = np.zeros((2, self.X.shape[0]))
+        for i in range(self.X.shape[0]):
+            skew1, kurt1, skew2, kurt2 = self._get_peak_shape_stats(i)
+            skewness[0, i] = skew1
+            skewness[1, i] = skew2
+            kurtosis_vals[0, i] = kurt1
+            kurtosis_vals[1, i] = kurt2
+        return skewness, kurtosis_vals
+    
+    def _get_signal_energy(self, scan_idx=0, spec_idx=0):
+        signal = np.abs(self.X[scan_idx, :, :])[spec_idx]
+        return np.sum(signal ** 2)
+    
+    def signal_energy(self, spec_idx=0):
+        energy = np.zeros(self.X.shape[0])
+        for i in range(self.X.shape[0]):
+            energy[i] = self._get_signal_energy(i, spec_idx)
+        return energy
+    
+    def peak_signal_energy(self):
+        peak_idxs = self._get_peak_idx()
+        return [
+            self.signal_energy(peak_idxs[0]),
+            self.signal_energy(peak_idxs[1])
+        ]
+    
+    def _get_decay_rate(self, scan_idx=0, points_after=10):
+        signal = self._average_frame(scan_idx)
+        peak_idx = self._get_peak_idx(scan_idx)
+
+        start1 = peak_idx[0]
+        end1 = min(len(signal), peak_idx[0] + points_after)
+        x1 = np.arange(start1, end1)
+        y1 = signal[start1:end1]
+        slope1, _ = np.polyfit(x1, y1, 1)
+
+        start2 = peak_idx[1]
+        end2 = min(len(signal), peak_idx[1] + points_after)
+        x2 = np.arange(start2, end2)
+        y2 = signal[start2:end2]
+        slope2, _ = np.polyfit(x2, y2, 1)
+
+        return slope1, slope2
+    
+    def decay_rate(self):
+        slopes = np.zeros((2, self.X.shape[0]))
+        for i in range(self.X.shape[0]):
+            slopes[0, i], slopes[1, i] = self._get_decay_rate(i)
+        return slopes
+    
+    def _get_ascend_rate(self, scan_idx=0, points_before=10):
+        signal = self._average_frame(scan_idx)
+        peak_idx = self._get_peak_idx(scan_idx)
+
+        start1 = max(0, peak_idx[0] - points_before)
+        end1 = peak_idx[0]
+        x1 = np.arange(start1, end1)
+        y1 = signal[start1:end1]
+        slope1, _ = np.polyfit(x1, y1, 1)
+
+        start2 = max(0, peak_idx[1] - points_before)
+        end2 = peak_idx[1]
+        x2 = np.arange(start2, end2)
+        y2 = signal[start2:end2]
+        slope2, _ = np.polyfit(x2, y2, 1)
+
+        return slope1, slope2
+    
+    def ascend_rate(self):
+        slopes = np.zeros((2, self.X.shape[0]))
+        for i in range(self.X.shape[0]):
+            slopes[0, i], slopes[1, i] = self._get_ascend_rate(i)
+        return slopes
+
+    def _get_phase_variance(self, scan_idx=0, spec_idx=0):
+        signal = self.X[scan_idx, :, :][spec_idx]
+        phase = np.angle(signal)
+        return np.var(phase)
+
+    def phase_variance(self, spec_idx=0):
+        variance = np.zeros(self.X.shape[0])
+        for i in range(self.X.shape[0]):
+            variance[i] = self._get_phase_variance(i, spec_idx)
+        return variance
+
+    def peak_phase_variance(self):
+        peak_idxs = self._get_peak_idx()
+        return [
+            self.phase_variance(peak_idxs[0]),
+            self.phase_variance(peak_idxs[1])
+        ]
+
+    def _get_circularity_coefficient(self, scan_idx=0, spec_idx=0):
+        signal = self.X[scan_idx, :, :][spec_idx]
+        mean_conj_prod = np.mean(signal * signal)
+        mean_power = np.mean(np.abs(signal) ** 2)
+        return np.abs(mean_conj_prod) / (mean_power + 1e-10)
+
+    def circularity_coefficient(self, spec_idx=0):
+        coeff = np.zeros(self.X.shape[0])
+        for i in range(self.X.shape[0]):
+            coeff[i] = self._get_circularity_coefficient(i, spec_idx)
+        return coeff
+
+    def peak_circularity_coefficient(self):
+        peak_idxs = self._get_peak_idx()
+        return [
+            self.circularity_coefficient(peak_idxs[0]),
+            self.circularity_coefficient(peak_idxs[1])
+        ]
+
+    def _get_phase_jitter(self, scan_idx=0, spec_idx=0):
+        signal = self.X[scan_idx, :, :][spec_idx]
+        phase = np.unwrap(np.angle(signal))
+        return np.var(np.diff(phase))
+
+    def phase_jitter(self, spec_idx=0):
+        jitter = np.zeros(self.X.shape[0])
+        for i in range(self.X.shape[0]):
+            jitter[i] = self._get_phase_jitter(i, spec_idx)
+        return jitter
+
+    def peak_phase_jitter(self):
+        peak_idxs = self._get_peak_idx()
+        return [
+            self.phase_jitter(peak_idxs[0]),
+            self.phase_jitter(peak_idxs[1])
+        ]
+
