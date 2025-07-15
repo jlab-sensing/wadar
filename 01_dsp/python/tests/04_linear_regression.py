@@ -35,7 +35,7 @@ if __name__ == "__main__":
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
-    features = feature_tools.get_feature_dataframe(X, y, destination=dataset_dir)
+    features = feature_tools.lasso_minimize_features(dataset_dir, X, y)
 
     model, metrics = linear_regression.model_linear_regression(dataset_dir, feature_file_name)
     print("Model Metrics:", metrics)
