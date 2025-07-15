@@ -8,5 +8,5 @@ from _01_gaia import dataset
 
 if __name__ == "__main__":
 
-    dataset_dir = "../data/dry-bulk-density-dataset"
+    dataset_dir = "../data/dry-soil-compaction-dataset"
     dataset_raw = dataset.Dataset(dataset_dir)

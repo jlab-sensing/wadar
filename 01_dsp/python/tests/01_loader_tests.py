@@ -12,12 +12,10 @@ from _01_gaia import dataset
 
 if __name__ == "__main__":
 
-    # dataset_dir = "../data/dry-bulk-density-dataset"
-    dataset_dir = "../data/compact-4-dry"
-
-    dataset_raw = dataset.Dataset(dataset_dir)
-
+    dataset_dir = "../data/dry-soil-compaction-dataset"
+    
     # To load data from a dataset directory and save it as raw data
+    dataset_raw = dataset.Dataset(dataset_dir)
     hydros = FrameLoader(dataset_dir, new_dataset=True, ddc_flag=True)
     X, y = hydros.X, hydros.y
 

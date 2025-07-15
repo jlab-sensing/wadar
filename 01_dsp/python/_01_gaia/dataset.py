@@ -65,6 +65,7 @@ class Dataset:
 
         scans_per_datum = 1
 
+        percentage = 0
         for folder in subdirs:
             frame_tot_combined = None
             frames_bb_combined = None
@@ -89,14 +90,14 @@ class Dataset:
                 save_name = capture_file.stem + '_frameTot.csv'
                 save_path = folder / save_name
                 np.savetxt(save_path, frame_tot_combined, delimiter=',')
-                print(f"Saved CSV: {save_path}")
 
             # Save parameters to JSON, overwriting if it exists
             params_file = folder / "radar_params.json"
             with open(params_file, 'w') as f:
                 json.dump(params, f, indent=4)
-            print(f"Saved parameters to JSON: {params_file}")
-    
+            percentage = percentage + (j + 1) / (len(capture_files) * len(subdirs)) * 100
+            print(f"{percentage:.2f}%...")
+
     def full_monty(self):
         """
         Run the full preprocessing pipeline: label dataset, purge labels, and convert frames to CSV.

@@ -45,7 +45,7 @@ class FrameLoader:
                 data = f.read()
             parsed = json.loads(data)
             label = parsed.get("bulk-density")   
-            label = np.median(label) if isinstance(label, list) else label
+            label = np.mean(label) if isinstance(label, list) else label
             return label
         else:
             print(f"Warning: {json_file} does not exist in {data_dir}. Returning default label 0.")

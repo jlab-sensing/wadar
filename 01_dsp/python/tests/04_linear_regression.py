@@ -22,18 +22,21 @@ def plot_feature_importance(model, feature_names):
 
 if __name__ == "__main__":
 
-    VIZ = False  # Set to True to visualize features, False to save them
-
-    dataset_dir = "../data/full_monty"
+    VIZ = True  # Set to True to visualize features
+    
+    dataset_dir = "../data/dry-soil-compaction-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
-    features = feature_tools.FeatureTools(X, soil_index=200)
+    features = feature_tools.FeatureTools(X, soil_index=100)
 
     features.save_features(dataset_dir, normalize=True)
 
     soil_compaction_targets = y
 
     model, metrics = linear_regression.model_linear_regression(dataset_dir, target=soil_compaction_targets)
-
-    plot_feature_importance(model, feature_names=list(features.feature_names))
+    print("Model Metrics:", metrics)
+    print("Model Coefficients:", model.coef_)
+    
+    if VIZ:
+        plot_feature_importance(model, feature_names=list(features.feature_names))

@@ -5,6 +5,8 @@ import os
 from scipy import signal
 from sklearn.decomposition import PCA
 from mpl_toolkits.mplot3d import Axes3D
+from sklearn.decomposition import KernelPCA
+from sklearn.metrics import mean_squared_error
 
 class PCAProcessor:
     def __init__(self, X, n_components=1):
@@ -75,3 +77,38 @@ class PCAProcessor:
         plt.title('Variance Explained (Per-Sample Dimensionality Reduction)')
         plt.grid()
         plt.show()
+
+# This is impossible to tune.
+class KernelPCAProcessor:
+    def __init__(self, X, n_components=1, kernel='rbf', **kernel_params):
+        self.n_components = n_components
+        self.kernel = kernel
+        self.kernel_params = kernel_params
+        self.kpca = KernelPCA(n_components=self.n_components, kernel=self.kernel, fit_inverse_transform=True, **self.kernel_params)
+        self.X = X
+
+    def shape_data2kpca(self):
+        N, R, T = self.X.shape
+        new_shape = np.zeros((R, T * N), dtype=np.float64)
+        new_shape_idx = 0
+        for i in range(N):
+            for j in range(T):
+                new_shape[:, new_shape_idx] = np.abs(self.X[i, :, j])
+                new_shape_idx += 1
+        return new_shape.T  # KPCA expects shape (n_samples, n_features)
+
+    def shape_kpca2data(self, new_shape):
+        N, R, T = self.X.shape
+        new_shape = new_shape.T
+        back_to_original_shape = np.zeros_like(self.X, dtype=np.float64)
+        for i in range(N):
+            for j in range(T):
+                back_to_original_shape[i, :, j] = new_shape[:, i * T + j]
+        return back_to_original_shape
+
+    def dimensionality_reduction(self):
+        N, R, T = self.X.shape
+        X_flat = np.abs(self.X.reshape(N, R * T))
+        reduced = self.kpca.fit_transform(X_flat)
+        print("Shape after kernel PCA dimensionality reduction:", reduced.shape)
+        return reduced

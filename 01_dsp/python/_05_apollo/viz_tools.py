@@ -14,13 +14,21 @@ def plot_median_frame(X, frame_index=0):
 def plot_median_unique(X, y):
     unique_Y, unique_Y_idx = np.unique(y, return_index=True)
     X = np.abs(X)
-    plt.figure()
-    # Plot Median Frames for each unique label
+    plt.figure(figsize=(7, 4))
+    cmap = plt.get_cmap('viridis')
+    colors = cmap(np.linspace(0, 1, len(unique_Y)))
     for i, j in enumerate(unique_Y_idx):
-        plt.plot(np.median(X[j, :, :], axis=1), label=f"Label: {unique_Y[i]:.2f}")
-    plt.tight_layout()
-    plt.title("Median Frames for Unique Labels")
-    plt.xlabel("Range Bins")
-    plt.ylabel("Amplitude")
-    plt.legend()
+        plt.plot(
+            np.median(X[j, :, :], axis=1),
+            label=f"Label: {unique_Y[i]:.2f}",
+            color=colors[i],
+            linewidth=2
+        )
+    plt.title("Median Frames for Unique Labels", fontsize=14, fontweight='bold')
+    plt.xlabel("Range Bins", fontsize=12)
+    plt.ylabel("Amplitude", fontsize=12)
+    plt.legend(frameon=False, fontsize=10, loc='best')
+    plt.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
+    plt.tight_layout(pad=1.5)
+    plt.tick_params(axis='both', which='major', labelsize=10)
     plt.show()

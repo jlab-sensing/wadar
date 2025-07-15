@@ -7,121 +7,93 @@ sys.path.insert(0, parent_dir)
 from _01_gaia.loader import FrameLoader
 from _03_hephaestus import feature_tools
 from _05_apollo import viz_tools
+import seaborn as sns
 
+def eval_corr(y, feature):
+    """
+    Evaluates the correlation between the feature and the labels.
+    """
+    corr = np.corrcoef(y, feature)[0, 1]
+    return corr
 
 if __name__ == "__main__":
 
-    VIZ = True  # Set to True to visualize features, False to save them
+    VIZ = True
 
-    dataset_dir = "../data/dry-bulk-density-dataset"
+    dataset_dir = "../data/dry-soil-compaction-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
-    # signal_horizontal = X[:, 200, :]  
-    # print("Signal shape:", signal_horizontal.shape)
-    
-    # plt.figure(figsize=(10, 6))
-    # plt.plot(signal_horizontal[0, :], label=y[0])  # Plot the first signal
-    # plt.plot(signal_horizontal[20, :], label=y[20])  # Plot the 21st signal
-    # plt.plot(signal_horizontal[40, :], label=y[40])  # Plot the 41st signal
-    # plt.xlabel('Range Bins')
-    # plt.ylabel('Amplitude')
-    # plt.title('Horizontal Signal Samples')
-    # plt.legend()
-    # plt.grid()
-    # plt.show()
+    feature_tools = feature_tools.FeatureTools(X)
 
-    features = feature_tools.FeatureTools(X, soil_index=200)
+    # ==========
+    # Peak Amplitude
+    # ==========
 
-    if (VIZ):
+    peak_amplitude = feature_tools.peak_amplitude()
 
-        peak_amplitude = features.peak_amplitude()
+    print("Peak Amplitude Correlation:")
+    print("Correlation with Peak Amplitude 1:", eval_corr(y, peak_amplitude[:, 0]))
+    print("Correlation with Peak Amplitude 2:", eval_corr(y, peak_amplitude[:, 1]))
+    print()
+
+    if VIZ:
         plt.figure()
-        plt.plot(y, peak_amplitude, 'o')
-        plt.xlabel('Bulk Density')
+        plt.plot(y, peak_amplitude[:, 0], 'o', label='Peak Amplitude 1')
+        plt.plot(y, peak_amplitude[:, 1], 'o', label='Peak Amplitude 2')
+        plt.xlabel('Soil Compaction Level')
         plt.ylabel('Peak Amplitude')
-        plt.title('Peak Amplitude vs Bulk Density')
-        plt.grid()
+        plt.title('Peak Amplitude vs Soil Compaction')
+        plt.legend()
 
-        signal_variance = features.signal_variance()
+    # ==========
+    # Find hte range bins with peak variances correlated most with the labels.
+    # This is commented out because it takes forever to run.
+    # ==========
+
+    # corr_coefs = []
+    # for i in range(X.shape[1]):
+    #     signal_variance = feature_tools.signal_variance(i)
+    #     corr_coef = eval_corr(y, signal_variance)
+    #     corr_coefs.append((corr_coef, i))
+
+    # num_of_corrs = 10
+    # # Sort by absolute correlation (already correct)
+    # top_corrs = sorted(corr_coefs, key=lambda x: abs(x[0]), reverse=True)[:num_of_corrs]
+
+    # print(f"Peak Variance - Top {num_of_corrs} Correlations:")
+    # for rank, (coef, idx) in enumerate(top_corrs, 1):
+    #     print(f"{rank}. Correlation Coefficient: {coef:.4f} @ {idx}")
+    # print()
+
+    # if VIZ:
+    #     plt.figure(figsize=(10, 6))
+    #     for coef, idx in top_corrs:
+    #         sns.scatterplot(x=y, y=feature_tools.signal_variance(idx), label=f'Idx {idx} (r={coef:.2f})')
+    #     plt.xlabel('Soil Compaction Level')
+    #     plt.ylabel('Peak Variance')
+    #     plt.title(f'Top {num_of_corrs} Correlated Peak Variance Features')
+    #     plt.legend()
+
+    # ==========
+    # Peak Variance
+    # ==========
+
+    print("Peak Variance Correlation:")
+    peak_variances = feature_tools.peak_variance()
+    peak_1_variance = peak_variances[0]
+    peak_2_variance = peak_variances[1]
+    print("Correlation with Peak Variance 1:", eval_corr(y, peak_1_variance))
+    print("Correlation with Peak Variance 2:", eval_corr(y, peak_2_variance))
+
+    if VIZ:
         plt.figure()
-        plt.plot(y, signal_variance, 'o')
-        plt.xlabel('Bulk Density')
-        plt.ylabel('Signal Variance')
-        plt.title('Signal Variance vs Bulk Density')
-        plt.grid()
+        plt.plot(y, peak_1_variance, 'o', label='Peak Variance 1')
+        plt.plot(y, peak_2_variance, 'o', label='Peak Variance 2')
+        plt.xlabel('Soil Compaction Level')
+        plt.ylabel('Peak Variance')
+        plt.title('Peak Variance vs Soil Compaction')
+        plt.legend()
 
-        signal_entropy = features.signal_entropy()
-        plt.figure()
-        plt.plot(y, signal_entropy, 'o')
-        plt.xlabel('Bulk Density')
-        plt.ylabel('Signal Entropy')
-        plt.title('Signal Entropy vs Bulk Density')
-        plt.grid()
-
-        signal_energy = features.signal_energy()
-        plt.figure()
-        plt.plot(y, signal_energy, 'o')
-        plt.xlabel('Bulk Density')
-        plt.ylabel('Signal Energy')
-        plt.title('Signal Energy vs Bulk Density')
-        plt.grid()
-
-        # peak_delay = features.peak_delay()            # Not currently accurate.
-        # plt.figure()
-        # plt.plot(y, peak_delay, 'o')
-        # plt.xlabel('Bulk Density')
-        # plt.ylabel('Peak Delay')
-        # plt.title('Peak Delay vs Bulk Density')
-        # plt.grid()
-
-        peak_width_fwhm = features.peak_width_fwhm()
-        plt.figure()
-        plt.plot(y, peak_width_fwhm, 'o')
-        plt.xlabel('Bulk Density')  
-        plt.ylabel('Peak Width FWHM')
-        plt.title('Peak Width FWHM vs Bulk Density')
-        plt.grid()
-
-        # signal_skewness, signal_kurtosis = features.signal_skewness_kurtosis()
-        # plt.figure()
-        # plt.plot(y, signal_skewness, 'o', label='Skewness')
-        # plt.plot(y, signal_kurtosis, 'o', label='Kurtosis')
-        # plt.xlabel('Bulk Density')
-        # plt.ylabel('Signal Skewness/Kurtosis')
-        # plt.title('Signal Skewness and Kurtosis vs Bulk Density')
-        # plt.legend()
-        # plt.grid()
-
-        # centroid, bandwidth = features.spectral_centroid_bandwidth()          # Black box. Not going to use it until I understand it.
-        # plt.figure()
-        # plt.plot(y, centroid, 'o', label='Spectral Centroid')
-        # plt.plot(y, bandwidth, 'o', label='Spectral Bandwidth')
-        # plt.xlabel('Bulk Density')
-        # plt.ylabel('Spectral Features')
-        # plt.title('Spectral Centroid and Bandwidth vs Bulk Density')
-        # plt.legend()
-        # plt.grid()
-
-        entropy_energy_ratio = features.entropy_to_energy_ratio()
-        plt.figure()   
-        plt.plot(y, entropy_energy_ratio, 'o')
-        plt.xlabel('Bulk Density')
-        plt.ylabel('Entropy to Energy Ratio')
-        plt.title('Entropy to Energy Ratio vs Bulk Density')
-        plt.grid()
-
-        peak_entropy_ratio = features.peak_to_entropy_ratio()
-        plt.figure()    
-        plt.plot(y, peak_entropy_ratio, 'o')
-        plt.xlabel('Bulk Density')
-        plt.ylabel('Peak to Entropy Ratio')
-        plt.title('Peak to Entropy Ratio vs Bulk Density')
-        plt.grid()
-
-        plt.show()
-    
-    else:
-        features.save_features(dataset_dir, normalize=True)
-
-    # viz_tools.plot_median_unique(X, y)
+    if VIZ:  # This function calls plt.show() internally so don't call it anywhere else
+        viz_tools.plot_median_unique(X, y)

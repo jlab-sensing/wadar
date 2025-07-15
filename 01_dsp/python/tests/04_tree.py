@@ -29,7 +29,7 @@ if __name__ == "__main__":
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
-    features = feature_tools.FeatureTools(X, soil_index=200)
+    features = feature_tools.FeatureTools(X, soil_index=100)
 
     features.save_features(dataset_dir, normalize=False)
 
@@ -47,7 +47,6 @@ if __name__ == "__main__":
     print("Trained Decision Tree model:", model)
     print("Metrics:", metrics)
 
-    # plot_feature_importance(model, feature_names=list(features.feature_names))
 
     plot_tree(
         model,
