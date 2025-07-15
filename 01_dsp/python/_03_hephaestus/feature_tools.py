@@ -69,20 +69,58 @@ class FeatureTools:
             self.signal_variance(peak_idxs[0]),
             self.signal_variance(peak_idxs[1])
         ]
+    
+    def _get_amplitude2variance_ratio(self, scan_idx=0, spec_idx=0):
+        signal = self._average_frame(scan_idx)
+        amplitude = signal[spec_idx]
+        variance = self._get_signal_variance(scan_idx, spec_idx)
 
-    # def signal_entropy(self):
-    #     """
-    #     Computes the entropy of the signal. Signal entropy is a measure of the
-    #     uncertainty or randomness in the signal values. In the context of soil
-    #     analysis, higher entropy may indicate a more complex or heterogeneous soil
-    #     structure, which can be associated with factors such as soil composition.
-    #     """
-    #     signal, _ = self._get_peak_signal()
-    #     entropy = np.zeros(signal.shape[0])
-    #     for i in range(signal.shape[0]):
-    #         normed = signal[i] / (np.sum(signal[i]) + 1e-10)
-    #         entropy[i] = -np.sum(normed * np.log(normed + 1e-10))
-    #     return entropy
+        return amplitude / (variance + 1e-10)
+    
+    def peak_amplitude2variance_ratio(self):
+        ratios = np.zeros((2, self.X.shape[0]))
+        for i in range(self.X.shape[0]):
+            peak_idxs = self._get_peak_idx(i)
+            ratios[0, i] = self._get_amplitude2variance_ratio(i, peak_idxs[0])
+            ratios[1, i] = self._get_amplitude2variance_ratio(i, peak_idxs[1])
+        return ratios
+    
+    def _get_signal_entropy(self, scan_idx=0, spec_idx=0):
+        """
+        Signal entropy at scan_idx at the specified index.
+        """
+        signal = np.abs(self.X[scan_idx, :, :])
+        signal = signal[spec_idx]
+        normed = signal / (np.sum(signal) + 1e-10)
+        return -np.sum(normed * np.log(normed + 1e-10))
+    
+    def signal_entropy(self, spec_idx=0):
+        entropy = np.zeros(self.X.shape[0])
+        for i in range(self.X.shape[0]):
+            entropy[i] = self._get_signal_entropy(i, spec_idx)
+        return entropy
+    
+    def peak_entropy(self):
+        peak_idxs = self._get_peak_idx()
+        return [
+            self.signal_entropy(peak_idxs[0]),
+            self.signal_entropy(peak_idxs[1])
+        ]
+    
+    def _get_amplitude2entropy_ratio(self, scan_idx=0, spec_idx=0):
+        signal = self._average_frame(scan_idx)
+        amplitude = signal[spec_idx]
+        entropy = self._get_signal_entropy(scan_idx, spec_idx)
+
+        return amplitude / (entropy + 1e-10)
+    
+    def peak_amplitude2entropy_ratio(self):
+        ratios = np.zeros((2, self.X.shape[0]))
+        for i in range(self.X.shape[0]):
+            peak_idxs = self._get_peak_idx(i)
+            ratios[0, i] = self._get_amplitude2entropy_ratio(i, peak_idxs[0])
+            ratios[1, i] = self._get_amplitude2entropy_ratio(i, peak_idxs[1])
+        return ratios
 
     # def signal_energy(self):
     #     """
