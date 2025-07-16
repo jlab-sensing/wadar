@@ -16,12 +16,18 @@ from sklearn.preprocessing import StandardScaler
 
 class FeatureTools:
     def __init__(self, X):
+        """
+        Wow this really doesn't need to be a class but
+        I realized too late.
+        """
+
         self.X = X
 
     def _average_frame(self, scan_idx=0):
         """
         Just so I can easily decide whether to use median or mean.
         """
+
         return np.abs(np.median(self.X[scan_idx, :, :], axis=1))
     
 
@@ -44,6 +50,10 @@ class FeatureTools:
             return peak_idxs[0][sorted_peaks][::-1] 
         
     def peak_amplitude(self):
+        """
+        Amplitude of the two peaks. Corresponds to the reflectivity
+        of the peak indices.
+        """
 
         peak_amplitudes = np.zeros((self.X.shape[0], 2))
         for i in range(self.X.shape[0]):
@@ -57,18 +67,29 @@ class FeatureTools:
     def _get_signal_variance(self, scan_idx=0, spec_idx=0):
         """
         Signal variance at scan_idx at the specified index.
+        Signal variance is a measure of how much the signal varies
+        over the range bins. 
         """
+
         signal = np.abs(self.X[scan_idx, :, :])
         signal = signal[spec_idx]
         return np.var(signal)
     
     def signal_variance(self, spec_idx=0):
+        """
+        Signal variance for all scans at the specified index.
+        """
+
         variance = np.zeros(self.X.shape[0])
         for i in range(self.X.shape[0]):
             variance[i] = self._get_signal_variance(i, spec_idx)
         return variance
     
     def peak_variance(self):
+        """
+        Variance of the two peaks.
+        """
+
         peak_idxs = self._get_peak_idx()
         return [
             self.signal_variance(peak_idxs[0]),
@@ -76,6 +97,11 @@ class FeatureTools:
         ]
     
     def _get_amplitude2variance_ratio(self, scan_idx=0, spec_idx=0):
+        """
+        Amplitude to variance ratio at scan_idx at the specified index.
+        Just a way to normalize the amplitude by the variance.
+        """
+
         signal = self._average_frame(scan_idx)
         amplitude = signal[spec_idx]
         variance = self._get_signal_variance(scan_idx, spec_idx)
@@ -83,6 +109,10 @@ class FeatureTools:
         return amplitude / (variance + 1e-10)
     
     def peak_amplitude2variance_ratio(self):
+        """
+        Amplitude to variance ratio for the two peaks.
+        """
+
         ratios = np.zeros((2, self.X.shape[0]))
         for i in range(self.X.shape[0]):
             peak_idxs = self._get_peak_idx(i)
@@ -92,20 +122,31 @@ class FeatureTools:
     
     def _get_signal_entropy(self, scan_idx=0, spec_idx=0):
         """
-        Signal entropy at scan_idx at the specified index.
+        Signal entropy at scan_idx at the specified index. 
+        Signal entropy is a measure of the uncertainty
+        in the signal. 
         """
+
         signal = np.abs(self.X[scan_idx, :, :])
         signal = signal[spec_idx]
         normed = signal / (np.sum(signal) + 1e-10)
         return -np.sum(normed * np.log(normed + 1e-10))
     
     def signal_entropy(self, spec_idx=0):
+        """
+        Signal entropy for all scans at the specified index.
+        """
+
         entropy = np.zeros(self.X.shape[0])
         for i in range(self.X.shape[0]):
             entropy[i] = self._get_signal_entropy(i, spec_idx)
         return entropy
     
     def peak_entropy(self):
+        """
+        Entropy of the two peaks.
+        """
+
         peak_idxs = self._get_peak_idx()
         return [
             self.signal_entropy(peak_idxs[0]),
@@ -113,6 +154,11 @@ class FeatureTools:
         ]
     
     def _get_amplitude2entropy_ratio(self, scan_idx=0, spec_idx=0):
+        """
+        Amplitude to entropy ratio at scan_idx at the specified index.
+        Normalizes the amplitude using the entropy.
+        """
+
         signal = self._average_frame(scan_idx)
         amplitude = signal[spec_idx]
         entropy = self._get_signal_entropy(scan_idx, spec_idx)
@@ -120,6 +166,10 @@ class FeatureTools:
         return amplitude / (entropy + 1e-10)
     
     def peak_amplitude2entropy_ratio(self):
+        """
+        Amplitude to entropy ratio for the two peaks.
+        """
+        
         ratios = np.zeros((2, self.X.shape[0]))
         for i in range(self.X.shape[0]):
             peak_idxs = self._get_peak_idx(i)
@@ -129,18 +179,27 @@ class FeatureTools:
     
     def peak_delay(self):
         """
-        A bunch of delays
+        A bunch of delays. Index 0 is the distance to when the antenna
+        coupling peak occurs, index 1 is the distance to the second peak
+        which is the actual soil reflection, and index 2 is the relative
+        difference between the two peaks.
         """
+
         delays = np.zeros((3, self.X.shape[0]))
         for i in range(self.X.shape[0]):
             peak_idxs = self._get_peak_idx(i)
-            delays[0, i] = peak_idxs[0]                 # distance to first peak
-            delays[1, i] = peak_idxs[1]                 # distance to second peak
-            delays[2, i] = peak_idxs[1] - peak_idxs[0]  # distance between peaks
+            delays[0, i] = peak_idxs[0] 
+            delays[1, i] = peak_idxs[1]           
+            delays[2, i] = peak_idxs[1] - peak_idxs[0]  
         
         return delays
     
     def _get_peak_width(self, scan_idx=0):
+        """
+        Gets the width of the two peaks at scan_idx. Peak width is defined
+        as the width of the peak at half its maximum height.
+        """
+
         signal = self._average_frame(scan_idx)
         peaks = self._get_peak_idx(scan_idx)
         peak1, peak2 = peaks[0], peaks[1]
@@ -149,12 +208,23 @@ class FeatureTools:
         return width1, width2
     
     def peak_width(self):
+        """
+        Width of the two peaks at each scan.
+        """
+
         widths = np.zeros((2, self.X.shape[0]))
         for i in range(self.X.shape[0]):
             widths[0, i], widths[1, i] = self._get_peak_width(i)
         return widths
     
     def _get_peak_shape_stats(self, scan_idx=0, window=5):
+        """
+        Gets the skewness and kurtosis of the two peaks at scan_idx.
+        Skewness measures the asymmetry of the peak, while kurtosis
+        measures the "tailedness" of the peak. Window determines
+        how many points around the peak to consider for the statistics.
+        """
+
         peak_idxs = self._get_peak_idx(scan_idx)
         signal = self._average_frame(scan_idx)
         start1 = max(0, peak_idxs[0] - window)
@@ -166,6 +236,10 @@ class FeatureTools:
         return skew(window_signal1), kurtosis(window_signal1), skew(window_signal2), kurtosis(window_signal2)
 
     def peak_shape_stats(self):
+        """
+        Skewness and kurtosis of the two peaks at each scan.
+        """
+
         skewness = np.zeros((2, self.X.shape[0]))
         kurtosis_vals = np.zeros((2, self.X.shape[0]))
         for i in range(self.X.shape[0]):
@@ -177,16 +251,30 @@ class FeatureTools:
         return skewness, kurtosis_vals
     
     def _get_signal_energy(self, scan_idx=0, spec_idx=0):
+        """
+        Computes the energy of the signal at scan_idx at the specified index.
+        Not that different from amplitude but accounts for the entire signal
+        taken over slow time.
+        """
+
         signal = np.abs(self.X[scan_idx, :, :])[spec_idx]
         return np.sum(signal ** 2)
     
     def signal_energy(self, spec_idx=0):
+        """
+        Computes the energy of the signal for all scans at the specified index.
+        """
+
         energy = np.zeros(self.X.shape[0])
         for i in range(self.X.shape[0]):
             energy[i] = self._get_signal_energy(i, spec_idx)
         return energy
     
     def peak_signal_energy(self):
+        """
+        Computes the energy of the two peaks.
+        """
+
         peak_idxs = self._get_peak_idx()
         return [
             self.signal_energy(peak_idxs[0]),
@@ -194,6 +282,13 @@ class FeatureTools:
         ]
     
     def _get_decay_rate(self, scan_idx=0, points_after=10):
+        """
+        Computes the decay rate of the signal after the peak.
+        The decay rate is the slope of the line fitted to the signal
+        after the peak. The points_after parameter determines how many
+        points after the peak to consider for the slope.
+        """
+
         signal = self._average_frame(scan_idx)
         peak_idx = self._get_peak_idx(scan_idx)
 
@@ -212,12 +307,23 @@ class FeatureTools:
         return slope1, slope2
     
     def decay_rate(self):
+        """
+        Computes the decay rate of the two peaks for all scans.
+        """
+
         slopes = np.zeros((2, self.X.shape[0]))
         for i in range(self.X.shape[0]):
             slopes[0, i], slopes[1, i] = self._get_decay_rate(i)
         return slopes
     
     def _get_ascend_rate(self, scan_idx=0, points_before=10):
+        """
+        Computes the ascend rate of the signal before the peak.
+        The ascend rate is the slope of the line fitted to the signal
+        before the peak. The points_before parameter determines how many
+        points before the peak to consider for the slope.
+        """
+
         signal = self._average_frame(scan_idx)
         peak_idx = self._get_peak_idx(scan_idx)
 
@@ -236,23 +342,41 @@ class FeatureTools:
         return slope1, slope2
     
     def ascend_rate(self):
+        """
+        Computes the ascend rate of the two peaks for all scans.
+        """
+
         slopes = np.zeros((2, self.X.shape[0]))
         for i in range(self.X.shape[0]):
             slopes[0, i], slopes[1, i] = self._get_ascend_rate(i)
         return slopes
 
     def _get_phase_variance(self, scan_idx=0, spec_idx=0):
+        """
+        Computes the variance of the phase of the signal at scan_idx.
+        This is because the stochastic nature of the signal reflecting
+        on more porous soil may affect the phase of the signal.
+        """
+
         signal = self.X[scan_idx, :, :][spec_idx]
         phase = np.angle(signal)
         return np.var(phase)
 
     def phase_variance(self, spec_idx=0):
+        """
+        Computes the variance of the phase of the signal for all scans.
+        """
+
         variance = np.zeros(self.X.shape[0])
         for i in range(self.X.shape[0]):
             variance[i] = self._get_phase_variance(i, spec_idx)
         return variance
 
     def peak_phase_variance(self):
+        """
+        Computes the phase variance of the two peaks.
+        """
+
         peak_idxs = self._get_peak_idx()
         return [
             self.phase_variance(peak_idxs[0]),
@@ -260,6 +384,12 @@ class FeatureTools:
         ]
 
     def _get_circularity_coefficient(self, scan_idx=0, spec_idx=0):
+        """
+        Computes the circularity coefficient of the signal at scan_idx.
+        The circularity coefficient describes the statistical
+        scattering behavior of the signal. 
+        """
+
         signal = self.X[scan_idx, :, :][spec_idx]
         mean_conj_prod = np.mean(signal * signal)
         mean_power = np.mean(np.abs(signal) ** 2)
@@ -272,6 +402,10 @@ class FeatureTools:
         return coeff
 
     def peak_circularity_coefficient(self):
+        """
+        Computes the circularity coefficient of the two peaks.
+        """
+
         peak_idxs = self._get_peak_idx()
         return [
             self.circularity_coefficient(peak_idxs[0]),
@@ -279,17 +413,31 @@ class FeatureTools:
         ]
 
     def _get_phase_jitter(self, scan_idx=0, spec_idx=0):
+        """
+        Computes the phase jitter of the signal at scan_idx.
+        Phase jitter is the variance of the phase difference
+        between consecutive samples in the signal.
+        """
+
         signal = self.X[scan_idx, :, :][spec_idx]
         phase = np.unwrap(np.angle(signal))
         return np.var(np.diff(phase))
 
     def phase_jitter(self, spec_idx=0):
+        """
+        Computes the phase jitter of the signal for all scans.
+        """
+
         jitter = np.zeros(self.X.shape[0])
         for i in range(self.X.shape[0]):
             jitter[i] = self._get_phase_jitter(i, spec_idx)
         return jitter
 
     def peak_phase_jitter(self):
+        """
+        Computes the phase jitter of the two peaks.
+        """
+
         peak_idxs = self._get_peak_idx()
         return [
             self.phase_jitter(peak_idxs[0]),
@@ -297,22 +445,26 @@ class FeatureTools:
         ]
 
 def get_feature_dataframe(X, labels, destination=None):
+    """
+    Generates a DataFrame with various features extracted from the input data.
+    """
+
     ft = FeatureTools(X)
 
-    peak_amps = ft.peak_amplitude()             # shape (N, 2)
-    peak_vars = ft.peak_variance()              # list of two arrays (N,)
-    peak_entropy = ft.peak_entropy()            # list of two arrays (N,)
+    peak_amps = ft.peak_amplitude()                     # shape (N, 2)
+    peak_vars = ft.peak_variance()                      # list of two arrays (N,)
+    peak_entropy = ft.peak_entropy()                    # list of two arrays (N,)
     peak_amp2var = ft.peak_amplitude2variance_ratio()   # shape (2, N)
     peak_amp2ent = ft.peak_amplitude2entropy_ratio()    # shape (2, N)
-    peak_delay = ft.peak_delay()                # shape (3, N)
-    peak_width = ft.peak_width()                # shape (2, N)
-    peak_skew, peak_kurt = ft.peak_shape_stats()   # both (2, N)
-    peak_energy = ft.peak_signal_energy()       # list of two arrays (N,)
-    decay_rate = ft.decay_rate()                # shape (2, N)
-    ascend_rate = ft.ascend_rate()              # shape (2, N)
-    phase_var = ft.peak_phase_variance()        # list of two arrays (N,)
-    circ_coeff = ft.peak_circularity_coefficient()  # list of two arrays (N,)
-    phase_jitter = ft.peak_phase_jitter()       # list of two arrays (N,)
+    peak_delay = ft.peak_delay()                        # shape (3, N)
+    peak_width = ft.peak_width()                        # shape (2, N)
+    peak_skew, peak_kurt = ft.peak_shape_stats()        # both (2, N)
+    peak_energy = ft.peak_signal_energy()               # list of two arrays (N,)
+    decay_rate = ft.decay_rate()                        # shape (2, N)
+    ascend_rate = ft.ascend_rate()                      # shape (2, N)
+    phase_var = ft.peak_phase_variance()                # list of two arrays (N,)
+    circ_coeff = ft.peak_circularity_coefficient()      # list of two arrays (N,)
+    phase_jitter = ft.peak_phase_jitter()               # list of two arrays (N,)
 
     feature_dict = {
         'amp1': peak_amps[:, 0],
@@ -359,6 +511,11 @@ def get_feature_dataframe(X, labels, destination=None):
     return df
 
 def lasso_minimize_features(dataset_dir, X, y):
+    """
+    Uses Lasso regression to minimize the number of features.
+    It selects features based on their coefficients and saves the
+    selected features to a CSV file.
+    """
     df = get_feature_dataframe(X, y, destination=dataset_dir)
 
     # Sourced from 
