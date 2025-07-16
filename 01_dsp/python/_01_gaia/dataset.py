@@ -39,6 +39,7 @@ class Dataset:
                         data = f.read()
                     parsed = json.loads(data)
                     parsed["bulk-density"].append(bulk_density)
+                    parsed["label"] = bulk_density_to_label(bulk_density)
                     with open(json_file, 'w') as f:
                         json.dump(parsed, f)
             else:
@@ -105,6 +106,19 @@ class Dataset:
         self.purge_labels()
         self.label_dataset()
         self.frames_to_csv()
+
+def bulk_density_to_label(bulk_density):
+    """
+    Convert bulk density to a label. For silty soil based on 
+    https://www.nrcs.usda.gov/sites/default/files/2022-10/nrcs142p2_051591.pdf.
+    Labels are based on root growth potential.
+    """
+    if bulk_density < 1.4:
+        return "Ideal"
+    elif bulk_density > 1.65:
+        return "Restricted"
+    else:
+        return "Non-ideal"
 
 def process_frames(file_path, capture_name):
     """
