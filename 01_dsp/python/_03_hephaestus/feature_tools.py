@@ -49,6 +49,14 @@ class FeatureTools:
             sorted_peaks = np.argsort(scan_mean[peak_idxs[0]])[-2:]
             return peak_idxs[0][sorted_peaks][::-1] 
         
+    def _get_amplitude(self, scan_idx=0):
+        amplitudes = np.zeros(self.X.shape[0])
+        for i in range(self.X.shape[0]):
+            signal = self._average_frame(i)
+            amplitudes[i] = signal[scan_idx]
+
+        return amplitudes
+
     def peak_amplitude(self):
         """
         Amplitude of the two peaks. Corresponds to the reflectivity
@@ -510,6 +518,139 @@ def get_feature_dataframe(X, labels, destination=None):
 
     return df
 
+def get_feature_dataframe_all(X, labels, destination=None):
+    """
+    Generates a DataFrame with various features extracted from the input data.
+    This function is similar to get_feature_dataframe but does not save the DataFrame.
+    """
+
+    print("Initializing FeatureTools...")
+    ft = FeatureTools(X)
+
+    print("Extracting amplitudes...")
+    amplitudes = np.zeros((X.shape[0], X.shape[1]))
+    for i in range(X.shape[1]):
+        amplitudes[:, i] = ft._get_amplitude(i)
+    amp_dict = {f'amp{i+1}': amplitudes[:, i] for i in range(amplitudes.shape[1])}
+
+    print("Extracting variance...")
+    var = np.zeros((X.shape[0], X.shape[1]))
+    for i in range(X.shape[1]):
+        var[:, i] = ft.signal_variance(i)
+    var_dict = {f'var{i+1}': var[:, i] for i in range(var.shape[1])}
+
+    print("Extracting entropy...")
+    entropy = np.zeros((X.shape[0], X.shape[1]))
+    for i in range(X.shape[1]):
+        entropy[:, i] = ft.signal_entropy(i)
+    entropy_dict = {f'entropy{i+1}': entropy[:, i] for i in range(entropy.shape[1])}
+
+    # print("Extracting amplitude to variance ratio...")
+    # amp2var = np.zeros((X.shape[0], X.shape[1]))
+    # for i in range(X.shape[1]):
+    #     amp2var[:, i] = ft._get_amplitude2variance_ratio(i)
+    # amp2var_dict = {f'amp2var{i+1}': amp2var[i, :] for i in range(amp2var.shape[0])}
+
+    # print("Extracting amplitude to entropy ratio...")
+    # amp2ent = np.zeros((X.shape[0], X.shape[1]))
+    # for i in range(X.shape[1]):
+    #     amp2ent[:, i] = ft._get_amplitude2entropy_ratio(i)
+    # amp2ent_dict = {f'amp2ent{i+1}': amp2ent[i, :] for i in range(amp2ent.shape[0])}
+
+    print("Extracting delay...")
+    delay = ft.peak_delay()  # shape (3, N)
+    delay_dict = {f'delay{i+1}': delay[i, :] for i in range(delay.shape[0])}
+
+    print("Extracting peak width...")
+    width = ft.peak_width()  # shape (2, N)
+    width_dict = {f'width{i+1}': width[i, :] for i in range(width.shape[0])}
+
+    print("Extracting skewness and kurtosis...")
+    skewness, kurtosis_vals = ft.peak_shape_stats()  # both (2, N)
+    skew_dict = {f'skew{i+1}': skewness[i, :] for i in range(skewness.shape[0])}
+    kurt_dict = {f'kurt{i+1}': kurtosis_vals[i, :] for i in range(kurtosis_vals.shape[0])}
+
+    print("Extracting energy...")
+    energy = np.zeros((X.shape[0], X.shape[1]))
+    for i in range(X.shape[0]):
+        energy[:, i] = ft.signal_energy(i)
+    energy_dict = {f'energy{i+1}': energy[:, i] for i in range(energy.shape[1])}
+
+    print("Extracting decay rate...")
+    decay = ft.decay_rate()  # shape (2, N)
+    decay_dict = {f'decay{i+1}': decay[i, :] for i in range(decay.shape[0])}
+
+    print("Extracting ascend rate...")
+    ascend = ft.ascend_rate()  # shape (2, N)
+    ascend_dict = {f'ascend{i+1}': ascend[i, :] for i in range(ascend.shape[0])}
+
+    print("Extracting phase variance...")
+    phase_var = np.zeros((X.shape[0], X.shape[1]))
+    for i in range(X.shape[0]):
+        phase_var[:, i] = ft.phase_variance(i)
+    phase_var_dict = {f'phase_var{i+1}': phase_var[:, i] for i in range(phase_var.shape[1])}
+
+    print("Extracting circularity coefficient...")
+    circ_coeff = np.zeros((X.shape[0], X.shape[1]))
+    for i in range(X.shape[0]):
+        circ_coeff[:, i] = ft.circularity_coefficient(i)
+    circ_coeff_dict = {f'circ_coeff{i+1}': circ_coeff[:, i] for i in range(circ_coeff.shape[1])}
+
+    print("Extracting phase jitter...")
+    phase_jitter = np.zeros((X.shape[0], X.shape[1]))
+    for i in range(X.shape[0]):
+        phase_jitter[:, i] = ft.phase_jitter(i)
+    phase_jitter_dict = {f'phase_jitter{i+1}': phase_jitter[:, i] for i in range(phase_jitter.shape[1])}
+
+    print("Merging all features into DataFrame...")
+    feature_dict = {
+        **amp_dict,
+        **var_dict,
+        **entropy_dict,
+        # **amp2var_dict,
+        # **amp2ent_dict,
+        **delay_dict,
+        **width_dict,
+        **skew_dict,
+        **kurt_dict,
+        **energy_dict,
+        **decay_dict,
+        **ascend_dict,
+        **phase_var_dict,
+        **circ_coeff_dict,
+        **phase_jitter_dict
+    }
+
+    feature_dict['label'] = labels
+
+    df = pd.DataFrame(feature_dict)
+    if destination is not None:
+        print(f"Saving features to {os.path.join(destination, 'features.csv')} ...")
+        if not os.path.exists(destination):
+            os.makedirs(destination)
+        df.to_csv(os.path.join(destination, 'features.csv'), index=False)
+    
+    print("Feature extraction complete.")
+    return df
+
+def correlation_minimize_features(dataset_dir, X, y, top_n=10):
+    df = get_feature_dataframe_all(X, y, destination=dataset_dir)
+
+    # Calculate correlation with the target variable
+    corr = df.corr()['label'].abs().sort_values(ascending=False)
+
+    # Select the top_n features most correlated with the label (excluding the label itself)
+    top_features = corr.drop('label').head(top_n).index.tolist()
+    selected_features = top_features + ['label']
+
+    # Save the selected features to a new DataFrame
+    df_new = df[selected_features]
+    df_new.to_csv(os.path.join(dataset_dir, 'features_selected.csv'), index=False)
+
+    # Return the top correlation scores as a dictionary
+    top_corr_scores = corr[top_features].to_dict()
+    return df_new, top_corr_scores
+
 def lasso_minimize_features(dataset_dir, X, y):
     """
     Uses Lasso regression to minimize the number of features.
@@ -556,3 +697,8 @@ def lasso_minimize_features(dataset_dir, X, y):
 
     df_new = df[feature_subset]
     df_new.to_csv(os.path.join(dataset_dir, 'features_selected.csv'), index=False)
+
+    # dictionary of feature names and their coefficients
+    results = {name: coef_value for name, coef_value in zip(names, lasso1_coef) if coef_value != 0}
+
+    return df_new, results
