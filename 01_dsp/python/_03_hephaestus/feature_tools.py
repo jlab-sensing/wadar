@@ -528,8 +528,6 @@ def save_feature_table(feature_table, destination, feature_file_name='features_s
 
     if not os.path.exists(destination):
         os.makedirs(destination)
-    if os.path.exists(os.path.join(destination, feature_file_name)):
-        print(f"File {feature_file_name} already exists in {destination}. Overwriting.")
     feature_table.to_csv(os.path.join(destination, feature_file_name), index=False)
     print(f"Feature table saved to {os.path.join(destination, feature_file_name)}")
 
