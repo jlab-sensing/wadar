@@ -326,6 +326,7 @@ class FeatureTools:
     # TODO: FFT and some time domain features. Maybe correlation between peaks?
     #       There are advanced radar clutter analysis techniques.
     #       Persistence, but that might be the same as variance.
+    #       Definitely missing phase stuff, so prioritize that.
     
 def get_feature_dataframe(X, labels, destination=None):
     """
