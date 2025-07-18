@@ -506,11 +506,11 @@ def lasso_minimize_features(feature_table):
     feature_subset=np.array(names)[lasso1_coef>0.001]
 
     # Adding the target to the list of feaatures. 
-    feature_subset=np.append(feature_subset, "label")
+    feature_subset=np.append(feature_subset, "Label")
 
     # Creating a new dataframe with the selected features.
     df_new = pd.DataFrame(X_test, columns=names)
-    df_new['label'] = y_test
+    df_new['Label'] = y_test
     df_new = df_new[feature_subset]
 
     # Results
@@ -521,12 +521,28 @@ def lasso_minimize_features(feature_table):
 
     return df_new, results
 
-def save_feature_table(feature_table, destination):
+def save_feature_table(feature_table, destination, feature_file_name='features_selected.csv'):
     """
     Saves the feature table to a CSV file.
     """
 
     if not os.path.exists(destination):
         os.makedirs(destination)
-    feature_table.to_csv(os.path.join(destination, 'features_selected.csv'), index=False)
-    print(f"Feature table saved to {os.path.join(destination, 'features_selected.csv')}")
+    if os.path.exists(os.path.join(destination, feature_file_name)):
+        print(f"File {feature_file_name} already exists in {destination}. Overwriting.")
+    feature_table.to_csv(os.path.join(destination, feature_file_name), index=False)
+    print(f"Feature table saved to {os.path.join(destination, feature_file_name)}")
+
+def load_feature_table(dir, feature_file_name='features.csv'):
+    """
+    Loads the feature table from a CSV file.
+    """
+
+    feature_table = pd.read_csv(f"{dir}/{feature_file_name}")
+
+    feature_array = feature_table.drop(columns=['Label']).values
+    feature_names = feature_table.drop(columns=['Label']).columns.tolist()
+    feature_names = [name.replace('_', ' ').title() for name in feature_names]
+    labels = feature_table['Label'].values
+
+    return feature_table, feature_array, feature_names, labels

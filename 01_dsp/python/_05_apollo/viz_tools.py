@@ -81,7 +81,6 @@ def plot_confusion_matrix(y_labels, y_pred):
     plt.xticks(fontsize=14, weight='bold', rotation=45)
     plt.yticks(fontsize=14, weight='bold', rotation=0)
     plt.tight_layout()
-    plt.show()
 
 def plot_IQ_signals(X, y):
     unique_Y, unique_Y_idx = np.unique(y, return_index=True)

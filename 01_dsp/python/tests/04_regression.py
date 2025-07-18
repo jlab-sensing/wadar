@@ -8,82 +8,64 @@ sys.path.insert(0, parent_dir)
 from _01_gaia.loader import FrameLoader
 from _03_hephaestus import feature_tools
 from _04_athena import regression
-from _01_gaia.dataset import bulk_density_to_label
+from _06_hermes.bulk_density_labels import bulk_density_to_label
 from _05_apollo import viz_tools
 
 import pandas as pd
 
-def plot_feature_importance(model, feature_names):
-    """
-    Plots the feature importance from a linear regression model.
-    """
-    importance = model.coef_
-    indices = np.argsort(np.abs(importance))[::-1]
-
-    plt.figure(figsize=(10, 6))
-    plt.title("Feature Importance")
-    plt.bar(range(len(importance)), importance[indices], align='center')
-    plt.xticks(range(len(importance)), np.array(feature_names)[indices], rotation=90)
-    plt.xlabel("Features")
-    plt.ylabel("Importance")
-    plt.tight_layout()
-    plt.show()
-
 if __name__ == "__main__":
 
-    VIZ = True  # Set to True to visualize features
+    VIZ = False  # Set to True to visualize features
     
     dataset_dir = "../data/combined-soil-compaction-dataset"
-    feature_file_name = "features_selected.csv"
-    data = pd.read_csv(f"{dataset_dir}/{feature_file_name}")
-    X = data.drop(columns=['label']).values
-    y = data['label'].values
+    feature_file_name = "features.csv"
+    test_size = 0.2
+
+    # If making a new feature set,
+    # hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
+    # X, y = hydros.X, hydros.y
+    # hephaestus_features = feature_tools.FeatureTools(X)
+    # feature_table = hephaestus_features.feature_full_monty(y, dataset_dir)
+
+    # If using an existing feature set,
+    feature_table, _, _, _ = feature_tools.load_feature_table(
+        dataset_dir, feature_file_name)
 
 
-    # features = feature_tools.lasso_minimize_features(dataset_dir, X, y)
-
-    # print("Linear Regression Model:")
-    # model, metrics = regression.model_linear_regression(dataset_dir, feature_file_name)
-    # print("Model Metrics:", metrics)
-    # print("Model Coefficients:", model.coef_)
-    # print()
-
-    test_size = 0.5
+    df_best, mi_scores = feature_tools.mutual_info_minimize_features(feature_table, top_n=10)
+    feature_tools.save_feature_table(df_best, dataset_dir, "features_mutual_info.csv")
+    _, feature_array, _, labels = feature_tools.load_feature_table(
+        dataset_dir, "features_mutual_info.csv")
 
     print("Polynomial Regression Model")
     print()
 
     print("Degree 1:")
     poly_model, poly_metrics = regression.polynomial_regression(
-        dataset_dir, feature_file_name, degree=1, test_size=test_size)
+        feature_array, labels, degree=1, test_size=test_size)
     print("Model Metrics:", poly_metrics)
 
     y_labels = []
-    for i, label in enumerate(y):
+    for i, label in enumerate(labels):
         y_labels.append(bulk_density_to_label(label))
 
-    y_pred = poly_model.predict(X)
+    y_pred = poly_model.predict(feature_array)
 
-    viz_tools.plot_confusion_matrix(
-        y_labels=y_labels,
-        y_pred=[bulk_density_to_label(pred) for pred in y_pred]
-    )
+    if VIZ:
+        viz_tools.plot_confusion_matrix(
+            y_labels=y_labels,
+            y_pred=[bulk_density_to_label(pred) for pred in y_pred]
+        )
 
 
     print("Degree 2:")
     poly_model, poly_metrics = regression.polynomial_regression(
-        dataset_dir, feature_file_name, degree=2, test_size=test_size)
+        feature_array, labels, degree=2, test_size=test_size)
     print("Model Metrics:", poly_metrics)
 
     print("Degree 3:")
     poly_model, poly_metrics = regression.polynomial_regression(
-        dataset_dir, feature_file_name, degree=3, test_size=test_size)
+        feature_array, labels, degree=3, test_size=test_size)
     print("Model Metrics:", poly_metrics)
-    
-    # Doesn't work for polynomial regression
-    # if VIZ:
-    #     data = pd.read_csv(dataset_dir + '/' + feature_file_name)
-    #     feature_names = data.drop(columns=['label']).columns.tolist()
-    #     plot_feature_importance(poly_model, feature_names=feature_names)
 
     plt.show()

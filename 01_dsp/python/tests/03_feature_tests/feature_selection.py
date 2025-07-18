@@ -26,14 +26,16 @@ if __name__ == "__main__":
     print("Test harness for feature pruning.")
 
     dataset_dir = "../../data/combined-soil-compaction-dataset"
-    hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
-    X, y = hydros.X, hydros.y
+
 
     # If making a new feature set, 
+    # hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
+    # X, y = hydros.X, hydros.y
     # hephaestus_features = feature_tools.FeatureTools(X)
     # feature_table = hephaestus_features.feature_full_monty(y, dataset_dir)
 
     # If using an existing feature set, 
+    
     feature_table = pd.read_csv(f"{dataset_dir}/features.csv")
 
     # ==============
