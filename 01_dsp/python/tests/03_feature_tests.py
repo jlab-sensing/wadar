@@ -37,10 +37,10 @@ def eval_top_correlation(y, X, feature_func, num_of_corrs=10):
 if __name__ == "__main__":
 
     VIZ = False
-
     DEMO_MODE = False
 
-    dataset_dir = "../data/wet-1-soil-compaction-dataset"
+
+    dataset_dir = "../data/combined-soil-compaction-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
@@ -365,7 +365,7 @@ if __name__ == "__main__":
     plt.barh(results.keys(), results.values())
     plt.show()
 
-    _, results = feature_tools.correlation_minimize_features(dataset_dir, X, y)
+    # _, results = feature_tools.correlation_minimize_features(dataset_dir, X, y)
 
     # print("Feature selection results:")
     # print(results)
