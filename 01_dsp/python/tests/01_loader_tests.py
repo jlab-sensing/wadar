@@ -12,10 +12,13 @@ from _01_gaia import dataset
 
 if __name__ == "__main__":
 
-    dataset_dir = "../data/dry-soil-compaction-dataset"
-    
+    # This file assumes that the dataset directory is labeled.
+    # See 01_dataset_tests.py for using the Dataset class
+    # to label the directories properly.
+
+    dataset_dir = "../data/combined-soil-compaction-dataset"
+
     # To load data from a dataset directory and save it as raw data
-    dataset_raw = dataset.Dataset(dataset_dir)
     hydros = FrameLoader(dataset_dir, new_dataset=True, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
@@ -24,15 +27,6 @@ if __name__ == "__main__":
     # X, y = hydros.X, hydros.y
 
     print("X shape:", X.shape)
-
-    # plt.figure(figsize=(6, 6))
-    # signal = np.abs(X[1, :, 100])
-    # plt.plot(signal, color='black', linewidth=1)
-    # # plt.grid(False)
-    # # plt.xticks([])
-    # # plt.yticks([])
-    # plt.tight_layout()
-    # plt.box(False)
-    # plt.show()
+    print("y shape:", y.shape)
 
     plot_median_unique(X, y)

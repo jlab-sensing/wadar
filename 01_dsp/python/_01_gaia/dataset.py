@@ -5,6 +5,7 @@ import pandas as pd
 import json
 import pathlib
 import sys
+import shutil
 
 class Dataset:
     def __init__(self, dataset_dir):
@@ -106,19 +107,6 @@ class Dataset:
         self.purge_labels()
         self.label_dataset()
         self.frames_to_csv()
-
-def bulk_density_to_label(bulk_density):
-    """
-    Convert bulk density to a label. For silty soil based on 
-    https://www.nrcs.usda.gov/sites/default/files/2022-10/nrcs142p2_051591.pdf.
-    Labels are based on root growth potential.
-    """
-    if bulk_density < 1.4:
-        return "Ideal"
-    elif bulk_density > 1.65:
-        return "Restricted"
-    else:
-        return "Non-ideal"
 
 def process_frames(file_path, capture_name):
     """
@@ -320,3 +308,51 @@ def NoveldaChipParams(chip_set, pgen, sampler='4mm'):
     bw_hz = fH - fL if 'fH' in locals() else bw_hz
 
     return fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz
+
+# It would have been faster to rename the files in the dataset directories
+# but I decided to waste time and write this function instead.
+def combine_datasets(
+        dataset_dirs = ["../data/wet-0-soil-compaction-dataset", "../data/wet-1-soil-compaction-dataset"], 
+        target_dir = "../data/combined-soil-compaction-dataset"):
+    """
+    Combine multiple datasets into a single dataset by renaming folders and copying files.
+    Assumes that each directory is named "label-#-...". Eg.
+    wet-0-soil-compaction-dataset, wet-1-soil-compaction-dataset.
+    """
+    target_dir = pathlib.Path(target_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    
+    for dataset_dir in dataset_dirs:
+        print(f"Processing dataset: {dataset_dir}")
+
+        cur_dataset = Dataset(dataset_dir)
+        dataset_dir = cur_dataset.data_dir
+        
+        dataset_name = dataset_dir.name
+        prefix = dataset_name.split("-")[0] + "-" + dataset_name.split("-")[1]  # "wet-0" or "wet-1"
+
+        for folder in dataset_dir.iterdir():
+            if folder.is_dir():
+                new_folder_name = f"{prefix}-{folder.name}"
+                target_folder = target_dir / new_folder_name
+                target_folder.mkdir(exist_ok=True)
+                for file in folder.iterdir():
+                    if file.is_file():
+                        target_file = target_folder / file.name
+                        shutil.copy2(file, target_file)
+        
+        print(f"Dataset {dataset_dir} processed and copied to {target_dir}")
+
+# Probably should move this to a utils file doesn't really belong here
+def bulk_density_to_label(bulk_density):
+    """
+    Convert bulk density to a label. For silty soil based on 
+    https://www.nrcs.usda.gov/sites/default/files/2022-11/Bulk%20Density%20-%20Soil%20Health%20Guide_0.pdf.
+    Labels are based on root growth potential.
+    """
+    if bulk_density < 1.4:
+        return "Ideal"
+    elif bulk_density > 1.75:
+        return "Restricted"
+    else:
+        return "Non-ideal"

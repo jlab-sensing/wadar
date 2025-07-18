@@ -15,7 +15,7 @@ if __name__ == "__main__":
     KERNEL_PCA = False
 
     # Load the dataset
-    dataset_dir = "../data/dry-soil-compaction-dataset"
+    dataset_dir = "../data/wet-1-soil-compaction-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False)
     X, y = hydros.X, hydros.y
 

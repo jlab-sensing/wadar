@@ -4,10 +4,11 @@ import os
 import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)) # https://stackoverflow.com/questions/21005822/what-does-os-path-abspathos-path-joinos-path-dirname-file-os-path-pardir
 sys.path.insert(0, parent_dir)
+
 from _01_gaia.loader import FrameLoader
 from _03_hephaestus import feature_tools
 from _05_apollo import viz_tools
-
+import seaborn as sns
 import pandas as pd
 
 def eval_corr(y, feature):
@@ -31,13 +32,15 @@ def eval_top_correlation(y, X, feature_func, num_of_corrs=10):
         print(f"{rank}. Correlation Coefficient: {coef:.4f} @ {idx}")
     print()
 
+    return top_corrs
+
 if __name__ == "__main__":
 
     VIZ = False
 
     DEMO_MODE = False
 
-    dataset_dir = "../data/dry-soil-compaction-dataset"
+    dataset_dir = "../data/wet-1-soil-compaction-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
@@ -362,7 +365,7 @@ if __name__ == "__main__":
     plt.barh(results.keys(), results.values())
     plt.show()
 
-    # _, results = feature_tools.correlation_minimize_features(dataset_dir, X, y)
+    _, results = feature_tools.correlation_minimize_features(dataset_dir, X, y)
 
     # print("Feature selection results:")
     # print(results)

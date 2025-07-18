@@ -19,7 +19,7 @@ from sklearn.model_selection import KFold
 if __name__ == "__main__":
 
     # load the dataset
-    dataset_dir = "../data/dry-soil-compaction-dataset"
+    dataset_dir = "../data/wet-1-soil-compaction-dataset"
     feature_file_name = "features_selected.csv"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     data = pd.read_csv(f"{dataset_dir}/{feature_file_name}")
@@ -107,3 +107,5 @@ if __name__ == "__main__":
 
     print(f"K-Fold MSEs: {mse_scores}")
     print(f"Average MSE: {np.mean(mse_scores):.4f}")
+
+    

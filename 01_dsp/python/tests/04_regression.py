@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     VIZ = True  # Set to True to visualize features
     
-    dataset_dir = "../data/dry-soil-compaction-dataset"
+    dataset_dir = "../data/wet-1-soil-compaction-dataset"
     feature_file_name = "features_selected.csv"
     data = pd.read_csv(f"{dataset_dir}/{feature_file_name}")
     X = data.drop(columns=['label']).values

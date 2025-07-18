@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     VIZ = False  # Set to True to visualize features, False to save them
 
-    dataset_dir = "../data/dry-soil-compaction-dataset"
+    dataset_dir = "../data/wet-1-soil-compaction-dataset"
     feature_file_name = "features.csv"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y

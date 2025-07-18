@@ -82,3 +82,56 @@ def plot_confusion_matrix(y_labels, y_pred):
     plt.yticks(fontsize=14, weight='bold', rotation=0)
     plt.tight_layout()
     plt.show()
+
+def plot_IQ_signals(X, y):
+    unique_Y, unique_Y_idx = np.unique(y, return_index=True)
+    unique_Y = unique_Y[np.argsort(unique_Y)]
+
+    X_abs = np.median(np.abs(X), axis=2)
+
+    plt.figure(figsize=(12, 7))
+
+    # color map for increasing soil compaction levels
+    sorted_indices = np.argsort(unique_Y)
+    sorted_unique_Y = unique_Y[sorted_indices]
+    colors = plt.cm.viridis(np.linspace(0, 1, len(sorted_unique_Y)))
+
+    for i, label in enumerate(sorted_unique_Y):
+        idx = np.where(y == label)[0]
+
+        # plotting the mean and median as a line with a shaded area
+        # so the plot looks less cluttered
+        mean_curve = np.mean(X_abs[idx], axis=0)
+        std_curve = np.std(X_abs[idx], axis=0)
+        plt.plot(mean_curve, color=colors[i], label=f"Level {label:.2f}", linewidth=2)
+        plt.fill_between(np.arange(mean_curve.size), mean_curve - std_curve, mean_curve + std_curve,
+                         color=colors[i], alpha=0.2)
+    
+    plt.xlabel("Range Bin", fontsize=14)
+    plt.ylabel("Absolute Value of I/Q Signal", fontsize=14)
+    plt.legend(title="Compaction Level", fontsize=12, title_fontsize=13, loc="best")
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.tight_layout()
+
+    X_angle = np.median(np.angle(X), axis=2)
+
+    plt.figure(figsize=(12, 7))
+
+    for i, label in enumerate(sorted_unique_Y):
+        idx = np.where(y == label)[0]
+
+        # plotting the mean and median as a line with a shaded area
+        # so the plot looks less cluttered
+        mean_curve = np.mean(X_angle[idx], axis=0)
+        std_curve = np.std(X_angle[idx], axis=0)
+        plt.plot(mean_curve, color=colors[i], label=f"Level {label:.2f}", linewidth=2)
+        plt.fill_between(np.arange(mean_curve.size), mean_curve - std_curve, mean_curve + std_curve,
+                         color=colors[i], alpha=0.2)
+
+    plt.xlabel("Range Bin", fontsize=14)
+    plt.ylabel("Angle of I/Q Signal", fontsize=14)
+    plt.legend(title="Compaction Level", fontsize=12, title_fontsize=13, loc="best")
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.tight_layout()
+
+    plt.show()
