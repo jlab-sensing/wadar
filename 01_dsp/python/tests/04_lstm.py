@@ -16,7 +16,7 @@ from sklearn.metrics import mean_squared_error
 if __name__ == "__main__":
 
     # load the dataset
-    dataset_dir = "../data/dry-soil-compaction-dataset"
+    dataset_dir = "../data/combined-soil-compaction-dataset"
     feature_file_name = "features_selected.csv"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y

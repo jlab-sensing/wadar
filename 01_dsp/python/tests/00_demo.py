@@ -20,3 +20,4 @@ if __name__ == "__main__":
     X, y = hydros.X, hydros.y
 
     viz_tools.plot_IQ_signals(X, y)
+    plt.show()

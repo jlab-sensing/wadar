@@ -15,11 +15,13 @@ from sklearn.metrics import mean_squared_error
 import pandas as pd
 from keras.layers import Dense, Conv1D, Flatten, Dropout
 from sklearn.model_selection import KFold
+from _06_hermes.bulk_density_labels import bulk_density_to_label
+from _05_apollo import viz_tools
 
 if __name__ == "__main__":
 
     # load the dataset
-    dataset_dir = "../data/wet-1-soil-compaction-dataset"
+    dataset_dir = "../data/combined-soil-compaction-dataset"
     feature_file_name = "features_selected.csv"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     data = pd.read_csv(f"{dataset_dir}/{feature_file_name}")
@@ -27,85 +29,79 @@ if __name__ == "__main__":
     y = data['label'].values
 
 
-    # scaler = MinMaxScaler()
-    # X_scaled = scaler.fit_transform(X)
-
-    # X_train, X_test, y_train, y_test = train_test_split(
-    #     X_scaled, y, test_size=0.2
-    # )
-
-    # # simple lil test model
-    # model = Sequential()
-    # model.add(Dense(64, input_dim=X_train.shape[1], activation='relu'))
-    # model.add(Dense(64, activation='relu'))
-    # model.add(Dense(1))  # regression output
-
-    # model.compile(loss='mse', optimizer='adam')
-
-    # history = model.fit(X_train, y_train, epochs=100, batch_size=32,
-    #                     validation_split=0.2, verbose=1)
-
-
-    # y_pred = model.predict(X_test).flatten()
-    # mse = mean_squared_error(y_test, y_pred)
-    # print(f"Test MSE: {mse:.4f}")
-
-    X = hydros.X   # samples, fast_time, slow_time)
-    y = hydros.y
-    X_abs = np.abs(X)
-
-    # Normalize per sample
     scaler = MinMaxScaler()
-    X_scaled = np.zeros_like(X_abs)
-    for i in range(X_abs.shape[0]):
-        X_scaled[i] = scaler.fit_transform(X_abs[i])
+    X_scaled = scaler.fit_transform(X)
 
-    # Train/test split without flattening
     X_train, X_test, y_train, y_test = train_test_split(
-        X_scaled, y, test_size=0.2, random_state=42
+        X_scaled, y, test_size=0.2
     )
 
-    # # Build model — Conv1D along slow_time axis (time distributed over fast_time)
-    # model = Sequential()
-    # model.add(Conv1D(64, kernel_size=3, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
-    # model.add(Conv1D(64, kernel_size=3, activation='relu'))
-    # model.add(Flatten())
-    # model.add(Dense(64, activation='relu'))
-    # model.add(Dense(1))
+    # simple lil test model
+    model = Sequential()
+    model.add(Dense(64, input_dim=X_train.shape[1], activation='relu'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(1))  # regression output
 
-    # model.compile(loss='mse', optimizer='adam')
-    # history = model.fit(
-    #     X_train, y_train, epochs=100, batch_size=32,
-    #     validation_split=0.2, verbose=1
+    model.compile(loss='mse', optimizer='adam')
+
+    history = model.fit(X_train, y_train, epochs=20, batch_size=32,
+                        validation_split=0.2, verbose=1)
+
+
+    y_pred = model.predict(X_test).flatten()
+    mse = mean_squared_error(y_test, y_pred)
+    print(f"Test MSE: {mse:.4f}")
+
+    y_pred = model.predict(X_scaled).flatten()
+
+    y_pred_labels = [bulk_density_to_label(i) for i in y_pred]
+    y_test_labels = [bulk_density_to_label(i) for i in y]
+
+    accuracy = np.mean(np.array(y_pred_labels) == np.array(y_test_labels))
+    print(f"Prediction Accuracy: {accuracy:.4f}")
+
+    viz_tools.plot_confusion_matrix(
+        y_test_labels, y_pred_labels
+    )
+
+    # ===================================
+
+    # X = hydros.X   # samples, fast_time, slow_time)
+    # y = hydros.y
+    # X_abs = np.abs(X)
+
+    # # Normalize per sample
+    # scaler = MinMaxScaler()
+    # X_scaled = np.zeros_like(X_abs)
+    # for i in range(X_abs.shape[0]):
+    #     X_scaled[i] = scaler.fit_transform(X_abs[i])
+
+    # # Train/test split without flattening
+    # X_train, X_test, y_train, y_test = train_test_split(
+    #     X_scaled, y, test_size=0.2, random_state=42
     # )
 
-    # y_pred = model.predict(X_test).flatten()
-    # mse = mean_squared_error(y_test, y_pred)
-    # print(f"Test MSE: {mse:.4f}")
+    # kf = KFold(n_splits=5, shuffle=True)
+    # mse_scores = []
 
-    # print(X_train.shape, X_test.shape)
+    # for train_idx, test_idx in kf.split(X_scaled):
+    #     X_train, X_test = X_scaled[train_idx], X_scaled[test_idx]
+    #     y_train, y_test = y[train_idx], y[test_idx]
 
-    kf = KFold(n_splits=5, shuffle=True)
-    mse_scores = []
+    #     model = Sequential()
+    #     model.add(Conv1D(64, 3, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
+    #     model.add(Conv1D(64, 3, activation='relu'))
+    #     model.add(Flatten())
+    #     model.add(Dense(64, activation='relu'))
+    #     model.add(Dense(1))
+    #     model.compile(optimizer='adam', loss='mse')
+    #     model.fit(X_train, y_train, epochs=50, batch_size=16, verbose=0)
 
-    for train_idx, test_idx in kf.split(X_scaled):
-        X_train, X_test = X_scaled[train_idx], X_scaled[test_idx]
-        y_train, y_test = y[train_idx], y[test_idx]
+    #     y_pred = model.predict(X_test).flatten()
+    #     mse = mean_squared_error(y_test, y_pred)
+    #     mse_scores.append(mse)
 
-        model = Sequential()
-        model.add(Conv1D(64, 3, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
-        model.add(Conv1D(64, 3, activation='relu'))
-        model.add(Flatten())
-        model.add(Dense(64, activation='relu'))
-        model.add(Dense(1))
-        model.compile(optimizer='adam', loss='mse')
-        model.fit(X_train, y_train, epochs=50, batch_size=16, verbose=0)
-
-        y_pred = model.predict(X_test).flatten()
-        mse = mean_squared_error(y_test, y_pred)
-        mse_scores.append(mse)
-
-    print(f"K-Fold MSEs: {mse_scores}")
-    print(f"Average MSE: {np.mean(mse_scores):.4f}")
+    # print(f"K-Fold MSEs: {mse_scores}")
+    # print(f"Average MSE: {np.mean(mse_scores):.4f}")
 
     

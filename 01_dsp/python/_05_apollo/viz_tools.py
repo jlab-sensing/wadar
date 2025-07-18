@@ -133,5 +133,3 @@ def plot_IQ_signals(X, y):
     plt.legend(title="Compaction Level", fontsize=12, title_fontsize=13, loc="best")
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()
-
-    plt.show()

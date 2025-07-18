@@ -3,6 +3,9 @@
 # to perform dimensionality reduction for the purpose
 # of looking at the data in a lower dimension.
 
+# TODO: Exploring an autoencoder would be interesting. 
+# Though I suspect that this requires far more data than we have.
+
 import os
 import sys
 import numpy as np

@@ -13,177 +13,99 @@ import pandas as pd
 from sklearn.linear_model import Lasso, LassoCV
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from scipy.stats import entropy
 
 class FeatureTools:
     def __init__(self, X):
-        """
-        Wow this really doesn't need to be a class but
-        I realized too late.
-        """
-
         self.X = X
 
-    def _average_frame(self, scan_idx=0):
+    def _segments(self):
+        """
+        So I can determine the segments of the signal that I want to analyze.
+        """
+
+        return [0, 250, 512]
+
+    def _average_frame(self):
         """
         Just so I can easily decide whether to use median or mean.
         """
 
-        return np.abs(np.median(self.X[scan_idx, :, :], axis=1))
+        return np.median(self.X, axis=2)
     
-
-    def _get_peak_idx(self, scan_idx = 0):
+    def _get_peak_idx(self):
         """
-        Gets the two biggest peaks. The first one, in the near-field of the
-        radar, is technically the effect of the antenna coupling, but it seems
-        to change with soil compaction. The second one is the actual
-        reflection from the soil layer.
+        Returns the two largest peaks in the signal for all scans.
         """
-
-        scan_mean = self._average_frame(scan_idx)
-
-        peak_idxs = find_peaks(scan_mean)
-
-        if len(peak_idxs) < 2:
-            return peak_idxs
-        else:
-            sorted_peaks = np.argsort(scan_mean[peak_idxs[0]])[-2:]
-            return peak_idxs[0][sorted_peaks][::-1] 
-        
-    def _get_amplitude(self, scan_idx=0):
-        amplitudes = np.zeros(self.X.shape[0])
+        peak_idxs = np.zeros((self.X.shape[0], 2), dtype=int)
+        average_signals = np.abs(self._average_frame())
         for i in range(self.X.shape[0]):
-            signal = self._average_frame(i)
-            amplitudes[i] = signal[scan_idx]
+            signal = average_signals[i]
+            peaks, _ = find_peaks(signal, distance=5)
+            top2 = np.argsort(signal[peaks])[-2:]  # Get indices of the two largest peaks
+            peak_idxs[i] = peaks[top2]
 
-        return amplitudes
+        return peak_idxs
 
     def peak_amplitude(self):
         """
-        Amplitude of the two peaks. Corresponds to the reflectivity
-        of the peak indices.
+        Amplitude of the two peaks for all scans.
         """
+
+        peak_idxs = self._get_peak_idx()
+        signal = np.abs(self._average_frame())
 
         peak_amplitudes = np.zeros((self.X.shape[0], 2))
         for i in range(self.X.shape[0]):
-            peak_idxs = self._get_peak_idx(i)
-            signal = self._average_frame(i)
-            peak_amplitudes[i, 0] = signal[peak_idxs[0]]
-            peak_amplitudes[i, 1] = signal[peak_idxs[1]]
-        
+            peak_amplitudes[i, 0] = signal[i, peak_idxs[i, 0]]
+            peak_amplitudes[i, 1] = signal[i, peak_idxs[i, 1]]
         return peak_amplitudes
 
-    def _get_signal_variance(self, scan_idx=0, spec_idx=0):
+    def _get_signal_variance(self, idx):
         """
-        Signal variance at scan_idx at the specified index.
-        Signal variance is a measure of how much the signal varies
-        over the range bins. 
+        Computes the variance of the signal at the specified index.
         """
 
-        signal = np.abs(self.X[scan_idx, :, :])
-        signal = signal[spec_idx]
-        return np.var(signal)
-    
-    def signal_variance(self, spec_idx=0):
-        """
-        Signal variance for all scans at the specified index.
-        """
-
-        variance = np.zeros(self.X.shape[0])
-        for i in range(self.X.shape[0]):
-            variance[i] = self._get_signal_variance(i, spec_idx)
-        return variance
-    
+        signal = np.abs(self.X[idx, :, :])
+        return np.var(signal, axis=1)
+        
     def peak_variance(self):
         """
         Variance of the two peaks.
         """
 
         peak_idxs = self._get_peak_idx()
-        return [
-            self.signal_variance(peak_idxs[0]),
-            self.signal_variance(peak_idxs[1])
-        ]
-    
-    def _get_amplitude2variance_ratio(self, scan_idx=0, spec_idx=0):
-        """
-        Amplitude to variance ratio at scan_idx at the specified index.
-        Just a way to normalize the amplitude by the variance.
-        """
-
-        signal = self._average_frame(scan_idx)
-        amplitude = signal[spec_idx]
-        variance = self._get_signal_variance(scan_idx, spec_idx)
-
-        return amplitude / (variance + 1e-10)
-    
-    def peak_amplitude2variance_ratio(self):
-        """
-        Amplitude to variance ratio for the two peaks.
-        """
-
-        ratios = np.zeros((2, self.X.shape[0]))
+        variance = np.zeros((self.X.shape[0], 2))
         for i in range(self.X.shape[0]):
-            peak_idxs = self._get_peak_idx(i)
-            ratios[0, i] = self._get_amplitude2variance_ratio(i, peak_idxs[0])
-            ratios[1, i] = self._get_amplitude2variance_ratio(i, peak_idxs[1])
-        return ratios
-    
-    def _get_signal_entropy(self, scan_idx=0, spec_idx=0):
-        """
-        Signal entropy at scan_idx at the specified index. 
-        Signal entropy is a measure of the uncertainty
-        in the signal. 
-        """
+            signal_var = self._get_signal_variance(i)
+            variance[i, 0] = signal_var[peak_idxs[i, 0]]
+            variance[i, 1] = signal_var[peak_idxs[i, 1]]
+        return variance
 
-        signal = np.abs(self.X[scan_idx, :, :])
-        signal = signal[spec_idx]
-        normed = signal / (np.sum(signal) + 1e-10)
-        return -np.sum(normed * np.log(normed + 1e-10))
-    
-    def signal_entropy(self, spec_idx=0):
+    def _get_signal_entropy(self, idx):
         """
-        Signal entropy for all scans at the specified index.
+        Computes the entropy of the signal at the specified index.
+        Signal entropy is a measure of the uncertainty in the signal.
         """
-
-        entropy = np.zeros(self.X.shape[0])
-        for i in range(self.X.shape[0]):
-            entropy[i] = self._get_signal_entropy(i, spec_idx)
+        signal = np.abs(self.X[idx, :, :])
+        entropy = np.zeros(signal.shape[0])
+        for i in range(signal.shape[0]):
+            hist, _ = np.histogram(signal[i, :], bins=30, density=True)
+            hist = hist[hist > 0]
+            entropy[i] = -np.sum(hist * np.log(hist + 1e-10))
         return entropy
-    
+
     def peak_entropy(self):
         """
         Entropy of the two peaks.
         """
-
         peak_idxs = self._get_peak_idx()
-        return [
-            self.signal_entropy(peak_idxs[0]),
-            self.signal_entropy(peak_idxs[1])
-        ]
-    
-    def _get_amplitude2entropy_ratio(self, scan_idx=0, spec_idx=0):
-        """
-        Amplitude to entropy ratio at scan_idx at the specified index.
-        Normalizes the amplitude using the entropy.
-        """
-
-        signal = self._average_frame(scan_idx)
-        amplitude = signal[spec_idx]
-        entropy = self._get_signal_entropy(scan_idx, spec_idx)
-
-        return amplitude / (entropy + 1e-10)
-    
-    def peak_amplitude2entropy_ratio(self):
-        """
-        Amplitude to entropy ratio for the two peaks.
-        """
-        
-        ratios = np.zeros((2, self.X.shape[0]))
+        entropy = np.zeros((self.X.shape[0], 2))
         for i in range(self.X.shape[0]):
-            peak_idxs = self._get_peak_idx(i)
-            ratios[0, i] = self._get_amplitude2entropy_ratio(i, peak_idxs[0])
-            ratios[1, i] = self._get_amplitude2entropy_ratio(i, peak_idxs[1])
-        return ratios
+            signal_entropy = self._get_signal_entropy(i)
+            entropy[i, 0] = signal_entropy[peak_idxs[i, 0]]
+            entropy[i, 1] = signal_entropy[peak_idxs[i, 1]]
+        return entropy
     
     def peak_delay(self):
         """
@@ -193,70 +115,42 @@ class FeatureTools:
         difference between the two peaks.
         """
 
-        delays = np.zeros((3, self.X.shape[0]))
-        for i in range(self.X.shape[0]):
-            peak_idxs = self._get_peak_idx(i)
-            delays[0, i] = peak_idxs[0] 
-            delays[1, i] = peak_idxs[1]           
-            delays[2, i] = peak_idxs[1] - peak_idxs[0]  
-        
+        peak_idxs = self._get_peak_idx() 
+        delays = np.zeros((self.X.shape[0], 3))
+        delays[:, 0] = peak_idxs[:, 0]
+        delays[:, 1] = peak_idxs[:, 1]
+        delays[:, 2] = peak_idxs[:, 1] - peak_idxs[:, 0]
         return delays
-    
-    def _get_peak_width(self, scan_idx=0):
-        """
-        Gets the width of the two peaks at scan_idx. Peak width is defined
-        as the width of the peak at half its maximum height.
-        """
 
-        signal = self._average_frame(scan_idx)
-        peaks = self._get_peak_idx(scan_idx)
-        peak1, peak2 = peaks[0], peaks[1]
-        width1 = peak_widths(signal, [peak1], rel_height=0.5)[0][0]
-        width2 = peak_widths(signal, [peak2], rel_height=0.5)[0][0]
-        return width1, width2
-    
     def peak_width(self):
         """
         Width of the two peaks at each scan.
         """
-
-        widths = np.zeros((2, self.X.shape[0]))
+        peak_idxs = self._get_peak_idx()
+        signal = np.abs(self._average_frame())
+        widths = np.zeros((self.X.shape[0], 2))
         for i in range(self.X.shape[0]):
-            widths[0, i], widths[1, i] = self._get_peak_width(i)
+            widths[i, 0] = peak_widths(signal[i], [peak_idxs[i, 0]])[0][0]
+            widths[i, 1] = peak_widths(signal[i], [peak_idxs[i, 1]])[0][0]
         return widths
-    
-    def _get_peak_shape_stats(self, scan_idx=0, window=5):
-        """
-        Gets the skewness and kurtosis of the two peaks at scan_idx.
-        Skewness measures the asymmetry of the peak, while kurtosis
-        measures the "tailedness" of the peak. Window determines
-        how many points around the peak to consider for the statistics.
-        """
-
-        peak_idxs = self._get_peak_idx(scan_idx)
-        signal = self._average_frame(scan_idx)
-        start1 = max(0, peak_idxs[0] - window)
-        end1 = min(len(signal), peak_idxs[0] + window)
-        window_signal1 = signal[start1:end1]
-        start2 = max(0, peak_idxs[1] - window)
-        end2 = min(len(signal), peak_idxs[1] + window)
-        window_signal2 = signal[start2:end2]
-        return skew(window_signal1), kurtosis(window_signal1), skew(window_signal2), kurtosis(window_signal2)
 
     def peak_shape_stats(self):
         """
         Skewness and kurtosis of the two peaks at each scan.
+        Skewness measures the asymmetry of the signal,
+        while kurtosis measures the peakedbess of the signal.
         """
 
-        skewness = np.zeros((2, self.X.shape[0]))
-        kurtosis_vals = np.zeros((2, self.X.shape[0]))
+        skewness = np.zeros((self.X.shape[0], 2))
+        kurt = np.zeros((self.X.shape[0], 2))
+        peak_idxs = self._get_peak_idx()
+        signal = np.abs(self._average_frame())
         for i in range(self.X.shape[0]):
-            skew1, kurt1, skew2, kurt2 = self._get_peak_shape_stats(i)
-            skewness[0, i] = skew1
-            skewness[1, i] = skew2
-            kurtosis_vals[0, i] = kurt1
-            kurtosis_vals[1, i] = kurt2
-        return skewness, kurtosis_vals
+            skewness[i, 0] = skew(signal[i, :peak_idxs[i, 0]])
+            skewness[i, 1] = skew(signal[i, peak_idxs[i, 1]:])
+            kurt[i, 0] = kurtosis(signal[i, :peak_idxs[i, 0]])
+            kurt[i, 1] = kurtosis(signal[i, peak_idxs[i, 1]:])
+        return skewness, kurt
     
     def _get_signal_energy(self, scan_idx=0, spec_idx=0):
         """
@@ -268,97 +162,75 @@ class FeatureTools:
         signal = np.abs(self.X[scan_idx, :, :])[spec_idx]
         return np.sum(signal ** 2)
     
-    def signal_energy(self, spec_idx=0):
-        """
-        Computes the energy of the signal for all scans at the specified index.
-        """
-
-        energy = np.zeros(self.X.shape[0])
-        for i in range(self.X.shape[0]):
-            energy[i] = self._get_signal_energy(i, spec_idx)
-        return energy
-    
     def peak_signal_energy(self):
         """
         Computes the energy of the two peaks.
         """
 
         peak_idxs = self._get_peak_idx()
-        return [
-            self.signal_energy(peak_idxs[0]),
-            self.signal_energy(peak_idxs[1])
-        ]
+        energy = np.zeros((self.X.shape[0], 2))
+        for i in range(self.X.shape[0]):
+            energy[i, 0] = self._get_signal_energy(i, peak_idxs[i, 0])
+            energy[i, 1] = self._get_signal_energy(i, peak_idxs[i, 1])
+        return energy
     
-    def _get_decay_rate(self, scan_idx=0, points_after=10):
-        """
-        Computes the decay rate of the signal after the peak.
-        The decay rate is the slope of the line fitted to the signal
-        after the peak. The points_after parameter determines how many
-        points after the peak to consider for the slope.
-        """
-
-        signal = self._average_frame(scan_idx)
-        peak_idx = self._get_peak_idx(scan_idx)
-
-        start1 = peak_idx[0]
-        end1 = min(len(signal), peak_idx[0] + points_after)
-        x1 = np.arange(start1, end1)
-        y1 = signal[start1:end1]
-        slope1, _ = np.polyfit(x1, y1, 1)
-
-        start2 = peak_idx[1]
-        end2 = min(len(signal), peak_idx[1] + points_after)
-        x2 = np.arange(start2, end2)
-        y2 = signal[start2:end2]
-        slope2, _ = np.polyfit(x2, y2, 1)
-
-        return slope1, slope2
-    
-    def decay_rate(self):
+    def decay_rate(self, decay_points=10):
         """
         Computes the decay rate of the two peaks for all scans.
         """
 
-        slopes = np.zeros((2, self.X.shape[0]))
+        slopes = np.zeros((self.X.shape[0], 2))
+        signal = np.abs(self._average_frame())
+
+        peak_idxs = self._get_peak_idx()
+
+        # peak 1
+        slopes = np.zeros((self.X.shape[0], 2))
         for i in range(self.X.shape[0]):
-            slopes[0, i], slopes[1, i] = self._get_decay_rate(i)
+            start1 = peak_idxs[i, 0]
+            end1 = min(signal.shape[1], peak_idxs[i, 0] + decay_points)
+            x1 = np.arange(start1, end1)
+            y1 = signal[i, start1:end1]
+            slopes[i, 0], _ = np.polyfit(x1, y1, 1)
+
+        # peak 2
+        for i in range(self.X.shape[0]):
+            start2 = peak_idxs[i, 1]
+            end2 = min(signal.shape[1], peak_idxs[i, 1] + decay_points)
+            x2 = np.arange(start2, end2)
+            y2 = signal[i, start2:end2]
+            slopes[i, 1], _ = np.polyfit(x2, y2, 1)
+
         return slopes
-    
-    def _get_ascend_rate(self, scan_idx=0, points_before=10):
-        """
-        Computes the ascend rate of the signal before the peak.
-        The ascend rate is the slope of the line fitted to the signal
-        before the peak. The points_before parameter determines how many
-        points before the peak to consider for the slope.
-        """
 
-        signal = self._average_frame(scan_idx)
-        peak_idx = self._get_peak_idx(scan_idx)
-
-        start1 = max(0, peak_idx[0] - points_before)
-        end1 = peak_idx[0]
-        x1 = np.arange(start1, end1)
-        y1 = signal[start1:end1]
-        slope1, _ = np.polyfit(x1, y1, 1)
-
-        start2 = max(0, peak_idx[1] - points_before)
-        end2 = peak_idx[1]
-        x2 = np.arange(start2, end2)
-        y2 = signal[start2:end2]
-        slope2, _ = np.polyfit(x2, y2, 1)
-
-        return slope1, slope2
-    
     def ascend_rate(self):
         """
         Computes the ascend rate of the two peaks for all scans.
         """
 
-        slopes = np.zeros((2, self.X.shape[0]))
-        for i in range(self.X.shape[0]):
-            slopes[0, i], slopes[1, i] = self._get_ascend_rate(i)
-        return slopes
+        slopes = np.zeros((self.X.shape[0], 2))
+        signal = np.abs(self._average_frame())
 
+        peak_idxs = self._get_peak_idx()
+
+        # peak 1
+        for i in range(self.X.shape[0]):
+            start1 = max(0, peak_idxs[i, 0] - 10)
+            end1 = peak_idxs[i, 0]
+            x1 = np.arange(start1, end1)
+            y1 = signal[i, start1:end1]
+            slopes[i, 0], _ = np.polyfit(x1, y1, 1)
+
+        # peak 2
+        for i in range(self.X.shape[0]):
+            start2 = max(0, peak_idxs[i, 1] - 10)
+            end2 = peak_idxs[i, 1]
+            x2 = np.arange(start2, end2)
+            y2 = signal[i, start2:end2]
+            slopes[i, 1], _ = np.polyfit(x2, y2, 1)
+
+        return slopes
+            
     def _get_phase_variance(self, scan_idx=0, spec_idx=0):
         """
         Computes the variance of the phase of the signal at scan_idx.
@@ -451,7 +323,28 @@ class FeatureTools:
             self.phase_jitter(peak_idxs[0]),
             self.phase_jitter(peak_idxs[1])
         ]
+    
+    def _get_phase(self, spec_idx=0):
+        """
+        Computes the phase of the signal at the specified index.
+        The phase is the angle of the complex signal.
+        """
 
+        phase = np.angle(self.X)
+        phase = np.median(phase[:, spec_idx], axis=1)
+        return phase
+
+    def peak_phase(self):
+        """
+        Computes the phase of the two peaks.
+        """
+
+        peak_idxs = self._get_peak_idx()
+        return [
+            self._get_phase(peak_idxs[0]),
+            self._get_phase(peak_idxs[1])
+        ]
+    
 def get_feature_dataframe(X, labels, destination=None):
     """
     Generates a DataFrame with various features extracted from the input data.
@@ -473,6 +366,7 @@ def get_feature_dataframe(X, labels, destination=None):
     phase_var = ft.peak_phase_variance()                # list of two arrays (N,)
     circ_coeff = ft.peak_circularity_coefficient()      # list of two arrays (N,)
     phase_jitter = ft.peak_phase_jitter()               # list of two arrays (N,)
+    phase = ft.peak_phase()
 
     feature_dict = {
         'amp1': peak_amps[:, 0],
@@ -506,6 +400,8 @@ def get_feature_dataframe(X, labels, destination=None):
         'circ_coeff2': circ_coeff[1],
         'phase_jitter1': phase_jitter[0],
         'phase_jitter2': phase_jitter[1],
+        'phase1': phase[0],
+        'phase2': phase[1],
         'label': labels
     }
 
