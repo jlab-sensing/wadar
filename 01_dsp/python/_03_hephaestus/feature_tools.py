@@ -230,27 +230,30 @@ class FeatureTools:
             slopes[i, 1], _ = np.polyfit(x2, y2, 1)
 
         return slopes
+    
+    def peak_phase(self):
+        """
+        Computes the phase of the two peaks.
+        """
+
+        peak_idxs = self._get_peak_idx()
+        signal = np.angle(self._average_frame())
+        peak_phases = np.zeros((self.X.shape[0], 2))
+
+        for i in range(self.X.shape[0]):
+            peak_phases[i, 0] = signal[i, peak_idxs[i, 0]]
+            peak_phases[i, 1] = signal[i, peak_idxs[i, 1]]
+        return peak_phases
             
-    def _get_phase_variance(self, scan_idx=0, spec_idx=0):
+    def _get_phase_variance(self, idx):
         """
         Computes the variance of the phase of the signal at scan_idx.
         This is because the stochastic nature of the signal reflecting
         on more porous soil may affect the phase of the signal.
         """
 
-        signal = self.X[scan_idx, :, :][spec_idx]
-        phase = np.angle(signal)
-        return np.var(phase)
-
-    def phase_variance(self, spec_idx=0):
-        """
-        Computes the variance of the phase of the signal for all scans.
-        """
-
-        variance = np.zeros(self.X.shape[0])
-        for i in range(self.X.shape[0]):
-            variance[i] = self._get_phase_variance(i, spec_idx)
-        return variance
+        signal = np.angle(self.X[idx, :, :])
+        return np.var(signal, axis=1)
 
     def peak_phase_variance(self):
         """
@@ -258,28 +261,30 @@ class FeatureTools:
         """
 
         peak_idxs = self._get_peak_idx()
-        return [
-            self.phase_variance(peak_idxs[0]),
-            self.phase_variance(peak_idxs[1])
-        ]
+        phase_variance = np.zeros((self.X.shape[0], 2))
+        for i in range(self.X.shape[0]):
+            signal_phase_var = self._get_phase_variance(i)
+            phase_variance[i, 0] = signal_phase_var[peak_idxs[i, 0]]
+            phase_variance[i, 1] = signal_phase_var[peak_idxs[i, 1]]
+        return phase_variance
 
-    def _get_circularity_coefficient(self, scan_idx=0, spec_idx=0):
+    def _get_circularity_coefficient(self, idx=0):
         """
-        Computes the circularity coefficient of the signal at scan_idx.
+        Computes the circularity coefficient of the signal at idx.
         The circularity coefficient describes the statistical
         scattering behavior of the signal. 
         """
 
-        signal = self.X[scan_idx, :, :][spec_idx]
-        mean_conj_prod = np.mean(signal * signal)
-        mean_power = np.mean(np.abs(signal) ** 2)
-        return np.abs(mean_conj_prod) / (mean_power + 1e-10)
+        signal = self.X[idx, :, :]
 
-    def circularity_coefficient(self, spec_idx=0):
-        coeff = np.zeros(self.X.shape[0])
-        for i in range(self.X.shape[0]):
-            coeff[i] = self._get_circularity_coefficient(i, spec_idx)
-        return coeff
+        coeffs = np.zeros(signal.shape[0])
+        for i in range(signal.shape[0]):
+            cur_signal = signal[i, :]
+            mean_conj_prod = np.mean(cur_signal * cur_signal)
+            mean_power = np.mean(np.abs(cur_signal) ** 2)
+            coeffs[i] = np.abs(mean_conj_prod) / (mean_power + 1e-10)
+        return coeffs
+
 
     def peak_circularity_coefficient(self):
         """
@@ -287,10 +292,13 @@ class FeatureTools:
         """
 
         peak_idxs = self._get_peak_idx()
-        return [
-            self.circularity_coefficient(peak_idxs[0]),
-            self.circularity_coefficient(peak_idxs[1])
-        ]
+        coeffs = np.zeros((self.X.shape[0], 2))
+
+        for i in range(self.X.shape[0]):
+            circ_coeffs = self._get_circularity_coefficient(i)
+            coeffs[i, 0] = circ_coeffs[peak_idxs[i, 0]]
+            coeffs[i, 1] = circ_coeffs[peak_idxs[i, 1]]
+        return coeffs
 
     def _get_phase_jitter(self, scan_idx=0, spec_idx=0):
         """
@@ -303,47 +311,21 @@ class FeatureTools:
         phase = np.unwrap(np.angle(signal))
         return np.var(np.diff(phase))
 
-    def phase_jitter(self, spec_idx=0):
-        """
-        Computes the phase jitter of the signal for all scans.
-        """
-
-        jitter = np.zeros(self.X.shape[0])
-        for i in range(self.X.shape[0]):
-            jitter[i] = self._get_phase_jitter(i, spec_idx)
-        return jitter
-
     def peak_phase_jitter(self):
         """
-        Computes the phase jitter of the two peaks.
+        Computes the phase jitter of the two peaks for all scans.
         """
 
         peak_idxs = self._get_peak_idx()
-        return [
-            self.phase_jitter(peak_idxs[0]),
-            self.phase_jitter(peak_idxs[1])
-        ]
+        phase_jitter = np.zeros((self.X.shape[0], 2))
+        for i in range(self.X.shape[0]):
+            phase_jitter[i, 0] = self._get_phase_jitter(i, peak_idxs[i, 0])
+            phase_jitter[i, 1] = self._get_phase_jitter(i, peak_idxs[i, 1])
+        return phase_jitter
     
-    def _get_phase(self, spec_idx=0):
-        """
-        Computes the phase of the signal at the specified index.
-        The phase is the angle of the complex signal.
-        """
-
-        phase = np.angle(self.X)
-        phase = np.median(phase[:, spec_idx], axis=1)
-        return phase
-
-    def peak_phase(self):
-        """
-        Computes the phase of the two peaks.
-        """
-
-        peak_idxs = self._get_peak_idx()
-        return [
-            self._get_phase(peak_idxs[0]),
-            self._get_phase(peak_idxs[1])
-        ]
+    # TODO: FFT and some time domain features. Maybe correlation between peaks?
+    #       There are advanced radar clutter analysis techniques.
+    #       Persistence, but that might be the same as variance.
     
 def get_feature_dataframe(X, labels, destination=None):
     """

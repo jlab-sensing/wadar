@@ -181,6 +181,14 @@ if __name__ == "__main__":
 
     plot_features(VIZ, y, "Ascend Rate", tent_names, ascend_rate)
 
+    # ==============
+    # Assembling the feature table
+    # ==============
+
+    feature_df = pd.DataFrame({
+        'Feature': feature_names,
+        'Values': np.hstack(feature_array)
+    })
 
     # ==============
     # Mutual Information for feature selection
