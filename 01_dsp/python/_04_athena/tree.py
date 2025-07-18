@@ -7,26 +7,12 @@ import pandas as pd
 
 
 
-def train_decision_tree_model(dataset_dir, feature_file_name, test_size=0.2, random_state=42, max_depth=5):
+def train_decision_tree_model(feature_array, labels, test_size=0.2, random_state=21, max_depth=5):
     """
-    Loads engineered features from an .npz file and trains a Decision Tree Regressor.
-
-    Parameters:
-        dataset_dir (str): Path to directory containing features.npz
-        target (np.ndarray): Target values (e.g. soil compaction), shape (N,)
-        test_size (float): Proportion of data for testing
-        max_depth (int): Maximum depth of decision tree
-
-    Returns:
-        model: Trained DecisionTreeRegressor
-        metrics: Dictionary with MSE and R²
+    Trains a Decision Tree Regressor on the provided features and labels.
     """
-    data = pd.read_csv(dataset_dir + '/' + feature_file_name)
-    X = data.drop(columns=['label']).values
-    y = data['label'].values
-    
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=random_state)
 
     model = DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
     model.fit(X_train, y_train)
@@ -35,28 +21,14 @@ def train_decision_tree_model(dataset_dir, feature_file_name, test_size=0.2, ran
     mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    print(f"Decision Tree (depth={max_depth}) → MSE: {mse:.4f}, R²: {r2:.4f}")
     return model, {'mse': mse, 'r2': r2}
 
-def train_random_forest_model(dataset_dir, feature_file_name, test_size=0.2, random_state=42, n_estimators=100):
+def train_random_forest_model(feature_array, labels, test_size=0.2, random_state=21, n_estimators=100):
     """
-    Trains a Random Forest Regressor on saved features.
-
-    Parameters:
-        dataset_dir (str): Path to directory containing features.npz
-        target (np.ndarray): Target values (e.g. soil compaction), shape (N,)
-        test_size (float): Proportion of data for testing
-        max_depth (int): Maximum depth of decision tree
-
-    Returns:
-        model: Trained DecisionTreeRegressor
-        metrics: Dictionary with MSE and R²
+    Trains a Random Forest Regressor on the provided features and labels.
     """
-    data = pd.read_csv(dataset_dir + '/' + feature_file_name)
-    X = data.drop(columns=['label']).values
-    y = data['label'].values
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=random_state)
 
     model = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state)
     model.fit(X_train, y_train)
@@ -65,5 +37,4 @@ def train_random_forest_model(dataset_dir, feature_file_name, test_size=0.2, ran
     mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    print(f"Random Forest ({n_estimators} trees) → MSE: {mse:.4f}, R²: {r2:.4f}")
     return model, {'mse': mse, 'r2': r2}

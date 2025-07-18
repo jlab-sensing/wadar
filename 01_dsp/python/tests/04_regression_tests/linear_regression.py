@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import sys
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)) # https://stackoverflow.com/questions/21005822/what-does-os-path-abspathos-path-joinos-path-dirname-file-os-path-pardir
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir))# https://stackoverflow.com/questions/21005822/what-does-os-path-abspathos-path-joinos-path-dirname-file-os-path-pardir
 sys.path.insert(0, parent_dir)
 
 from _01_gaia.loader import FrameLoader
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     VIZ = False  # Set to True to visualize features
     
-    dataset_dir = "../data/combined-soil-compaction-dataset"
+    dataset_dir = "../../data/combined-soil-compaction-dataset"
     feature_file_name = "features.csv"
     test_size = 0.2
 
@@ -30,7 +30,6 @@ if __name__ == "__main__":
     # If using an existing feature set,
     feature_table, _, _, _ = feature_tools.load_feature_table(
         dataset_dir, feature_file_name)
-
 
     df_best, mi_scores = feature_tools.mutual_info_minimize_features(feature_table, top_n=10)
     feature_tools.save_feature_table(df_best, dataset_dir, "features_mutual_info.csv")
@@ -51,6 +50,10 @@ if __name__ == "__main__":
 
     y_pred = poly_model.predict(feature_array)
 
+    accuracy = np.mean([bulk_density_to_label(pred) == y for pred, y in zip(y_pred, y_labels)])
+    print(f"Classification Accuracy: {accuracy:.2f}")
+    print()
+
     if VIZ:
         viz_tools.plot_confusion_matrix(
             y_labels=y_labels,
@@ -62,6 +65,7 @@ if __name__ == "__main__":
     poly_model, poly_metrics = regression.polynomial_regression(
         feature_array, labels, degree=2, test_size=test_size)
     print("Model Metrics:", poly_metrics)
+    print()
 
     print("Degree 3:")
     poly_model, poly_metrics = regression.polynomial_regression(
