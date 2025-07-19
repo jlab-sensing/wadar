@@ -47,6 +47,9 @@ def grid_search_sgd_regression(feature_array, labels, test_size=0.2, random_stat
 
     model, _ = sgd_regression(feature_array, labels, test_size, random_state)
 
+    scaler = StandardScaler()
+    feature_array = scaler.fit_transform(feature_array)
+
     parameters = [
         {
             'sgdregressor__max_iter':[100000, 1000000], 
