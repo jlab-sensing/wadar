@@ -12,11 +12,13 @@ from _05_apollo import viz_tools
 import _04_athena.sgd as sgd
 import pandas as pd
 from _05_apollo import viz_tools
+import json
 
 
 if __name__ == "__main__":
 
     VIZ = False  # Set to True to visualize features
+    MONTE_CARLO = False
     
     dataset_dir = "../../data/combined-soil-compaction-dataset"
     feature_file_name = "features.csv"
@@ -29,63 +31,92 @@ if __name__ == "__main__":
     # feature_table = hephaestus_features.feature_full_monty(y, dataset_dir)
 
     # If using an existing feature set,
-    feature_table, _, _, _ = feature_tools.load_feature_table(
+    feature_table, _, _, labels = feature_tools.load_feature_table(
         dataset_dir, feature_file_name)
     
-    df_best, mi_scores = feature_tools.mutual_info_minimize_features(feature_table, top_n=10)
-    feature_tools.save_feature_table(df_best, dataset_dir, "features_mutual_info.csv")
-    _, feature_array, feature_names, labels = feature_tools.load_feature_table(
-        dataset_dir, "features_mutual_info.csv")
-
-    # ========== Regression Example ==========
-
-    print("SGD Regression")
-
-    print("Optimizing hyperparameters with grid search")
-
-    clf = sgd.grid_search_sgd_regression(feature_array, labels, test_size=test_size, random_state=21)
-
-    best_params = clf.best_params_
+    if not MONTE_CARLO:
     
-    print(f"Best parameters: {best_params}")
+        _, feature_array, feature_names, labels = feature_tools.load_feature_table(
+            dataset_dir, "feature_sgd_monte_carlo.csv")
 
-    print("Training model with best parameters")
+        # ========== Regression Example ==========
 
-    model, metrics = sgd.sgd_regression(feature_array, labels, test_size=test_size, random_state=2,
-                                            eta0=best_params['sgdregressor__eta0'],
-                                            max_iter=best_params['sgdregressor__max_iter'],
-                                            tol=best_params['sgdregressor__tol'])
+        print("SGD Regression")
 
-    print(f"Model metrics: {metrics}")
-    print()
+        best_params_file = os.path.join(dataset_dir, "sgd_best_params.json")
+        with open(best_params_file, "r") as f:
+            best_params = json.load(f)
 
-    # ========== Classification Example ==========
-    
-    print("SGD Classification")
+        print(f"Best parameters: {best_params}")
 
-    print("Optimizing hyperparameters with grid search")
+        print("Training model with best parameters")
 
-    clf = sgd.grid_search_sgd_classification(feature_array, labels, test_size=test_size, random_state=2)
+        model, metrics = sgd.sgd_regression(feature_array, labels, test_size=test_size, random_state=2,
+                                                eta0=best_params['sgdregressor__eta0'],
+                                                max_iter=best_params['sgdregressor__max_iter'],
+                                                tol=best_params['sgdregressor__tol'])
 
-    best_params = clf.best_params_
+        print(f"Model metrics: {metrics}")
+        print()
 
-    print(f"Best parameters: {best_params}")
+        viz_tools.plot_regression(
+            labels, model.predict(feature_array).flatten()
+        )
+        plt.show()
 
-    print("Training model with best parameters")
+        # Commented out because classification can be done with regression, and since regression
+        # will be done anyway, there doesn't seem to be a reason to train a separate classification model,
+        # other than to inflate accuracy metrics.
 
-    model, metrics = sgd.sgd_classification(feature_array, labels, test_size=test_size, random_state=2,
-                                            eta0=best_params['sgdclassifier__eta0'],
-                                            max_iter=best_params['sgdclassifier__max_iter'],
-                                            tol=best_params['sgdclassifier__tol'])
-    print(f"Model metrics: {metrics}")
+        # ========== Classification Example ==========    
+        
+        # print("SGD Classification")
 
-    # ========== Confusion Matrix ==========
+        # print("Optimizing hyperparameters with grid search")
 
-    y_labels = []
-    for i, label in enumerate(labels):
-        y_labels.append(bulk_density_to_label(label))
+        # clf = sgd.grid_search_sgd_classification(feature_array, labels, test_size=test_size, random_state=2)
 
-    y_pred = model.predict(feature_array)
+        # best_params = clf.best_params_
 
-    viz_tools.plot_confusion_matrix(y_labels, y_pred)
-    plt.show()
+        # print(f"Best parameters: {best_params}")
+
+        # print("Training model with best parameters")
+
+        # model, metrics = sgd.sgd_classification(feature_array, labels, test_size=test_size, random_state=2,
+        #                                         eta0=best_params['sgdclassifier__eta0'],
+        #                                         max_iter=best_params['sgdclassifier__max_iter'],
+        #                                         tol=best_params['sgdclassifier__tol'])
+        # print(f"Model metrics: {metrics}")
+
+        # # ========== Confusion Matrix ==========
+
+        # y_labels = []
+        # for i, label in enumerate(labels):
+        #     y_labels.append(bulk_density_to_label(label))
+
+        # y_pred = model.predict(feature_array)
+
+        # viz_tools.plot_confusion_matrix(y_labels, y_pred)
+        # plt.show()
+
+    else:
+
+        print("Monte Carlo Feature Selection:")
+        mc_results = sgd.monte_carlo_feature_selection(
+            feature_table, labels, dataset_dir, n_iterations=10, test_size=test_size
+        )
+
+        feature_table, feature_array, feature_names, labels = feature_tools.load_feature_table(
+            dataset_dir, "feature_sgd_monte_carlo.csv"
+        )
+        model, metrics = sgd.sgd_regression(
+            feature_array, labels, test_size=test_size, random_state=2
+        )
+
+        print("Metrics (SGD Regression):", metrics)
+
+        viz_tools.plot_regression(
+            labels, model.predict(feature_array).flatten()
+        )
+
+        plt.show()

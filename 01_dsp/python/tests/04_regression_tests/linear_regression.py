@@ -16,7 +16,7 @@ import pandas as pd
 if __name__ == "__main__":
 
     VIZ = False  # Set to True to visualize features
-    MONTE_CARLO = True
+    MONTE_CARLO = False
     
     dataset_dir = "../../data/combined-soil-compaction-dataset"
     feature_file_name = "features.csv"
@@ -37,11 +37,8 @@ if __name__ == "__main__":
 
     if not MONTE_CARLO:
 
-
-        df_best, mi_scores = feature_tools.mutual_info_minimize_features(feature_table, top_n=10)
-        feature_tools.save_feature_table(df_best, dataset_dir, "features_mutual_info.csv")
         _, feature_array, _, labels = feature_tools.load_feature_table(
-            dataset_dir, "features_mutual_info.csv")
+            dataset_dir, "feature_linear_regression_monte_carlo")
 
         print("Degree 1:")
         poly_model, poly_metrics = regression.polynomial_regression(
