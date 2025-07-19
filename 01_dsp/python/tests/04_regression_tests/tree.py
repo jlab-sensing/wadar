@@ -30,7 +30,9 @@ def plot_random_forest(feature_table, model_rf):
 if __name__ == "__main__":
 
     VIZ = False  # Set to True to visualize features
-    MONTE_CARLO = True
+    MONTE_CARLO = False
+
+    RANDOM_FOREST = False # Set to True to use Random Forest, False for Gradient Boosted Tree
     
     dataset_dir = "../../data/combined-soil-compaction-dataset"
     feature_file_name = "features.csv"
@@ -48,79 +50,107 @@ if __name__ == "__main__":
     
     if not MONTE_CARLO:
 
-        _, feature_array, feature_names, labels = feature_tools.load_feature_table(
-            dataset_dir, "feature_random_forest_monte_carlo.csv")
-        
-        # Decision trees seem objectively worse than random forests, with the only advantage
-        # being interpretability, but random forests are plenty interpretable.
+        if RANDOM_FOREST:
 
-        # # Train Decision Tree model
-        # model, metrics = tree.train_decision_tree_model(
-        #     feature_array,
-        #     labels,
-        #     test_size=test_size,
-        #     max_depth=5
-        # )
+            _, feature_array, feature_names, labels = feature_tools.load_feature_table(
+                dataset_dir, "feature_random_forest_monte_carlo.csv")
+            
+            # Train Random Forest model
+            model_rf, metrics_rf = tree.train_random_forest(
+                feature_array,
+                labels,
+                test_size=test_size,
+                n_estimators=100
+            )
 
-        # print("Trained Decision Tree model:", model)
-        # print("Metrics:", metrics)
+            print("Trained Random Forest model:", model_rf)
+            print("Metrics (Random Forest):", metrics_rf)
 
-        # plt.figure(figsize=(12, 8))
-        # plot_tree(
-        #     model,
-        #     feature_names=feature_names,
-        #     filled=True,
-        #     precision=3,
-        #     fontsize=10
-        # )
-        # plt.title("Decision Tree Structure")
+            plot_random_forest(feature_table, model_rf)
 
-        # Train Random Forest model
-        model_rf, metrics_rf = tree.train_random_forest_model(
-            feature_array,
-            labels,
-            test_size=test_size,
-            n_estimators=100
-        )
+            viz_tools.plot_regression(
+                labels, model_rf.predict(feature_array).flatten()
+            )
 
-        print("Trained Random Forest model:", model_rf)
-        print("Metrics (Random Forest):", metrics_rf)
+        else:
 
-        plot_random_forest(feature_table, model_rf)
+            _, feature_array, feature_names, labels = feature_tools.load_feature_table(
+                dataset_dir, "feature_gradient_boosted_tree_monte_carlo.csv")
 
-        viz_tools.plot_regression(
-            labels, model_rf.predict(feature_array).flatten()
-        )
+            # Train Gradient Boosted Tree model
+            model, metrics = tree.train_gradient_boosted_tree(
+                feature_array,
+                labels,
+                test_size=test_size,
+                n_estimators=100
+            )
+
+            print("Trained Gradient Boosted Tree model:", model)
+            print("Metrics (Gradient Boosted Tree):", metrics)
+
+            viz_tools.plot_regression(
+                labels, model.predict(feature_array).flatten()
+            )
 
         plt.show()
     
     else:
 
-        # Monte Carlo feature selection for Random Forest
-        tree.monte_carlo_feature_selection(
-            feature_table,
-            labels,
-            dataset_dir,
-            n_iterations=100,
-            test_size=test_size
-        )
+        if RANDOM_FOREST:
 
-        feature_table, feature_array, _, labels = feature_tools.load_feature_table(
-            dataset_dir, "feature_random_forest_monte_carlo.csv"
-        )
-        model_rf, metrics_rf = tree.train_random_forest_model(
-            feature_array,
-            labels,
-            test_size=test_size,
-            n_estimators=100
-        )
-        print("Trained Random Forest model:", model_rf)
-        print("Metrics (Random Forest):", metrics_rf)
+            # Monte Carlo feature selection for Random Forest
+            tree.monte_carlo_random_treefeature_selection(
+                feature_table,
+                labels,
+                dataset_dir,
+                n_iterations=100,
+                test_size=test_size
+            )
 
-        # Plot random forest tree
-        plot_random_forest(feature_table, model_rf)
+            feature_table, feature_array, _, labels = feature_tools.load_feature_table(
+                dataset_dir, "feature_random_forest_monte_carlo.csv"
+            )
+            model_rf, metrics_rf = tree.train_random_forest(
+                feature_array,
+                labels,
+                test_size=test_size,
+                n_estimators=100
+            )
+            print("Trained Random Forest model:", model_rf)
+            print("Metrics (Random Forest):", metrics_rf)
 
-        viz_tools.plot_regression(
-            labels, model_rf.predict(feature_array).flatten()
-        )
+            # Plot random forest tree
+            plot_random_forest(feature_table, model_rf)
+
+            viz_tools.plot_regression(
+                labels, model_rf.predict(feature_array).flatten()
+            )
+
+        else:
+
+            # Monte Carlo feature selection for Gradient Boosted Tree
+            tree.monte_carlo_gradient_boosted_tree_feature_selection(
+                feature_table,
+                labels,
+                dataset_dir,
+                n_iterations=100,
+                test_size=test_size
+            )
+
+            feature_table, feature_array, _, labels = feature_tools.load_feature_table(
+                dataset_dir, "feature_gradient_boosted_tree_monte_carlo.csv"
+            )
+            model, metrics = tree.train_gradient_boosted_tree(
+                feature_array,
+                labels,
+                test_size=test_size,
+                n_estimators=100
+            )
+            print("Trained Gradient Boosted Tree model:", model)
+            print("Metrics (Gradient Boosted Tree):", metrics)
+
+            viz_tools.plot_regression(
+                labels, model.predict(feature_array).flatten()
+            )
+        
         plt.show()
