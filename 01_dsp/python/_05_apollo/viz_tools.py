@@ -132,3 +132,15 @@ def plot_IQ_signals(X, y):
     plt.legend(title="Compaction Level", fontsize=12, title_fontsize=13, loc="best")
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()
+
+def plot_regression(y_true, y_pred):
+    plt.figure(figsize=(8, 6))
+    plt.scatter(y_true, y_pred, alpha=0.7, color='royalblue', edgecolor='k', s=60)
+    plt.plot([min(y_true), max(y_true)], [min(y_true), max(y_true)],
+                color='darkred', linestyle='--', linewidth=2, label='Ideal Fit')
+    plt.title('True vs Predicted Values', fontsize=16)
+    plt.xlabel('True Values', fontsize=14)
+    plt.ylabel('Predicted Values', fontsize=14)
+    plt.legend(fontsize=12)
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.tight_layout()

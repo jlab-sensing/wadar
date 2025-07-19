@@ -10,10 +10,12 @@ from _03_hephaestus import feature_tools
 from _04_athena import tree
 from sklearn.tree import plot_tree
 import pandas as pd
+from _05_apollo import viz_tools
 
 if __name__ == "__main__":
 
     VIZ = False  # Set to True to visualize features
+    MONTE_CARLO = False
     
     dataset_dir = "../../data/combined-soil-compaction-dataset"
     feature_file_name = "features.csv"
@@ -26,53 +28,109 @@ if __name__ == "__main__":
     # feature_table = hephaestus_features.feature_full_monty(y, dataset_dir)
 
     # If using an existing feature set,
-    feature_table, _, _, _ = feature_tools.load_feature_table(
+    feature_table, _, _, labels = feature_tools.load_feature_table(
         dataset_dir, feature_file_name)
+    
+    if not MONTE_CARLO:
 
-    df_best, mi_scores = feature_tools.mutual_info_minimize_features(feature_table, top_n=10)
-    feature_tools.save_feature_table(df_best, dataset_dir, "features_mutual_info.csv")
-    _, feature_array, feature_names, labels = feature_tools.load_feature_table(
-        dataset_dir, "features_mutual_info.csv")
+        _, feature_array, feature_names, labels = feature_tools.load_feature_table(
+            dataset_dir, "feature_random_forest_monte_carlo.csv")
 
-    # Train Decision Tree model
-    model, metrics = tree.train_decision_tree_model(
-        feature_array,
-        labels,
-        test_size=test_size,
-        max_depth=5
-    )
+        # Decision trees seem objectively worse than random forests, with the only advantage
+        # being interpretability, but random forests are plenty interpretable.
 
-    print("Trained Decision Tree model:", model)
-    print("Metrics:", metrics)
+        # # Train Decision Tree model
+        # model, metrics = tree.train_decision_tree_model(
+        #     feature_array,
+        #     labels,
+        #     test_size=test_size,
+        #     max_depth=5
+        # )
 
-    plt.figure(figsize=(12, 8))
-    plot_tree(
-        model,
-        feature_names=feature_names,
-        filled=True,
-        precision=3,
-        fontsize=10
-    )
-    plt.title("Decision Tree Structure")
+        # print("Trained Decision Tree model:", model)
+        # print("Metrics:", metrics)
 
-    # Train Random Forest model
-    model_rf, metrics_rf = tree.train_random_forest_model(
-        feature_array,
-        labels,
-        test_size=test_size,
-        n_estimators=100
-    )
+        # plt.figure(figsize=(12, 8))
+        # plot_tree(
+        #     model,
+        #     feature_names=feature_names,
+        #     filled=True,
+        #     precision=3,
+        #     fontsize=10
+        # )
+        # plt.title("Decision Tree Structure")
 
-    print("Trained Random Forest model:", model_rf)
-    print("Metrics (Random Forest):", metrics_rf)
+        # Train Random Forest model
+        model_rf, metrics_rf = tree.train_random_forest_model(
+            feature_array,
+            labels,
+            test_size=test_size,
+            n_estimators=100
+        )
 
-    plt.figure(figsize=(12, 8))
-    plot_tree(
-        model,
-        feature_names=feature_names,
-        filled=True,
-        precision=3,
-        fontsize=10
-    )
-    plt.title("Decision Tree Structure")
-    plt.show()
+        print("Trained Random Forest model:", model_rf)
+        print("Metrics (Random Forest):", metrics_rf)
+
+        # Plot random forest tree
+        fig, ax = plt.subplots(figsize=(16, 10), dpi=100)
+        plot_tree(
+            model_rf.estimators_[0],
+            feature_names=feature_names,
+            filled=True,
+            rounded=True,
+            precision=3,
+            fontsize=5,
+            ax=ax,
+            proportion=True
+        )
+        ax.set_title("Random Forest: Example Decision Tree", fontsize=5, fontweight='bold')
+        plt.tight_layout()
+
+        viz_tools.plot_regression(
+            labels, model_rf.predict(feature_array).flatten()
+        )
+
+        plt.show()
+    
+    else:
+
+        # Monte Carlo feature selection for Random Forest
+        tree.monte_carlo_feature_selection(
+            feature_table,
+            labels,
+            dataset_dir,
+            n_iterations=1000,
+            test_size=test_size
+        )
+
+        feature_table, feature_array, _, labels = feature_tools.load_feature_table(
+            dataset_dir, "feature_random_forest_monte_carlo.csv"
+        )
+        model_rf, metrics_rf = tree.train_random_forest_model(
+            feature_array,
+            labels,
+            test_size=test_size,
+            n_estimators=100
+        )
+        print("Trained Random Forest model:", model_rf)
+        print("Metrics (Random Forest):", metrics_rf)
+
+        # Plot random forest tree
+        fig, ax = plt.subplots(figsize=(16, 10), dpi=100)
+        plot_tree(
+            model_rf.estimators_[0],
+            feature_names=feature_table.columns[:-1].tolist(),
+            filled=True,
+            rounded=True,
+            precision=3,
+            fontsize=5,
+            ax=ax,
+            proportion=True
+        )
+        ax.set_title("Random Forest: Example Decision Tree", fontsize=5, fontweight='bold')
+        plt.tight_layout()
+
+        viz_tools.plot_regression(
+            labels, model_rf.predict(feature_array).flatten()
+        )
+        plt.show()

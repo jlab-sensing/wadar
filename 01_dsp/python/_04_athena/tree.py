@@ -1,10 +1,10 @@
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, r2_score
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
-
+from _03_hephaestus import feature_tools
 
 
 def train_decision_tree_model(feature_array, labels, test_size=0.2, random_state=21, max_depth=5):
@@ -18,10 +18,10 @@ def train_decision_tree_model(feature_array, labels, test_size=0.2, random_state
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
-    mse = mean_squared_error(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    return model, {'mse': mse, 'r2': r2}
+    return model, {'mae': mae, 'r2': r2}
 
 def train_random_forest_model(feature_array, labels, test_size=0.2, random_state=21, n_estimators=100):
     """
@@ -34,7 +34,49 @@ def train_random_forest_model(feature_array, labels, test_size=0.2, random_state
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
-    mse = mean_squared_error(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    return model, {'mse': mse, 'r2': r2}
+    return model, {'mae': mae, 'r2': r2}
+
+def monte_carlo_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
+    """
+    Test different feature sets using Monte Carlo simulation to determine the
+    best feature set for random forest. Not sure if random forests are better,
+    but they are more robust to overfitting, which is something I'm concerned about
+    with our smaller than ideal dataset.
+    """
+
+    feature_array = feature_table.drop(columns=['Label']).values
+    labels = feature_table['Label'].values
+
+    best_features = []
+    best_score = np.inf
+
+    for i in range(n_iterations):
+        top_n = np.random.randint(1, feature_array.shape[1] + 1)
+        selected_indices = np.random.choice(feature_array.shape[1], top_n, replace=False)
+        selected_features = feature_array[:, selected_indices]
+        
+        model_rf, metrics_rf = train_random_forest_model(
+            selected_features,
+            labels,
+            test_size=test_size,
+            n_estimators=100
+        )
+
+        if metrics_rf['mae'] < best_score:
+            best_score = metrics_rf['mae']
+            best_features = selected_indices
+
+        if (i + 1) % max(1, n_iterations // 10) == 0:
+            print(f"Iteration {i+1} / {n_iterations}")
+
+    feature_table_optimal = feature_table.iloc[:, best_features]
+    feature_table_optimal['Label'] = labels
+
+    feature_tools.save_feature_table(
+        feature_table_optimal, data_dir, "feature_random_forest_monte_carlo.csv"
+    )
+
+    return feature_array[:, best_features], feature_table.columns[best_features].tolist(), labels
