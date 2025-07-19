@@ -11,6 +11,7 @@ from _04_athena import tree
 from sklearn.tree import plot_tree
 import pandas as pd
 from _05_apollo import viz_tools
+from _06_hermes.logger import update_results
 
 def plot_random_forest(feature_table, model_rf):
     fig, ax = plt.subplots(figsize=(16, 10), dpi=100)
@@ -63,14 +64,25 @@ if __name__ == "__main__":
                 n_estimators=100
             )
 
-            print("Trained Random Forest model:", model_rf)
             print("Metrics (Random Forest):", metrics_rf)
 
-            plot_random_forest(feature_table, model_rf)
+            mae = metrics_rf["mae"]
+            r2 = metrics_rf["r2"]
+            accuracy = metrics_rf["accuracy"]
+            inference_time = metrics_rf["inference_time"]
 
-            viz_tools.plot_regression(
-                labels, model_rf.predict(feature_array).flatten()
-            )
+            model_name = "Random Forest"
+
+            update_results(model_name, mae, accuracy, inference_time, dataset_dir)
+
+            if VIZ:
+                plot_random_forest(feature_table, model_rf)
+
+                viz_tools.plot_regression(
+                    labels, model_rf.predict(feature_array).flatten()
+                )
+
+                plt.show()
 
         else:
 
@@ -85,14 +97,21 @@ if __name__ == "__main__":
                 n_estimators=100
             )
 
-            print("Trained Gradient Boosted Tree model:", model)
             print("Metrics (Gradient Boosted Tree):", metrics)
 
-            viz_tools.plot_regression(
-                labels, model.predict(feature_array).flatten()
-            )
+            mae = metrics["mae"]
+            r2 = metrics["r2"]
+            accuracy = metrics["accuracy"]
+            inference_time = metrics["inference_time"]
 
-        plt.show()
+            model_name = "Gradient Boosted Tree"
+
+            update_results(model_name, mae, accuracy, inference_time, dataset_dir)
+
+            if VIZ:
+                viz_tools.plot_regression(
+                    labels, model.predict(feature_array).flatten()
+                )
     
     else:
 

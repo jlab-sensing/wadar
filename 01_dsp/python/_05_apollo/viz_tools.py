@@ -138,7 +138,7 @@ def plot_regression(y_true, y_pred):
     plt.scatter(y_true, y_pred, alpha=0.7, color='royalblue', edgecolor='k', s=60)
     plt.plot([min(y_true), max(y_true)], [min(y_true), max(y_true)],
                 color='darkred', linestyle='--', linewidth=2, label='Ideal Fit')
-    plt.title('True vs Predicted Values', fontsize=16)
+    # plt.title('True vs Predicted Values', fontsize=16)
     plt.xlabel('True Values', fontsize=14)
     plt.ylabel('Predicted Values', fontsize=14)
     plt.legend(fontsize=12)

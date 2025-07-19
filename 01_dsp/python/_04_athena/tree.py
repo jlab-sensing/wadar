@@ -6,9 +6,10 @@ from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 from _03_hephaestus import feature_tools
 from xgboost import XGBRegressor
+import time
+from _06_hermes.parameters import num2label, RANDOM_SEED
 
-
-def train_decision_tree_model(feature_array, labels, test_size=0.2, random_state=21, max_depth=5):
+def train_decision_tree_model(feature_array, labels, test_size=0.2, max_depth=5):
     """
     Trains a Decision Tree Regressor on the provided features and labels. I don't 
     use this because they seem to operate objectively worse than Random Forests,
@@ -18,32 +19,44 @@ def train_decision_tree_model(feature_array, labels, test_size=0.2, random_state
 
     X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=random_state)
 
-    model = DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
+    model = DecisionTreeRegressor(max_depth=max_depth, random_state=RANDOM_SEED)
     model.fit(X_train, y_train)
 
+    time_start = time.time()
     y_pred = model.predict(X_test)
+    inference_time = time.time() - time_start
+
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    return model, {'mae': mae, 'r2': r2}
+    y_labels = [num2label(label) for label in y_test]
+    accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
+
+    return model, {'mae': mae, 'r2': r2, 'accuracy': accuracy, 'inference_time': inference_time}
 
 def train_random_forest(feature_array, labels, test_size=0.2, random_state=21, n_estimators=100):
     """
     Trains a Random Forest Regressor on the provided features and labels.
     """
 
-    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=random_state)
+    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=RANDOM_SEED)
 
-    model = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state)
+    model = RandomForestRegressor(n_estimators=n_estimators, random_state=RANDOM_SEED)
     model.fit(X_train, y_train)
 
+    time_start = time.time()
     y_pred = model.predict(X_test)
+    inference_time = time.time() - time_start
+
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    return model, {'mae': mae, 'r2': r2}
+    y_labels = [num2label(label) for label in y_test]
+    accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
 
-def monte_carlo_random_treefeature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
+    return model, {'mae': mae, 'r2': r2, 'accuracy': accuracy, 'inference_time': inference_time}
+
+def monte_carlo_random_tree_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
     """
     Test different feature sets using Monte Carlo simulation to determine the
     best feature set for random forest. Not sure if random forests are better,
@@ -90,17 +103,25 @@ def train_gradient_boosted_tree(feature_array, labels, test_size=0.2, n_estimato
     Trains a XGBoost Regressor on the provided features and labels.
     """
 
-    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size)
-
+    X_train, X_test, y_train, y_test = train_test_split(feature_array, 
+                                                        labels, 
+                                                        test_size=test_size, 
+                                                        random_state=RANDOM_SEED)
+    
     # maybe I should perform a grid search but it performs well enough without it
     model = XGBRegressor(n_estimators=n_estimators)
     model.fit(X_train, y_train)
 
+    time_start = time.time()
     y_pred = model.predict(X_test)
+    inference_time = time.time() - time_start
+
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
+    y_labels = [num2label(label) for label in y_test]
+    accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
 
-    return model, {'mae': mae, 'r2': r2}
+    return model, {'mae': mae, 'r2': r2, 'accuracy': accuracy, 'inference_time': inference_time}
 
 def monte_carlo_gradient_boosted_tree_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
     """

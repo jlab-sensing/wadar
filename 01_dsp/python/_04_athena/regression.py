@@ -10,14 +10,16 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import RidgeCV
 from sklearn.pipeline import Pipeline
 from _03_hephaestus import feature_tools
+import time
+from _06_hermes.parameters import num2label, RANDOM_SEED
 
-def polynomial_regression(feature_array, labels, test_size=0.2, random_state=21, degree=1):
+def polynomial_regression(feature_array, labels, test_size=0.2, degree=1):
 
     X = feature_array
     y = labels
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state
+        X, y, test_size=test_size, random_state=RANDOM_SEED
     )
 
     alphas = np.logspace(-6, 3, 100)
@@ -32,15 +34,22 @@ def polynomial_regression(feature_array, labels, test_size=0.2, random_state=21,
 
     model.fit(X_train, y_train)
 
+    time_start = time.time()
     y_pred = model.predict(X_test)
+    inference_time = time.time() - time_start
+
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    y_pred_train = model.predict(X_train)
-    mae_train = mean_absolute_error(y_train, y_pred_train)
-    r2_train = r2_score(y_train, y_pred_train)
+    y_labels = [num2label(label) for label in y_test]
+    accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
 
-    return model, {'mse': mae, 'r2': r2, 'mae_train': mae_train, 'r2_train': r2_train}
+    return model, {
+        "mae": mae,
+        "r2": r2,
+        "accuracy": accuracy,
+        "inference_time": inference_time
+    }
 
 def monte_carlo_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
     """
