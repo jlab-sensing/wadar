@@ -1,0 +1,39 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+import sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir)) # https://stackoverflow.com/questions/21005822/what-does-os-path-abspathos-path-joinos-path-dirname-file-os-path-pardir
+sys.path.insert(0, parent_dir)
+
+from _01_gaia.loader import FrameLoader
+import pandas as pd
+
+from _06_hermes.bulk_density_labels import bulk_density_to_label
+from _05_apollo import viz_tools
+from _03_hephaestus import feature_tools
+import tensorflow as tf
+from _04_athena.cnn_models import BabyCNNRegressor
+
+tf.get_logger().setLevel('ERROR')
+
+if __name__ == "__main__":
+
+    VIZ = False  # Set to True to visualize features
+    
+    dataset_dir = "../../data/combined-soil-compaction-dataset"
+    feature_file_name = "features.csv"
+    test_size = 0.2
+
+    hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
+    X = np.abs(hydros.X)
+    y = hydros.y
+
+    cnn_cv = BabyCNNRegressor(X, y)
+
+    # model = cnn_cv.train()
+    # print("MAE on validation set:", model.evaluate(cnn_cv.X, cnn_cv.y))
+    # cnn_cv.save_model(dataset_dir)
+
+    cnn_cv.load_model(dataset_dir)
+
+    cnn_cv.evaluate(X, y)

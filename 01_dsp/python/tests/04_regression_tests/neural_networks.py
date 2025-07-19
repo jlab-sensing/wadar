@@ -55,6 +55,6 @@ if __name__ == "__main__":
 
     cnn_cv = BabyCNNRegressor(X, y)
     cnn_cv.cross_validate()
-    cnn_cv.train_final_model()
+    cnn_cv.train()
     cnn_cv.evaluate_holdout()
     cnn_cv.plot_predictions()
