@@ -10,41 +10,45 @@ from sklearn.metrics import mean_squared_error
 
 class PCAProcessor:
     def __init__(self, X, n_components=1):
+
         self.n_components = n_components
         self.pca = PCA(n_components=self.n_components)
         self.X = X
+
+        if np.iscomplex(X).any():
+            raise ValueError("Input the magnitude or phase not the raw data.")
     
-    def denoise(self):
-        new_shape = self.shape_data2pca()
-        clutter = self.pca.fit_transform(new_shape)
-        clutter_recon = self.pca.inverse_transform(clutter)
-        denoised_new_shape = new_shape - clutter_recon
-        return self.shape_pca2data(denoised_new_shape)
+    # Commented out because I changed some stuff that will stop it from working.
 
-    def shape_data2pca(self):
-        N, R, T = self.X.shape
-        new_shape = np.zeros((R, T * N), dtype=np.float64)
-        new_shape_idx = 0
-        for i in range(N):
-            for j in range(T):
-                new_shape[:, new_shape_idx] = np.abs(self.X[i, :, j])
-                new_shape_idx += 1
-        return new_shape
+    # def denoise(self):
+    #     new_shape = self.shape_data2pca()
+    #     clutter = self.pca.fit_transform(new_shape)
+    #     clutter_recon = self.pca.inverse_transform(clutter)
+    #     denoised_new_shape = new_shape - clutter_recon
+    #     return self.shape_pca2data(denoised_new_shape)
 
-    def shape_pca2data(self, new_shape):
-        N, R, T = self.X.shape
-        back_to_original_shape = np.zeros_like(self.X, dtype=np.float64)
-        for i in range(N):
-            for j in range(T):
-                back_to_original_shape[i, :, j] = new_shape[:, i * T + j]
-        return back_to_original_shape
+    # def shape_data2pca(self):
+    #     N, R, T = self.X.shape
+    #     new_shape = np.zeros((R, T * N), dtype=np.float64)
+    #     new_shape_idx = 0
+    #     for i in range(N):
+    #         for j in range(T):
+    #             new_shape[:, new_shape_idx] = np.abs(self.X[i, :, j])
+    #             new_shape_idx += 1
+    #     return new_shape
+
+    # def shape_pca2data(self, new_shape):
+    #     N, R, T = self.X.shape
+    #     back_to_original_shape = np.zeros_like(self.X, dtype=np.float64)
+    #     for i in range(N):
+    #         for j in range(T):
+    #             back_to_original_shape[i, :, j] = new_shape[:, i * T + j]
+    #     return back_to_original_shape
     
     def dimensionality_reduction(self):
         N, R, T = self.X.shape
         X_flat = self.X.reshape(N, R * T)
-        X_flat = np.abs(X_flat)
         reduced = self.pca.fit_transform(X_flat)  # shape: (N, n_components)
-        print("Shape after PCA dimensionality reduction:", reduced.shape)
         return reduced
     
     def plot_variance_columnwise(self):
@@ -77,38 +81,3 @@ class PCAProcessor:
         plt.title('Variance Explained (Per-Sample Dimensionality Reduction)')
         plt.grid()
         plt.show()
-
-# This is impossible to tune.
-class KernelPCAProcessor:
-    def __init__(self, X, n_components=1, kernel='rbf', **kernel_params):
-        self.n_components = n_components
-        self.kernel = kernel
-        self.kernel_params = kernel_params
-        self.kpca = KernelPCA(n_components=self.n_components, kernel=self.kernel, fit_inverse_transform=True, **self.kernel_params)
-        self.X = X
-
-    def shape_data2kpca(self):
-        N, R, T = self.X.shape
-        new_shape = np.zeros((R, T * N), dtype=np.float64)
-        new_shape_idx = 0
-        for i in range(N):
-            for j in range(T):
-                new_shape[:, new_shape_idx] = np.abs(self.X[i, :, j])
-                new_shape_idx += 1
-        return new_shape.T  # KPCA expects shape (n_samples, n_features)
-
-    def shape_kpca2data(self, new_shape):
-        N, R, T = self.X.shape
-        new_shape = new_shape.T
-        back_to_original_shape = np.zeros_like(self.X, dtype=np.float64)
-        for i in range(N):
-            for j in range(T):
-                back_to_original_shape[i, :, j] = new_shape[:, i * T + j]
-        return back_to_original_shape
-
-    def dimensionality_reduction(self):
-        N, R, T = self.X.shape
-        X_flat = np.abs(self.X.reshape(N, R * T))
-        reduced = self.kpca.fit_transform(X_flat)
-        print("Shape after kernel PCA dimensionality reduction:", reduced.shape)
-        return reduced

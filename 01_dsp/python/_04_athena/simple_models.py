@@ -58,23 +58,21 @@ class SimpleRegressor:
                     epochs=epochs,
                     batch_size=batch_size,
                     validation_data=(X_val_fold, y_val_fold),
-                    verbose=1
+                    verbose=0
                 )
 
                 y_pred_val = self.model.predict(X_val_fold).flatten()
                 mae_val = np.mean(np.abs(y_val_fold - y_pred_val))
                 self.mae_scores.append(mae_val)
 
-    def evaluate(self, VIZ=True):
+    def evaluate(self, VIZ=False):
 
         y_pred = self.model.predict(self.X_test).flatten()
 
         if not self.kfold_splits:
             mae = np.mean(np.abs(self.y_test - y_pred))
-            print(f"Mean Absolute Error on Test Set: {mae:.4f}")
         else:
             mae = np.mean(self.mae_scores)
-            print(f"Mean Absolute Error (K-Fold): {mae:.4f}")
 
         y_pred_all = self.model.predict(self.features).flatten()
 
