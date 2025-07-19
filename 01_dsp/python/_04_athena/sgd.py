@@ -16,13 +16,15 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import GridSearchCV
 from _03_hephaestus import feature_tools
+import time
+from _06_hermes.parameters import num2label, RANDOM_SEED
 
-def sgd_regression(feature_array, labels, test_size, random_state=21,
+def sgd_regression(feature_array, labels, test_size,
                    eta0=0.001, 
                    max_iter=1000000,
                    tol=1e-10):
-    
-    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=random_state)
+
+    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=RANDOM_SEED)
 
     est = make_pipeline(
         StandardScaler(),
@@ -35,11 +37,17 @@ def sgd_regression(feature_array, labels, test_size, random_state=21,
 
     est.fit(X_train, y_train)
 
+    time_start = time.time()
     y_pred = est.predict(X_test)
+    inference_time = time.time() - time_start
+
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    metrics = {'mae': mae, 'r2': r2}
+    y_labels = [num2label(label) for label in y_test]
+    accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
+
+    metrics = {'mae': mae, 'r2': r2, 'inference_time': inference_time, 'accuracy': accuracy}
 
     return est, metrics
 

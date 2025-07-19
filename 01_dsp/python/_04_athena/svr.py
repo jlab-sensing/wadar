@@ -13,6 +13,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import GridSearchCV
 from _03_hephaestus import feature_tools
+import time
+from _06_hermes.parameters import num2label, RANDOM_SEED
 
 def svr_regression(feature_array, labels, test_size=0.2, C=1.0, gamma='scale', epsilon=0.1):
     X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size)
@@ -24,11 +26,16 @@ def svr_regression(feature_array, labels, test_size=0.2, C=1.0, gamma='scale', e
                                               )
     clf.fit(X_train, y_train)
 
+    time_start = time.time()
     y_pred = clf.predict(X_test)
+    inference_time = time.time() - time_start
+
     mae = mean_absolute_error(y_test, y_pred)
     r2 = clf.score(X_test, y_test)
-    metrics = {'mae': mae, 'r2': r2}
-    return clf, metrics
+    y_labels = [num2label(label) for label in y_test]
+    accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
+
+    return clf, {'mae': mae, 'r2': r2, 'accuracy': accuracy, 'inference_time': inference_time}
 
 def tune_svr(feature_array, labels):
 

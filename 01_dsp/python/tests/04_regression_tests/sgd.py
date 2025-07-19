@@ -13,6 +13,7 @@ import _04_athena.sgd as sgd
 import pandas as pd
 from _05_apollo import viz_tools
 import json
+from _06_hermes.logger import update_results
 
 
 if __name__ == "__main__":
@@ -51,7 +52,7 @@ if __name__ == "__main__":
 
         print("Training model with best parameters")
 
-        model, metrics = sgd.sgd_regression(feature_array, labels, test_size=test_size, random_state=2,
+        model, metrics = sgd.sgd_regression(feature_array, labels, test_size=test_size,
                                                 eta0=best_params['sgdregressor__eta0'],
                                                 max_iter=best_params['sgdregressor__max_iter'],
                                                 tol=best_params['sgdregressor__tol'])
@@ -59,10 +60,20 @@ if __name__ == "__main__":
         print(f"Model metrics: {metrics}")
         print()
 
-        viz_tools.plot_regression(
-            labels, model.predict(feature_array).flatten()
-        )
-        plt.show()
+        mae = metrics['mae']
+        r2 = metrics['r2']
+        inference_time = metrics['inference_time']
+        accuracy = metrics['accuracy']
+
+        model_name = "SGD"
+
+        update_results(model_name, mae, accuracy, inference_time, dataset_dir)
+
+        if VIZ:
+            viz_tools.plot_regression(
+                labels, model.predict(feature_array).flatten()
+            )
+            plt.show()
 
         # Commented out because classification can be done with regression, and since regression
         # will be done anyway, there doesn't seem to be a reason to train a separate classification model,

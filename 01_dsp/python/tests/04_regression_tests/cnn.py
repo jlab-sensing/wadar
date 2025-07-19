@@ -8,11 +8,11 @@ sys.path.insert(0, parent_dir)
 from _01_gaia.loader import FrameLoader
 import pandas as pd
 
-from _06_hermes.bulk_density_labels import bulk_density_to_label
 from _05_apollo import viz_tools
 from _03_hephaestus import feature_tools
 import tensorflow as tf
 from _04_athena.cnn_models import BabyCNNRegressor
+from _06_hermes.logger import update_results
 
 tf.get_logger().setLevel('ERROR')
 
@@ -36,4 +36,14 @@ if __name__ == "__main__":
 
     cnn_cv.load_model(dataset_dir)
 
-    cnn_cv.evaluate(X, y)
+    metrics = cnn_cv.evaluate()
+
+    print("CNN Model Metrics:", metrics)
+
+    mae = metrics['mae']
+    accuracy = metrics['accuracy']
+    inference_time = metrics['inference_time']
+
+    model_name = "BabyCNNRegressor"
+    
+    update_results(model_name, mae, accuracy, inference_time, dataset_dir)
