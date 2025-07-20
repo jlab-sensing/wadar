@@ -2,14 +2,27 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-from scipy import signal
 from sklearn.decomposition import PCA
-from mpl_toolkits.mplot3d import Axes3D
-from sklearn.decomposition import KernelPCA
-from sklearn.metrics import mean_squared_error
 
 class PCAProcessor:
+    """
+    PCAProcessor is a class to perform Principal Component Analysis (PCA) on radar data.
+    It can be used to reduce the dimensionality of the data and extract features that are useful
+    for classification tasks.
+
+    Parameters:
+        X (np.ndarray):         Input data of shape (samples, features).
+        n_components (int):     Number of components to keep.
+    """
+
     def __init__(self, X, n_components=1):
+        """
+        Initialize the PCAProcessor with the input data and number of components.
+
+        Args:
+            X (np.ndarray):         Input data of shape (samples, features).
+            n_components (int):     Number of components to keep.
+        """
 
         self.n_components = n_components
         self.pca = PCA(n_components=self.n_components)
@@ -18,56 +31,27 @@ class PCAProcessor:
         if np.iscomplex(X).any():
             raise ValueError("Input the magnitude or phase not the raw data.")
     
-    # Commented out because I changed some stuff that will stop it from working.
-
-    # def denoise(self):
-    #     new_shape = self.shape_data2pca()
-    #     clutter = self.pca.fit_transform(new_shape)
-    #     clutter_recon = self.pca.inverse_transform(clutter)
-    #     denoised_new_shape = new_shape - clutter_recon
-    #     return self.shape_pca2data(denoised_new_shape)
-
-    # def shape_data2pca(self):
-    #     N, R, T = self.X.shape
-    #     new_shape = np.zeros((R, T * N), dtype=np.float64)
-    #     new_shape_idx = 0
-    #     for i in range(N):
-    #         for j in range(T):
-    #             new_shape[:, new_shape_idx] = np.abs(self.X[i, :, j])
-    #             new_shape_idx += 1
-    #     return new_shape
-
-    # def shape_pca2data(self, new_shape):
-    #     N, R, T = self.X.shape
-    #     back_to_original_shape = np.zeros_like(self.X, dtype=np.float64)
-    #     for i in range(N):
-    #         for j in range(T):
-    #             back_to_original_shape[i, :, j] = new_shape[:, i * T + j]
-    #     return back_to_original_shape
-    
     def dimensionality_reduction(self):
+        """
+        Perform PCA on the input data and return the reduced data.
+
+        Returns:
+            np.ndarray: Reduced data of shape (samples, n_components).
+        """
+
         N, R, T = self.X.shape
         X_flat = self.X.reshape(N, R * T)
         reduced = self.pca.fit_transform(X_flat)  # shape: (N, n_components)
         return reduced
-    
-    def plot_variance_columnwise(self):
-        new_shape = self.shape_data2pca()
-        pca_components = range(1, 11) 
-        var_explained = []
-        for n_components in pca_components:
-            pca = PCA(n_components=n_components)
-            pca.fit(new_shape)
-            var_explained.append(np.sum(pca.explained_variance_ratio_))
-        plt.plot(pca_components, var_explained, marker='o')
-        plt.xlabel('Number of PCA Components')
-        plt.ylabel('Variance Explained')
-        plt.title('Variance Explained by PCA Components')
-        plt.xticks(pca_components)
-        plt.grid()
-        plt.show()
 
     def plot_variance_samplewise(self, max_components=10):
+        """
+        Plot the cumulative variance explained by the PCA components for each sample. Useful for understanding how many components are needed
+        to explain the variance in the data.
+
+        Args:
+            max_components (int): Maximum number of components to consider for the plot.
+        """
         N, R, T = self.X.shape
         X_flat = np.abs(self.X.reshape(N, R * T))  # flatten per sample
         explained = []

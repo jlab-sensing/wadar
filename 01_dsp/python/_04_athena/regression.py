@@ -1,5 +1,3 @@
-# Use of linear regression to predict the bulk density of soil based on the given features.
-
 import numpy as np
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.linear_model import LinearRegression
@@ -14,6 +12,19 @@ import time
 from _06_hermes.parameters import num2label, RANDOM_SEED
 
 def polynomial_regression(feature_array, labels, test_size=0.2, degree=1):
+    """
+    Performs polynomial regression on the given feature array and labels. 
+
+    Args:
+        feature_array (np.ndarray):    Array of features of shape (samples, features).
+        labels (np.ndarray):           Array of labels of shape (samples,).
+        test_size (float):             Proportion of the dataset to include in the test split.
+        degree (int):                  Degree of the polynomial features to be generated.
+
+    Returns:
+        model (Pipeline):              Trained polynomial regression model.
+        dict:                          Dictionary containing evaluation metrics such as MAE, R2, accuracy, and inference time.
+    """
 
     X = feature_array
     y = labels
@@ -53,8 +64,19 @@ def polynomial_regression(feature_array, labels, test_size=0.2, degree=1):
 
 def monte_carlo_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
     """
-    Test different feature sets using Monte Carlo simulation to determine the
-    best feature set for linear regression.
+    Test different feature sets using Monte Carlo simulation to determine the best performing features.
+
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing the features and labels.
+        labels (np.ndarray):            Array of labels corresponding to the features.
+        data_dir (str):                 Directory to save the feature table.
+        n_iterations (int):             Number of iterations to run the Monte Carlo simulation.
+        test_size (float):              Proportion of the dataset to include in the test split.
+
+    Returns:
+        np.ndarray:                     Array of features selected based on the best performing model.
+        list:                           List of feature names selected based on the best performing model.
+        np.ndarray:                     Array of labels corresponding to the selected features.
     """
 
     feature_array = feature_table.drop(columns=['Label']).values

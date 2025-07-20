@@ -19,10 +19,22 @@ from _03_hephaestus import feature_tools
 import time
 from _06_hermes.parameters import num2label, RANDOM_SEED
 
-def sgd_regression(feature_array, labels, test_size,
-                   eta0=0.001, 
-                   max_iter=1000000,
-                   tol=1e-10):
+def sgd_regression(feature_array, labels, test_size, eta0=0.001, max_iter=1000000, tol=1e-10):
+    """
+    Performs SGD regression on the given feature array and labels.
+
+    Args:
+        feature_array (np.ndarray):    Array of features of shape (samples, features).
+        labels (np.ndarray):           Array of labels of shape (samples,).
+        test_size (float):             Proportion of the dataset to include in the test split.
+        eta0 (float):                  Initial learning rate.
+        max_iter (int):                Maximum number of iterations for the SGD regressor.
+        tol (float):                   Tolerance for stopping criteria.
+
+    Returns:
+        est (SGDRegressor):            Trained SGD regressor model.
+        metrics (dict):                Dictionary containing evaluation metrics such as MAE, R2, accuracy, and inference time.
+    """
 
     X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=RANDOM_SEED)
 
@@ -51,9 +63,20 @@ def sgd_regression(feature_array, labels, test_size,
 
     return est, metrics
 
-def grid_search_sgd_regression(feature_array, labels, test_size=0.2, random_state=21):
+def grid_search_sgd_regression(feature_array, labels, test_size=0.2):
+    """
+    Performs grid search for hyperparameter tuning of SGD regression.
 
-    model, _ = sgd_regression(feature_array, labels, test_size, random_state)
+    Args:
+        feature_array (np.ndarray):     Array of features of shape (samples, features).
+        labels (np.ndarray):            Array of labels of shape (samples,).
+        test_size (float):              Proportion of the dataset to include in the test split.
+
+    Returns:
+        sgd_grid_search (GridSearchCV): Fitted grid search object.
+    """
+
+    model, _ = sgd_regression(feature_array, labels, test_size, RANDOM_SEED)
 
     scaler = StandardScaler()
     feature_array = scaler.fit_transform(feature_array)
@@ -76,65 +99,21 @@ def grid_search_sgd_regression(feature_array, labels, test_size=0.2, random_stat
 
     return sgd_grid_search
 
-def sgd_classification(feature_array, labels, test_size, random_state=21,
-                      eta0=0.01,
-                      max_iter=100000,
-                      tol=0.001):
-
-    y_labels = []
-    for i, label in enumerate(labels):
-        y_labels.append(bulk_density_to_label(label))
-
-    X_train, X_test, y_train, y_test = train_test_split(feature_array, y_labels, test_size=test_size, random_state=random_state)
-
-    est = make_pipeline(
-        StandardScaler(),
-        SGDClassifier(
-            eta0=eta0,
-            max_iter=max_iter,
-            tol=tol
-        )
-    )
-
-    est.fit(X_train, y_train)
-
-    y_pred = est.predict(X_test)
-    accuracy = np.mean(y_pred == y_test)
-
-    metrics = {'accuracy': accuracy}
-
-    return est, metrics
-
-def grid_search_sgd_classification(feature_array, labels, test_size=0.2, random_state=21):
-
-    y_labels = []
-    for i, label in enumerate(labels):
-        y_labels.append(bulk_density_to_label(label))
-
-    model, _ = sgd_classification(feature_array, labels, test_size, random_state)
-
-    parameters = [
-        {
-            'sgdclassifier__max_iter':[100000, 1000000], 
-            'sgdclassifier__tol':[1e-10, 1e-3],
-            'sgdclassifier__eta0':[0.001, 0.01]
-        }
-    ]
-
-    sgd_grid_search = GridSearchCV(
-        model,
-        parameters,
-        cv=10
-    )
-
-    sgd_grid_search.fit(feature_array, y_labels)
-
-    return sgd_grid_search
-
 def monte_carlo_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
     """
-    Test different feature sets using Monte Carlo simulation to determine the
-    best feature set for SGD regression.
+    Performs Monte Carlo feature selection on the given feature table and labels. 
+
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing the features and labels.
+        labels (np.ndarray):            Array of labels of shape (samples,).
+        data_dir (str):                 Directory to save the optimal feature table.
+        n_iterations (int):             Number of iterations to run the Monte Carlo simulation.
+        test_size (float):              Proportion of the dataset to include in the test split.
+
+    Returns:
+        feature_table_optimal (pd.DataFrame): DataFrame containing the optimal features and labels.
+        feature_names (list):           List of feature names selected based on the best performing model.
+        labels (np.ndarray):            Array of labels corresponding to the selected features.
     """
 
     feature_array = feature_table.drop(columns=['Label']).values

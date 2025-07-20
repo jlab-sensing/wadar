@@ -1,3 +1,5 @@
+# Thjis file is grossly outdated and needs to be rewritten.
+
 # Metis (Μῆτις): Titaness of wisdom, prudence, and deep thought. Excellent for the intelligent and careful decision-making of an ML model.
 
 import matplotlib.pyplot as plt

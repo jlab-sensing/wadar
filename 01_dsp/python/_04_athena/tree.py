@@ -17,7 +17,7 @@ def train_decision_tree_model(feature_array, labels, test_size=0.2, max_depth=5)
     are more interpretable than the other models anyway.
     """
 
-    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=random_state)
+    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=RANDOM_SEED)
 
     model = DecisionTreeRegressor(max_depth=max_depth, random_state=RANDOM_SEED)
     model.fit(X_train, y_train)
@@ -34,14 +34,24 @@ def train_decision_tree_model(feature_array, labels, test_size=0.2, max_depth=5)
 
     return model, {'mae': mae, 'r2': r2, 'accuracy': accuracy, 'inference_time': inference_time}
 
-def train_random_forest(feature_array, labels, test_size=0.2, random_state=21, n_estimators=100):
+def train_random_forest(feature_array, labels, test_size=0.2, n_estimators=100):
     """
-    Trains a Random Forest Regressor on the provided features and labels.
+    Trains a Random Forest Regressor on the provided features and labels. 
+
+    Args:
+        feature_array (np.ndarray):    Array of features of shape (samples, features).
+        labels (np.ndarray):           Array of labels of shape (samples,).
+        test_size (float):             Proportion of the dataset to include in the test split.
+        n_estimators (int):            Number of trees in the forest.
+
+    Returns:
+        model (RandomForestRegressor): Trained Random Forest model.
+        dict:                          Dictionary containing evaluation metrics such as MAE, R2, accuracy, and inference time.
     """
 
     X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=RANDOM_SEED)
 
-    model = RandomForestRegressor(n_estimators=n_estimators, random_state=RANDOM_SEED)
+    model = RandomForestRegressor(n_estimators=n_estimators)
     model.fit(X_train, y_train)
 
     time_start = time.time()
@@ -58,10 +68,19 @@ def train_random_forest(feature_array, labels, test_size=0.2, random_state=21, n
 
 def monte_carlo_random_tree_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
     """
-    Test different feature sets using Monte Carlo simulation to determine the
-    best feature set for random forest. Not sure if random forests are better,
-    but they are more robust to overfitting, which is something I'm concerned about
-    with our smaller than ideal dataset.
+    Performs Monte Carlo feature selection on the given feature table and labels. 
+
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing the features and labels.
+        labels (np.ndarray):            Array of labels of shape (samples,).
+        data_dir (str):                 Directory to save the feature table.
+        n_iterations (int):             Number of iterations for the Monte Carlo simulation.
+        test_size (float):              Proportion of the dataset to include in the test split.
+
+    Returns:
+        np.ndarray:                     Array of selected features after Monte Carlo simulation.
+        list:                           List of selected feature names.
+        np.ndarray:                     Array of labels corresponding to the selected features.
     """
 
     feature_array = feature_table.drop(columns=['Label']).values
@@ -101,12 +120,19 @@ def monte_carlo_random_tree_feature_selection(feature_table, labels, data_dir, n
 def train_gradient_boosted_tree(feature_array, labels, test_size=0.2, n_estimators=100):
     """
     Trains a XGBoost Regressor on the provided features and labels.
+
+    Args:
+        feature_array (np.ndarray):    Array of features of shape (samples, features).
+        labels (np.ndarray):           Array of labels of shape (samples,).
+        test_size (float):             Proportion of the dataset to include in the test split.
+        n_estimators (int):            Number of boosting rounds.
+
+    Returns:
+        model (XGBRegressor):         Trained XGBoost model.
+        dict:                          Dictionary containing evaluation metrics such as MAE, R2, accuracy, and inference time.
     """
 
-    X_train, X_test, y_train, y_test = train_test_split(feature_array, 
-                                                        labels, 
-                                                        test_size=test_size, 
-                                                        random_state=RANDOM_SEED)
+    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=RANDOM_SEED)
     
     # maybe I should perform a grid search but it performs well enough without it
     model = XGBRegressor(n_estimators=n_estimators)
@@ -125,8 +151,19 @@ def train_gradient_boosted_tree(feature_array, labels, test_size=0.2, n_estimato
 
 def monte_carlo_gradient_boosted_tree_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
     """
-    Test different feature sets using Monte Carlo simulation to determine the
-    best feature set for gradient boosted trees.
+    Performs Monte Carlo feature selection on the given feature table and labels. 
+
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing the features and labels.
+        labels (np.ndarray):            Array of labels of shape (samples,).
+        data_dir (str):                 Directory to save the feature table.
+        n_iterations (int):             Number of iterations for the Monte Carlo simulation.
+        test_size (float):              Proportion of the dataset to include in the test split.
+
+    Returns:
+        np.ndarray:                     Array of selected features after Monte Carlo simulation.
+        list:                           List of selected feature names.
+        np.ndarray:                     Array of labels corresponding to the selected features.
     """
 
     feature_array = feature_table.drop(columns=['Label']).values

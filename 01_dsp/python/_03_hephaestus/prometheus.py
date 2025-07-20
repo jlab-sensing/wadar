@@ -1,3 +1,5 @@
+# This file is grossly outdated and needs to be rewritten.
+
 # Prometheus (Προμηθεύς): The Titan who brought fire (knowledge/tools) to humanity. Represents extracting powerful insights/features from raw material.
 # All image based feature extraction methods are named after Prometheus.
 

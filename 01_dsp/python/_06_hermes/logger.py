@@ -4,6 +4,20 @@ import numpy as np
 import pandas as pd
 
 def update_results(model_name, mae, accuracy, inference_time, dataset_dir):
+    """
+    Update the results CSV file with the latest model performance metrics.
+
+    Args:
+        model_name (str):           Name of the model.
+        mae (float):                Mean Absolute Error of the model.
+        accuracy (float):           Accuracy of the model.
+        inference_time (float):     Inference time of the model.
+        dataset_dir (str):          Directory where the results CSV file is stored.
+
+    Returns:
+        None
+    """
+    
     results_file = os.path.join(dataset_dir, "results.csv")
     if os.path.exists(results_file):
         results_df = pd.read_csv(results_file)

@@ -6,9 +6,37 @@ import json
 import pathlib
 import sys
 import shutil
+from _06_hermes.parameters import num2label
 
 class Dataset:
+    """
+    Class to handle the dataset for the GOPHER radar data.
+
+    Parameters:
+    dataset_dir (str):      The directory where the dataset is stored.
+    new_dataset (bool):     If True, the class will load data from the dataset directory and save it as raw data. If False, it will load the raw data from saved files.
+    ddc_flag (bool):        If True, the class will perform digital downconversion on the frames. Default is True.
+
+    Attributes:
+    dataset_dir (str):      The directory where the dataset is stored.
+    X (np.ndarray):         The features of the dataset.
+    y (np.ndarray):         The labels of the dataset.
+    ddc (bool):             Flag to indicate if digital downconversion is performed.
+    data_dir (Path):        The path to the dataset directory.
+    data_log (Path):        The path to the data log CSV file.
+    df (pd.DataFrame):      DataFrame containing the data log.
+
+    """
+
+
     def __init__(self, dataset_dir):
+        """
+        Initialize the Dataset class.
+
+        Args:
+            dataset_dir (str): The directory where the dataset is stored.
+        """
+
         self.data_dir = pathlib.Path(dataset_dir)
         if not self.data_dir.exists():
             print(f"Error: The directory {self.data_dir} does not exist.")
@@ -26,7 +54,11 @@ class Dataset:
         """
         Create labels for the dataset by extracting bulk density from the data log.
         Each sample directory will have a JSON file with the bulk density.
+
+        Args:
+            None
         """
+
         for index, row in self.df.iterrows():
             sample_dir = self.data_dir / row["Sample #"]
             bulk_density = row["Bulk Density (g/cm^3)"]
@@ -40,7 +72,7 @@ class Dataset:
                         data = f.read()
                     parsed = json.loads(data)
                     parsed["bulk-density"].append(bulk_density)
-                    parsed["label"] = bulk_density_to_label(bulk_density)
+                    parsed["label"] = num2label(bulk_density)
                     with open(json_file, 'w') as f:
                         json.dump(parsed, f)
             else:
@@ -50,6 +82,9 @@ class Dataset:
         """
         Purge labels from the dataset for relabeling.
         Deletes the JSON files containing bulk density labels.
+
+        Args:
+            None
         """
         for index, row in self.df.iterrows():
             sample_dir = self.data_dir / row["Sample #"]
@@ -61,6 +96,9 @@ class Dataset:
         """
         Converts all `.frames` files in subdirectories of the dataset directory into CSV files.
         Each resulting CSV contains the raw radar frame data.
+
+        Args:
+            None
         """
         root_path = self.data_dir
         subdirs = [f for f in root_path.iterdir() if f.is_dir() and f.name not in ['.', '..']]
@@ -103,7 +141,11 @@ class Dataset:
     def full_monty(self):
         """
         Run the full preprocessing pipeline: label dataset, purge labels, and convert frames to CSV.
+        
+        Args:
+            None
         """
+
         self.purge_labels()
         self.label_dataset()
         self.frames_to_csv()
@@ -113,12 +155,12 @@ def process_frames(file_path, capture_name):
     Process Novelda radar data capture file to extract raw frames and baseband signal.
 
     Args:
-        local_data_path (str): Path to the data capture file.
-        capture_name (str): Name of the data capture file.
+        local_data_path (str):      Path to the data capture file.
+        capture_name (str):         Name of the data capture file.
 
     Returns:
-        frame_tot (np.ndarray): Raw radar frames (shape: [num_samples, num_frames]).
-        params (dict): Dictionary containing radar parameters.
+        frame_tot (np.ndarray):     Raw radar frames (shape: [num_samples, num_frames]).
+        params (dict):              Dictionary containing potentially useful radar parameters.
     """
 
     if file_path is None or capture_name is None:
@@ -219,19 +261,19 @@ def NoveldaChipParams(chip_set, pgen, sampler='4mm'):
     Get Novelda radar chip parameters based on chipset, pulse generator (PGen), and sampler.
 
     Args:
-        chip_set (str): Chipset type ('X1-IPG0', 'X1-IPG1', 'X2', 'X4').
-        pgen (int): Pulse generator index (0, 1, or 2 for X1, 0-11 for X2).
-        sampler (str): Sampler type ('4mm', '8mm', '4cm').
-    
+        chip_set (str):     Chipset type ('X1-IPG0', 'X1-IPG1', 'X2', 'X4').
+        pgen (int):         Pulse generator index (0, 1, or 2 for X1, 0-11 for X2).
+        sampler (str):      Sampler type ('4mm', '8mm', '4cm').
+
     Returns:
-        fc (float): Center frequency [Hz]
-        bw (float): Fractional bandwidth
-        bwr (float): dB down bandwidth range
-        vp (float): Peak voltage [V]
-        n (int): Number of samplers (frame size)
-        bw_hz (float): Bandwidth in Hz
-        pwr_dBm (float): Power in dBm
-        fs_hz (float): Sampling rate [Hz]
+        fc (float):         Center frequency [Hz]
+        bw (float):         Fractional bandwidth
+        bwr (float):        dB down bandwidth range
+        vp (float):         Peak voltage [V]
+        n (int):            Number of samplers (frame size)
+        bw_hz (float):      Bandwidth in Hz
+        pwr_dBm (float):    Power in dBm
+        fs_hz (float):      Sampling rate [Hz]
     """
     chip_set = chip_set.lower()
     sampler = sampler.lower()
@@ -309,15 +351,16 @@ def NoveldaChipParams(chip_set, pgen, sampler='4mm'):
 
     return fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz
 
-# It would have been faster to rename the files in the dataset directories
-# but I decided to waste time and write this function instead.
-def combine_datasets(
-        dataset_dirs = ["../data/wet-0-soil-compaction-dataset", "../data/wet-1-soil-compaction-dataset"], 
-        target_dir = "../data/combined-soil-compaction-dataset"):
+# It would have been faster to rename the files in the dataset directories instead of writing this function.
+def combine_datasets(dataset_dirs, target_dir):
     """
     Combine multiple datasets into a single dataset by renaming folders and copying files.
     Assumes that each directory is named "label-#-...". Eg.
     wet-0-soil-compaction-dataset, wet-1-soil-compaction-dataset.
+
+    Args:
+        dataset_dirs (list): List of dataset directories to combine.
+        target_dir (str):    Directory where the combined dataset will be saved.
     """
     target_dir = pathlib.Path(target_dir)
     target_dir.mkdir(parents=True, exist_ok=True)

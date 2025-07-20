@@ -17,6 +17,23 @@ import time
 from _06_hermes.parameters import num2label, RANDOM_SEED
 
 def svr_regression(feature_array, labels, test_size=0.2, C=1.0, gamma='scale', epsilon=0.1):
+    """
+    Performs Support Vector Regression (SVR) on the given feature array and labels.
+
+    Args:
+        feature_array (np.ndarray):    Array of features of shape (samples, features).
+        labels (np.ndarray):           Array of labels of shape (samples,).
+        test_size (float):             Proportion of the dataset to include in the test split.
+        C (float):                     Regularization parameter.
+        gamma (str or float):          Kernel coefficient for 'rbf', 'poly', and 'sigmoid'.
+        epsilon (float):               Epsilon in the epsilon-SVR model.
+
+    Returns:
+        clf (SVR):                     Trained SVR model.
+        metrics (dict):                Dictionary containing evaluation metrics such as MAE, R2, accuracy, and inference time.
+    """
+
+
     X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size)
 
     clf = make_pipeline(StandardScaler(), SVR(kernel='rbf', 
@@ -38,8 +55,18 @@ def svr_regression(feature_array, labels, test_size=0.2, C=1.0, gamma='scale', e
     return clf, {'mae': mae, 'r2': r2, 'accuracy': accuracy, 'inference_time': inference_time}
 
 def tune_svr(feature_array, labels):
+    """
+    Tune the hyperparameters of the SVR model using GridSearchCV. Sourced from
+    https://medium.com/@jayedakhtar96/learn-how-to-implement-svr-for-real-world-data-using-python-sklearn-and-hyperparameter-tuning-7b12a2df9074
+    
+    Args:
+        feature_array (np.ndarray):    Array of features of shape (samples, features).
+        labels (np.ndarray):           Array of labels of shape (samples,).
+        
+    Returns:
+        dict:                          Dictionary containing the best hyperparameters for the SVR model.
+    """
 
-    # Sourced from https://medium.com/@jayedakhtar96/learn-how-to-implement-svr-for-real-world-data-using-python-sklearn-and-hyperparameter-tuning-7b12a2df9074
     param_grid = {
         'C': [0.1, 1, 10, 100],
         'gamma': [0.01, 0.1, 1, 'scale'],
@@ -62,8 +89,17 @@ def tune_svr(feature_array, labels):
 
 def monte_carlo_svr_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
     """
-    Test different feature sets using Monte Carlo simulation to determine the
-    best feature set for SVR.
+    Performs Monte Carlo feature selection on the given feature table and labels. 
+
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing the features and labels.
+        labels (np.ndarray):            Array of labels of shape (samples,).
+        data_dir (str):                 Directory to save the feature table.
+        n_iterations (int):             Number of iterations for the Monte Carlo simulation.
+        test_size (float):              Proportion of the dataset to include in the test split.
+
+    Returns:
+        pd.DataFrame:                  DataFrame containing the optimal feature set after Monte Carlo simulation.
     """
 
     feature_array = feature_table.drop(columns=['Label']).values

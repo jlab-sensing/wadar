@@ -1,3 +1,5 @@
+# Possible outdated, haven't used in a while.
+
 import os
 import sys
 

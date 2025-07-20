@@ -17,26 +17,43 @@ from scipy.stats import entropy
 from sklearn.feature_selection import mutual_info_regression
 
 class FeatureTools:
+    """
+    Feature engineering tools for signal processing. Does most of the heavy lifting
+    in this pipeline. This class is designed to extract features from radar signals.
+    """
+
     def __init__(self, X):
+        """
+        Initialize the FeatureTools class with the input data.
+
+        Args:
+            X (np.ndarray): Input radar data of shape (samples, fast time, slow time).
+        """
         self.X = X
 
     def _segments(self):
         """
-        So I can determine the segments of the signal that I want to analyze.
+        TODO: Implement a method to analyze segments of the signal.
         """
 
         return [0, 250, 512]
 
     def _average_frame(self):
         """
-        Just so I can easily decide whether to use median or mean.
+        Computes the average frame of the signal across slow time.
+
+        Returns:
+            np.ndarray: Average frame of the signal.
         """
 
         return np.median(self.X, axis=2)
     
     def _get_peak_idx(self):
         """
-        Returns the two largest peaks in the signal for all scans.
+        Computes the indices of the two largest peaks in the average frame of the signal.
+
+        Returns:
+            np.ndarray: Indices of the two largest peaks for each scan.
         """
         peak_idxs = np.zeros((self.X.shape[0], 2), dtype=int)
         average_signals = np.abs(self._average_frame())
@@ -50,7 +67,8 @@ class FeatureTools:
 
     def peak_amplitude(self):
         """
-        Amplitude of the two peaks for all scans.
+        Returns:
+            np.ndarray: Amplitude of the two largest peaks for each scan.
         """
 
         peak_idxs = self._get_peak_idx()
@@ -64,7 +82,14 @@ class FeatureTools:
 
     def _get_signal_variance(self, idx):
         """
-        Computes the variance of the signal at the specified index.
+        Computes the variance of the signal at the specified index. This is relevant to analyze the
+        stability of the signal over slow time which may indicate the soil condition.
+
+        Args:
+            idx (int):  Index of the scan to compute the variance for.
+
+        Returns:
+            np.ndarray: Variance of the signal at the specified index.
         """
 
         signal = np.abs(self.X[idx, :, :])
@@ -72,7 +97,8 @@ class FeatureTools:
         
     def peak_variance(self):
         """
-        Variance of the two peaks.
+        Returns:
+            np.ndarray: Variance of the two largest peaks for each scan.
         """
 
         peak_idxs = self._get_peak_idx()
@@ -85,9 +111,17 @@ class FeatureTools:
 
     def _get_signal_entropy(self, idx):
         """
-        Computes the entropy of the signal at the specified index.
-        Signal entropy is a measure of the uncertainty in the signal.
+        Computes the entropy of the signal at the specified index. Signal entropy is a measure of the
+        randomness or unpredictability of the signal, which can be useful to analyze the soil condition.
+        The hypothesis is that more loose soil will have a more random signal.
+
+        Args:
+            idx (int):  Index of the scan to compute the entropy for.
+
+        Returns:
+            np.ndarray: Entropy of the signal at the specified index.
         """
+
         signal = np.abs(self.X[idx, :, :])
         entropy = np.zeros(signal.shape[0])
         for i in range(signal.shape[0]):
@@ -98,7 +132,8 @@ class FeatureTools:
 
     def peak_entropy(self):
         """
-        Entropy of the two peaks.
+        Returns:
+            np.ndarray: Entropy of the two largest peaks for each scan.
         """
         peak_idxs = self._get_peak_idx()
         entropy = np.zeros((self.X.shape[0], 2))
@@ -110,10 +145,11 @@ class FeatureTools:
     
     def peak_delay(self):
         """
-        A bunch of delays. Index 0 is the distance to when the antenna
-        coupling peak occurs, index 1 is the distance to the second peak
-        which is the actual soil reflection, and index 2 is the relative
-        difference between the two peaks.
+        Returns a numpy array with (0) the delay to the first peak, (1) the delay to the second peak,
+        and (2) the difference between the two delays for each scan.
+
+        Returns: 
+            np.ndarray: Delays of the two largest peaks for each scan.
         """
 
         peak_idxs = self._get_peak_idx() 
@@ -125,8 +161,10 @@ class FeatureTools:
 
     def peak_width(self):
         """
-        Width of the two peaks at each scan.
+        Returns the width of the two largest peaks for each scan. peak_widths is doing the heavy lifting here,
+        it returns the width of the peak at the specified indices.
         """
+
         peak_idxs = self._get_peak_idx()
         signal = np.abs(self._average_frame())
         widths = np.zeros((self.X.shape[0], 2))
@@ -137,9 +175,11 @@ class FeatureTools:
 
     def peak_shape_stats(self):
         """
-        Skewness and kurtosis of the two peaks at each scan.
-        Skewness measures the asymmetry of the signal,
-        while kurtosis measures the peakedbess of the signal.
+        Skewness and kurtosis of the two peaks at each scan. Skewness measures the asymmetry of the peak,
+        while kurtosis measures the pointiness of the peak. 
+
+        Returns:
+            np.ndarray: Skewness and kurtosis of the two largest peaks for each scan.
         """
 
         skewness = np.zeros((self.X.shape[0], 2))
@@ -155,9 +195,12 @@ class FeatureTools:
     
     def _get_signal_energy(self, scan_idx=0, spec_idx=0):
         """
-        Computes the energy of the signal at scan_idx at the specified index.
-        Not that different from amplitude but accounts for the entire signal
+        Computes the energy of the signal at scan_idx and spec_idx. Signal energy is the sum of the squares of the signal
         taken over slow time.
+
+        Args:
+            scan_idx (int): Index of the sample to compute the energy for.
+            spec_idx (int): Index of the spectrum to compute the energy for (in fast time).
         """
 
         signal = np.abs(self.X[scan_idx, :, :])[spec_idx]
@@ -165,7 +208,8 @@ class FeatureTools:
     
     def peak_signal_energy(self):
         """
-        Computes the energy of the two peaks.
+        Returns:
+            np.ndarray: Energy of the two largest peaks for each scan.
         """
 
         peak_idxs = self._get_peak_idx()
@@ -177,7 +221,11 @@ class FeatureTools:
     
     def decay_rate(self, decay_points=10):
         """
-        Computes the decay rate of the two peaks for all scans.
+        Computes the decay rate of the two peaks for all scans. Decay rate is the slope of the signal
+        after the peak, which is computed by fitting a line to the signal after the peak for a specified number of points.
+
+        Args:
+            decay_points (int): Number of points to use for fitting the decay line.
         """
 
         slopes = np.zeros((self.X.shape[0], 2))
@@ -185,7 +233,7 @@ class FeatureTools:
 
         peak_idxs = self._get_peak_idx()
 
-        # peak 1
+        # Peak 1
         slopes = np.zeros((self.X.shape[0], 2))
         for i in range(self.X.shape[0]):
             start1 = peak_idxs[i, 0]
@@ -194,7 +242,7 @@ class FeatureTools:
             y1 = signal[i, start1:end1]
             slopes[i, 0], _ = np.polyfit(x1, y1, 1)
 
-        # peak 2
+        # Peak 2
         for i in range(self.X.shape[0]):
             start2 = peak_idxs[i, 1]
             end2 = min(signal.shape[1], peak_idxs[i, 1] + decay_points)
@@ -206,7 +254,8 @@ class FeatureTools:
 
     def ascend_rate(self):
         """
-        Computes the ascend rate of the two peaks for all scans.
+        Computes the ascend rate of the two peaks for all scans. Ascend rate is the slope of the signal
+        before the peak, which is computed by fitting a line to the signal before the peak for a specified number of points.
         """
 
         slopes = np.zeros((self.X.shape[0], 2))
@@ -234,7 +283,10 @@ class FeatureTools:
     
     def peak_phase(self):
         """
-        Computes the phase of the two peaks.
+        Computes the phase of the two peaks for all scans. The phase is computed as the angle of the complex signal.
+
+        Returns:
+            np.ndarray: Phase of the two largest peaks for each scan.
         """
 
         peak_idxs = self._get_peak_idx()
@@ -248,9 +300,11 @@ class FeatureTools:
             
     def _get_phase_variance(self, idx):
         """
-        Computes the variance of the phase of the signal at scan_idx.
-        This is because the stochastic nature of the signal reflecting
-        on more porous soil may affect the phase of the signal.
+        Computes the variance of the phase of the signal at idx. Phase variance is the variance of the phase of the signal.
+        We hypothesize that the phase variance is related to the soil condition, as it may indicate the stability of the signal.
+
+        Args:
+            idx (int):  Index of the scan to compute the phase variance for.
         """
 
         signal = np.angle(self.X[idx, :, :])
@@ -258,7 +312,8 @@ class FeatureTools:
 
     def peak_phase_variance(self):
         """
-        Computes the phase variance of the two peaks.
+        Returns:
+            np.ndarray: Variance of the phase of the two largest peaks for each scan.
         """
 
         peak_idxs = self._get_peak_idx()
@@ -271,9 +326,12 @@ class FeatureTools:
 
     def _get_circularity_coefficient(self, idx=0):
         """
-        Computes the circularity coefficient of the signal at idx.
-        The circularity coefficient describes the statistical
-        scattering behavior of the signal. 
+        Computes the circularity coefficient of the signal at idx. Circularity coefficient is defined as the ratio 
+        of the mean of the conjugate product of the signal to the mean power of the signal. I don't fully understand
+        this, this was suggested by AI.
+
+        Args:
+            idx (int):  Index of the scan to compute the circularity coefficient for.
         """
 
         signal = self.X[idx, :, :]
@@ -289,7 +347,8 @@ class FeatureTools:
 
     def peak_circularity_coefficient(self):
         """
-        Computes the circularity coefficient of the two peaks.
+        Returns:
+            np.ndarray: Circularity coefficient of the two largest peaks for each scan.
         """
 
         peak_idxs = self._get_peak_idx()
@@ -303,9 +362,16 @@ class FeatureTools:
 
     def _get_phase_jitter(self, scan_idx=0, spec_idx=0):
         """
-        Computes the phase jitter of the signal at scan_idx.
-        Phase jitter is the variance of the phase difference
-        between consecutive samples in the signal.
+        Computes the phase jitter of the signal at scan_idx. Phase jitter is defined as the variance of the phase difference
+        between consecutive samples in the signal. This is a measure of the stability of the phase of the signal, 
+        which may indicate some kind of instability in the returned signal.
+
+        Args:
+            scan_idx (int): Index of the sample to compute the phase jitter for.
+            spec_idx (int): Index of the spectrum to compute the phase jitter for (in fast time).
+
+        Returns:
+            float: Variance of the phase difference between consecutive samples in the signal.
         """
 
         signal = self.X[scan_idx, :, :][spec_idx]
@@ -314,7 +380,8 @@ class FeatureTools:
 
     def peak_phase_jitter(self):
         """
-        Computes the phase jitter of the two peaks for all scans.
+        Returns:
+            np.ndarray: Phase jitter of the two largest peaks for each scan.
         """
 
         peak_idxs = self._get_peak_idx()
@@ -327,18 +394,27 @@ class FeatureTools:
     # TODO: FFT and some time domain features. Maybe correlation between peaks?
     #       There are advanced radar clutter analysis techniques.
     #       Persistence, but that might be the same as variance.
-    #       Definitely missing phase stuff, so prioritize that.
+    #       Definitely missing some phase features that I don't know about.
+    #       With the feature pruning methods I've implemented, there's no such thing as "too many features".
 
     def initialize_feature_table(self):
         """
         Assembles a feature table with all the features extracted.
+        This method initializes an empty DataFrame to store the features.
+        It should be called before extracting features.
+
+        Returns:
+            None
         """
 
         self.feature_table = pd.DataFrame({})
     
     def magnitude_features(self):
         """
-        Extracts all the features related to the magnitude of the signal.
+        Extracts all the features related to the magnitude of the signal. 
+
+        Returns:
+            None
         """
 
         peak_amplitude = self.peak_amplitude()
@@ -381,6 +457,9 @@ class FeatureTools:
     def phase_features(self):
         """
         Extracts all the features related to the phase of the signal.
+
+        Returns:
+            None
         """
 
         peak_phase = self.peak_phase()
@@ -398,8 +477,14 @@ class FeatureTools:
     
     def feature_full_monty(self, label, destination=None):
         """
-        Extracts all the features related to the signal.
-        This includes both magnitude and phase features.
+        Calls all the feature extraction methods and assembles the entire feature table.
+
+        Args:
+            label (str):            Label for the feature table, typically the soil condition.
+            destination (str):      Directory to save the feature table as a CSV file. If None, the table is not saved.
+
+        Returns:
+            pd.DataFrame:           Feature table containing all the extracted features and the label.
         """
 
         self.initialize_feature_table()
@@ -417,6 +502,16 @@ class FeatureTools:
     
 
 def mutual_info_minimize_features(feature_table, top_n=10):
+    """
+    Uses mutual information to minimize the number of features. 
+
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing the features and labels.
+        top_n (int):                    Number of top features to select based on mutual information.
+
+    Returns:
+        pd.DataFrame:                  DataFrame containing the selected features and their mutual information scores.
+    """
     
     feature_array = feature_table.drop(columns=['Label']).values
     feature_names = feature_table.drop(columns=['Label']).columns.tolist()
@@ -441,6 +536,16 @@ def mutual_info_minimize_features(feature_table, top_n=10):
     return df_best, mi_scores
 
 def correlation_minimize_features(feature_table, top_n=10):
+    """
+    Uses correlation to minimize the number of features. This has been the worst performing method so far.
+
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing the features and labels.
+        top_n (int):                    Number of top features to select based on correlation.
+
+    Returns:
+        pd.DataFrame:                  DataFrame containing the selected features and their correlation scores.
+    """
     
     feature_array = feature_table.drop(columns=['Label']).values
     feature_names = feature_table.drop(columns=['Label']).columns.tolist()
@@ -467,11 +572,10 @@ def correlation_minimize_features(feature_table, top_n=10):
 
 def lasso_minimize_features(feature_table):
     """
-    Uses Lasso regression to minimize the number of features.
-    It selects features based on their coefficients and saves the
-    selected features to a CSV file.
+    Uses Lasso regression to minimize the number of features. Selects features based on their coefficients.
 
-    TODO: This isn't currently working it's removing data samples for some reason.
+    TODO:   This isn't currently working it's removing data samples for some reason. I lost the source where I 
+            borrowed (stolen) this code from.
     """
 
     feature_array = feature_table.drop(columns=['Label']).values
@@ -524,6 +628,14 @@ def lasso_minimize_features(feature_table):
 def save_feature_table(feature_table, destination, feature_file_name='features_selected.csv'):
     """
     Saves the feature table to a CSV file.
+
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing the features and labels.
+        destination (str):              Directory to save the feature table.
+        feature_file_name (str):        Name of the feature file to save as.
+
+    Returns:
+        None
     """
 
     if not os.path.exists(destination):
@@ -533,7 +645,11 @@ def save_feature_table(feature_table, destination, feature_file_name='features_s
 
 def load_feature_table(dir, feature_file_name='features.csv'):
     """
-    Loads the feature table from a CSV file.
+    Loads a feature table from a CSV file.
+
+    Args:
+        dir (str):                   Directory where the feature file is located.
+        feature_file_name (str):     Name of the feature file to load.
     """
 
     feature_table = pd.read_csv(f"{dir}/{feature_file_name}")

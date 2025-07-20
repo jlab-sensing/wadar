@@ -22,6 +22,7 @@ class FrameLoader:
     new_dataset (bool): If True, the class will load data from the dataset directory and save it as raw data. If False, it will load the raw data from saved files.
     ddc (bool): If True, the class will perform digital downconversion on the frames. Default is True.
     """
+    
     def __init__(self, dataset_dir, new_dataset=True, ddc_flag=True):
         self.dataset_dir = dataset_dir
         self.X = None

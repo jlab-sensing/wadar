@@ -1,6 +1,5 @@
 # Important parameters that I want to stay consistent across different modules.
 
-
 RANDOM_SEED = 42
 
 def bulk_density_to_label(bulk_density, soil_type = "silty"):
@@ -9,6 +8,7 @@ def bulk_density_to_label(bulk_density, soil_type = "silty"):
     https://www.nrcs.usda.gov/sites/default/files/2022-11/Bulk%20Density%20-%20Soil%20Health%20Guide_0.pdf.
     Labels are based on root growth potential.
     """
+
     if soil_type == "silty":
         if bulk_density < 1.4:
             return "Ideal"
@@ -17,4 +17,4 @@ def bulk_density_to_label(bulk_density, soil_type = "silty"):
         else:
             return "Non-ideal"
 
-num2label = bulk_density_to_label # So that if I want to change the function later, I can just change it here.
+num2label = bulk_density_to_label       # So that if I want to change the function later for a different labeling scheme, I can do it in one place.

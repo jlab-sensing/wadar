@@ -8,10 +8,11 @@ def novelda_digital_downconvert(raw_frame):
     signal (i.e. I & Q, in-phase & quadrature, outputs). Inherited from
     NoveldaDDC.m.
 
-    :param raw_frame:   high-frequency sampled UWB radar signal
-    :return:            baseband, and filtered IQ radar 
-                        signal, note: use abs() on output to get envelope
-                        magnitude
+    Args:
+        raw_frame (np.ndarray):         Input radar frame data, shape (N,).
+
+    Returns:
+        baseband_signal (np.ndarray):   Baseband signal after DDC, shape (N,).
     """
 
     # These parameters are for true the X1-IPG1
