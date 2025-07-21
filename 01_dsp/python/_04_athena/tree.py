@@ -8,6 +8,7 @@ from _03_hephaestus import feature_tools
 from xgboost import XGBRegressor
 import time
 from _06_hermes.parameters import num2label, RANDOM_SEED
+from sklearn.model_selection import KFold
 
 def train_decision_tree_model(feature_array, labels, test_size=0.2, max_depth=5):
     """
@@ -34,7 +35,7 @@ def train_decision_tree_model(feature_array, labels, test_size=0.2, max_depth=5)
 
     return model, {'mae': mae, 'r2': r2, 'accuracy': accuracy, 'inference_time': inference_time}
 
-def train_random_forest(feature_array, labels, test_size=0.2, n_estimators=100):
+def train_random_forest(feature_array, labels, test_size=0.2, n_estimators=100, kfold_splits=5):
     """
     Trains a Random Forest Regressor on the provided features and labels. 
 
@@ -48,23 +49,39 @@ def train_random_forest(feature_array, labels, test_size=0.2, n_estimators=100):
         model (RandomForestRegressor): Trained Random Forest model.
         dict:                          Dictionary containing evaluation metrics such as MAE, R2, accuracy, and inference time.
     """
+    kf = KFold(n_splits=kfold_splits, shuffle=True, random_state=RANDOM_SEED)
+    maes, r2s, accuracies, inference_times = [], [], [], []
+    models = []
 
-    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size, random_state=RANDOM_SEED)
+    for train_index, test_index in kf.split(feature_array):
+        X_train, X_test = feature_array[train_index], feature_array[test_index]
+        y_train, y_test = labels[train_index], labels[test_index]
 
-    model = RandomForestRegressor(n_estimators=n_estimators)
-    model.fit(X_train, y_train)
+        model = RandomForestRegressor(n_estimators=n_estimators, random_state=RANDOM_SEED)
+        model.fit(X_train, y_train)
+        models.append(model)
 
-    time_start = time.time()
-    y_pred = model.predict(X_test)
-    inference_time = time.time() - time_start
+        time_start = time.time()
+        y_pred = model.predict(X_test)
+        inference_time = time.time() - time_start
 
-    mae = mean_absolute_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
+        mae = mean_absolute_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+        y_labels = [num2label(label) for label in y_test]
+        accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
 
-    y_labels = [num2label(label) for label in y_test]
-    accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
+        maes.append(mae)
+        r2s.append(r2)
+        accuracies.append(accuracy)
+        inference_times.append(inference_time)
 
-    return model, {'mae': mae, 'r2': r2, 'accuracy': accuracy, 'inference_time': inference_time}
+    # Use the last trained model for return (or you could refit on all data if desired)
+    return models[-1], {
+        'mae': np.mean(maes),
+        'r2': np.mean(r2s),
+        'accuracy': np.mean(accuracies),
+        'inference_time': np.mean(inference_times)
+    }
 
 def monte_carlo_random_tree_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
     """

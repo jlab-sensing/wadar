@@ -31,6 +31,13 @@ if __name__ == "__main__":
     # MAE and Accuracy
     # ==========================
 
+    # Sort by Accuracy descending
+    sorted_results = results.sort_values(by='Accuracy', ascending=False)
+    models = sorted_results['Model']
+    mae = sorted_results['MAE']
+    accuracy = sorted_results['Accuracy']
+    index = np.arange(len(models))
+
     # Plot MAE
     mae_bars = ax1.bar(index, mae, bar_width, label='MAE', color='#1f77b4', edgecolor='black', linewidth=1)
     # Plot Accuracy
@@ -64,8 +71,8 @@ if __name__ == "__main__":
     ax1.legend(bars, labels, loc='best', fontsize=12)
 
     # top is getting cut off
-    ax1.set_ylim(0, results['MAE'].max() * 1.1) 
-    ax2.set_ylim(0, results['Accuracy'].max() * 1.1)  
+    ax1.set_ylim(0, mae.max() * 1.1) 
+    ax2.set_ylim(0, accuracy.max() * 1.1)  
 
     # Title
     plt.title('Model Error and Accuracy', fontsize=16, fontweight='bold')
@@ -75,10 +82,14 @@ if __name__ == "__main__":
     # Plot Inference Time
     # ==========================
 
+    # Sort by Inference Time ascending
+    sorted_results = results.sort_values(by='Inference Time', ascending=True)
+    inferenceTime = sorted_results['Inference Time'] * 1000  # Convert to milliseconds
+
     plt.figure(figsize=(10, 6))
-    bars = plt.bar(models, results['Inference Time'], color='#2ca02c', edgecolor='black', linewidth=1)
+    bars = plt.bar(models, inferenceTime, color='#2ca02c', edgecolor='black', linewidth=1)
     plt.xlabel('Model', fontsize=14, fontweight='bold')
-    plt.ylabel('Inference Time (s)', fontsize=14, fontweight='bold')
+    plt.ylabel('Inference Time (ms)', fontsize=14, fontweight='bold')
     plt.title('Model Inference Time', fontsize=16, fontweight='bold')
     plt.yscale('log')
     plt.xticks(rotation=45, ha='right', fontsize=12)
@@ -89,6 +100,6 @@ if __name__ == "__main__":
         plt.annotate(f'{height:.2e}', xy=(bar.get_x() + bar.get_width() / 2, height),
                      xytext=(0, 3), textcoords="offset points",
                      ha='center', va='bottom', fontsize=10)
-    plt.ylim(0, results['Inference Time'].max() * 2)  # Set y-limits for Inference Time   
+    plt.ylim(0, inferenceTime.max() * 2)  # Set y-limits for Inference Time   
     plt.tight_layout()
     plt.show()
