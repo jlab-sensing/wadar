@@ -121,8 +121,8 @@ class Image2Compaction:
             global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
             feature_batch_average = global_average_layer(feature_batch)             # Classification head.
 
-            # prediction_layer = tf.keras.layers.Dense(1, activation='sigmoid')     # Ew, sigmoid.
-            prediction_layer = tf.keras.layers.Dense(3, activation='relu')          # relu is better according to Professor Marinescu.
+            # prediction_layer = tf.keras.layers.Dense(1, activation='sigmoid')    
+            prediction_layer = tf.keras.layers.Dense(3, activation='relu')          # relu is better according to Rezvan.
             prediction_batch = prediction_layer(feature_batch_average)              
             print(prediction_batch.shape)                                           # Not entirely sure what this tells us.
 

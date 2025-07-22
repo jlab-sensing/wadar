@@ -3,7 +3,7 @@
 RANDOM_SEED = 42
 KFOLD_SPLITS = 5
 
-def bulk_density_to_label(bulk_density, soil_type = "silty"):
+def bulk_density_to_label(bulk_density: float, soil_type: str = "silty") -> str:
     """
     Convert bulk density to a label. For silty soil based on 
     https://www.nrcs.usda.gov/sites/default/files/2022-11/Bulk%20Density%20-%20Soil%20Health%20Guide_0.pdf.

@@ -84,7 +84,9 @@ class BabyCNNRegressor:
             'accuracy': np.mean(accuracy)
         }
 
-        self.model = model
+        # final model fat with all the data
+        self.model = self.build_model(input_shape=(self.X.shape[1], self.X.shape[2]))
+        self.model.fit(self.X, self.y, epochs=epochs, batch_size=32, verbose=1)
 
         return model, metrics
 
