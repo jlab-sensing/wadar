@@ -29,14 +29,14 @@ if __name__ == "__main__":
 
 
     # If making a new feature set, 
-    # hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
-    # X, y = hydros.X, hydros.y
-    # hephaestus_features = feature_tools.FeatureTools(X)
-    # feature_table = hephaestus_features.feature_full_monty(y, dataset_dir)
+    hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
+    X, y = hydros.X, hydros.y
+    hephaestus_features = feature_tools.FeatureTools(X)
+    feature_table = hephaestus_features.feature_full_monty(y, dataset_dir)
 
     # If using an existing feature set, 
     
-    feature_table = pd.read_csv(f"{dataset_dir}/features.csv")
+    # feature_table = pd.read_csv(f"{dataset_dir}/features.csv")
 
     # ==============
     # Feature selection

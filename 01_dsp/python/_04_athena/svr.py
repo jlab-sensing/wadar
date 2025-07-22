@@ -14,45 +14,57 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import GridSearchCV
 from _03_hephaestus import feature_tools
 import time
-from _06_hermes.parameters import num2label, RANDOM_SEED
+from _06_hermes.parameters import num2label, RANDOM_SEED, KFOLD_SPLITS
+from sklearn.model_selection import KFold
 
-def svr_regression(feature_array, labels, test_size=0.2, C=1.0, gamma='scale', epsilon=0.1):
+def svr_regression(feature_array, labels, C=1.0, gamma='scale', epsilon=0.1, k_folds=KFOLD_SPLITS):
     """
-    Performs Support Vector Regression (SVR) on the given feature array and labels.
+    Performs Support Vector Regression (SVR) with K-Fold cross-validation.
 
     Args:
         feature_array (np.ndarray):    Array of features of shape (samples, features).
         labels (np.ndarray):           Array of labels of shape (samples,).
-        test_size (float):             Proportion of the dataset to include in the test split.
         C (float):                     Regularization parameter.
         gamma (str or float):          Kernel coefficient for 'rbf', 'poly', and 'sigmoid'.
         epsilon (float):               Epsilon in the epsilon-SVR model.
+        k_folds (int):                 Number of folds for K-Fold cross-validation.
 
     Returns:
-        clf (SVR):                     Trained SVR model.
-        metrics (dict):                Dictionary containing evaluation metrics such as MAE, R2, accuracy, and inference time.
+        clf (SVR):                     Trained SVR model (last fold).
+        metrics (dict):                Dictionary containing mean evaluation metrics across folds.
     """
 
+    maes, r2s, accuracies, inference_times = [], [], [], []
 
-    X_train, X_test, y_train, y_test = train_test_split(feature_array, labels, test_size=test_size)
+    kf = KFold(n_splits=k_folds, shuffle=True, random_state=RANDOM_SEED)
+    for train_idx, test_idx in kf.split(feature_array):
+        X_train, X_test = feature_array[train_idx], feature_array[test_idx]
+        y_train, y_test = labels[train_idx], labels[test_idx]
 
-    clf = make_pipeline(StandardScaler(), SVR(kernel='rbf', 
-                                              C=C, 
-                                              gamma=gamma, 
-                                              epsilon=epsilon)
-                                              )
-    clf.fit(X_train, y_train)
+        clf = make_pipeline(StandardScaler(), SVR(kernel='rbf', C=C, gamma=gamma, epsilon=epsilon))
+        clf.fit(X_train, y_train)
 
-    time_start = time.time()
-    y_pred = clf.predict(X_test)
-    inference_time = time.time() - time_start
+        time_start = time.time()
+        y_pred = clf.predict(X_test)
+        inference_time = time.time() - time_start
 
-    mae = mean_absolute_error(y_test, y_pred)
-    r2 = clf.score(X_test, y_test)
-    y_labels = [num2label(label) for label in y_test]
-    accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
+        mae = mean_absolute_error(y_test, y_pred)
+        r2 = clf.score(X_test, y_test)
+        y_labels = [num2label(label) for label in y_test]
+        accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
 
-    return clf, {'mae': mae, 'r2': r2, 'accuracy': accuracy, 'inference_time': inference_time}
+        maes.append(mae)
+        r2s.append(r2)
+        accuracies.append(accuracy)
+        inference_times.append(inference_time)
+    # Return last trained model and mean metrics
+    metrics = {
+        'mae': np.mean(maes),
+        'r2': np.mean(r2s),
+        'accuracy': np.mean(accuracies),
+        'inference_time': np.mean(inference_times)
+    }
+    return clf, metrics
 
 def tune_svr(feature_array, labels):
     """
@@ -87,7 +99,7 @@ def tune_svr(feature_array, labels):
 
     return grid_search.best_params_
 
-def monte_carlo_svr_feature_selection(feature_table, labels, data_dir, n_iterations=100, test_size=0.2):
+def monte_carlo_svr_feature_selection(feature_table, labels, data_dir, n_iterations=100,):
     """
     Performs Monte Carlo feature selection on the given feature table and labels. 
 
@@ -118,19 +130,18 @@ def monte_carlo_svr_feature_selection(feature_table, labels, data_dir, n_iterati
         model, metrics = svr_regression(
             selected_features,
             labels,
-            test_size=test_size,
             C=best_params['C'],
             gamma=best_params['gamma'],
             epsilon=best_params['epsilon']
         )
 
         if metrics['mae'] < best_score:
+            print(f"Improved MAE from {best_score:.4f} to {metrics['mae']:.4f} at iteration {i+1}")
+
+        if metrics['mae'] < best_score:
             best_score = metrics['mae']
             best_features = selected_indices
             best_params = best_params
-
-        if (i + 1) % max(1, n_iterations // 10) == 0:
-            print(f"Iteration {i + 1}/{n_iterations} - Best MAE: {best_score:.4f}")
 
     feature_table_optimal = feature_table.iloc[:, best_features].copy()
     feature_table_optimal['Label'] = labels

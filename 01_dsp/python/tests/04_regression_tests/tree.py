@@ -30,10 +30,10 @@ def plot_random_forest(feature_table, model_rf):
 
 if __name__ == "__main__":
 
-    VIZ = False  # Set to True to visualize features
-    MONTE_CARLO = False
+    VIZ = True  # Set to True to visualize features
+    MONTE_CARLO = True
 
-    RANDOM_FOREST = False # Set to True to use Random Forest, False for Gradient Boosted Tree
+    RANDOM_FOREST = True # Set to True to use Random Forest, False for Gradient Boosted Tree
     
     dataset_dir = "../../data/combined-soil-compaction-dataset"
     feature_file_name = "features.csv"
@@ -115,15 +115,16 @@ if __name__ == "__main__":
     
     else:
 
+        n_iterations = 100
+
         if RANDOM_FOREST:
 
             # Monte Carlo feature selection for Random Forest
-            tree.monte_carlo_random_treefeature_selection(
+            tree.monte_carlo_random_tree_feature_selection(
                 feature_table,
                 labels,
                 dataset_dir,
-                n_iterations=100,
-                test_size=test_size
+                n_iterations=n_iterations,
             )
 
             feature_table, feature_array, _, labels = feature_tools.load_feature_table(
@@ -131,15 +132,13 @@ if __name__ == "__main__":
             )
             model_rf, metrics_rf = tree.train_random_forest(
                 feature_array,
-                labels,
-                test_size=test_size,
-                n_estimators=100
-            )
+                labels
+        )
             print("Trained Random Forest model:", model_rf)
             print("Metrics (Random Forest):", metrics_rf)
 
             # Plot random forest tree
-            plot_random_forest(feature_table, model_rf)
+            # plot_random_forest(feature_table, model_rf) 
 
             viz_tools.plot_regression(
                 labels, model_rf.predict(feature_array).flatten()
@@ -152,8 +151,7 @@ if __name__ == "__main__":
                 feature_table,
                 labels,
                 dataset_dir,
-                n_iterations=100,
-                test_size=test_size
+                n_iterations=n_iterations,
             )
 
             feature_table, feature_array, _, labels = feature_tools.load_feature_table(
@@ -161,9 +159,7 @@ if __name__ == "__main__":
             )
             model, metrics = tree.train_gradient_boosted_tree(
                 feature_array,
-                labels,
-                test_size=test_size,
-                n_estimators=100
+                labels
             )
             print("Trained Gradient Boosted Tree model:", model)
             print("Metrics (Gradient Boosted Tree):", metrics)

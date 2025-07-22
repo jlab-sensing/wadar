@@ -1,6 +1,7 @@
 # Important parameters that I want to stay consistent across different modules.
 
 RANDOM_SEED = 42
+KFOLD_SPLITS = 5
 
 def bulk_density_to_label(bulk_density, soil_type = "silty"):
     """

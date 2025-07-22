@@ -10,7 +10,8 @@ if __name__ == "__main__":
 
     # If combining datasets
     dataset_dirs = ["../data/wet-0-soil-compaction-dataset",
-                    "../data/wet-1-soil-compaction-dataset"]
+                    "../data/wet-1-soil-compaction-dataset",
+                    "../data/wet-2-soil-compaction-dataset"]
     
     target_dir = "../data/combined-soil-compaction-dataset"
 

@@ -9,12 +9,12 @@ from _06_hermes.parameters import num2label, RANDOM_SEED
 import tensorflow as tf
 import time
 from sklearn.metrics import mean_absolute_error
-
+from _06_hermes.parameters import KFOLD_SPLITS
 
 tf.random.set_seed(RANDOM_SEED)
 
 class BabyCNNRegressor:
-    def __init__(self, X, y, test_size=0.2, n_splits=5):
+    def __init__(self, X, y, test_size=0.2, n_splits=KFOLD_SPLITS):
         self.X = self.scale_each_sample(X)
         self.y = y
         self.test_size = test_size
@@ -51,6 +51,43 @@ class BabyCNNRegressor:
 
         return self.model
     
+    def cross_validate(self, epochs):
+        kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=KFOLD_SPLITS)
+        mae = []
+        inference_time = []
+        accuracy = []
+
+        for train_index, val_index in kf.split(self.X):
+            X_train, X_val = self.X[train_index], self.X[val_index]
+            y_train, y_val = self.y[train_index], self.y[val_index]
+
+
+            model = self.build_model(input_shape=(X_train.shape[1], X_train.shape[2]))
+            
+            model.fit(X_train, y_train, epochs=epochs, batch_size=32, verbose=1,
+                        validation_data=(X_val, y_val))
+
+            time_start = time.time()            # done seperately just to measure inference time
+            y_pred = model.predict(X_val)
+            inference_time.append(time.time() - time_start)
+
+            print(y_pred.shape, y_val.shape)
+            cur_mae = mean_absolute_error(y_val, y_pred)
+            mae.append(cur_mae)
+
+            y_labels = [num2label(label) for label in y_val]
+            accuracy.append(np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)]))
+
+        metrics = {
+            'mae': np.mean(mae),
+            'inference_time': np.mean(inference_time),
+            'accuracy': np.mean(accuracy)
+        }
+
+        self.model = model
+
+        return model, metrics
+
     def estimate(self, X):
         X_scaled = self.scale_each_sample(X)
         y_pred = self.model.predict(X_scaled).flatten()

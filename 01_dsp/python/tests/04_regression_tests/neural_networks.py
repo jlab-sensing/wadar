@@ -8,7 +8,6 @@ sys.path.insert(0, parent_dir)
 from _01_gaia.loader import FrameLoader
 import pandas as pd
 
-from _06_hermes.bulk_density_labels import bulk_density_to_label
 from _05_apollo import viz_tools
 from _03_hephaestus import feature_tools
 import tensorflow as tf
@@ -42,19 +41,19 @@ if __name__ == "__main__":
 
     # ===================================================
 
-    # regressor = SimpleRegressor(feature_array, labels, test_size=0.2, kfold_splits=5)
-    # regressor.train()
-    # regressor.evaluate()
-    # # regressor.evaluate_classification(bulk_density_to_label, viz_tools)
+    regressor = SimpleRegressor(feature_array, labels, test_size=0.2, kfold_splits=5)
+    regressor.train()
+    regressor.evaluate()
+    # regressor.evaluate_classification(bulk_density_to_label, viz_tools)
 
    # ===================================================
 
-    hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
-    X = np.abs(hydros.X)
-    y = hydros.y
+    # hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
+    # X = np.abs(hydros.X)
+    # y = hydros.y
 
-    cnn_cv = BabyCNNRegressor(X, y)
-    cnn_cv.cross_validate()
-    cnn_cv.train()
-    cnn_cv.evaluate_holdout()
-    cnn_cv.plot_predictions()
+    # cnn_cv = BabyCNNRegressor(X, y)
+    # cnn_cv.cross_validate()
+    # cnn_cv.train()
+    # cnn_cv.evaluate_holdout()
+    # cnn_cv.plot_predictions()

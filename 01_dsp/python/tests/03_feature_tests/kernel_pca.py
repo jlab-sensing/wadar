@@ -48,7 +48,7 @@ if __name__ == "__main__":
     }
 
 
-    for i in range(100):
+    for i in range(50):
 
         kernel = np.random.choice(param_grid['kernel'])
         gamma = np.random.choice(param_grid['gamma'])
@@ -63,12 +63,10 @@ if __name__ == "__main__":
 
 
         # Train Gradient Boosted Tree model
-        model, metrics = tree.train_random_forest(
+        model, metrics = tree.train_gradient_boosted_tree(
             encoded_features,
             y,
-            test_size=test_size,
-            n_estimators=100,
-            kfold_splits=5
+            n_estimators=100
         )
 
         mae = metrics['mae']
@@ -103,7 +101,6 @@ if __name__ == "__main__":
     ax.set_xlabel('PCA Component 1')
     ax.set_ylabel('PCA Component 2')
     ax.set_zlabel('PCA Component 3')
-    ax.set_title('Kernel PCA Dimensionality Reduction (3D)')
     fig.colorbar(sc, label='Label')
     plt.show()
 

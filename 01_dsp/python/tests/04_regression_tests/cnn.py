@@ -30,11 +30,11 @@ if __name__ == "__main__":
 
     cnn_cv = BabyCNNRegressor(X, y)
 
-    # model = cnn_cv.train()
-    # print("MAE on validation set:", model.evaluate(cnn_cv.X, cnn_cv.y))
-    # cnn_cv.save_model(dataset_dir)
+    model, metrics = cnn_cv.cross_validate(epochs=1000)
+    print("Metrics: ", metrics)
+    cnn_cv.save_model(dataset_dir)
 
-    cnn_cv.load_model(dataset_dir)
+    # cnn_cv.load_model(dataset_dir)
 
     metrics = cnn_cv.evaluate()
 
