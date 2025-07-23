@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-def update_results(model_name, mae, accuracy, inference_time, dataset_dir):
+def update_results(feature_name, model_name, accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir, results_file="results.csv"):
     """
     Update the results CSV file with the latest model performance metrics.
 
@@ -17,21 +17,25 @@ def update_results(model_name, mae, accuracy, inference_time, dataset_dir):
     Returns:
         None
     """
-    
-    results_file = os.path.join(dataset_dir, "results.csv")
+
+    results_file = os.path.join(dataset_dir, results_file)
     if os.path.exists(results_file):
         results_df = pd.read_csv(results_file)
     else:
-        results_df = pd.DataFrame(columns=["Model", "Accuracy", "MAE", "Last Updated", "Inference Time"])
+        results_df = pd.DataFrame(columns=["Feature", "Model", "Accuracy", "MAE", "Last Updated", "Inference Time"])
 
     # Check if entry for this model already exists
 
-    existing_idx = results_df[results_df["Model"] == model_name].index
+    existing_idx = results_df[results_df["Model"] == model_name].index.intersection(results_df[results_df["Feature"] == feature_name].index)
 
     new_row = {
+            "Feature": feature_name,
             "Model": model_name,
             "Accuracy": accuracy,
             "MAE": mae,
+            "RMSE": rmse,
+            "R2": r2,
+            "Training Time": training_time,
             "Last Updated": pd.Timestamp.now(),
             "Inference Time": inference_time
         }

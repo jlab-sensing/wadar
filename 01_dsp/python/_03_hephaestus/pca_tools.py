@@ -15,7 +15,7 @@ class PCAProcessor:
         n_components (int):     Number of components to keep.
     """
 
-    def __init__(self, X, n_components=1):
+    def __init__(self, X, n_components=None):
         """
         Initialize the PCAProcessor with the input data and number of components.
 

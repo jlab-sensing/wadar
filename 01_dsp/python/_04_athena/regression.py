@@ -9,11 +9,11 @@ from sklearn.linear_model import RidgeCV, Ridge
 from sklearn.pipeline import Pipeline
 from _03_hephaestus import feature_tools
 import time
-from _06_hermes.parameters import num2label, RANDOM_SEED
+from _06_hermes.parameters import num2label, RANDOM_SEED, KFOLD_SPLITS
 
 from sklearn.model_selection import KFold
 
-def polynomial_regression(feature_array, labels, degree=1, kfold_splits=5, **kwargs):
+def polynomial_regression(feature_array, labels, degree=1, kfold_splits=KFOLD_SPLITS, **kwargs):
     """
     Performs regularized ridge polynomial regression on the provided features and labels.
 
@@ -25,7 +25,7 @@ def polynomial_regression(feature_array, labels, degree=1, kfold_splits=5, **kwa
 
     Returns:
         None:                       (Model is fit per fold; averaging results.)
-        dict:                       Dictionary with averaged metrics: MAE, R2, Accuracy, Inference Time.
+        dict:                       Dictionary with averaged metrics: MAE, RMSE, R2, Accuracy, Inference Time, Training Time.
     """
 
     X = feature_array
@@ -34,9 +34,11 @@ def polynomial_regression(feature_array, labels, degree=1, kfold_splits=5, **kwa
     kf = KFold(n_splits=kfold_splits, shuffle=True, random_state=RANDOM_SEED)
 
     mae_list = []
+    rmse_list = []
     r2_list = []
     accuracy_list = []
     inference_time_list = []
+    training_time_list = []
 
     for train_index, test_index in kf.split(X):
         X_train, X_test = X[train_index], X[test_index]
@@ -48,25 +50,31 @@ def polynomial_regression(feature_array, labels, degree=1, kfold_splits=5, **kwa
             ('ridge', Ridge(alpha=1000))
         ])
 
+        train_start = time.time()
         model.fit(X_train, y_train)
+        training_time = time.time() - train_start
 
         time_start = time.time()
         y_pred = model.predict(X_test)
         inference_time = time.time() - time_start
 
         mae_list.append(mean_absolute_error(y_test, y_pred))
+        rmse_list.append(np.sqrt(np.mean((y_test - y_pred) ** 2)))
         r2_list.append(r2_score(y_test, y_pred))
 
         y_labels = [num2label(label) for label in y_test]
         fold_accuracy = np.mean([num2label(pred) == y_true for pred, y_true in zip(y_pred, y_labels)])
         accuracy_list.append(fold_accuracy)
         inference_time_list.append(inference_time)
+        training_time_list.append(training_time)
 
     return model, {
         "mae": np.mean(mae_list),
+        "rmse": np.mean(rmse_list),
         "r2": np.mean(r2_list),
         "accuracy": np.mean(accuracy_list),
-        "inference_time": np.mean(inference_time_list)
+        "inference_time": np.mean(inference_time_list),
+        "training_time": np.mean(training_time_list)
     }
 
 def monte_carlo_regression_feature_selection(feature_table, labels, data_dir, degree=1, n_iterations=100):
@@ -108,7 +116,7 @@ def monte_carlo_regression_feature_selection(feature_table, labels, data_dir, de
             best_score = metrics['mae']
             best_features = selected_indices
 
-    feature_table_optimal = feature_table.iloc[:, best_features]
+    feature_table_optimal = feature_table.copy().iloc[:, best_features]
     feature_table_optimal['Label'] = labels
 
     feature_tools.save_feature_table(

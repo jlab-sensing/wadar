@@ -34,15 +34,17 @@ def svr_regression(feature_array, labels, C=1.0, gamma='scale', epsilon=0.1, k_f
         metrics (dict):                Dictionary containing mean evaluation metrics across folds.
     """
 
-    maes, r2s, accuracies, inference_times = [], [], [], []
+    maes, r2s, accuracies, inference_times, rmses, training_times = [], [], [], [], [], []
 
     kf = KFold(n_splits=k_folds, shuffle=True, random_state=RANDOM_SEED)
     for train_idx, test_idx in kf.split(feature_array):
         X_train, X_test = feature_array[train_idx], feature_array[test_idx]
         y_train, y_test = labels[train_idx], labels[test_idx]
 
+        time_train_start = time.time()
         clf = make_pipeline(StandardScaler(), SVR(kernel='rbf', C=C, gamma=gamma, epsilon=epsilon))
         clf.fit(X_train, y_train)
+        training_time = time.time() - time_train_start
 
         time_start = time.time()
         y_pred = clf.predict(X_test)
@@ -50,19 +52,24 @@ def svr_regression(feature_array, labels, C=1.0, gamma='scale', epsilon=0.1, k_f
 
         mae = mean_absolute_error(y_test, y_pred)
         r2 = clf.score(X_test, y_test)
+        rmse = np.sqrt(np.mean((y_test - y_pred) ** 2))
         y_labels = [num2label(label) for label in y_test]
         accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
 
         maes.append(mae)
         r2s.append(r2)
+        rmses.append(rmse)
         accuracies.append(accuracy)
         inference_times.append(inference_time)
-    # Return last trained model and mean metrics
+        training_times.append(training_time)
+    
     metrics = {
         'mae': np.mean(maes),
         'r2': np.mean(r2s),
+        'rmse': np.mean(rmses),
         'accuracy': np.mean(accuracies),
-        'inference_time': np.mean(inference_times)
+        'inference_time': np.mean(inference_times),
+        'training_time': np.mean(training_times)
     }
     return clf, metrics
 
@@ -143,7 +150,7 @@ def monte_carlo_svr_feature_selection(feature_table, labels, data_dir, n_iterati
             best_features = selected_indices
             best_params = best_params
 
-    feature_table_optimal = feature_table.iloc[:, best_features].copy()
+    feature_table_optimal = feature_table.copy().iloc[:, best_features]
     feature_table_optimal['Label'] = labels
 
     feature_tools.save_feature_table(

@@ -19,23 +19,25 @@ def train_random_forest(feature_array, labels, n_estimators=n_estimators, kfold_
     Args:
         feature_array (np.ndarray):    Array of features of shape (samples, features).
         labels (np.ndarray):           Array of labels of shape (samples,).
-        test_size (float):             Proportion of the dataset to include in the test split.
         n_estimators (int):            Number of trees in the forest.
+        kfold_splits (int):            Number of K-Fold splits.
 
     Returns:
         model (RandomForestRegressor): Trained Random Forest model.
-        dict:                          Dictionary containing evaluation metrics such as MAE, R2, accuracy, and inference time.
+        dict:                          Dictionary containing evaluation metrics such as MAE, RMSE, R2, accuracy, training time, and inference time.
     """
     kf = KFold(n_splits=kfold_splits, shuffle=True, random_state=RANDOM_SEED)
-    maes, r2s, accuracies, inference_times = [], [], [], []
+    maes, rmses, r2s, accuracies, inference_times, training_times = [], [], [], [], [], []
     models = []
 
     for train_index, test_index in kf.split(feature_array):
         X_train, X_test = feature_array[train_index], feature_array[test_index]
         y_train, y_test = labels[train_index], labels[test_index]
 
+        train_start = time.time()
         model = RandomForestRegressor(n_estimators=n_estimators, random_state=RANDOM_SEED)
         model.fit(X_train, y_train)
+        training_time = time.time() - train_start
         models.append(model)
 
         time_start = time.time()
@@ -43,20 +45,24 @@ def train_random_forest(feature_array, labels, n_estimators=n_estimators, kfold_
         inference_time = time.time() - time_start
 
         mae = mean_absolute_error(y_test, y_pred)
+        rmse = np.sqrt(np.mean((y_test - y_pred) ** 2))
         r2 = r2_score(y_test, y_pred)
         y_labels = [num2label(label) for label in y_test]
         accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
 
         maes.append(mae)
+        rmses.append(rmse)
         r2s.append(r2)
         accuracies.append(accuracy)
         inference_times.append(inference_time)
+        training_times.append(training_time)
 
-    # Use the last trained model for return (or you could refit on all data if desired)
     return models[-1], {
         'mae': np.mean(maes),
+        'rmse': np.mean(rmses),
         'r2': np.mean(r2s),
         'accuracy': np.mean(accuracies),
+        'training_time': np.mean(training_times),
         'inference_time': np.mean(inference_times)
     }
 
@@ -101,7 +107,7 @@ def monte_carlo_random_tree_feature_selection(feature_table, labels, data_dir, n
             best_score = metrics_rf['mae']
             best_features = selected_indices
 
-    feature_table_optimal = feature_table.iloc[:, best_features]
+    feature_table_optimal = feature_table.copy().iloc[:, best_features]
     feature_table_optimal['Label'] = labels
 
     feature_tools.save_feature_table(
@@ -117,25 +123,26 @@ def train_gradient_boosted_tree(feature_array, labels, n_estimators=n_estimators
     Args:
         feature_array (np.ndarray):    Array of features of shape (samples, features).
         labels (np.ndarray):           Array of labels of shape (samples,).
-        test_size (float):             Not used (kept for compatibility).
         n_estimators (int):            Number of boosting rounds.
         kfold_splits (int):            Number of K-Fold splits.
 
     Returns:
         model (XGBRegressor):          Last trained XGBoost model.
-        dict:                          Dictionary containing averaged evaluation metrics (MAE, R2, accuracy, inference time).
+        dict:                          Dictionary containing averaged evaluation metrics (MAE, RMSE, R2, accuracy, training time, inference time).
     """
 
     kf = KFold(n_splits=kfold_splits, shuffle=True, random_state=RANDOM_SEED)
-    maes, r2s, accuracies, inference_times = [], [], [], []
+    maes, rmses, r2s, accuracies, inference_times, training_times = [], [], [], [], [], []
     models = []
 
     for train_index, test_index in kf.split(feature_array):
         X_train, X_test = feature_array[train_index], feature_array[test_index]
         y_train, y_test = labels[train_index], labels[test_index]
 
+        train_start = time.time()
         model = XGBRegressor(n_estimators=n_estimators, random_state=RANDOM_SEED, verbosity=0)
         model.fit(X_train, y_train)
+        training_time = time.time() - train_start
         models.append(model)
 
         time_start = time.time()
@@ -143,19 +150,24 @@ def train_gradient_boosted_tree(feature_array, labels, n_estimators=n_estimators
         inference_time = time.time() - time_start
 
         mae = mean_absolute_error(y_test, y_pred)
+        rmse = np.sqrt(np.mean((y_test - y_pred) ** 2))
         r2 = r2_score(y_test, y_pred)
         y_labels = [num2label(label) for label in y_test]
         accuracy = np.mean([num2label(pred) == y for pred, y in zip(y_pred, y_labels)])
 
         maes.append(mae)
+        rmses.append(rmse)
         r2s.append(r2)
         accuracies.append(accuracy)
         inference_times.append(inference_time)
+        training_times.append(training_time)
 
     return models[-1], {
         'mae': np.mean(maes),
+        'rmse': np.mean(rmses),
         'r2': np.mean(r2s),
         'accuracy': np.mean(accuracies),
+        'training_time': np.mean(training_times),
         'inference_time': np.mean(inference_times)
     }
 
@@ -200,7 +212,7 @@ def monte_carlo_gradient_boosted_tree_feature_selection(feature_table, labels, d
             best_score = metrics['mae']
             best_features = selected_indices
 
-    feature_table_optimal = feature_table.iloc[:, best_features]
+    feature_table_optimal = feature_table.copy().iloc[:, best_features]
     feature_table_optimal['Label'] = labels
 
     feature_tools.save_feature_table(
