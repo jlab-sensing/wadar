@@ -15,11 +15,33 @@ from sklearn.model_selection import KFold
 
 class PretrainedCNN:
     """
-    cite https://www.tensorflow.org/tutorials/images/transfer_learning
+    Pretrained CNN model for image classification. Much of the code is adapter from 
+    https://www.tensorflow.org/tutorials/images/transfer_learning.
+
+    Args:
+        X (np.ndarray):                Array of images of shape (samples, height, width). 
+                                       For raw radargrams, it should be of shape (samples, fast time, slow time).
+        y (np.ndarray):                Array of labels of shape (samples,).
+        output_dir (str):              Directory to save images and labels.
+        img_size (tuple):              Size to which images will be resized (default: (160, 160)).
+        batch_size (int):              Batch size for training (default: 32).
     """
 
-
     def __init__(self, X, y, output_dir, img_size=(160, 160), batch_size=32):
+        """
+        Initialize the PretrainedCNN with images and labels.
+
+        Args:
+            X (np.ndarray):                Array of images of shape (samples, height, width).
+            y (np.ndarray):                Array of labels of shape (samples,).
+            output_dir (str):              Directory to save images and labels.
+            img_size (tuple):              Size to which images will be resized (default: (160, 160)).
+            batch_size (int):              Batch size for training (default: 32
+
+        Returns:
+            None
+        """
+
         self.X = X
         self.y = y
         self.output_dir = output_dir
@@ -31,6 +53,17 @@ class PretrainedCNN:
         self.model = None
     
     def full_monty(self, epochs=10):
+        """
+        Run the full training and evaluation process.
+
+        Args:
+            epochs (int):                 Number of epochs for training (default: 10).
+
+        Returns:
+            model (tf.keras.Model):       The trained model.
+            metrics (dict):               Dictionary containing evaluation metrics.
+        """
+
         self.prepare_data()
         _, metrics = self.cross_validation(epochs=epochs)
         model = self.train_full(epochs=epochs)
@@ -38,6 +71,12 @@ class PretrainedCNN:
         return model, metrics
 
     def prepare_data(self):
+        """
+        Prepare the dataset by saving images and labels to the output directory.
+
+        Returns:
+            None
+        """
 
         # Save images and labels
         for idx, sample in enumerate(self.X):
@@ -56,6 +95,14 @@ class PretrainedCNN:
 
 
     def load_dataset(self):
+        """
+        Load the dataset from the output directory.
+
+        Returns:
+            images (np.ndarray):           Array of images of shape (samples, height, width, 3).
+            labels (np.ndarray):           Array of labels of shape (samples,).
+        """
+
         df = pd.read_csv(os.path.join(self.output_dir, "labels.csv"))
 
         def load_image(filename):
@@ -78,6 +125,15 @@ class PretrainedCNN:
         return images, labels
 
     def build_model(self, train_dataset=None):
+        """
+        Build the CNN model using a pre-trained MobileNetV2 as the base model.
+
+        Args:
+            train_dataset (tf.data.Dataset): Dataset for training (optional, used for input shape).
+
+        Returns:
+            None
+        """
 
         # Rescale pixel values 
         rescale = tf.keras.layers.Rescaling(1./127.5, offset=-1) # Rescale from [0, 255] to [-1, 1]
@@ -126,6 +182,18 @@ class PretrainedCNN:
         print("Number of trainable variables:", len(self.model.trainable_variables))
 
     def train(self, train_dataset, validation_dataset, epochs=10):
+        """
+        Train the CNN model.
+
+        Args:
+            train_dataset (tf.data.Dataset):        Dataset for training.
+            validation_dataset (tf.data.Dataset):   Dataset for validation.
+            epochs (int):                           Number of epochs for training (default: 10).
+
+        Returns:
+            history (tf.keras.callbacks.History):   Training history.
+        """ 
+
         base_learning_rate = 0.0001
         self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
                            loss=tf.keras.losses.BinaryCrossentropy(),
@@ -143,6 +211,12 @@ class PretrainedCNN:
         """
         Train the model with the entire dataset. Should only be used after cross-validation, as any validation
         done with this method will not be representative.
+
+        Args:
+            epochs (int):                 Number of epochs for training (default: 10).
+
+        Returns:
+            None
         """
 
         images, labels = self.load_dataset()
@@ -164,7 +238,17 @@ class PretrainedCNN:
 
 
     def cross_validation(self, epochs=10, kfold_splits=KFOLD_SPLITS):
+        """
+        Perform K-Fold cross-validation on the dataset.
 
+        Args:
+            epochs (int):                 Number of epochs for training (default: 10).
+            kfold_splits (int):           Number of K-Fold splits (default: KFOLD_SPLITS).
+
+        Returns:
+            fold_histories (list):       List of training histories for each fold.
+            metrics (dict):              Dictionary containing average metrics across folds.
+        """
 
         images, labels = self.load_dataset()
 
