@@ -6,98 +6,78 @@ import sys
 import tensorflow as tf
 from tensorflow.data import Dataset
 from _01_gaia.loader import FrameLoader
-from _06_hermes.parameters import num2label
+from _06_hermes.parameters import num2label, KFOLD_SPLITS, RANDOM_SEED
 import pandas as pd
 from PIL import Image
+import time
+from sklearn.model_selection import KFold
+
 
 class PretrainedCNN:
-    def __init__(self, dataset_dir, output_dir, img_size=(160, 160), batch_size=32):
-        self.dataset_dir = dataset_dir
+    """
+    cite https://www.tensorflow.org/tutorials/images/transfer_learning
+    """
+
+
+    def __init__(self, X, y, output_dir, img_size=(160, 160), batch_size=32):
+        self.X = X
+        self.y = y
         self.output_dir = output_dir
         self.img_size = img_size
         self.batch_size = batch_size
         os.makedirs(self.output_dir, exist_ok=True)
         self.labels = []
         self.df = None
-        self.train_dataset = None
-        self.validation_dataset = None
-        self.test_dataset = None
         self.model = None
+    
+    def full_monty(self, epochs=10):
+        self.prepare_data()
+        _, metrics = self.cross_validation(epochs=epochs)
+        model = self.train_full(epochs=epochs)
+
+        return model, metrics
 
     def prepare_data(self):
-        hydros = FrameLoader(self.dataset_dir, new_dataset=False, ddc_flag=True)
-        X = np.abs(hydros.X)
-        y = hydros.y
-
-        print("X shape:", X.shape)
 
         # Save images and labels
-        for idx, sample in enumerate(X):
-            sample_min = sample.min()           # normalize to 0-255 
+        for idx, sample in enumerate(self.X):
+            sample_min = sample.min()           # normalize to 0-255
             sample_max = sample.max()
             normalized_sample = 255 * (sample - sample_min) / (sample_max - sample_min + 1e-8)
             img = Image.fromarray(normalized_sample.astype(np.uint8))
-            label = y[idx]
+            label = self.y[idx]
             file_name =  f"sample_{idx:03d}.png"
             img.save(os.path.join(self.output_dir, file_name))
             self.labels.append({'filename': file_name, 'label': label})
 
-        print(f"Saved {len(X)} images to {self.output_dir}")
+        print(f"Saved {len(self.X)} images to {self.output_dir}")
         self.df = pd.DataFrame(self.labels)
         self.df.to_csv(os.path.join(self.output_dir, "labels.csv"), index=False)
 
-    def preprocess(self):
-        # https://www.tensorflow.org/tutorials/images/transfer_learning
-        # ====================================================
-        # Data preprocessing
-        # ====================================================
 
+    def load_dataset(self):
         df = pd.read_csv(os.path.join(self.output_dir, "labels.csv"))
-        class_names = df['label'].values
-        class_labels = [num2label(label) for label in class_names]
 
         def load_image(filename):
             img_path = os.path.join(self.output_dir, filename)
             img = Image.open(img_path).convert('RGB')
             img = img.resize(self.img_size)
-            img_array = np.array(img)
-            return img_array
+            return np.array(img)
 
         images = []
-        labels_numeric = []
+        labels = []
 
         for idx, row in df.iterrows():
             img_array = load_image(row['filename'])
             images.append(img_array)
-            labels_numeric.append(int(df.loc[idx, 'label']))  # or float if regression
+            labels.append(int(row['label']))  # Change to float for regression
 
         images = np.stack(images)
-        labels_numeric = np.array(labels_numeric)
+        labels = np.array(labels)
 
-        # Split into train/validation (e.g., 80/20 split)
-        split_idx = int(0.8 * len(images))
-        train_images, val_images = images[:split_idx], images[split_idx:]
-        train_labels, val_labels = labels_numeric[:split_idx], labels_numeric[split_idx:]
+        return images, labels
 
-        self.train_dataset = Dataset.from_tensor_slices((train_images, train_labels)).batch(self.batch_size)
-        self.validation_dataset = Dataset.from_tensor_slices((val_images, val_labels)).batch(self.batch_size)
-
-        val_batches = tf.data.experimental.cardinality(self.validation_dataset)
-        self.test_dataset = self.validation_dataset.take(val_batches // 5)
-        self.validation_dataset = self.validation_dataset.skip(val_batches // 5)
-
-        print('Number of validation batches: %d' % tf.data.experimental.cardinality(self.validation_dataset))
-        print('Number of test batches: %d' % tf.data.experimental.cardinality(self.test_dataset))
-
-        # Configure the dataset for performance
-        AUTOTUNE = tf.data.AUTOTUNE
-        self.train_dataset = self.train_dataset.prefetch(buffer_size=AUTOTUNE)
-        self.validation_dataset = self.validation_dataset.prefetch(buffer_size=AUTOTUNE)
-        self.test_dataset = self.test_dataset.prefetch(buffer_size=AUTOTUNE)
-
-    def build_model(self):
-        # No data augmentation because radargrams are slow time x fast time, can't be flipped or 
-        # rotated like images.
+    def build_model(self, train_dataset=None):
 
         # Rescale pixel values 
         rescale = tf.keras.layers.Rescaling(1./127.5, offset=-1) # Rescale from [0, 255] to [-1, 1]
@@ -112,7 +92,7 @@ class PretrainedCNN:
                                                        include_top=False,
                                                        weights='imagenet')
         
-        image_batch, label_batch = next(iter(self.train_dataset))
+        image_batch, label_batch = next(iter(train_dataset))
         feature_batch = base_model(image_batch)
         print(feature_batch.shape)
 
@@ -145,18 +125,83 @@ class PretrainedCNN:
         self.model.summary()
         print("Number of trainable variables:", len(self.model.trainable_variables))
 
-    def train(self, initial_epochs=10):
+    def train(self, train_dataset, validation_dataset, epochs=10):
         base_learning_rate = 0.0001
         self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
                            loss=tf.keras.losses.BinaryCrossentropy(),
                            metrics=[tf.keras.metrics.BinaryAccuracy(threshold=0.5, name='accuracy')])
-        
-        loss0, accuracy0 = self.model.evaluate(self.validation_dataset)
 
-        history = self.model.fit(self.train_dataset,
-                                epochs=initial_epochs,
-                                validation_data=self.validation_dataset)
+        loss0, accuracy0 = self.model.evaluate(validation_dataset)
+
+        history = self.model.fit(train_dataset,
+                                epochs=epochs,
+                                validation_data=validation_dataset)
         return history
+
+
+    def train_full(self, epochs=10):
+        """
+        Train the model with the entire dataset. Should only be used after cross-validation, as any validation
+        done with this method will not be representative.
+        """
+
+        images, labels = self.load_dataset()
+
+        train_ds = Dataset.from_tensor_slices((images, labels)).batch(self.batch_size)
+
+        AUTOTUNE = tf.data.AUTOTUNE
+        train_ds = train_ds.prefetch(buffer_size=AUTOTUNE)
+        train_dataset = train_ds
+
+        self.build_model(train_dataset) # in case it was not called before
+
+        base_learning_rate = 0.0001
+        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
+                           loss=tf.keras.losses.BinaryCrossentropy(),
+                           metrics=[tf.keras.metrics.BinaryAccuracy(threshold=0.5, name='accuracy')])
+
+        return self.model
+
+
+    def cross_validation(self, epochs=10, kfold_splits=KFOLD_SPLITS):
+
+
+        images, labels = self.load_dataset()
+
+        kf = KFold(n_splits=kfold_splits, shuffle=True, random_state=RANDOM_SEED)
+
+        fold_histories = []
+        fold_accuracies = []
+
+        for fold, (train_idx, val_idx) in enumerate(kf.split(images)):
+            print(f"\n===== Fold {fold+1}/{kfold_splits} =====")
+
+            train_images, val_images = images[train_idx], images[val_idx]
+            train_labels, val_labels = labels[train_idx], labels[val_idx]
+
+            train_ds = Dataset.from_tensor_slices((train_images, train_labels)).batch(self.batch_size)
+            val_ds = Dataset.from_tensor_slices((val_images, val_labels)).batch(self.batch_size)
+
+            AUTOTUNE = tf.data.AUTOTUNE
+            train_ds = train_ds.prefetch(buffer_size=AUTOTUNE)
+            val_ds = val_ds.prefetch(buffer_size=AUTOTUNE)
+
+            train_dataset = train_ds
+            validation_dataset = val_ds
+
+            self.build_model(train_dataset)
+            history = self.train(train_dataset, validation_dataset, epochs=epochs)
+
+            fold_histories.append(history)
+            val_acc = history.history['val_accuracy'][-1]
+            fold_accuracies.append(val_acc)
+            print(f"Fold {fold+1} validation accuracy: {val_acc:.4f}")
+
+        metrics = {
+            'accuracy': np.mean(fold_accuracies)
+        }
+
+        return fold_histories, metrics
 
     def plot_history(self, history):
         acc = history.history['accuracy']
