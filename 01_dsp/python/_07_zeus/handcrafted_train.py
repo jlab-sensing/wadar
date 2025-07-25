@@ -14,6 +14,7 @@ import pandas as pd
 from _04_athena import tree
 import _04_athena.svr as svr
 from pickle import dump
+from _04_athena.multi_later_percepetron import MultiLaterPercepetron, monte_carlo_mlp_feature_selection
 
 def save_sklearn_model(dataset_dir, poly_model, model_name):
     save_path = os.path.join(dataset_dir, f"models/model_{model_name.lower().replace(' ', '_')}.pkl")
@@ -22,7 +23,7 @@ def save_sklearn_model(dataset_dir, poly_model, model_name):
 
 if __name__ == "__main__":
 
-    n_iterations = 1          # Number of iterations for Monte Carlo feature selection
+    n_iterations = 100          # Number of iterations for Monte Carlo feature selection
     
     # When combining datasets,
     # dataset_dirs = [
@@ -190,3 +191,26 @@ if __name__ == "__main__":
 
     update_results("Handcrafted", "SVR", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
     save_sklearn_model(dataset_dir, model, "SVR")
+
+    # ==============
+    # Neural networks
+    # ==============
+
+    monte_carlo_mlp_feature_selection(feature_table, labels, dataset_dir, n_iterations=n_iterations)
+
+    _, feature_array, feature_names, labels = feature_tools.load_feature_table(
+        dataset_dir, "models/feature_mlp_monte_carlo.csv"
+    )
+
+    mlp = MultiLaterPercepetron(feature_array, labels)
+    model, metrics = mlp.full_monty()
+
+    mae = metrics["mae"]
+    rmse = metrics["rmse"]
+    r2 = metrics["r2"]
+    training_time = metrics["training_time"]
+    inference_time = metrics["inference_time"]
+    accuracy = metrics["accuracy"]
+
+    update_results("Handcrafted", "MLP", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+    mlp.save_model(model, dataset_dir)

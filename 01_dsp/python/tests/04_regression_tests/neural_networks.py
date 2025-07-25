@@ -11,7 +11,7 @@ import pandas as pd
 from _05_apollo import viz_tools
 from _03_hephaestus import feature_tools
 import tensorflow as tf
-from _04_athena.simple_models import SimpleRegressor
+from _04_athena.multi_later_percepetron import MultiLaterPercepetron, monte_carlo_mlp_feature_selection
 from _04_athena.cnn_models import BabyCNNRegressor
 
 tf.get_logger().setLevel('ERROR')
@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     VIZ = False  # Set to True to visualize features
     
-    dataset_dir = "../../data/combined-soil-compaction-dataset"
+    dataset_dir = "../../data/training-dataset"
     feature_file_name = "features.csv"
     test_size = 0.2
 
@@ -31,29 +31,31 @@ if __name__ == "__main__":
     # feature_table = hephaestus_features.feature_full_monty(y, dataset_dir)
 
     # If using an existing feature set,
-    feature_table, _, _, _ = feature_tools.load_feature_table(
+    feature_table, _, _, labels = feature_tools.load_feature_table(
         dataset_dir, feature_file_name)
-    
-    df_best, mi_scores = feature_tools.mutual_info_minimize_features(feature_table, top_n=10)
-    feature_tools.save_feature_table(df_best, dataset_dir, "features_mutual_info.csv")
-    _, feature_array, feature_names, labels = feature_tools.load_feature_table(
-        dataset_dir, "features_mutual_info.csv")
 
     # ===================================================
 
-    regressor = SimpleRegressor(feature_array, labels, test_size=0.2, kfold_splits=5)
-    regressor.train()
-    regressor.evaluate()
-    # regressor.evaluate_classification(bulk_density_to_label, viz_tools)
+    monte_carlo_mlp_feature_selection(feature_table, labels, dataset_dir, n_iterations=2)
 
-   # ===================================================
+    _, feature_array, feature_names, labels = feature_tools.load_feature_table(
+        dataset_dir, "models/feature_mlp_monte_carlo.csv"
+    )
 
-    # hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
-    # X = np.abs(hydros.X)
-    # y = hydros.y
+    mlp = MultiLaterPercepetron(feature_array, labels)
+    model, metrics = mlp.full_monty()
 
-    # cnn_cv = BabyCNNRegressor(X, y)
-    # cnn_cv.cross_validate()
-    # cnn_cv.train()
-    # cnn_cv.evaluate_holdout()
-    # cnn_cv.plot_predictions()
+    mae = metrics["mae"]
+    rmse = metrics["rmse"]
+    r2 = metrics["r2"]
+    training_time = metrics["training_time"]
+    inference_time = metrics["inference_time"]
+    accuracy = metrics["accuracy"]
+
+    print("Cross-Validation Results:")
+    print(f"MAE: {mae:.4f}")
+    print(f"RMSE: {rmse:.4f}")
+    print(f"R2: {r2:.4f}")
+    print(f"Training Time: {training_time:.4f} seconds")
+    print(f"Inference Time: {inference_time:.4f} seconds")
+    print(f"Accuracy: {accuracy:.4f}")

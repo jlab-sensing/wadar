@@ -11,7 +11,7 @@ from _04_athena import tree
 from _03_hephaestus import feature_tools
 from _05_apollo import viz_tools
 from _03_hephaestus.pca_tools import PCAProcessor
-from _04_athena.simple_models import SimpleRegressor
+from _04_athena.simple_models import MultiLaterPercepetron
 
 
 if __name__ == "__main__":
@@ -41,16 +41,16 @@ if __name__ == "__main__":
 
 
     # Using PCAProcessor to perform dimensionality reduction
-    regressor = SimpleRegressor(features, y, test_size=test_size, kfold_splits=5)
-    regressor.train()
+    regressor = MultiLaterPercepetron(features, y, test_size=test_size, kfold_splits=5)
+    regressor.cross_validate()
     metrics_both = regressor.evaluate()
 
-    regressor_angle = SimpleRegressor(features_angle, y, test_size=test_size, kfold_splits=5)
-    regressor_angle.train()
+    regressor_angle = MultiLaterPercepetron(features_angle, y, test_size=test_size, kfold_splits=5)
+    regressor_angle.cross_validate()
     metrics_angle = regressor_angle.evaluate()
 
-    regressor_magnitude = SimpleRegressor(features_magnitude, y, test_size=test_size, kfold_splits=5)
-    regressor_magnitude.train()
+    regressor_magnitude = MultiLaterPercepetron(features_magnitude, y, test_size=test_size, kfold_splits=5)
+    regressor_magnitude.cross_validate()
     metrics_magnitude = regressor_magnitude.evaluate()
 
 
@@ -62,8 +62,8 @@ if __name__ == "__main__":
     _, feature_array, feature_names, labels = feature_tools.load_feature_table(
         dataset_dir, "features_mutual_info.csv")
     
-    regressor_manual = SimpleRegressor(feature_array, labels, test_size=test_size, kfold_splits=5)
-    regressor_manual.train()
+    regressor_manual = MultiLaterPercepetron(feature_array, labels, test_size=test_size, kfold_splits=5)
+    regressor_manual.cross_validate()
     metrics_manual = regressor_manual.evaluate()
 
     print("Manually selected features metrics:", metrics_manual)
