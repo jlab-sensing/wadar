@@ -4,6 +4,7 @@ from sklearn.metrics import mean_squared_error
 import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Input
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 from _05_apollo import viz_tools
@@ -42,12 +43,15 @@ class MultiLaterPercepetron:
         dropout_rate=0.5
 
         model = Sequential()
-        model.add(Dense(hidden_units_1, input_dim=input_dim, activation='relu'))
+        model.add(Input(shape=(input_dim,)))
+        model.add(Dense(hidden_units_1, activation='relu'))
         model.add(Dropout(dropout_rate))
         model.add(Dense(hidden_units_2, activation='relu'))
         model.add(Dropout(dropout_rate))
         model.add(Dense(1))  # Regression output
-        model.compile(loss='mae', optimizer='adam')
+
+        model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+
         self.model = model
 
     def cross_validate(self, epochs=20, batch_size=32):

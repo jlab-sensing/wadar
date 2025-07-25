@@ -16,6 +16,13 @@ import _04_athena.svr as svr
 from pickle import dump
 from _04_athena.multi_later_percepetron import MultiLaterPercepetron, monte_carlo_mlp_feature_selection
 
+# Enable and disable different model training and evaluation sections as needed.
+REGRESSION = False
+RANDOM_FOREST = False
+GRADIENT_BOOSTED_TREE = False
+SVR = False
+NEURAL_NETWORKS = True
+
 def save_sklearn_model(dataset_dir, poly_model, model_name):
     save_path = os.path.join(dataset_dir, f"models/model_{model_name.lower().replace(' ', '_')}.pkl")
     with open(save_path, 'wb') as f:
@@ -49,168 +56,182 @@ if __name__ == "__main__":
     feature_table, feature_array, feature_names, labels = feature_tools.load_feature_table(dataset_dir)
 
     # ==============
+    # Neural networks
+    # ==============
+
+    if NEURAL_NETWORKS:
+
+        # Crashing for some reason
+        # monte_carlo_mlp_feature_selection(feature_table, labels, dataset_dir, n_iterations=n_iterations)
+
+        # _, feature_array, feature_names, labels = feature_tools.load_feature_table(
+        #     dataset_dir, "models/feature_mlp_monte_carlo.csv"
+        # )
+
+        _, feature_array, feature_names, labels = feature_tools.load_feature_table(dataset_dir)
+
+
+        mlp = MultiLaterPercepetron(feature_array, labels)
+        model, metrics = mlp.full_monty()
+
+        mae = metrics["mae"]
+        rmse = metrics["rmse"]
+        r2 = metrics["r2"]
+        training_time = metrics["training_time"]
+        inference_time = metrics["inference_time"]
+        accuracy = metrics["accuracy"]
+
+        update_results("Handcrafted", "MLP", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+        mlp.save_model(model, dataset_dir)
+
+    # ==============
     # Evaluating ridge regression models
     # ==============
 
-    print("Evaluating ridge regression models...")
+    if REGRESSION:
 
-    for degree in [1, 2, 3]:
+        print("Evaluating ridge regression models...")
 
-        print(f"Degree {degree} Monte Carlo Feature Selection")
+        for degree in [1, 2, 3]:
 
-        mc_results = regression.monte_carlo_regression_feature_selection(
-            feature_table, labels, dataset_dir, degree=degree, n_iterations=n_iterations
-        )
+            print(f"Degree {degree} Monte Carlo Feature Selection")
 
-        feature_table, feature_array, _, labels = feature_tools.load_feature_table(
-            dataset_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
-        )
-        poly_model, poly_metrics = regression.polynomial_regression(
-            feature_array, labels, degree=degree, kfold_splits=5
-        )
+            mc_results = regression.monte_carlo_regression_feature_selection(
+                feature_table, labels, dataset_dir, degree=degree, n_iterations=n_iterations
+            )
 
-    for degree in [1, 2, 3]:
+            feature_table, feature_array, _, labels = feature_tools.load_feature_table(
+                dataset_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
+            )
+            poly_model, poly_metrics = regression.polynomial_regression(
+                feature_array, labels, degree=degree, kfold_splits=5
+            )
 
-        _, feature_array, _, labels = feature_tools.load_feature_table(
-            dataset_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
-        )
+        for degree in [1, 2, 3]:
 
-        poly_model, poly_metrics = regression.polynomial_regression(
-            feature_array, labels, degree=degree, kfold_splits=5
-        )
+            _, feature_array, _, labels = feature_tools.load_feature_table(
+                dataset_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
+            )
 
-        mae = poly_metrics["mae"]
-        rmse = poly_metrics["rmse"]
-        r2 = poly_metrics["r2"]
-        accuracy = poly_metrics["accuracy"]
-        inference_time = poly_metrics["inference_time"]
-        training_time = poly_metrics["training_time"]
+            poly_model, poly_metrics = regression.polynomial_regression(
+                feature_array, labels, degree=degree, kfold_splits=5
+            )
 
-        model_name = f"Regression Degree {degree}"
+            mae = poly_metrics["mae"]
+            rmse = poly_metrics["rmse"]
+            r2 = poly_metrics["r2"]
+            accuracy = poly_metrics["accuracy"]
+            inference_time = poly_metrics["inference_time"]
+            training_time = poly_metrics["training_time"]
 
-        update_results("Handcrafted", model_name, accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
-        save_sklearn_model(dataset_dir, poly_model, model_name)
+            model_name = f"Regression Degree {degree}"
 
-    print()
-    print()
+            update_results("Handcrafted", model_name, accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+            save_sklearn_model(dataset_dir, poly_model, model_name)
+
+        print()
+        print()
 
     # ==============
     # Evaluating Random Forest models
     # ==============
 
-    print("Evaluating Random Forest models...")
+    if RANDOM_FOREST:
 
-    tree.monte_carlo_random_tree_feature_selection(
-        feature_table,
-        labels,
-        dataset_dir,
-        n_iterations=n_iterations,
-    )
+        print("Evaluating Random Forest models...")
 
-    feature_table, feature_array, _, labels = feature_tools.load_feature_table(
-        dataset_dir, "models/feature_random_forest_monte_carlo.csv"
-    )
+        tree.monte_carlo_random_tree_feature_selection(
+            feature_table,
+            labels,
+            dataset_dir,
+            n_iterations=n_iterations,
+        )
 
-    model_rf, metrics_rf = tree.train_random_forest(
-        feature_array,
-        labels
-    )
+        feature_table, feature_array, _, labels = feature_tools.load_feature_table(
+            dataset_dir, "models/feature_random_forest_monte_carlo.csv"
+        )
 
-    mae = metrics_rf["mae"]
-    r2 = metrics_rf["r2"]
-    accuracy = metrics_rf["accuracy"]
-    inference_time = metrics_rf["inference_time"]
-    training_time = metrics_rf["training_time"]
-    rmse = metrics_rf["rmse"]
+        model_rf, metrics_rf = tree.train_random_forest(
+            feature_array,
+            labels
+        )
 
-    update_results("Handcrafted", "Random Forest", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
-    save_sklearn_model(dataset_dir, model_rf, "Random Forest")
+        mae = metrics_rf["mae"]
+        r2 = metrics_rf["r2"]
+        accuracy = metrics_rf["accuracy"]
+        inference_time = metrics_rf["inference_time"]
+        training_time = metrics_rf["training_time"]
+        rmse = metrics_rf["rmse"]
 
-    print()
-    print()
+        update_results("Handcrafted", "Random Forest", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+        save_sklearn_model(dataset_dir, model_rf, "Random Forest")
+
+        print()
+        print()
 
     # ==============
     # Evaluating Gradient Boosted Tree models
     # ==============
 
-    print("Evaluating Gradient Boosted Tree models...")
+    if GRADIENT_BOOSTED_TREE:
 
-    tree.monte_carlo_gradient_boosted_tree_feature_selection(
-        feature_table,
-        labels,
-        dataset_dir,
-        n_iterations=n_iterations,
-    )
+        print("Evaluating Gradient Boosted Tree models...")
 
-    feature_table, feature_array, _, labels = feature_tools.load_feature_table(
-        dataset_dir, "models/feature_gradient_boosted_tree_monte_carlo.csv"
-    )
+        tree.monte_carlo_gradient_boosted_tree_feature_selection(
+            feature_table,
+            labels,
+            dataset_dir,
+            n_iterations=n_iterations,
+        )
 
-    model, metrics = tree.train_gradient_boosted_tree(
-        feature_array,
-        labels
-    )
+        feature_table, feature_array, _, labels = feature_tools.load_feature_table(
+            dataset_dir, "models/feature_gradient_boosted_tree_monte_carlo.csv"
+        )
 
-    mae = metrics["mae"]
-    r2 = metrics["r2"]
-    accuracy = metrics["accuracy"]
-    inference_time = metrics["inference_time"] 
-    training_time = metrics["training_time"]
-    rmse = metrics["rmse"]
+        model, metrics = tree.train_gradient_boosted_tree(
+            feature_array,
+            labels
+        )
 
-    update_results("Handcrafted", "Gradient Boosted Tree", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
-    save_sklearn_model(dataset_dir, model, "Gradient Boosted Tree")
+        mae = metrics["mae"]
+        r2 = metrics["r2"]
+        accuracy = metrics["accuracy"]
+        inference_time = metrics["inference_time"] 
+        training_time = metrics["training_time"]
+        rmse = metrics["rmse"]
 
-    print()
-    print()
+        update_results("Handcrafted", "Gradient Boosted Tree", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+        save_sklearn_model(dataset_dir, model, "Gradient Boosted Tree")
+
+        print()
+        print()
 
     # ==============
     # Evaluating SVR models
     # ==============
 
-    print("Evaluating SVR models...")
+    if SVR:
 
-    feature_table = svr.monte_carlo_svr_feature_selection(
-        feature_table, labels, dataset_dir, n_iterations=n_iterations
-    )
-    
-    feature_table, feature_array, feature_names, labels = feature_tools.load_feature_table(
-        dataset_dir, "models/feature_svr_monte_carlo.csv"
-    )
+        print("Evaluating SVR models...")
 
-    model, metrics = svr.svr_regression(
-        feature_array, labels
-    )
+        feature_table = svr.monte_carlo_svr_feature_selection(
+            feature_table, labels, dataset_dir, n_iterations=n_iterations
+        )
+        
+        feature_table, feature_array, feature_names, labels = feature_tools.load_feature_table(
+            dataset_dir, "models/feature_svr_monte_carlo.csv"
+        )
 
-    mae = metrics['mae']
-    r2 = metrics['r2']
-    accuracy = metrics['accuracy']
-    inference_time = metrics['inference_time']
-    training_time = metrics['training_time']
-    rmse = metrics['rmse']
+        model, metrics = svr.svr_regression(
+            feature_array, labels
+        )
 
-    update_results("Handcrafted", "SVR", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
-    save_sklearn_model(dataset_dir, model, "SVR")
+        mae = metrics['mae']
+        r2 = metrics['r2']
+        accuracy = metrics['accuracy']
+        inference_time = metrics['inference_time']
+        training_time = metrics['training_time']
+        rmse = metrics['rmse']
 
-    # ==============
-    # Neural networks
-    # ==============
-
-    monte_carlo_mlp_feature_selection(feature_table, labels, dataset_dir, n_iterations=n_iterations)
-
-    _, feature_array, feature_names, labels = feature_tools.load_feature_table(
-        dataset_dir, "models/feature_mlp_monte_carlo.csv"
-    )
-
-    mlp = MultiLaterPercepetron(feature_array, labels)
-    model, metrics = mlp.full_monty()
-
-    mae = metrics["mae"]
-    rmse = metrics["rmse"]
-    r2 = metrics["r2"]
-    training_time = metrics["training_time"]
-    inference_time = metrics["inference_time"]
-    accuracy = metrics["accuracy"]
-
-    update_results("Handcrafted", "MLP", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
-    mlp.save_model(model, dataset_dir)
+        update_results("Handcrafted", "SVR", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+        save_sklearn_model(dataset_dir, model, "SVR")
