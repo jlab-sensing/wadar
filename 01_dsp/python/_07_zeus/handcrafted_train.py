@@ -1,4 +1,4 @@
-# This script evaluates various classical machine learning models on a dataset with handcrafted features.
+# This script trains various regression machine learning models on a dataset with handcrafted features.
 
 import os
 import sys
@@ -13,46 +13,39 @@ from _06_hermes.logger import update_results
 import pandas as pd
 from _04_athena import tree
 import _04_athena.svr as svr
+from pickle import dump
+
+def save_sklearn_model(dataset_dir, poly_model, model_name):
+    save_path = os.path.join(dataset_dir, f"models/model_{model_name.lower().replace(' ', '_')}.pkl")
+    with open(save_path, 'wb') as f:
+        dump(poly_model, f)
 
 if __name__ == "__main__":
 
-    n_iterations = 1000 # maybe this should be a parameter?
+    n_iterations = 1          # Number of iterations for Monte Carlo feature selection
+    
+    # When combining datasets,
+    # dataset_dirs = [
+    #     "../data/wet-0-soil-compaction-dataset",
+    #     "../data/wet-1-soil-compaction-dataset",
+    #     "../data/wet-2-soil-compaction-dataset"]
+    # target_dir = "../data/training-dataset"
+    # dataset_raw = dataset.combine_datasets(dataset_dirs, target_dir)
+    # dataset_dir = target_dir
+    # new_dataset = True
 
-    dataset_dirs = []
-
-    args = sys.argv[1:]
-
-    if len(args) < 1:
-        print("Usage: python PrepareDataset.py <dataset_dir> [new_dataset]")
-        sys.exit(1)
-
-    if len(args) == 2:
-        dataset_dir = args[0]
-        dataset_raw = dataset.Dataset(dataset_dir)
-    else:
-        target_dir = args[0]
-        dataset_dirs = args[1:]
-        dataset_raw = dataset.combine_datasets(dataset_dirs, target_dir)
-        dataset_dir = target_dir
-
-    if os.path.exists(dataset_dir + "/X_raw.npy") and os.path.exists(dataset_dir + "/y_raw.npy"):
-        new_dataset = False
-    else:
-        new_dataset = True
+    # When the dataset is already combined,
+    dataset_dir = "../data/training-dataset"
+    new_dataset = False
 
     hydros = loader.FrameLoader(dataset_dir, new_dataset=new_dataset, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
-    print("X shape:", X.shape)
-    print("y shape:", y.shape)
-
-    hephaestus_features = feature_tools.FeatureTools(X)
-    feature_table = hephaestus_features.feature_full_monty(y, dataset_dir)
+    if new_dataset:
+        hephaestus_features = feature_tools.FeatureTools(X)
+        feature_table = hephaestus_features.feature_full_monty(y, dataset_dir)
 
     feature_table, feature_array, feature_names, labels = feature_tools.load_feature_table(dataset_dir)
-
-    print("Feature table shape:", feature_table.shape)
-
 
     # ==============
     # Evaluating ridge regression models
@@ -69,7 +62,7 @@ if __name__ == "__main__":
         )
 
         feature_table, feature_array, _, labels = feature_tools.load_feature_table(
-            dataset_dir, f"feature_linear_regression_{degree}_monte_carlo.csv"
+            dataset_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
         )
         poly_model, poly_metrics = regression.polynomial_regression(
             feature_array, labels, degree=degree, kfold_splits=5
@@ -78,7 +71,8 @@ if __name__ == "__main__":
     for degree in [1, 2, 3]:
 
         _, feature_array, _, labels = feature_tools.load_feature_table(
-            dataset_dir, f"feature_linear_regression_{degree}_monte_carlo.csv")
+            dataset_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
+        )
 
         poly_model, poly_metrics = regression.polynomial_regression(
             feature_array, labels, degree=degree, kfold_splits=5
@@ -93,8 +87,9 @@ if __name__ == "__main__":
 
         model_name = f"Regression Degree {degree}"
 
-        update_results(model_name, accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
-    
+        update_results("Handcrafted", model_name, accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+        save_sklearn_model(dataset_dir, poly_model, model_name)
+
     print()
     print()
 
@@ -112,7 +107,7 @@ if __name__ == "__main__":
     )
 
     feature_table, feature_array, _, labels = feature_tools.load_feature_table(
-        dataset_dir, "feature_random_forest_monte_carlo.csv"
+        dataset_dir, "models/feature_random_forest_monte_carlo.csv"
     )
 
     model_rf, metrics_rf = tree.train_random_forest(
@@ -127,7 +122,8 @@ if __name__ == "__main__":
     training_time = metrics_rf["training_time"]
     rmse = metrics_rf["rmse"]
 
-    update_results("Random Forest", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+    update_results("Handcrafted", "Random Forest", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+    save_sklearn_model(dataset_dir, model_rf, "Random Forest")
 
     print()
     print()
@@ -146,7 +142,7 @@ if __name__ == "__main__":
     )
 
     feature_table, feature_array, _, labels = feature_tools.load_feature_table(
-        dataset_dir, "feature_gradient_boosted_tree_monte_carlo.csv"
+        dataset_dir, "models/feature_gradient_boosted_tree_monte_carlo.csv"
     )
 
     model, metrics = tree.train_gradient_boosted_tree(
@@ -161,7 +157,8 @@ if __name__ == "__main__":
     training_time = metrics["training_time"]
     rmse = metrics["rmse"]
 
-    update_results("Gradient Boosted Tree", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+    update_results("Handcrafted", "Gradient Boosted Tree", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+    save_sklearn_model(dataset_dir, model, "Gradient Boosted Tree")
 
     print()
     print()
@@ -177,7 +174,7 @@ if __name__ == "__main__":
     )
     
     feature_table, feature_array, feature_names, labels = feature_tools.load_feature_table(
-        dataset_dir, "feature_svr_monte_carlo.csv"
+        dataset_dir, "models/feature_svr_monte_carlo.csv"
     )
 
     model, metrics = svr.svr_regression(
@@ -191,4 +188,5 @@ if __name__ == "__main__":
     training_time = metrics['training_time']
     rmse = metrics['rmse']
 
-    update_results("SVR", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+    update_results("Handcrafted", "SVR", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
+    save_sklearn_model(dataset_dir, model, "SVR")

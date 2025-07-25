@@ -62,6 +62,9 @@ def svr_regression(feature_array, labels, C=1.0, gamma='scale', epsilon=0.1, k_f
         accuracies.append(accuracy)
         inference_times.append(inference_time)
         training_times.append(training_time)
+
+    model = SVR(kernel='rbf', C=C, gamma=gamma, epsilon=epsilon)
+    model.fit(feature_array, labels)
     
     metrics = {
         'mae': np.mean(maes),
@@ -71,7 +74,7 @@ def svr_regression(feature_array, labels, C=1.0, gamma='scale', epsilon=0.1, k_f
         'inference_time': np.mean(inference_times),
         'training_time': np.mean(training_times)
     }
-    return clf, metrics
+    return model, metrics
 
 def tune_svr(feature_array, labels):
     """
@@ -156,7 +159,7 @@ def monte_carlo_svr_feature_selection(feature_table, labels, data_dir, n_iterati
     feature_tools.save_feature_table(
         feature_table_optimal,
         data_dir,
-        "feature_svr_monte_carlo.csv"
+        "models/feature_svr_monte_carlo.csv"
     )
 
     # save best params as a json file

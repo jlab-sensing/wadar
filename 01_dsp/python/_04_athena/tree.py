@@ -57,6 +57,9 @@ def train_random_forest(feature_array, labels, n_estimators=n_estimators, kfold_
         inference_times.append(inference_time)
         training_times.append(training_time)
 
+    model = RandomForestRegressor(n_estimators=n_estimators, random_state=RANDOM_SEED)
+    model.fit(feature_array, labels)
+
     return models[-1], {
         'mae': np.mean(maes),
         'rmse': np.mean(rmses),
@@ -111,7 +114,7 @@ def monte_carlo_random_tree_feature_selection(feature_table, labels, data_dir, n
     feature_table_optimal['Label'] = labels
 
     feature_tools.save_feature_table(
-        feature_table_optimal, data_dir, "feature_random_forest_monte_carlo.csv"
+        feature_table_optimal, data_dir, "models/feature_random_forest_monte_carlo.csv"
     )
 
     return feature_array[:, best_features], feature_table.columns[best_features].tolist(), labels
@@ -161,6 +164,9 @@ def train_gradient_boosted_tree(feature_array, labels, n_estimators=n_estimators
         accuracies.append(accuracy)
         inference_times.append(inference_time)
         training_times.append(training_time)
+
+    model = XGBRegressor(n_estimators=n_estimators, random_state=RANDOM_SEED, verbosity=0)
+    model.fit(feature_array, labels)
 
     return models[-1], {
         'mae': np.mean(maes),
@@ -216,7 +222,7 @@ def monte_carlo_gradient_boosted_tree_feature_selection(feature_table, labels, d
     feature_table_optimal['Label'] = labels
 
     feature_tools.save_feature_table(
-        feature_table_optimal, data_dir, "feature_gradient_boosted_tree_monte_carlo.csv"
+        feature_table_optimal, data_dir, "models/feature_gradient_boosted_tree_monte_carlo.csv"
     )
 
     return feature_array[:, best_features], feature_table.columns[best_features].tolist(), labels

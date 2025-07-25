@@ -68,6 +68,14 @@ def polynomial_regression(feature_array, labels, degree=1, kfold_splits=KFOLD_SP
         inference_time_list.append(inference_time)
         training_time_list.append(training_time)
 
+    model = Pipeline([
+        ('poly', PolynomialFeatures(degree=degree, include_bias=False)),
+        ('scaler', StandardScaler()),
+        ('ridge', Ridge(alpha=1000))
+    ])
+
+    model.fit(X, y)
+
     return model, {
         "mae": np.mean(mae_list),
         "rmse": np.mean(rmse_list),
@@ -120,7 +128,7 @@ def monte_carlo_regression_feature_selection(feature_table, labels, data_dir, de
     feature_table_optimal['Label'] = labels
 
     feature_tools.save_feature_table(
-        feature_table_optimal, data_dir, f"feature_linear_regression_{degree}_monte_carlo.csv"
+        feature_table_optimal, data_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
     )
 
     return feature_array[:, best_features], feature_table.columns[best_features].tolist(), labels

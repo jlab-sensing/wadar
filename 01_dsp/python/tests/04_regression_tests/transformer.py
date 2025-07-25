@@ -320,4 +320,4 @@ if __name__ == "__main__":
 
     print("Cross-validation metrics:", metrics)
 
-    update_results("BLIP Regression", "BLIP Regression", metrics['accuracy'], metrics['mae'], metrics['rmse'], metrics['r2'], metrics['training_time'], metrics['inference_time'], dataset_dir)
+    update_results("N/A", "BLIP Regression", metrics['accuracy'], metrics['mae'], metrics['rmse'], metrics['r2'], metrics['training_time'], metrics['inference_time'], dataset_dir)

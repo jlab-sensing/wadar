@@ -641,7 +641,8 @@ def save_feature_table(feature_table, destination, feature_file_name='features_s
     if not os.path.exists(destination):
         os.makedirs(destination)
     feature_table.to_csv(os.path.join(destination, feature_file_name), index=False)
-    print(f"Feature table saved to {os.path.join(destination, feature_file_name)}")
+
+    # print(f"Feature table saved to {os.path.join(destination, feature_file_name)}")
 
 def load_feature_table(dir, feature_file_name='features.csv'):
     """

@@ -19,3 +19,13 @@ def bulk_density_to_label(bulk_density: float, soil_type: str = "silty") -> str:
             return "Non-ideal"
 
 num2label = bulk_density_to_label       # So that if I want to change the function later for a different labeling scheme, I can do it in one place.
+
+# Naming conventions
+# For models: model_{model_name}_{feature_name}.pkl
+# For feature extraction or dimensionality reduction: feature_{method}.pkl
+
+def model_name(feature_name, model_type):
+    return f"model_{model_type.lower().replace(' ', '_')}_{feature_name.lower().replace(' ', '_')}.pkl"
+
+def feature_extraction_name(method):
+    return f"feature_{method.lower().replace(' ', '_')}.pkl"
