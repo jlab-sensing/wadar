@@ -18,6 +18,10 @@ import requests
 from PIL import Image
 from transformers import BlipProcessor, BlipForConditionalGeneration
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
+from _06_hermes.parameters import KFOLD_SPLITS, RANDOM_SEED, num2label
+from sklearn.metrics import mean_absolute_error, accuracy_score, mean_squared_error, r2_score
+import time
 
 class RadarData2Image(Dataset):
     def __init__(self, X, y, processor):
@@ -81,29 +85,135 @@ class TransformerRegressionHead(nn.Module):
         self.pool = nn.AdaptiveAvgPool1d(1)
         self.regressor = nn.Linear(output_dim, 1)       # Encoder's output is averaged (pooled) and run through a linear layer to produce a single regression output.
 
-    def full_monty(self, X, y, processor):
+        for param in self.encoder.parameters():
+            param.requires_grad = False                 # Freezes the encoder's parameters to prevent them from being updated during training.
+
+    def train_full(self, X, y, processor, epochs=10, batch_size=4, save_dir=None):
         """
-        Full training and evaluation pipeline for the model.
-        """
-
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2)
-
-        # Wraps the radar data into a PyTorch Dataset
-        train_dataset = RadarData2Image(X_train, y_train, processor)
-        val_dataset = RadarData2Image(X_val, y_val, processor)
-        train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=1)
-
-        # Loading data into the model in batches. 
+        Trains the regression model on the provided radar data. TODO: Verify that this works.
         
+        Args:
+            X (np.ndarray):             Radar data of shape (N, H, W).
+            y (np.ndarray):             Labels corresponding to the radar data.
+            processor (BlipProcessor):  Processor for BLIP that formats input for the model.
+            epochs (int):               Number of training epochs.
+            batch_size (int):           Batch size for training.
+            save_dir (str):             Directory to save the trained model.
+                
+        Returns:
+            self (nn.Module):           The trained regression model.
+        """
+
+        # Set device to GPU if available, otherwise CPU
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        dataset = RadarData2Image(X, y, processor)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
         optimizer = torch.optim.AdamW(self.parameters(), lr=1e-4)
         loss_fn = nn.L1Loss()
 
-        # Standard training loop
-        for epoch in range(10):
-            train_loss = train(self, train_loader, optimizer, loss_fn, device)
-            val_loss, preds, trues = evaluate(self, val_loader, loss_fn, device)
-            print(f"Epoch {epoch}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}")
+        for epoch in range(epochs):
+            train_loss = train(self, dataloader, optimizer, loss_fn, device)
+            print(f"Epoch {epoch}: Train Loss = {train_loss:.4f}")
+        
+        if save_dir:
+            os.makedirs(save_dir, exist_ok=True)
+            torch.save(self.state_dict(), os.path.join(save_dir, "transformer.pth"))
+
+        return self
+    
+    def inference(self, X, processor, batch_size=4):
+        """
+        Runs inference on the model using the provided radar data. TODO: Verify that this works.
+
+        Args:
+            X (np.ndarray):             Radar data of shape (N, H, W).
+            processor (BlipProcessor):  Processor for BLIP that formats input for the model.
+            batch_size (int):           Batch size for inference.
+
+        Returns:
+            np.ndarray: Predicted regression outputs.
+        """
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.eval()
+        
+        dataset = RadarData2Image(X, None, processor)
+        dataloader = DataLoader(dataset, batch_size=batch_size)
+
+        preds = []
+        with torch.no_grad():
+            for inputs, _ in dataloader:
+                inputs = {k: v.to(device) for k, v in inputs.items()}
+                outputs = self(inputs['pixel_values'])
+                preds.extend(outputs.cpu().numpy())
+        
+        return np.array(preds)
+
+    def full_monty_eval(self, X, y, processor, epochs=10, batch_size=4):
+        """
+        Full training and evaluation pipeline for the model.
+
+        Args:
+            X (np.ndarray):             Radar data of shape (N, H, W).
+            y (np.ndarray):             Labels corresponding to the radar data.
+            processor (BlipProcessor):  Processor for BLIP that formats input for the model.
+
+        Returns:
+            dict: A dictionary containing evaluation metrics such as MAE, accuracy, RMSE, R2 score, inference time, and training time.
+        """
+
+        # Set device to GPU if available, otherwise CPU
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=RANDOM_SEED)
+        
+        mae = []
+        accuracy = []
+        rmse = []
+        inference_times = []
+        training_times = []
+        r2 = []
+
+        for fold, (train_idx, val_idx) in enumerate(kf.split(X)):
+            X_train, X_val = X[train_idx], X[val_idx]
+            y_train, y_val = y[train_idx], y[val_idx]
+
+            train_dataset = RadarData2Image(X_train, y_train, processor)
+            val_dataset = RadarData2Image(X_val, y_val, processor)
+            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+            val_loader = DataLoader(val_dataset, batch_size=batch_size)
+
+            optimizer = torch.optim.AdamW(self.parameters(), lr=1e-4)
+            loss_fn = nn.L1Loss()
+
+            print(f"Fold {fold+1}")
+            start_time = time.time()
+            for epoch in range(epochs):
+                train_loss = train(self, train_loader, optimizer, loss_fn, device)
+                start_time_2 = time.time()
+                val_loss, preds, trues = evaluate(self, val_loader, loss_fn, device)
+                inference_time = time.time() - start_time_2
+                print(f"  Epoch {epoch}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}, Time Passed = {time.time() - start_time:.2f}s")
+
+            training_times.append(time.time() - start_time)
+            inference_times.append(inference_time)
+
+            mae.append(mean_absolute_error(trues, preds))
+            y_labels = [num2label(label) for label in trues]
+            accuracy.append(np.mean([num2label(pred) == y for pred, y in zip(preds, y_labels)]))
+            rmse.append(np.sqrt(mean_squared_error(trues, preds)))
+            r2.append(r2_score(trues, preds))
+
+        return {
+            "mae": np.mean(mae),
+            "accuracy": np.mean(accuracy),
+            "rmse": np.mean(rmse),
+            "r2": np.mean(r2),
+            "inference_time": np.mean(inference_times),
+            "training_time": np.mean(training_times)
+        }
 
     def forward(self, pixel_values):
         """
@@ -192,6 +302,12 @@ if __name__ == "__main__":
     # Loads model from https://huggingface.co/Salesforce/blip-image-captioning-large
     processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-large")
     blip = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-large").to(device)
+    output_dim = blip.vision_model.config.hidden_size
+
+    # Loads model from Salesforce/blip-image-captioning-base (lighter version)
+    # processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+    # blip = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base").to(device)
+    # output_dim = blip.vision_model.config.hidden_size
 
     # Load and split the data
     dataset_dir = "../../data/combined-soil-compaction-dataset"
@@ -199,5 +315,9 @@ if __name__ == "__main__":
     X = np.abs(hydros.X)
     y = hydros.y
 
-    model = TransformerRegressionHead(blip, output_dim=1024).to(device)
-    model.full_monty(X, y, processor)
+    model = TransformerRegressionHead(blip, output_dim=output_dim).to(device)
+    metrics = model.full_monty_eval(X, y, processor, epochs=10, batch_size=32)
+
+    print("Cross-validation metrics:", metrics)
+
+    update_results("BLIP Regression", "BLIP Regression", metrics['accuracy'], metrics['mae'], metrics['rmse'], metrics['r2'], metrics['training_time'], metrics['inference_time'], dataset_dir)
