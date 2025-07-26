@@ -23,9 +23,9 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from _06_hermes.parameters import num2label
 
 # Enable and disable different model training and evaluation sections as needed.
-CNN_1D = True
-PRETRAINED_CNN = True
-TRANSFORMER = False
+CNN_1D = False
+PRETRAINED_CNN = False
+TRANSFORMER = True
 
 tf.get_logger().setLevel('ERROR')
 

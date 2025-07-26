@@ -19,6 +19,8 @@ import pickle
 from _05_apollo.viz_tools import plot_accuracy_mae
 from pickle import dump, load
 from _06_hermes.parameters import model_name, feature_extraction_name
+from _03_hephaestus.autoencoder import AutoencoderFeatureSelector
+from _04_athena.pretrained_cnn import PretrainedCNNFeatureExtractor
 
 IMPROVEMENT_THRESHOLD = 1e-4  # threshold for improvement in MAE to consider
 N_COMPONENTS = 16  
@@ -134,6 +136,8 @@ if __name__ == "__main__":
     dataset_dir = "../data/training-dataset"
     new_dataset = False
 
+    image_dir = os.path.join(dataset_dir, "images")
+
     # ==============================================================================
 
     hydros = loader.FrameLoader(dataset_dir, new_dataset=new_dataset, ddc_flag=True)
@@ -176,6 +180,62 @@ if __name__ == "__main__":
 
     evaluate_classical_models(features, y, "PCA Combined", dataset_dir, model_dir)
 
-    results = pd.read_csv(os.path.join(dataset_dir, "learned_classical_results.csv"))
+    # ==============
+    # Autoencoder
+    # ==============
 
+    X = np.abs(X)  
+    feature_extractor = AutoencoderFeatureSelector(X, encoding_dim=N_COMPONENTS)
+    features_autoencoder = feature_extractor.fit(epochs=30, batch_size=32, test_size=0.2)
+    feature_extractor.save_model(model_dir, model_name("feature_autoencoder_amplitude.keras"))
+
+    evaluate_classical_models(features_autoencoder, y, "Autoencoder Amplitude", dataset_dir, model_dir)
+
+    X = np.angle(X)
+    feature_extractor = AutoencoderFeatureSelector(X, encoding_dim=N_COMPONENTS)
+    features_autoencoder_phase = feature_extractor.fit(epochs=30, batch_size=32, test_size=0.2)
+    feature_extractor.save_model(model_dir, model_name("feature_autoencoder_phase.keras"))
+    evaluate_classical_models(features_autoencoder_phase, y, "Autoencoder Phase", dataset_dir, model_dir)
+
+    # Combine the features from both autoencoders
+    num_of_features = int(N_COMPONENTS / 2)
+    features_autoencoder_combined = np.concatenate(
+        [features_autoencoder_phase[:, :num_of_features], features_autoencoder[:, :num_of_features]], axis=1
+    )
+    evaluate_classical_models(features_autoencoder_combined, y, "Autoencoder Combined", dataset_dir, model_dir)
+
+    # ==============
+    # Pretrained CNN
+    # ==============
+
+    epochs = 30
+
+    feature_extractor = PretrainedCNNFeatureExtractor(X, 
+                                                      output_dir=model_dir, 
+                                                      dimensions=N_COMPONENTS)
+    model, features_cnn = feature_extractor.fit(epochs=epochs)
+
+    feature_extractor.save_model(model_dir, model_name("feature_cnn_amplitude.keras"))
+
+    evaluate_classical_models(features_cnn, y, "CNN Amplitude", dataset_dir, model_dir)
+
+    X = np.angle(X)
+    feature_extractor = PretrainedCNNFeatureExtractor(X,
+                                                      output_dir=model_dir,
+                                                      dimensions=N_COMPONENTS)
+    model, features_cnn_phase = feature_extractor.fit(epochs=epochs)
+
+    feature_extractor.save_model(model_dir, model_name("feature_cnn_phase.keras"))
+    evaluate_classical_models(features_cnn_phase, y, "CNN Phase", dataset_dir, model_dir)
+
+    # Combine the features from both CNNs
+    num_of_features = int(N_COMPONENTS / 2)
+    features_cnn_combined = np.concatenate(
+        [features_cnn_phase[:, :num_of_features], features_cnn[:, :num_of_features]], axis=1
+    )
+    evaluate_classical_models(features_cnn_combined, y, "CNN Combined", dataset_dir, model_dir)
+
+    # ======================================================================
+
+    results = pd.read_csv(os.path.join(dataset_dir, "learned_classical_results.csv"))
     plot_accuracy_mae(results)

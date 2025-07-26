@@ -10,7 +10,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.decomposition import PCA
 
-# Lots sourced from https://hex.tech/blog/autoencoders-for-feature-selection/
 class AutoencoderFeatureSelector: 
     """
     AutoencoderFeatureSelector is a class to perform feature selection using an autoencoder.

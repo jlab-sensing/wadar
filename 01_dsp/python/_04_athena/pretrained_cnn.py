@@ -43,7 +43,6 @@ class PretrainedCNNFeatureExtractor:
         """
 
         self.X = X
-        self.y = y
         self.output_dir = output_dir
         self.img_size = img_size
         self.dimensions = dimensions

@@ -111,41 +111,52 @@ class TransformerRegressionHead(nn.Module):
             print(f"Epoch {epoch}: Train Loss = {train_loss:.4f}")
         
         if save_dir:
-            os.makedirs(save_dir, exist_ok=True)
             torch.save(self.state_dict(), save_dir)
 
         return self
     
     def load_model(self, model_path):
+        """
+        Loads a pre-trained model from the specified path.
+
+        Args:
+            model_path (str): Path to the saved model file.
+
+        Returns:
+            None
+        """
+
         self.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
         self.eval()
-    
-    def predict(self, X, processor, batch_size=4):
+
+    def predict(self, X, processor, batch_size=4, device=None):
         """
-        Runs inference on the model using the provided radar data. TODO: Verify that this works.
+        Predicts regression outputs for the given radar data.
 
         Args:
             X (np.ndarray):             Radar data of shape (N, H, W).
             processor (BlipProcessor):  Processor for BLIP that formats input for the model.
-            batch_size (int):           Batch size for inference.
+            batch_size (int):           Batch size for prediction.
+            device (str, optional):     Device to run the model on ('cuda' or 'cpu'). If None, auto-detect.
 
         Returns:
             np.ndarray: Predicted regression outputs.
         """
-
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.to(device)
         self.eval()
-        
-        dataset = RadarData2Image(X, None, processor)
+
+        dataset = RadarData2Image(X, np.zeros(len(X)), processor)
         dataloader = DataLoader(dataset, batch_size=batch_size)
 
         preds = []
         with torch.no_grad():
-            for inputs, _ in dataloader:
-                inputs = {k: v.to(device) for k, v in inputs.items()}
-                outputs = self(inputs['pixel_values'])
+            for batch in dataloader:
+                inputs, _ = batch
+                pixel_values = inputs['pixel_values'].to(device)
+                outputs = self(pixel_values)
                 preds.extend(outputs.cpu().numpy())
-        
         return np.array(preds)
 
     def full_monty_eval(self, X, y, processor, epochs=10, batch_size=4):
