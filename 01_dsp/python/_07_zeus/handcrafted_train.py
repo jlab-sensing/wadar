@@ -3,24 +3,22 @@
 import os
 import sys
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)) # https://stackoverflow.com/questions/21005822/what-does-os-path-abspathos-path-joinos-path-dirname-file-os-path-pardir
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 sys.path.insert(0, parent_dir)
-from _01_gaia import dataset
 from _01_gaia import loader
 from _03_hephaestus import feature_tools
 from _04_athena import regression
 from _06_hermes.logger import update_results
-import pandas as pd
 from _04_athena import tree
 import _04_athena.svr as svr
 from pickle import dump
-from _04_athena.multi_later_percepetron import MultiLaterPercepetron, monte_carlo_mlp_feature_selection
+from _04_athena.multi_later_percepetron import MultiLaterPercepetron
 
-# Enable and disable different model training and evaluation sections as needed.
-REGRESSION = False
-RANDOM_FOREST = False
-GRADIENT_BOOSTED_TREE = False
-SVR = False
+# Enable and disable different model training sections as needed.
+REGRESSION = True
+RANDOM_FOREST = True
+GRADIENT_BOOSTED_TREE = True
+SVR = True
 NEURAL_NETWORKS = True
 
 def save_sklearn_model(dataset_dir, poly_model, model_name):
@@ -30,7 +28,7 @@ def save_sklearn_model(dataset_dir, poly_model, model_name):
 
 if __name__ == "__main__":
 
-    n_iterations = 100          # Number of iterations for Monte Carlo feature selection
+    n_iterations = 100  # Number of iterations for Monte Carlo feature selection
     
     # When combining datasets,
     # dataset_dirs = [
@@ -60,16 +58,9 @@ if __name__ == "__main__":
     # ==============
 
     if NEURAL_NETWORKS:
-
-        # Crashing for some reason
-        # monte_carlo_mlp_feature_selection(feature_table, labels, dataset_dir, n_iterations=n_iterations)
-
-        # _, feature_array, feature_names, labels = feature_tools.load_feature_table(
-        #     dataset_dir, "models/feature_mlp_monte_carlo.csv"
-        # )
+        print("Training Multi-Layer Perceptron model...")
 
         _, feature_array, feature_names, labels = feature_tools.load_feature_table(dataset_dir)
-
 
         mlp = MultiLaterPercepetron(feature_array, labels)
         model, metrics = mlp.full_monty()
@@ -83,32 +74,26 @@ if __name__ == "__main__":
 
         update_results("Handcrafted", "MLP", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
         mlp.save_model(model, dataset_dir)
+        
+        print(f"MLP Training Complete - Accuracy: {accuracy:.3f}, MAE: {mae:.3f}")
+        print()
 
     # ==============
-    # Evaluating ridge regression models
+    # Ridge Regression Models
     # ==============
 
     if REGRESSION:
-
-        print("Evaluating ridge regression models...")
+        print("Training ridge regression models...")
 
         for degree in [1, 2, 3]:
+            print(f"Training Degree {degree} regression with Monte Carlo feature selection...")
 
-            print(f"Degree {degree} Monte Carlo Feature Selection")
-
-            mc_results = regression.monte_carlo_regression_feature_selection(
+            # Perform Monte Carlo feature selection
+            regression.monte_carlo_regression_feature_selection(
                 feature_table, labels, dataset_dir, degree=degree, n_iterations=n_iterations
             )
 
-            feature_table, feature_array, _, labels = feature_tools.load_feature_table(
-                dataset_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
-            )
-            poly_model, poly_metrics = regression.polynomial_regression(
-                feature_array, labels, degree=degree, kfold_splits=5
-            )
-
-        for degree in [1, 2, 3]:
-
+            # Load selected features and train model
             _, feature_array, _, labels = feature_tools.load_feature_table(
                 dataset_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
             )
@@ -117,6 +102,7 @@ if __name__ == "__main__":
                 feature_array, labels, degree=degree, kfold_splits=5
             )
 
+            # Extract metrics
             mae = poly_metrics["mae"]
             rmse = poly_metrics["rmse"]
             r2 = poly_metrics["r2"]
@@ -126,36 +112,34 @@ if __name__ == "__main__":
 
             model_name = f"Regression Degree {degree}"
 
+            # Save results and model
             update_results("Handcrafted", model_name, accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
             save_sklearn_model(dataset_dir, poly_model, model_name)
+            
+            print(f"Degree {degree} Complete - Accuracy: {accuracy:.3f}, MAE: {mae:.3f}")
 
-        print()
         print()
 
     # ==============
-    # Evaluating Random Forest models
+    # Random Forest Models
     # ==============
 
     if RANDOM_FOREST:
+        print("Training Random Forest models...")
 
-        print("Evaluating Random Forest models...")
-
+        # Perform Monte Carlo feature selection
         tree.monte_carlo_random_tree_feature_selection(
-            feature_table,
-            labels,
-            dataset_dir,
-            n_iterations=n_iterations,
+            feature_table, labels, dataset_dir, n_iterations=n_iterations
         )
 
+        # Load selected features and train model
         feature_table, feature_array, _, labels = feature_tools.load_feature_table(
             dataset_dir, "models/feature_random_forest_monte_carlo.csv"
         )
 
-        model_rf, metrics_rf = tree.train_random_forest(
-            feature_array,
-            labels
-        )
+        model_rf, metrics_rf = tree.train_random_forest(feature_array, labels)
 
+        # Extract metrics
         mae = metrics_rf["mae"]
         r2 = metrics_rf["r2"]
         accuracy = metrics_rf["accuracy"]
@@ -163,36 +147,33 @@ if __name__ == "__main__":
         training_time = metrics_rf["training_time"]
         rmse = metrics_rf["rmse"]
 
+        # Save results and model
         update_results("Handcrafted", "Random Forest", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
         save_sklearn_model(dataset_dir, model_rf, "Random Forest")
-
-        print()
+        
+        print(f"Random Forest Complete - Accuracy: {accuracy:.3f}, MAE: {mae:.3f}")
         print()
 
     # ==============
-    # Evaluating Gradient Boosted Tree models
+    # Gradient Boosted Tree Models
     # ==============
 
     if GRADIENT_BOOSTED_TREE:
+        print("Training Gradient Boosted Tree models...")
 
-        print("Evaluating Gradient Boosted Tree models...")
-
+        # Perform Monte Carlo feature selection
         tree.monte_carlo_gradient_boosted_tree_feature_selection(
-            feature_table,
-            labels,
-            dataset_dir,
-            n_iterations=n_iterations,
+            feature_table, labels, dataset_dir, n_iterations=n_iterations
         )
 
+        # Load selected features and train model
         feature_table, feature_array, _, labels = feature_tools.load_feature_table(
             dataset_dir, "models/feature_gradient_boosted_tree_monte_carlo.csv"
         )
 
-        model, metrics = tree.train_gradient_boosted_tree(
-            feature_array,
-            labels
-        )
+        model, metrics = tree.train_gradient_boosted_tree(feature_array, labels)
 
+        # Extract metrics
         mae = metrics["mae"]
         r2 = metrics["r2"]
         accuracy = metrics["accuracy"]
@@ -200,32 +181,33 @@ if __name__ == "__main__":
         training_time = metrics["training_time"]
         rmse = metrics["rmse"]
 
+        # Save results and model
         update_results("Handcrafted", "Gradient Boosted Tree", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
         save_sklearn_model(dataset_dir, model, "Gradient Boosted Tree")
-
-        print()
+        
+        print(f"Gradient Boosted Tree Complete - Accuracy: {accuracy:.3f}, MAE: {mae:.3f}")
         print()
 
     # ==============
-    # Evaluating SVR models
+    # Support Vector Regression Models
     # ==============
 
     if SVR:
+        print("Training SVR models...")
 
-        print("Evaluating SVR models...")
-
-        feature_table = svr.monte_carlo_svr_feature_selection(
+        # Perform Monte Carlo feature selection
+        svr.monte_carlo_svr_feature_selection(
             feature_table, labels, dataset_dir, n_iterations=n_iterations
         )
         
+        # Load selected features and train model
         feature_table, feature_array, feature_names, labels = feature_tools.load_feature_table(
             dataset_dir, "models/feature_svr_monte_carlo.csv"
         )
 
-        model, metrics = svr.svr_regression(
-            feature_array, labels
-        )
+        model, metrics = svr.svr_regression(feature_array, labels)
 
+        # Extract metrics
         mae = metrics['mae']
         r2 = metrics['r2']
         accuracy = metrics['accuracy']
@@ -233,5 +215,10 @@ if __name__ == "__main__":
         training_time = metrics['training_time']
         rmse = metrics['rmse']
 
+        # Save results and model
         update_results("Handcrafted", "SVR", accuracy, mae, rmse, r2, training_time, inference_time, dataset_dir)
         save_sklearn_model(dataset_dir, model, "SVR")
+        
+        print(f"SVR Complete - Accuracy: {accuracy:.3f}, MAE: {mae:.3f}")
+
+    print("Training complete!")
