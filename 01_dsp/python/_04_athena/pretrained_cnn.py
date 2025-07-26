@@ -27,7 +27,7 @@ class PretrainedCNNFeatureExtractor:
         batch_size (int):              Batch size for training (default: 32).
     """
 
-    def __init__(self, X, y, output_dir, dimensions=128, img_size=(160, 160), batch_size=32):
+    def __init__(self, X, y, output_dir, dimensions=16, img_size=(160, 160), batch_size=32):
         """
         Initialize the PretrainedCNN with images and labels.
 
@@ -205,14 +205,44 @@ class PretrainedCNNFeatureExtractor:
 
         self.build_model(train_dataset) # in case it was not called before
 
+        initial_epochs = epochs // 2
+        fine_tune_epochs = epochs - initial_epochs
+
+        self.base_model.trainable = False
         base_learning_rate = 0.0001
         self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
                            loss=tf.keras.losses.MeanAbsoluteError(),
                            metrics=[tf.keras.metrics.MeanAbsoluteError(name='mae')])
-        
+        history = self.model.fit(train_dataset, epochs=initial_epochs)
+
+        fine_tune_at = 100  # Fine-tune from this layer onwards
+        self.base_model.trainable = True
+        for layer in self.base_model.layers[:fine_tune_at]:
+            layer.trainable = False
+
+        self.model.compile(optimizer=tf.keras.optimizers.Adam(1e-5),
+                           loss=tf.keras.losses.MeanAbsoluteError(),
+                           metrics=[tf.keras.metrics.MeanAbsoluteError(name='mae')])
+        history = self.model.fit(train_dataset, epochs=fine_tune_epochs)
+
         features = self.model.predict(images)
 
         return self.model, features
+    
+    def save_model(self, model_dir, model_name="feature_pretrained_cnn.keras"):
+        os.makedirs(model_dir, exist_ok=True)
+        self.model.save(os.path.join(model_dir, model_name))
+        print(f"Model saved to {os.path.join(model_dir, model_name)}")
+
+    def load_model(self, model_dir, model_name="feature_pretrained_cnn.keras"):
+        self.model = tf.keras.models.load_model(os.path.join(model_dir, model_name))
+        print(f"Model loaded from {os.path.join(model_dir, model_name)}")
+        return self.model
+    
+    def estimate(self, X):
+        X_scaled = self.scale_each_sample(X)
+        features = self.model.predict(X_scaled)
+        return features
 
 class PretrainedCNNRegressor:
     """
@@ -438,11 +468,13 @@ class PretrainedCNNRegressor:
         train_dataset = train_ds
 
         self.build_model(train_dataset) # in case it was not called before
+        model = self.train(train_dataset, train_dataset, epochs=epochs)  # Using the same dataset for training and validation
 
-        base_learning_rate = 0.0001
-        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
-                           loss=tf.keras.losses.MeanAbsoluteError(),
-                           metrics=[tf.keras.metrics.MeanAbsoluteError(name='mae')])
+        # base_learning_rate = 0.0001
+        # self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
+        #                    loss=tf.keras.losses.MeanAbsoluteError(),
+        #                    metrics=[tf.keras.metrics.MeanAbsoluteError(name='mae')])
+        # history = self.model.fit(train_dataset, epochs=epochs)
 
         return self.model
 
@@ -518,3 +550,26 @@ class PretrainedCNNRegressor:
         }
 
         return fold_histories, metrics
+    
+    def predict(self, X):
+        images = []
+        for sample in X:
+            sample_min = sample.min()
+            sample_max = sample.max()
+            normalized_sample = 255 * (sample - sample_min) / (sample_max - sample_min + 1e-8)
+            img = Image.fromarray(normalized_sample.astype(np.uint8)).convert('RGB')
+            img = img.resize(self.img_size)
+            images.append(np.array(img))
+        images = np.stack(images)
+        predictions = self.model.predict(images)
+        return predictions
+    
+    def save_model(self, model_dir, model_name="model_pretrained_cnn.keras"):
+        os.makedirs(model_dir, exist_ok=True)
+        self.model.save(os.path.join(model_dir, model_name))
+        print(f"Model saved to {os.path.join(model_dir, model_name)}")
+
+    def load_model(self, model_path):
+        self.model = tf.keras.models.load_model(model_path)
+        print(f"Model loaded from {model_path}")
+        return self.model

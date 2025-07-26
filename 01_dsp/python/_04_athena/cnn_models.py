@@ -133,3 +133,8 @@ class CNN1D:
     def load_model(self, model_dir, model_name="baby_cnn_regressor.keras"):
         self.model = tf.keras.models.load_model(model_dir + '/' + model_name)
         return self.model
+    
+    def predict(self, X):
+        X_scaled = self.scale_each_sample(X)
+        y_pred = self.model.predict(X_scaled).flatten()
+        return y_pred
