@@ -49,6 +49,6 @@ with dot.subgraph(name='cluster_model') as c:
     c.attr(style='dashed', label='Regression')
     c.node('C1')
     c.node('C2')
-    c.node('C3')
+    # c.node('C3')
 
 dot.render('flowchart', cleanup=True)

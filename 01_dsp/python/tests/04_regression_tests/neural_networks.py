@@ -12,7 +12,7 @@ from _05_apollo import viz_tools
 from _03_hephaestus import feature_tools
 import tensorflow as tf
 from _04_athena.multi_later_percepetron import MultiLaterPercepetron, monte_carlo_mlp_feature_selection
-from _04_athena.cnn_models import BabyCNNRegressor
+from _04_athena.cnn_models import CNN1D
 
 tf.get_logger().setLevel('ERROR')
 

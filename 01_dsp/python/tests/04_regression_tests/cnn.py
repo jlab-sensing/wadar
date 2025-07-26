@@ -11,7 +11,7 @@ import pandas as pd
 from _05_apollo import viz_tools
 from _03_hephaestus import feature_tools
 import tensorflow as tf
-from _04_athena.cnn_models import BabyCNNRegressor
+from _04_athena.cnn_models import CNN1D
 from _06_hermes.logger import update_results
 
 tf.get_logger().setLevel('ERROR')
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     X = np.abs(hydros.X)
     y = hydros.y
 
-    cnn_cv = BabyCNNRegressor(X, y)
+    cnn_cv = CNN1D(X, y)
 
     model, metrics = cnn_cv.cross_validate(epochs=1000)
     print("Metrics: ", metrics)
