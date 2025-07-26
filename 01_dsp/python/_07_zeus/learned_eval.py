@@ -18,12 +18,14 @@ from _01_gaia import loader
 from learned_train import N_COMPONENTS
 from _03_hephaestus.autoencoder import AutoencoderFeatureSelector
 from _04_athena.pretrained_cnn import PretrainedCNNFeatureExtractor
+from tensorflow.keras.models import load_model as keras_load_model
+from _03_hephaestus import feature_tools
 
 N_COMPONENTS = 16  
 
-PCA = True
-AUTOENCODER = True
-PRETRAINED_CNN = True
+PCA = False
+AUTOENCODER = False
+PRETRAINED_CNN = False
 
 def load_sklearn_model(models_dir, model_name):
     model_path = os.path.join(models_dir, model_name)
@@ -102,6 +104,41 @@ if __name__ == "__main__":
             predictions = regression_model.predict(features_combined)
             evaluate_model(dataset_dir, y, predictions, model_type, "Combined")
 
+        # Doing the MLP seperately since it has it isn't a sklearn model
+
+        # Scale PCA Amplitude features for MLP
+        mlp_model_path = os.path.join(model_dir, "model_mlp_pca_amplitude.h5")
+        scaler_name = os.path.join(model_dir, "model_mlp_pca_amplitude_scaler.pkl")
+        with open(scaler_name, 'rb') as f:
+            scaler = load(f)
+        features_amplitude = scaler.transform(features_amplitude)
+
+        # Scale PCA Phase features for MLP
+        scaler_name = os.path.join(model_dir, "model_mlp_pca_phase_scaler.pkl")
+        with open(scaler_name, 'rb') as f:
+            scaler = load(f)
+        features_phase = scaler.transform(features_phase)
+
+        # Scale PCA Combined features for MLP
+        scaler_name = os.path.join(model_dir, "model_mlp_pca_combined_scaler.pkl")
+        with open(scaler_name, 'rb') as f:
+            scaler = load(f)
+        features_combined = scaler.transform(features_combined)
+
+        mlp_model = keras_load_model(mlp_model_path)
+        mlp_predictions = mlp_model.predict(features_amplitude).squeeze()
+        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Amplitude")
+
+        mlp_model_path = os.path.join(model_dir, "model_mlp_pca_phase.h5")
+        mlp_model = keras_load_model(mlp_model_path)
+        mlp_predictions = mlp_model.predict(features_phase).squeeze()
+        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Phase")
+
+        mlp_model_path = os.path.join(model_dir, "model_mlp_pca_combined.h5")
+        mlp_model = keras_load_model(mlp_model_path)
+        mlp_predictions = mlp_model.predict(features_combined).squeeze()
+        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Combined")
+
     if AUTOENCODER:
         feature_selection = ["Autoencoder Amplitude", "Autoencoder Phase"]
 
@@ -142,6 +179,41 @@ if __name__ == "__main__":
             predictions = regression_model.predict(features_combined)
             evaluate_model(dataset_dir, y, predictions, model_type, "Autoencoder Combined")
 
+        # Doing the MLP separately since it isn't a sklearn model
+
+        # Scale Autoencoder Amplitude features for MLP
+        mlp_model_path = os.path.join(model_dir, "model_mlp_autoencoder_amplitude.h5")
+        scaler_name = os.path.join(model_dir, "model_mlp_autoencoder_amplitude_scaler.pkl")
+        with open(scaler_name, 'rb') as f:
+            scaler = load(f)
+        features_amplitude_scaled = scaler.transform(features_amplitude)
+
+        # Scale Autoencoder Phase features for MLP
+        scaler_name = os.path.join(model_dir, "model_mlp_autoencoder_phase_scaler.pkl")
+        with open(scaler_name, 'rb') as f:
+            scaler = load(f)
+        features_phase_scaled = scaler.transform(features_phase)
+
+        # Scale Autoencoder Combined features for MLP
+        scaler_name = os.path.join(model_dir, "model_mlp_autoencoder_combined_scaler.pkl")
+        with open(scaler_name, 'rb') as f:
+            scaler = load(f)
+        features_combined_scaled = scaler.transform(features_combined)
+
+        mlp_model = keras_load_model(mlp_model_path)
+        mlp_predictions = mlp_model.predict(features_amplitude_scaled).squeeze()
+        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Autoencoder Amplitude")
+
+        mlp_model_path = os.path.join(model_dir, "model_mlp_autoencoder_phase.h5")
+        mlp_model = keras_load_model(mlp_model_path)
+        mlp_predictions = mlp_model.predict(features_phase_scaled).squeeze()
+        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Autoencoder Phase")
+
+        mlp_model_path = os.path.join(model_dir, "model_mlp_autoencoder_combined.h5")
+        mlp_model = keras_load_model(mlp_model_path)
+        mlp_predictions = mlp_model.predict(features_combined_scaled).squeeze()
+        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Autoencoder Combined")
+
     if PRETRAINED_CNN:
 
         feature_selection = ["CNN Amplitude", "CNN Phase"]
@@ -180,8 +252,41 @@ if __name__ == "__main__":
             regression_model = load_sklearn_model(model_dir, model_name("CNN Combined", model_type))
             predictions = regression_model.predict(features_combined)
             evaluate_model(dataset_dir, y, predictions, model_type, "CNN Combined")
-    
-    # ==============
+
+        # Doing the MLP seperately since it has it isn't a sklearn model
+
+        # Scale CNN Amplitude features for MLP
+        mlp_model_path = os.path.join(model_dir, "model_mlp_cnn_amplitude.h5")
+        scaler_name = os.path.join(model_dir, "model_mlp_cnn_amplitude_scaler.pkl")
+        with open(scaler_name, 'rb') as f:
+            scaler = load(f)
+        features_amplitude_scaled = scaler.transform(features)
+
+        # Scale CNN Phase features for MLP
+        scaler_name = os.path.join(model_dir, "model_mlp_cnn_phase_scaler.pkl")
+        with open(scaler_name, 'rb') as f:
+            scaler = load(f)
+        features_phase_scaled = scaler.transform(features_phase)
+
+        # Scale CNN Combined features for MLP
+        scaler_name = os.path.join(model_dir, "model_mlp_cnn_combined_scaler.pkl")
+        with open(scaler_name, 'rb') as f:
+            scaler = load(f)
+        features_combined_scaled = scaler.transform(features_combined)
+
+        mlp_model = keras_load_model(mlp_model_path)
+        mlp_predictions = mlp_model.predict(features_amplitude_scaled).squeeze()
+        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "CNN Amplitude")
+
+        mlp_model_path = os.path.join(model_dir, "model_mlp_cnn_phase.h5")
+        mlp_model = keras_load_model(mlp_model_path)
+        mlp_predictions = mlp_model.predict(features_phase_scaled).squeeze()
+        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "CNN Phase")
+
+        mlp_model_path = os.path.join(model_dir, "model_mlp_cnn_combined.h5")
+        mlp_model = keras_load_model(mlp_model_path)
+        mlp_predictions = mlp_model.predict(features_combined_scaled).squeeze()
+        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "CNN Combined")
 
     results = pd.read_csv(os.path.join(dataset_dir, "results_learned_farm.csv"))
     plot_accuracy_mae(results)

@@ -14,6 +14,7 @@ from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import time
 from _06_hermes.parameters import num2label, RANDOM_SEED
 from _03_hephaestus import feature_tools
+import pickle
 
 np.random.seed(RANDOM_SEED)
 
@@ -113,9 +114,15 @@ class MultiLaterPercepetron:
         
         return self.model
     
-    def save_model(self, model, dataset_dir):
-        model_path = f"{dataset_dir}/models/MLP.h5"
+    def save_model(self, model, dataset_dir, name="MLP"):
+        model_path = f"{dataset_dir}/{name}.h5"
+        scaler_path = f"{dataset_dir}/{name}_scaler.pkl"
+
         model.save(model_path)
+        
+        # Save the scaler
+        with open(scaler_path, 'wb') as f:
+            pickle.dump(self.scaler, f)
 
 def monte_carlo_mlp_feature_selection(feature_table, labels, data_dir, n_iterations=100):
     """

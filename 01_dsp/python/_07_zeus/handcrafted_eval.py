@@ -20,6 +20,8 @@ from _06_hermes.parameters import num2label, RANDOM_SEED
 import matplotlib.pyplot as plt
 import time
 from _05_apollo.viz_tools import plot_accuracy_mae
+# from _04_athena.multi_later_percepetron import MultiLaterPercepetron, monte_carlo_mlp_feature_selection
+from tensorflow.keras.models import load_model as keras_load_model
 
 def load_model(models_dir, model_name):
     model_path = os.path.join(models_dir, model_name)
@@ -147,6 +149,48 @@ if __name__ == "__main__":
     feature_file_name = f"feature_svr_monte_carlo.csv"
 
     evaluate_sklearn_model(dataset_dir, "Support Vector Regression", feature_table, labels, models_dir, None, svr_model, feature_file_name)
+
+    # ==============
+    # Neural networks
+    # ==============
+
+    model_name = "MLP.h5"
+    scaler_name = "MLP_scaler.pkl"
+
+    mlp_model = keras_load_model(os.path.join(models_dir, model_name))
+    
+    # Load the scaler
+    scaler_path = os.path.join(models_dir, scaler_name)
+    with open(scaler_path, 'rb') as f:
+        scaler = load(f)
+
+    print(f"Evaluating Multi-Layer Perceptron model...")
+
+    _, feature_array, feature_names, labels = feature_tools.load_feature_table(dataset_dir)
+    
+    # Apply the same scaling as during training
+    feature_array_scaled = scaler.transform(feature_array)
+
+    predictions = mlp_model.predict(feature_array_scaled)
+
+    mae = mean_absolute_error(labels, predictions)
+    rmse = np.sqrt(np.mean((labels - predictions) ** 2))
+    r2 = r2_score(labels, predictions)
+    y_labels = [num2label(label) for label in labels]
+    predictions_labels = [num2label(pred) for pred in predictions]
+    accuracy = np.mean(np.array(y_labels) == np.array(predictions_labels))
+    update_results(
+            "Handcrafted",
+            "MLP",
+            accuracy,
+            mae,
+            rmse,
+            r2,
+            0,  # Training time not applicable here
+            0,  # Inference time not applicable here
+            dataset_dir,
+            f"results_farm.csv"
+        )
 
     # ==============
     # Results

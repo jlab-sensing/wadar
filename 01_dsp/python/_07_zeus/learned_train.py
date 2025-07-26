@@ -21,6 +21,7 @@ from pickle import dump, load
 from _06_hermes.parameters import model_name, feature_extraction_name
 from _03_hephaestus.autoencoder import AutoencoderFeatureSelector
 from _04_athena.pretrained_cnn import PretrainedCNNFeatureExtractor
+from _04_athena.multi_later_percepetron import MultiLaterPercepetron, monte_carlo_mlp_feature_selection
 
 IMPROVEMENT_THRESHOLD = 1e-4  # threshold for improvement in MAE to consider
 N_COMPONENTS = 16  
@@ -122,6 +123,28 @@ def evaluate_classical_models(features_magnitude, y, feature_name, dataset_dir, 
         results_file="learned_classical_results.csv"
     )
     save_sklearn_model(model_dir, model, model_name(feature_name, "SVR"))
+
+    # ==============
+    # Multi-Layer Perceptron
+    # ==============
+
+    mlp = MultiLaterPercepetron(features_magnitude, y)
+    model, metrics = mlp.full_monty()
+    update_results(
+        feature_name,
+        f"Multi-Layer Perceptron",
+        metrics['accuracy'],
+        metrics['mae'],
+        metrics['rmse'],
+        metrics['r2'],
+        metrics['training_time'],
+        metrics['inference_time'],
+        dataset_dir,
+        results_file="learned_classical_results.csv"
+    )
+
+    file_name = model_name(feature_name, "MLP")[:-4]
+    mlp.save_model(model, model_dir, name=file_name)
 
 if __name__ == "__main__":
 
