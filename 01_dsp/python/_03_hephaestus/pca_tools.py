@@ -31,7 +31,7 @@ class PCAProcessor:
         if np.iscomplex(X).any():
             raise ValueError("Input the magnitude or phase not the raw data.")
     
-    def dimensionality_reduction(self):
+    def dimensionality_reduction(self, X=None):
         """
         Perform PCA on the input data and return the reduced data.
 
@@ -39,8 +39,10 @@ class PCAProcessor:
             np.ndarray: Reduced data of shape (samples, n_components).
         """
 
-        N, R, T = self.X.shape
-        X_flat = self.X.reshape(N, R * T)
+        if X is None:
+            X = self.X
+        N, R, T = X.shape
+        X_flat = X.reshape(N, R * T)
         reduced = self.pca.fit_transform(X_flat)  # shape: (N, n_components)
         return reduced
 

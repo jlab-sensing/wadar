@@ -16,6 +16,14 @@ from _05_apollo.viz_tools import plot_accuracy_mae
 from _06_hermes.parameters import model_name, feature_extraction_name
 from _01_gaia import loader
 from learned_train import N_COMPONENTS
+from _03_hephaestus.autoencoder import AutoencoderFeatureSelector
+from _04_athena.pretrained_cnn import PretrainedCNNFeatureExtractor
+
+N_COMPONENTS = 16  
+
+PCA = True
+AUTOENCODER = True
+PRETRAINED_CNN = True
 
 def load_sklearn_model(models_dir, model_name):
     model_path = os.path.join(models_dir, model_name)
@@ -56,47 +64,124 @@ if __name__ == "__main__":
     hydros = loader.FrameLoader(dataset_dir, new_dataset=new_dataset, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
-    feature_selection = ["PCA Amplitude", "PCA Phase"]
     models = ["Regression Degree 1", "Regression Degree 2", "Regression Degree 3",
-              "Random Forest", "Gradient Boosted Tree", "SVR"]
-    
-    for feature_name in feature_selection:
-        for model_type in models:
+                    "Random Forest", "Gradient Boosted Tree", "SVR"]
+    model_dir = os.path.join(dataset_dir, "models")
 
-            model_name_full = model_name(feature_name, model_type)
-            model_dir = os.path.join(dataset_dir, "models")
-            poly_model = load_sklearn_model(model_dir, model_name_full)
+    if PCA:
 
-            print(f"Evaluating {model_type} with {feature_name}...")
+        feature_selection = ["PCA Amplitude", "PCA Phase"]
 
-            pca_feature_extractor = load_sklearn_model(model_dir, feature_extraction_name(feature_name))
-            features = pca_feature_extractor.dimensionality_reduction()
-
-            predictions = poly_model.predict(features)
-
-            evaluate_model(dataset_dir, y, predictions, model_type, feature_name)
-
-    feature_selection = "PCA Combined"
-
-    for model_type in models:
-        model_name_full = model_name(feature_selection, model_type)
-        model_dir = os.path.join(dataset_dir, "models")
-        poly_model = load_sklearn_model(model_dir, model_name_full)
-
-        print(f"Evaluating {model_type} with {feature_selection}...")
+        # PCA Amplitude
 
         pca_amplitude_extractor = load_sklearn_model(model_dir, feature_extraction_name("PCA Amplitude"))
-        pca_phase_extractor = load_sklearn_model(model_dir, feature_extraction_name("PCA Phase"))
+        features_amplitude = pca_amplitude_extractor.dimensionality_reduction(np.abs(X))
 
-        features_amplitude = pca_amplitude_extractor.dimensionality_reduction()
-        features_phase = pca_phase_extractor.dimensionality_reduction()
+        for model_type in models:
+            regression_model = load_sklearn_model(model_dir, model_name("PCA Amplitude", model_type))
+            predictions = regression_model.predict(features_amplitude)
+            evaluate_model(dataset_dir, y, predictions, model_type, "Amplitude")
+
+        # PCA Phase
+        pca_phase_extractor = load_sklearn_model(model_dir, feature_extraction_name("PCA Phase"))
+        features_phase = pca_phase_extractor.dimensionality_reduction(np.angle(X))
+
+        for model_type in models:
+            regression_model = load_sklearn_model(model_dir, model_name("PCA Phase", model_type))
+            predictions = regression_model.predict(features_phase)
+            evaluate_model(dataset_dir, y, predictions, model_type, "Phase")
+
+        # Combined features from both PCA
+        num_of_features = int(N_COMPONENTS / 2)
+        features_combined = np.concatenate(
+            [features_phase[:, :num_of_features], features_amplitude[:, :num_of_features]], axis=1
+        )
+
+        for model_type in models:
+            regression_model = load_sklearn_model(model_dir, model_name("PCA Combined", model_type))
+            predictions = regression_model.predict(features_combined)
+            evaluate_model(dataset_dir, y, predictions, model_type, "Combined")
+
+    if AUTOENCODER:
+        feature_selection = ["Autoencoder Amplitude", "Autoencoder Phase"]
+
+        # Autoencoder Amplitude
+        autoencoder_amplitude_extractor = AutoencoderFeatureSelector(
+            X, encoding_dim=N_COMPONENTS
+        )
+        autoencoder_amplitude_extractor.load_model(model_dir, "feature_autoencoder_amplitude.keras")
+        X_flat = autoencoder_amplitude_extractor.pre_process(X, signal_type='magnitude')
+        features_amplitude = autoencoder_amplitude_extractor.transform(X_flat)
+
+        for model_type in models:
+            regression_model = load_sklearn_model(model_dir, model_name("Autoencoder Amplitude", model_type))
+            predictions = regression_model.predict(features_amplitude)
+            evaluate_model(dataset_dir, y, predictions, model_type, "Autoencoder Amplitude")
+
+        # Autoencoder Phase
+        autoencoder_phase_extractor = AutoencoderFeatureSelector(
+            X=np.angle(X), encoding_dim=N_COMPONENTS
+        )
+        autoencoder_phase_extractor.load_model(model_dir, "feature_autoencoder_phase.keras")
+        X_flat = autoencoder_phase_extractor.pre_process(X, signal_type='phase')
+        features_phase = autoencoder_phase_extractor.transform(X_flat)
+
+        for model_type in models:
+            regression_model = load_sklearn_model(model_dir, model_name("Autoencoder Phase", model_type))
+            predictions = regression_model.predict(features_phase)
+            evaluate_model(dataset_dir, y, predictions, model_type, "Autoencoder Phase")
+
+        # Combined features from both Autoencoders
+        num_of_features = int(N_COMPONENTS / 2)
+        features_combined = np.concatenate(
+            [features_phase[:, :num_of_features], features_amplitude[:, :num_of_features]], axis=1
+        )
+
+        for model_type in models:
+            regression_model = load_sklearn_model(model_dir, model_name("Autoencoder Combined", model_type))
+            predictions = regression_model.predict(features_combined)
+            evaluate_model(dataset_dir, y, predictions, model_type, "Autoencoder Combined")
+
+    if PRETRAINED_CNN:
+
+        feature_selection = ["CNN Amplitude", "CNN Phase"]
+        feature_names = ["feature_cnn_amplitude.keras", "feature_cnn_phase.keras"]
+
+        # CNN Amplitude
+
+        trainer = PretrainedCNNFeatureExtractor(X, output_dir=dataset_dir + "/images", dimensions=N_COMPONENTS)
+        trainer.load_model(model_dir + "/" + "feature_cnn_amplitude.keras")
+        features = trainer.predict(np.abs(X))
+
+        for model_type in models:
+            regression_model = load_sklearn_model(model_dir, model_name("CNN Amplitude", model_type))
+            predictions = regression_model.predict(features)
+            evaluate_model(dataset_dir, y, predictions, model_type, "CNN Amplitude")
+
+        # CNN Phase
+
+        trainer = PretrainedCNNFeatureExtractor(X, output_dir=dataset_dir + "/images", dimensions=N_COMPONENTS)
+        trainer.load_model(model_dir + "/" + "feature_cnn_phase.keras")
+        features_phase = trainer.predict(np.angle(X))
+
+        for model_type in models:
+            regression_model = load_sklearn_model(model_dir, model_name("CNN Phase", model_type))
+            predictions = regression_model.predict(features_phase)
+            evaluate_model(dataset_dir, y, predictions, model_type, "CNN Phase")
+
+        # Combined features from both CNNs
 
         num_of_features = int(N_COMPONENTS / 2)
-        features_combined = np.concatenate([features_phase[:, :num_of_features], features_amplitude[:, :num_of_features]], axis=1)
+        features_combined = np.concatenate(
+            [features_phase[:, :num_of_features], features[:, :num_of_features]], axis=1
+        )
 
-        predictions = poly_model.predict(features_combined)
-
-        evaluate_model(dataset_dir, y, predictions, model_type, feature_selection)
+        for model_type in models:
+            regression_model = load_sklearn_model(model_dir, model_name("CNN Combined", model_type))
+            predictions = regression_model.predict(features_combined)
+            evaluate_model(dataset_dir, y, predictions, model_type, "CNN Combined")
+    
+    # ==============
 
     results = pd.read_csv(os.path.join(dataset_dir, "results_learned_farm.csv"))
     plot_accuracy_mae(results)
