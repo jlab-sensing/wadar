@@ -66,7 +66,7 @@ if __name__ == "__main__":
             training_time=metrics['training_time'],
             inference_time=metrics['inference_time'],
             dataset_dir=dataset_dir,
-            results_file="results-end-to-end.csv"
+            results_file_name="results-end-to-end.csv"
         )
 
         # On phase only
@@ -84,7 +84,7 @@ if __name__ == "__main__":
             training_time=metrics['training_time'],
             inference_time=metrics['inference_time'],
             dataset_dir=dataset_dir,
-            results_file="results-end-to-end.csv"
+            results_file_name="results-end-to-end.csv"
         )
 
         # On combined amplitude and phase
@@ -102,7 +102,7 @@ if __name__ == "__main__":
             training_time=metrics['training_time'],
             inference_time=metrics['inference_time'],
             dataset_dir=dataset_dir,
-            results_file="results-end-to-end.csv"
+            results_file_name="results-end-to-end.csv"
         )
 
     # ============
@@ -127,7 +127,7 @@ if __name__ == "__main__":
             training_time=metrics['training_time'],
             inference_time=metrics['inference_time'],
             dataset_dir=dataset_dir,
-            results_file="results-end-to-end.csv"
+            results_file_name="results-end-to-end.csv"
         )
         trainer.save_model(model_dir, model_name="pretrained_cnn_amplitude.keras")
 
@@ -145,7 +145,7 @@ if __name__ == "__main__":
             training_time=metrics['training_time'],
             inference_time=metrics['inference_time'],
             dataset_dir=dataset_dir,
-            results_file="results-end-to-end.csv"
+            results_file_name="results-end-to-end.csv"
         )
         trainer.save_model(model_dir, model_name="pretrained_cnn_phase.keras")
 
@@ -163,7 +163,7 @@ if __name__ == "__main__":
             training_time=metrics['training_time'],
             inference_time=metrics['inference_time'],
             dataset_dir=dataset_dir,
-            results_file="results-end-to-end.csv"
+            results_file_name="results-end-to-end.csv"
         )
         trainer.save_model(model_dir, model_name="pretrained_cnn_combined.keras")
 
@@ -196,7 +196,7 @@ if __name__ == "__main__":
             training_time=metrics['training_time'],
             inference_time=metrics['inference_time'],
             dataset_dir=dataset_dir,
-            results_file="results-end-to-end.csv"
+            results_file_name="results-end-to-end.csv"
         )
 
         # Phase
@@ -215,7 +215,7 @@ if __name__ == "__main__":
             training_time=metrics['training_time'],
             inference_time=metrics['inference_time'],
             dataset_dir=dataset_dir,
-            results_file="results-end-to-end.csv"
+            results_file_name="results-end-to-end.csv"
         )
 
         # Combined
@@ -234,7 +234,7 @@ if __name__ == "__main__":
             training_time=metrics['training_time'],
             inference_time=metrics['inference_time'],
             dataset_dir=dataset_dir,
-            results_file="results-end-to-end.csv"
+            results_file_name="results-end-to-end.csv"
         )
 
     # Visualized results from kfold cross-validation

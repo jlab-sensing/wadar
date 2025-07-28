@@ -58,13 +58,8 @@ class Dataset:
             self.full_monty()
 
     def _load_datalog(self) -> None:
-        """Load and validate the data log CSV file.
-        
-        Parameters:
-            None
-            
-        Returns:
-            None
+        """
+        Load and validate the data log CSV file.
         """
 
         try:
@@ -77,38 +72,23 @@ class Dataset:
             self._error(f"Failed to load data log: {e}")
 
     def _info(self, message: str) -> None:
-        """Print info message if verbose mode is enabled.
-        
-        Parameters:
-            message (str): The message to print.
-
-        Returns:
-            None
+        """
+        Print info message if verbose mode is enabled.
         """
 
         if self.verbose:
             print(f"[INFO] {message}")
 
     def _warning(self, message: str) -> None:
-        """Print warning message.
-
-        Parameters:
-            message (str): The message to print.
-
-        Returns:
-            None
+        """
+        Print warning message.
         """
 
         print(f"[WARNING] {message}")
 
     def _error(self, message: str) -> None:
-        """Print error message and exit.
-        
-        Parameters:
-            message (str): The message to print.
-            
-        Returns:
-            None
+        """
+        Print error message and exit.
         """
 
         print(f"[ERROR] {message}")
@@ -118,13 +98,8 @@ class Dataset:
         """
         Create labels for the dataset by extracting bulk density from the data log.
         Each sample directory will have a JSON file with the bulk density.
-
-        Parameters:
-            None
-
-        Returns:
-            None
         """
+
         if not self.has_datalog:
             self._warning("No data log available. Skipping labeling.")
             return
@@ -168,12 +143,6 @@ class Dataset:
     def purge_labels(self) -> None:
         """
         Remove all label files from the dataset for re-labeling.
-
-        Parameters:
-            None
-
-        Returns:
-            None
         """
 
         if not self.has_datalog:
@@ -200,13 +169,8 @@ class Dataset:
         """
         Convert all .frames files in subdirectories to CSV format.
         Each resulting CSV contains the raw radar frame data.
-
-        Parameters:
-            None
-
-        Returns:
-            None
         """
+
         self._info("Starting frame processing...")
         
         # Get all subdirectories
@@ -279,12 +243,6 @@ class Dataset:
     def full_monty(self) -> None:
         """
         Run the complete dataset processing pipeline.
-
-        Parameters:
-            None
-
-        Returns:
-            None
         """
 
         self._info("Starting dataset processing pipeline...")
@@ -302,12 +260,6 @@ class Dataset:
         """
         Process frames to CSV without any labeling operations.
         Useful for datasets without data logs.
-
-        Parameters:
-            None
-
-        Returns:
-            None
         """
 
         self._info("Processing frames only (no labeling)...")

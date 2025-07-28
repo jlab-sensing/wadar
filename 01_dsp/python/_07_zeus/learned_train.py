@@ -59,7 +59,7 @@ def evaluate_classical_models(features_magnitude, y, feature_name, dataset_dir, 
             metrics['training_time'],
             metrics['inference_time'],
             dataset_dir,
-            results_file="learned_classical_results.csv"
+            results_file_name="learned_classical_results.csv"
         )
         save_sklearn_model(model_dir, model, model_name(feature_name, f"Regression Degree {degree}"))
 
@@ -77,7 +77,7 @@ def evaluate_classical_models(features_magnitude, y, feature_name, dataset_dir, 
         metrics['training_time'],
         metrics['inference_time'],
         dataset_dir,
-        results_file="learned_classical_results.csv"
+        results_file_name="learned_classical_results.csv"
     )
     save_sklearn_model(model_dir, model, model_name(feature_name, "Random Forest"))
 
@@ -95,7 +95,7 @@ def evaluate_classical_models(features_magnitude, y, feature_name, dataset_dir, 
         metrics['training_time'],
         metrics['inference_time'],
         dataset_dir,
-        results_file="learned_classical_results.csv"
+        results_file_name="learned_classical_results.csv"
     )
     save_sklearn_model(model_dir, model, model_name(feature_name, "Gradient Boosted Tree"))
 
@@ -120,7 +120,7 @@ def evaluate_classical_models(features_magnitude, y, feature_name, dataset_dir, 
         metrics['training_time'],
         metrics['inference_time'],
         dataset_dir,
-        results_file="learned_classical_results.csv"
+        results_file_name="learned_classical_results.csv"
     )
     save_sklearn_model(model_dir, model, model_name(feature_name, "SVR"))
 
@@ -140,7 +140,7 @@ def evaluate_classical_models(features_magnitude, y, feature_name, dataset_dir, 
         metrics['training_time'],
         metrics['inference_time'],
         dataset_dir,
-        results_file="learned_classical_results.csv"
+        results_file_name="learned_classical_results.csv"
     )
 
     file_name = model_name(feature_name, "MLP")[:-4]

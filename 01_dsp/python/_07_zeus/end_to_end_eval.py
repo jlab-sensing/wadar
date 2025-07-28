@@ -84,7 +84,7 @@ if __name__ == "__main__":
             training_time=training_time,
             inference_time=inference_time,
             dataset_dir=validation_dir,
-            results_file="results-end-to-end-farm.csv"
+            results_file_name="results-end-to-end-farm.csv"
         )
 
         # On phase only
@@ -108,7 +108,7 @@ if __name__ == "__main__":
             training_time=training_time,
             inference_time=inference_time,
             dataset_dir=validation_dir,
-            results_file="results-end-to-end-farm.csv"
+            results_file_name="results-end-to-end-farm.csv"
         )
 
         # On combined amplitude and phase
@@ -132,7 +132,7 @@ if __name__ == "__main__":
             training_time=training_time,
             inference_time=inference_time,
             dataset_dir=validation_dir,
-            results_file="results-end-to-end-farm.csv"
+            results_file_name="results-end-to-end-farm.csv"
         )
 
     # ============
@@ -164,7 +164,7 @@ if __name__ == "__main__":
             training_time=training_time,
             inference_time=inference_time,
             dataset_dir=validation_dir,
-            results_file="results-end-to-end-farm.csv"
+            results_file_name="results-end-to-end-farm.csv"
         )
 
         # On phase only
@@ -188,7 +188,7 @@ if __name__ == "__main__":
             training_time=training_time,
             inference_time=inference_time,
             dataset_dir=validation_dir,
-            results_file="results-end-to-end-farm.csv"
+            results_file_name="results-end-to-end-farm.csv"
         )
 
         # On combined amplitude and phase
@@ -212,7 +212,7 @@ if __name__ == "__main__":
             training_time=training_time,
             inference_time=inference_time,
             dataset_dir=validation_dir,
-            results_file="results-end-to-end-farm.csv"
+            results_file_name="results-end-to-end-farm.csv"
         )
 
     # ============
@@ -246,7 +246,7 @@ if __name__ == "__main__":
             training_time=training_time,
             inference_time=inference_time,
             dataset_dir=validation_dir,
-            results_file="results-end-to-end-farm.csv"
+            results_file_name="results-end-to-end-farm.csv"
         )
 
         # On phase only
@@ -270,7 +270,7 @@ if __name__ == "__main__":
             training_time=training_time,
             inference_time=inference_time,
             dataset_dir=validation_dir,
-            results_file="results-end-to-end-farm.csv"
+            results_file_name="results-end-to-end-farm.csv"
         )
 
         # On combined amplitude and phase
@@ -294,7 +294,7 @@ if __name__ == "__main__":
             training_time=training_time,
             inference_time=inference_time,
             dataset_dir=validation_dir,
-            results_file="results-end-to-end-farm.csv"
+            results_file_name="results-end-to-end-farm.csv"
         )
 
     results = pd.read_csv(os.path.join(validation_dir, "results-end-to-end-farm.csv"))

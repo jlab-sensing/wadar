@@ -8,7 +8,10 @@ def novelda_digital_downconvert(raw_frame):
     signal (i.e. I & Q, in-phase & quadrature, outputs). Inherited from
     NoveldaDDC.m.
 
-    Args:
+    TODO: Quite certain this can be optimized, but since it's derived from
+    DSP concepts I do not fully understand, I am leaving it as is for now.
+
+    Parameters:
         raw_frame (np.ndarray):         Input radar frame data, shape (N,).
 
     Returns:
@@ -46,21 +49,19 @@ def novelda_digital_downconvert(raw_frame):
 
 def remove_anomalies(X, threshold=50):
     """
-    Replace values in X that deviate from the median by more than threshold with the median. This
-    is something that has been done since the beginning of the project.
+    Replace values in X that deviate from the median by more than threshold with the median.
 
-    Args:
+    Parameters:
         X (np.ndarray): Input array of shape (frames, range_bins, time_bins).
         threshold (float): Threshold for anomaly detection.
+
     Returns:
         np.ndarray: Array with anomalies replaced by the median.
     """
     
+    X = np.asarray(X)
+    med = np.median(X, axis=2, keepdims=True)
+    mask = np.abs(X - med) > threshold
     X_clean = X.copy()
-    for i in range(X_clean.shape[0]):
-        for j in range(X_clean.shape[1]):
-            med = np.median(X_clean[i, j, :])
-            for k in range(X_clean.shape[2]):
-                if np.abs(X_clean[i, j, k] - med) > threshold:
-                    X_clean[i, j, k] = med
+    X_clean[mask] = np.broadcast_to(med, X.shape)[mask]
     return X_clean
