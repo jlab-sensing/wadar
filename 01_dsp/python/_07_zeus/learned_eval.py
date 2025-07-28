@@ -20,10 +20,12 @@ from _03_hephaestus.autoencoder import AutoencoderFeatureSelector
 from _04_athena.pretrained_cnn import PretrainedCNNFeatureExtractor
 from tensorflow.keras.models import load_model as keras_load_model
 from _03_hephaestus import feature_tools
+import shutil
+from _01_gaia import dataset
 
 N_COMPONENTS = 16  
 
-PCA = False
+PCA = True
 AUTOENCODER = False
 PRETRAINED_CNN = False
 
@@ -37,6 +39,11 @@ def evaluate_model(dataset_dir, y, predictions, model_name, features_name):
     mae = mean_absolute_error(y, predictions)
     rmse = np.sqrt(np.mean((y - predictions) ** 2))
     r2 = r2_score(y, predictions)
+
+    mean_reading = np.mean(predictions)
+    range_reading = np.ptp(predictions) 
+    print(f"Mean of readings: {mean_reading}")
+    print(f"Range of readings: {range_reading}")
 
     y_labels = [num2label(label) for label in y]
     predictions_labels = [num2label(pred) for pred in predictions]
@@ -57,18 +64,35 @@ def evaluate_model(dataset_dir, y, predictions, model_name, features_name):
 
 if __name__ == "__main__":
 
-    # Validation dataset
-    dataset_dir = "../data/training-dataset"
-    new_dataset = False
+    training_dataset = "../data/training-dataset"
+    validation_dataset = "../data/field-soil"
+    new_dataset = True
 
     # ==============================================================================
 
-    hydros = loader.FrameLoader(dataset_dir, new_dataset=new_dataset, ddc_flag=True)
+    # Copy the /models folder from the training dataset to the validation dataset if it doesn't exist
+    src_models_dir = os.path.join(training_dataset, "models")
+    dst_models_dir = os.path.join(validation_dataset, "models")
+
+    if not os.path.exists(dst_models_dir):
+        shutil.copytree(src_models_dir, dst_models_dir)
+
+    dataset_raw = dataset.Dataset(validation_dataset)
+    hydros = loader.FrameLoader(validation_dataset, new_dataset=new_dataset, ddc_flag=True)
     X, y = hydros.X, hydros.y
 
     models = ["Regression Degree 1", "Regression Degree 2", "Regression Degree 3",
                     "Random Forest", "Gradient Boosted Tree", "SVR"]
-    model_dir = os.path.join(dataset_dir, "models")
+    model_dir = os.path.join(validation_dataset, "models")
+
+    # Create an empty results CSV if it doesn't exist
+    results_csv_path = os.path.join(validation_dataset, "results_learned_farm.csv")
+    if not os.path.exists(results_csv_path):
+        columns = [
+            "Feature", "Model", "Accuracy", "MAE", "Last Updated",
+            "Inference Time", "RMSE", "R2", "Training Time"
+        ]
+        pd.DataFrame(columns=columns).to_csv(results_csv_path, index=False)
 
     if PCA:
 
@@ -81,8 +105,9 @@ if __name__ == "__main__":
 
         for model_type in models:
             regression_model = load_sklearn_model(model_dir, model_name("PCA Amplitude", model_type))
+            print(f"Evaluating {model_type} on PCA Amplitude features...")
             predictions = regression_model.predict(features_amplitude)
-            evaluate_model(dataset_dir, y, predictions, model_type, "Amplitude")
+            evaluate_model(validation_dataset, y, predictions, model_type, "Amplitude")
 
         # PCA Phase
         pca_phase_extractor = load_sklearn_model(model_dir, feature_extraction_name("PCA Phase"))
@@ -91,7 +116,7 @@ if __name__ == "__main__":
         for model_type in models:
             regression_model = load_sklearn_model(model_dir, model_name("PCA Phase", model_type))
             predictions = regression_model.predict(features_phase)
-            evaluate_model(dataset_dir, y, predictions, model_type, "Phase")
+            evaluate_model(validation_dataset, y, predictions, model_type, "Phase")
 
         # Combined features from both PCA
         num_of_features = int(N_COMPONENTS / 2)
@@ -102,7 +127,7 @@ if __name__ == "__main__":
         for model_type in models:
             regression_model = load_sklearn_model(model_dir, model_name("PCA Combined", model_type))
             predictions = regression_model.predict(features_combined)
-            evaluate_model(dataset_dir, y, predictions, model_type, "Combined")
+            evaluate_model(validation_dataset, y, predictions, model_type, "Combined")
 
         # Doing the MLP seperately since it has it isn't a sklearn model
 
@@ -127,17 +152,17 @@ if __name__ == "__main__":
 
         mlp_model = keras_load_model(mlp_model_path)
         mlp_predictions = mlp_model.predict(features_amplitude).squeeze()
-        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Amplitude")
+        evaluate_model(validation_dataset, y, mlp_predictions, "MLP", "Amplitude")
 
         mlp_model_path = os.path.join(model_dir, "model_mlp_pca_phase.h5")
         mlp_model = keras_load_model(mlp_model_path)
         mlp_predictions = mlp_model.predict(features_phase).squeeze()
-        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Phase")
+        evaluate_model(validation_dataset, y, mlp_predictions, "MLP", "Phase")
 
         mlp_model_path = os.path.join(model_dir, "model_mlp_pca_combined.h5")
         mlp_model = keras_load_model(mlp_model_path)
         mlp_predictions = mlp_model.predict(features_combined).squeeze()
-        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Combined")
+        evaluate_model(validation_dataset, y, mlp_predictions, "MLP", "Combined")
 
     if AUTOENCODER:
         feature_selection = ["Autoencoder Amplitude", "Autoencoder Phase"]
@@ -153,7 +178,7 @@ if __name__ == "__main__":
         for model_type in models:
             regression_model = load_sklearn_model(model_dir, model_name("Autoencoder Amplitude", model_type))
             predictions = regression_model.predict(features_amplitude)
-            evaluate_model(dataset_dir, y, predictions, model_type, "Autoencoder Amplitude")
+            evaluate_model(validation_dataset, y, predictions, model_type, "Autoencoder Amplitude")
 
         # Autoencoder Phase
         autoencoder_phase_extractor = AutoencoderFeatureSelector(
@@ -166,7 +191,7 @@ if __name__ == "__main__":
         for model_type in models:
             regression_model = load_sklearn_model(model_dir, model_name("Autoencoder Phase", model_type))
             predictions = regression_model.predict(features_phase)
-            evaluate_model(dataset_dir, y, predictions, model_type, "Autoencoder Phase")
+            evaluate_model(validation_dataset, y, predictions, model_type, "Autoencoder Phase")
 
         # Combined features from both Autoencoders
         num_of_features = int(N_COMPONENTS / 2)
@@ -177,7 +202,7 @@ if __name__ == "__main__":
         for model_type in models:
             regression_model = load_sklearn_model(model_dir, model_name("Autoencoder Combined", model_type))
             predictions = regression_model.predict(features_combined)
-            evaluate_model(dataset_dir, y, predictions, model_type, "Autoencoder Combined")
+            evaluate_model(validation_dataset, y, predictions, model_type, "Autoencoder Combined")
 
         # Doing the MLP separately since it isn't a sklearn model
 
@@ -202,17 +227,17 @@ if __name__ == "__main__":
 
         mlp_model = keras_load_model(mlp_model_path)
         mlp_predictions = mlp_model.predict(features_amplitude_scaled).squeeze()
-        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Autoencoder Amplitude")
+        evaluate_model(validation_dataset, y, mlp_predictions, "MLP", "Autoencoder Amplitude")
 
         mlp_model_path = os.path.join(model_dir, "model_mlp_autoencoder_phase.h5")
         mlp_model = keras_load_model(mlp_model_path)
         mlp_predictions = mlp_model.predict(features_phase_scaled).squeeze()
-        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Autoencoder Phase")
+        evaluate_model(validation_dataset, y, mlp_predictions, "MLP", "Autoencoder Phase")
 
         mlp_model_path = os.path.join(model_dir, "model_mlp_autoencoder_combined.h5")
         mlp_model = keras_load_model(mlp_model_path)
         mlp_predictions = mlp_model.predict(features_combined_scaled).squeeze()
-        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "Autoencoder Combined")
+        evaluate_model(validation_dataset, y, mlp_predictions, "MLP", "Autoencoder Combined")
 
     if PRETRAINED_CNN:
 
@@ -221,25 +246,25 @@ if __name__ == "__main__":
 
         # CNN Amplitude
 
-        trainer = PretrainedCNNFeatureExtractor(X, output_dir=dataset_dir + "/images", dimensions=N_COMPONENTS)
+        trainer = PretrainedCNNFeatureExtractor(X, output_dir=validation_dataset + "/images", dimensions=N_COMPONENTS)
         trainer.load_model(model_dir + "/" + "feature_cnn_amplitude.keras")
         features = trainer.predict(np.abs(X))
 
         for model_type in models:
             regression_model = load_sklearn_model(model_dir, model_name("CNN Amplitude", model_type))
             predictions = regression_model.predict(features)
-            evaluate_model(dataset_dir, y, predictions, model_type, "CNN Amplitude")
+            evaluate_model(validation_dataset, y, predictions, model_type, "CNN Amplitude")
 
         # CNN Phase
 
-        trainer = PretrainedCNNFeatureExtractor(X, output_dir=dataset_dir + "/images", dimensions=N_COMPONENTS)
+        trainer = PretrainedCNNFeatureExtractor(X, output_dir=validation_dataset + "/images", dimensions=N_COMPONENTS)
         trainer.load_model(model_dir + "/" + "feature_cnn_phase.keras")
         features_phase = trainer.predict(np.angle(X))
 
         for model_type in models:
             regression_model = load_sklearn_model(model_dir, model_name("CNN Phase", model_type))
             predictions = regression_model.predict(features_phase)
-            evaluate_model(dataset_dir, y, predictions, model_type, "CNN Phase")
+            evaluate_model(validation_dataset, y, predictions, model_type, "CNN Phase")
 
         # Combined features from both CNNs
 
@@ -251,7 +276,7 @@ if __name__ == "__main__":
         for model_type in models:
             regression_model = load_sklearn_model(model_dir, model_name("CNN Combined", model_type))
             predictions = regression_model.predict(features_combined)
-            evaluate_model(dataset_dir, y, predictions, model_type, "CNN Combined")
+            evaluate_model(validation_dataset, y, predictions, model_type, "CNN Combined")
 
         # Doing the MLP seperately since it has it isn't a sklearn model
 
@@ -276,17 +301,17 @@ if __name__ == "__main__":
 
         mlp_model = keras_load_model(mlp_model_path)
         mlp_predictions = mlp_model.predict(features_amplitude_scaled).squeeze()
-        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "CNN Amplitude")
+        evaluate_model(validation_dataset, y, mlp_predictions, "MLP", "CNN Amplitude")
 
         mlp_model_path = os.path.join(model_dir, "model_mlp_cnn_phase.h5")
         mlp_model = keras_load_model(mlp_model_path)
         mlp_predictions = mlp_model.predict(features_phase_scaled).squeeze()
-        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "CNN Phase")
+        evaluate_model(validation_dataset, y, mlp_predictions, "MLP", "CNN Phase")
 
         mlp_model_path = os.path.join(model_dir, "model_mlp_cnn_combined.h5")
         mlp_model = keras_load_model(mlp_model_path)
         mlp_predictions = mlp_model.predict(features_combined_scaled).squeeze()
-        evaluate_model(dataset_dir, y, mlp_predictions, "MLP", "CNN Combined")
+        evaluate_model(validation_dataset, y, mlp_predictions, "MLP", "CNN Combined")
 
-    results = pd.read_csv(os.path.join(dataset_dir, "results_learned_farm.csv"))
+    results = pd.read_csv(os.path.join(validation_dataset, "results_learned_farm.csv"))
     plot_accuracy_mae(results)

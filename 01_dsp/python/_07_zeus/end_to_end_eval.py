@@ -21,11 +21,13 @@ from transformers import BlipProcessor, BlipForConditionalGeneration
 import gc
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from _06_hermes.parameters import num2label
+from _01_gaia import dataset
+import shutil
 
 # Enable and disable different model training and evaluation sections as needed.
-CNN_1D = False
+CNN_1D = True
 PRETRAINED_CNN = False
-TRANSFORMER = True
+TRANSFORMER = False
 
 tf.get_logger().setLevel('ERROR')
 
@@ -33,10 +35,23 @@ if __name__ == "__main__":
 
     VIZ = False  # Set to True to visualize features
     
-    dataset_dir = "../data/training-dataset"
-    model_dir = dataset_dir + "/models"
 
-    hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
+    training_dir = "../data/training-dataset"
+    validation_dir = "../data/field-soil-compaction-dataset"
+    new_dataset = True
+
+
+    # Copy the /models folder from the training dataset to the validation dataset if it doesn't exist
+    src_models_dir = os.path.join(training_dir, "models")
+    dst_models_dir = os.path.join(validation_dir, "models")
+
+    if not os.path.exists(dst_models_dir):
+        shutil.copytree(src_models_dir, dst_models_dir)
+
+    dataset_raw = dataset.Dataset(validation_dir)
+    model_dir = os.path.join(validation_dir, "models")
+
+    hydros = FrameLoader(validation_dir, new_dataset=False, ddc_flag=True)
     X_amp = np.abs(hydros.X)
     X_phase = np.angle(hydros.X)
     X_combined = np.concatenate((X_amp, X_phase), axis=2)
@@ -68,7 +83,7 @@ if __name__ == "__main__":
             r2=r2,
             training_time=training_time,
             inference_time=inference_time,
-            dataset_dir=dataset_dir,
+            dataset_dir=validation_dir,
             results_file="results-end-to-end-farm.csv"
         )
 
@@ -92,7 +107,7 @@ if __name__ == "__main__":
             r2=r2,
             training_time=training_time,
             inference_time=inference_time,
-            dataset_dir=dataset_dir,
+            dataset_dir=validation_dir,
             results_file="results-end-to-end-farm.csv"
         )
 
@@ -116,7 +131,7 @@ if __name__ == "__main__":
             r2=r2,
             training_time=training_time,
             inference_time=inference_time,
-            dataset_dir=dataset_dir,
+            dataset_dir=validation_dir,
             results_file="results-end-to-end-farm.csv"
         )
 
@@ -125,7 +140,7 @@ if __name__ == "__main__":
     # ============
 
     if PRETRAINED_CNN:
-        output_dir = dataset_dir + "/images"
+        output_dir = validation_dir + "/images"
         epochs = 2
 
         # On amplitude only
@@ -148,7 +163,7 @@ if __name__ == "__main__":
             r2=r2,
             training_time=training_time,
             inference_time=inference_time,
-            dataset_dir=dataset_dir,
+            dataset_dir=validation_dir,
             results_file="results-end-to-end-farm.csv"
         )
 
@@ -172,7 +187,7 @@ if __name__ == "__main__":
             r2=r2,
             training_time=training_time,
             inference_time=inference_time,
-            dataset_dir=dataset_dir,
+            dataset_dir=validation_dir,
             results_file="results-end-to-end-farm.csv"
         )
 
@@ -196,7 +211,7 @@ if __name__ == "__main__":
             r2=r2,
             training_time=training_time,
             inference_time=inference_time,
-            dataset_dir=dataset_dir,
+            dataset_dir=validation_dir,
             results_file="results-end-to-end-farm.csv"
         )
 
@@ -230,7 +245,7 @@ if __name__ == "__main__":
             r2=r2,
             training_time=training_time,
             inference_time=inference_time,
-            dataset_dir=dataset_dir,
+            dataset_dir=validation_dir,
             results_file="results-end-to-end-farm.csv"
         )
 
@@ -254,7 +269,7 @@ if __name__ == "__main__":
             r2=r2,
             training_time=training_time,
             inference_time=inference_time,
-            dataset_dir=dataset_dir,
+            dataset_dir=validation_dir,
             results_file="results-end-to-end-farm.csv"
         )
 
@@ -278,9 +293,9 @@ if __name__ == "__main__":
             r2=r2,
             training_time=training_time,
             inference_time=inference_time,
-            dataset_dir=dataset_dir,
+            dataset_dir=validation_dir,
             results_file="results-end-to-end-farm.csv"
         )
 
-    results = pd.read_csv(os.path.join(dataset_dir, "results-end-to-end-farm.csv"))
+    results = pd.read_csv(os.path.join(validation_dir, "results-end-to-end-farm.csv"))
     viz_tools.plot_accuracy_mae(results)
