@@ -16,6 +16,7 @@ from _06_hermes.parameters import num2label
 import pandas as pd
 import yaml
 from _04_athena.tree import train_gradient_boosted_tree, train_random_forest
+from _03_hephaestus.pca_tools import PCAProcessor
 
 def evaluate_model(results_file_name, dataset_dir, features_name, model_name, true_labels, model_predictions):
     mae = mean_absolute_error(true_labels, model_predictions)
@@ -143,6 +144,49 @@ def evaluate_gradient_boosted_tree(training_dataset, validation_dataset, trainin
                           training_metrics=training_metrics, 
                           validation_metrics=validation_metrics)
 
+def evaluate_all_models(zeus_params,
+                        training_dataset, 
+                        validation_dataset, 
+                        training_labels, 
+                        validation_labels, 
+                        training_features, 
+                        validation_features,
+                        feature_type_name):
+    
+    RIDGE_REGRESSION_ENABLED = zeus_params['models']['ridge_regression']['enabled']
+    RANDOM_FOREST_ENABLED = zeus_params['models']['random_forest']['enabled']
+    GRADIENT_BOOSTED_TREE_ENABLED = zeus_params['models']['gradient_boosted_tree']['enabled']
+        
+    if RIDGE_REGRESSION_ENABLED:
+        evaluate_ridge_regression(training_dataset=training_dataset,
+                                      validation_dataset=validation_dataset,
+                                      training_labels=training_labels,
+                                      validation_labels=validation_labels,
+                                      chosen_training_feature_array=training_features,
+                                      chosen_validation_feature_array=validation_features,
+                                      feature_type_name=feature_type_name,
+                                      zeus_params=zeus_params)
+
+    if RANDOM_FOREST_ENABLED:
+        evaluate_random_forest(training_dataset=training_dataset,
+                                    validation_dataset=validation_dataset,
+                                    training_labels=training_labels,
+                                    validation_labels=validation_labels,
+                                    chosen_training_feature_array=training_features,
+                                    chosen_validation_feature_array=validation_features,
+                                    feature_type_name=feature_type_name,
+                                    zeus_params=zeus_params)
+
+    if GRADIENT_BOOSTED_TREE_ENABLED:
+        evaluate_gradient_boosted_tree(training_dataset=training_dataset,
+                                           validation_dataset=validation_dataset,
+                                           training_labels=training_labels,
+                                           validation_labels=validation_labels,
+                                           chosen_training_feature_array=training_features,
+                                           chosen_validation_feature_array=validation_features,
+                                           feature_type_name=feature_type_name,
+                                           zeus_params=zeus_params)
+
 if __name__ == "__main__":
 
     with open("zeus_params.yaml", "r") as f:
@@ -176,12 +220,13 @@ if __name__ == "__main__":
 
     # Assembling handcrafted features
 
-    print("[INFO] Assembling handcrafted features...", zeus_params)
-
     TEST_HANDCRAFTED_FEATURES = zeus_params['features']['handcrafted']['enabled']
     N_FEATURES = zeus_params['features']['handcrafted']['n_features']
 
     if TEST_HANDCRAFTED_FEATURES:
+
+        print("[INFO] Assembling handcrafted features...", zeus_params)
+
         # Load or create features
         if new_dataset:
             handcrafted_feature_engineering = FeatureTools(X_train)
@@ -237,33 +282,77 @@ if __name__ == "__main__":
             validation_labels = validation_labels
 
         # Testing the feature table on enabled models
-        
-        if zeus_params['models']['ridge_regression']['enabled']:
-            evaluate_ridge_regression(training_dataset=training_dataset,
-                                      validation_dataset=validation_dataset,
-                                      training_labels=training_labels,
-                                      validation_labels=validation_labels,
-                                      chosen_training_feature_array=chosen_training_feature_array,
-                                      chosen_validation_feature_array=chosen_validation_feature_array,
-                                      feature_type_name="Handcrafted Features",
-                                      zeus_params=zeus_params)
-            
-        if zeus_params['models']['random_forest']['enabled']:
-            evaluate_random_forest(training_dataset=training_dataset,
-                                    validation_dataset=validation_dataset,
-                                    training_labels=training_labels,
-                                    validation_labels=validation_labels,
-                                    chosen_training_feature_array=chosen_training_feature_array,
-                                    chosen_validation_feature_array=chosen_validation_feature_array,
-                                    feature_type_name="Handcrafted Features",
-                                    zeus_params=zeus_params)
 
-        if zeus_params['models']['gradient_boosted_tree']['enabled']:
-            evaluate_gradient_boosted_tree(training_dataset=training_dataset,
-                                           validation_dataset=validation_dataset,
-                                           training_labels=training_labels,
-                                           validation_labels=validation_labels,
-                                           chosen_training_feature_array=chosen_training_feature_array,
-                                           chosen_validation_feature_array=chosen_validation_feature_array,
-                                           feature_type_name="Handcrafted Features",
-                                           zeus_params=zeus_params)
+        evaluate_all_models(zeus_params=zeus_params,
+                            training_dataset=training_dataset,
+                            validation_dataset=validation_dataset,
+                            training_labels=training_labels,
+                            validation_labels=validation_labels,
+                            training_features=chosen_training_feature_array,
+                            validation_features=chosen_validation_feature_array,
+                            feature_type_name="Handcrafted Features")
+            
+        print("[INFO] Handcrafted features evaluation completed.")
+
+    # ====================================================
+
+    # Assembling PCA-based features.
+
+    if zeus_params['features']['pca']['enabled']:
+
+        print("[INFO] Assembling PCA-based features...")
+
+        X_train_amplitude = np.abs(X_train)
+        X_val_amplitude = np.abs(X_val)
+        X_train_phase = np.angle(X_train)
+        X_val_phase = np.angle(X_val)
+
+        pca_processor_amplitude = PCAProcessor(X_train_amplitude, n_components=zeus_params['features']['pca']['n_features'])
+        pca_processor_phase = PCAProcessor(X_train_phase, n_components=zeus_params['features']['pca']['n_features'])
+
+        features_amplitude_train = pca_processor_amplitude.dimensionality_reduction()
+        features_amplitude_val = pca_processor_amplitude.transform(X_val_amplitude)
+
+        features_phase_train = pca_processor_phase.dimensionality_reduction()
+        features_phase_val = pca_processor_phase.transform(X_val_phase)
+
+        features_combined_train = np.concatenate(
+            [features_amplitude_train, features_phase_train], axis=1
+        )
+        features_combined_val = np.concatenate(
+            [features_amplitude_val, features_phase_val], axis=1
+        )
+
+        print("[INFO] Evaluating PCA Amplitude features...")
+        evaluate_all_models(zeus_params=zeus_params,
+                            training_dataset=training_dataset,
+                            validation_dataset=validation_dataset,
+                            training_labels=y_train,
+                            validation_labels=y_val,
+                            training_features=features_amplitude_train,
+                            validation_features=features_amplitude_val,
+                            feature_type_name="PCA Amplitude")
+
+        print("[INFO] Evaluating PCA Phase features...")
+        evaluate_all_models(zeus_params=zeus_params,
+                            training_dataset=training_dataset,
+                            validation_dataset=validation_dataset,
+                            training_labels=y_train,
+                            validation_labels=y_val,
+                            training_features=features_phase_train,
+                            validation_features=features_phase_val,
+                            feature_type_name="PCA Phase")
+        
+        print("[INFO] Evaluating PCA Combined features...")
+        evaluate_all_models(zeus_params=zeus_params,
+                            training_dataset=training_dataset,
+                            validation_dataset=validation_dataset,
+                            training_labels=y_train,
+                            validation_labels=y_val,
+                            training_features=features_combined_train,
+                            validation_features=features_combined_val,
+                            feature_type_name="PCA Combined")
+        
+        print("[INFO] PCA-based features evaluation completed.")
+
+    # ====================================================
