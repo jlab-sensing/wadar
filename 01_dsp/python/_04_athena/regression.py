@@ -78,3 +78,51 @@ def polynomial_regression(feature_array, labels, degree=1, kfold_splits=KFOLD_SP
         "inference_time": np.mean(metrics['inference_time']),
         "training_time": np.mean(metrics['training_time'])
     }
+
+def monte_carlo_regression_feature_selection(feature_table, labels, data_dir, degree=1, n_iterations=100):
+    """
+    Test different feature sets using Monte Carlo simulation to determine the best performing features.
+
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing the features and labels.
+        labels (np.ndarray):            Array of labels corresponding to the features.
+        data_dir (str):                 Directory to save the feature table.
+        n_iterations (int):             Number of iterations to run the Monte Carlo simulation.
+        test_size (float):              Proportion of the dataset to include in the test split.
+
+    Returns:
+        np.ndarray:                     Array of features selected based on the best performing model.
+        list:                           List of feature names selected based on the best performing model.
+        np.ndarray:                     Array of labels corresponding to the selected features.
+    """
+
+    feature_array = feature_table.drop(columns=['Label']).values
+    labels = feature_table['Label'].values
+
+    best_features = []
+    best_score = np.inf
+
+    for i in range(n_iterations):
+        top_n = np.random.randint(1, feature_array.shape[1] + 1)
+        selected_indices = np.random.choice(feature_array.shape[1], top_n, replace=False)
+        selected_features = feature_array[:, selected_indices]
+        
+        model, metrics = polynomial_regression(
+            selected_features, labels, degree=degree, kfold_splits=5
+        )
+
+        if metrics['mae'] < best_score:
+            print(f"Improved MAE from {best_score:.4f} to {metrics['mae']:.4f} at iteration {i+1}")
+
+        if metrics['mae'] < best_score:
+            best_score = metrics['mae']
+            best_features = selected_indices
+
+    feature_table_optimal = feature_table.copy().iloc[:, best_features]
+    feature_table_optimal['Label'] = labels
+
+    feature_tools.save_feature_table(
+        feature_table_optimal, data_dir, f"models/feature_linear_regression_{degree}_monte_carlo.csv"
+    )
+
+    return feature_array[:, best_features], feature_table.columns[best_features].tolist(), labels
