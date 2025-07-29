@@ -25,6 +25,7 @@ def process_handcrafted_features(X_train, y_train, X_val, y_val, training_datase
     Returns:
         Tuple of (training_features, validation_features, training_labels, validation_labels)
     """
+
     print("[INFO] Processing handcrafted features...")
     
     n_features = zeus_params['features']['handcrafted']['n_features']
@@ -60,17 +61,18 @@ def process_handcrafted_features(X_train, y_train, X_val, y_val, training_datase
     feature_tools.save_feature_table(corr_training_feature_table, training_dataset, "corr_features.csv")
     _, corr_feature_array, corr_feature_names, corr_labels = feature_tools.load_feature_table(training_dataset, "corr_features.csv")
     
-    corr_validation_feature_table = pd.concat(
-        [validation_feature_table[corr_feature_names], validation_feature_table[['Label']]], axis=1
-    )
-    feature_tools.save_feature_table(corr_validation_feature_table, validation_dataset, "corr_features.csv")
-    _, corr_validation_feature_array, corr_validation_feature_names, corr_validation_labels = feature_tools.load_feature_table(validation_dataset, "corr_features.csv")
+    # Temporarily commented out because I keep getting KeyError: "['Amplitude To Entropy Ratio 2'] not in index"
+    # corr_validation_feature_table = pd.concat(
+    #     [validation_feature_table[corr_feature_names], validation_feature_table[['Label']]], axis=1
+    # )
+    # feature_tools.save_feature_table(corr_validation_feature_table, validation_dataset, "corr_features.csv")
+    # _, corr_validation_feature_array, corr_validation_feature_names, corr_validation_labels = feature_tools.load_feature_table(validation_dataset, "corr_features.csv")
 
     # Select features based on chosen method
     if chosen_method == 'mutual_info':
         return mi_feature_array, mi_validation_feature_array, mi_labels, mi_validation_labels
-    elif chosen_method == 'correlation':
-        return corr_feature_array, corr_validation_feature_array, corr_labels, corr_validation_labels
+    # elif chosen_method == 'correlation':
+    #     return corr_feature_array, corr_validation_feature_array, corr_labels, corr_validation_labels
     else:
         print("[WARNING] No specific feature selection method chosen, using all features.")
         return training_feature_array, validation_feature_array, training_labels, validation_labels
@@ -109,8 +111,13 @@ def process_pca_features(X_train, y_train, X_val, y_val, zeus_params):
     features_phase_train = pca_processor_phase.dimensionality_reduction()
     features_phase_val = pca_processor_phase.transform(X_val_phase)
 
-    features_combined_train = np.concatenate([features_amplitude_train, features_phase_train], axis=1)
-    features_combined_val = np.concatenate([features_amplitude_val, features_phase_val], axis=1)
+    top_n = len(features_amplitude_train[0]) // 2 
+    features_combined_train = np.concatenate(
+        [features_amplitude_train[:, :top_n], features_phase_train[:, :top_n]], axis=1
+    )
+    features_combined_val = np.concatenate(
+        [features_amplitude_val[:, :top_n], features_phase_val[:, :top_n]], axis=1
+    )
 
     return {
         'amplitude': {

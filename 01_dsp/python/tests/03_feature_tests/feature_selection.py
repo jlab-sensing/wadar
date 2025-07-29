@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     print("Test harness for feature pruning.")
 
-    dataset_dir = "../../data/combined-soil-compaction-dataset"
+    dataset_dir = "../../data/training-dataset"
 
 
     # If making a new feature set, 

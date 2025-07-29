@@ -19,10 +19,15 @@ from _01_gaia.dataset import combine_datasets
 # Zeus modules
 from evaluators import evaluate_all_models
 from feature_processor import process_handcrafted_features, process_pca_features
-from visualization import generate_results_summary
+from visualization import generate_results_summary, plot_reduced_features, tsne_plot
+import numpy as np
+import matplotlib.pyplot as plt
 
 def main():
-    """Main Zeus pipeline execution."""
+    """
+    Main Zeus pipeline execution.
+    """
+
     # Load configuration
     print("[INFO] Loading Zeus configuration...")
     with open("zeus_params.yaml", "r") as f:
@@ -136,20 +141,56 @@ def main():
             validation_features=pca_features['combined']['val'],
             feature_type_name="PCA Combined"
         )
-        
+
+
+        if zeus_params['features']['pca']['visualize']:
+
+            print("[INFO] Visualizing PCA features...")
+            
+            reduced_training_features_amplitude = pca_features['amplitude']['train']
+            reduced_validation_features_amplitude = pca_features['amplitude']['val']
+            reduced_training_features_phase = pca_features['phase']['train']
+            reduced_validation_features_phase = pca_features['phase']['val']
+            reduced_training_features_combined = pca_features['combined']['train']
+            reduced_validation_features_combined = pca_features['combined']['val']
+            labels_train = pca_features['combined']['labels_train']
+            labels_val = pca_features['combined']['labels_val']
+
+            # tsne_plot(
+            #     reduced_training_features_amplitude, reduced_validation_features_amplitude, labels_train, labels_val
+            # )
+            # tsne_plot(
+            #     reduced_training_features_phase, reduced_validation_features_phase, labels_train, labels_val
+            # )
+            # tsne_plot(
+            #     reduced_training_features_combined, reduced_validation_features_combined, labels_train, labels_val
+            # )
+
+            plot_reduced_features(
+                reduced_training_features_amplitude, reduced_validation_features_amplitude, labels_train, labels_val, "PCA Amplitude"
+            )
+            plot_reduced_features(
+                reduced_training_features_phase, reduced_validation_features_phase, labels_train, labels_val, "PCA Phase"
+            )
+            # plot_reduced_features( 
+            #     reduced_training_features_combined, reduced_validation_features_combined, labels_train, labels_val
+            # )
+            plt.show()
+
         print("[INFO] PCA-based features evaluation completed.")
 
     # ====================================================
     # Results Summary
     # ====================================================
 
-    print("\n" + "="*60)
-    print("RESULTS SUMMARY")
-    print("="*60)
+    # print("\n" + "="*60)
+    # print("RESULTS SUMMARY")
+    # print("="*60)
     
-    generate_results_summary(target_validation_dataset, top_n=10)
+    # generate_results_summary(target_validation_dataset, top_n=10)
     
     print("\n[INFO] Zeus evaluation pipeline completed successfully!")
+
 
 
 if __name__ == "__main__":

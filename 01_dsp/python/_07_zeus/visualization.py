@@ -6,6 +6,7 @@ Contains functions for plotting and displaying results.
 import numpy as np
 import matplotlib.pyplot as plt
 from _06_hermes.logger import load_results
+from sklearn.manifold import TSNE
 
 
 def plot_results(top_n, results):
@@ -74,3 +75,81 @@ def generate_results_summary(validation_dataset, top_n=10):
     except Exception as e:
         print(f"[ERROR] Failed to load or plot results: {e}")
         print("[INFO] No results available for plotting.")
+
+def plot_reduced_features(reduced_training_features, reduced_validation_features, labels_train, labels_val, title):
+    """
+    Visualize dimensionality-reduced features for training and validation sets.
+
+    Args:
+        reduced_training_features_combined: np.ndarray, shape (n_samples_train, 2)
+        reduced_validation_features_combined: np.ndarray, shape (n_samples_val, 2)
+        labels_train: array-like, labels for training samples
+        labels_val: array-like, labels for validation samples
+    """
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # Training set: circles
+    scatter_train = ax.scatter(
+        reduced_training_features[:, 0],
+        reduced_training_features[:, 1],
+        c=labels_train,
+        cmap='tab10', alpha=0.7, edgecolors='k', marker='o', label='Train'
+    )
+    # Validation set: larger triangles, use same colormap and normalization
+    scatter_val = ax.scatter(
+        reduced_validation_features[:, 0],
+        reduced_validation_features[:, 1],
+        c=labels_val,
+        cmap=scatter_train.cmap,
+        norm=scatter_train.norm,
+        alpha=0.7, edgecolors='k', marker='^', label='Validation',
+        s=120
+    )
+
+    ax.set_title(f"{title} Top 2 Components: Train (o) vs Validation (^)")
+    ax.legend(loc='best')
+
+    # Colorbar for labels (only one, since cmap and norm are shared)
+    cbar = plt.colorbar(scatter_train, ax=ax, label='Label')
+    plt.tight_layout()
+
+def tsne_plot(reduced_training_features, reduced_validation_features, labels_train, labels_val, random_state=42):
+    """
+    Apply t-SNE and visualize reduced features for training and validation sets.
+
+    Args:
+        reduced_training_features: np.ndarray, shape (n_samples_train, n_features)
+        reduced_validation_features: np.ndarray, shape (n_samples_val, n_features)
+        labels_train: array-like, labels for training samples
+        labels_val: array-like, labels for validation samples
+        random_state: int, random seed for reproducibility
+    """
+    # Concatenate features for joint t-SNE
+    features_combined = np.vstack([reduced_training_features, reduced_validation_features])
+    labels_combined = np.concatenate([labels_train, labels_val])
+    n_train = reduced_training_features.shape[0]
+
+    # Apply t-SNE
+    tsne = TSNE(n_components=2, random_state=random_state)
+    features_tsne = tsne.fit_transform(features_combined)
+
+    # Split back to train/val
+    train_tsne = features_tsne[:n_train]
+    val_tsne = features_tsne[n_train:]
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    scatter_train = ax.scatter(
+        train_tsne[:, 0], train_tsne[:, 1],
+        c=labels_train, cmap='tab10', alpha=0.7, edgecolors='k', marker='o', label='Train'
+    )
+    scatter_val = ax.scatter(
+        val_tsne[:, 0], val_tsne[:, 1],
+        c=labels_val, cmap=scatter_train.cmap, norm=scatter_train.norm,
+        alpha=0.7, edgecolors='k', marker='^', label='Validation', s=120
+    )
+
+    ax.set_title("t-SNE: Train (o) vs Validation (^)")
+    ax.legend(loc='best')
+    plt.colorbar(scatter_train, ax=ax, label='Label')
+    plt.tight_layout()
