@@ -1,0 +1,70 @@
+# Zeus Configuration File
+# End-to-End ML Pipeline Configuration
+
+# Data Configuration
+data:
+  # Training dataset configuration
+  training:
+    # Raw datasets to combine (list of directories)
+    raw_datasets:
+      - "../data/wet-0-soil-compaction-dataset"
+      - "../data/wet-1-soil-compaction-dataset" 
+      - "../data/wet-2-soil-compaction-dataset"
+    # Target combined training dataset directory
+    target_dataset: "../data/training-dataset"
+  
+  # Validation dataset configuration
+  validation:
+    # Raw validation datasets to combine
+    raw_datasets:
+      - "../data/field-soil-compaction-dataset"
+    # Target combined validation dataset directory
+    target_dataset: "../data/validation-dataset"
+  
+  # Dataset processing flags
+  new_dataset: false  # Set to true to recreate datasets from raw data
+
+# Feature Engineering Configuration
+features:
+  handcrafted:
+    enabled: true  # Set to false to skip handcrafted feature generation
+    # Number of top features to select
+    n_features: 8
+    
+    # Feature selection methods to use
+    selection_methods:
+      mutual_info:
+        enabled: true
+        filename: "mi_features.csv"
+      correlation:
+        enabled: true  
+        filename: "corr_features.csv"
+    
+    # Which feature set to use for final model training
+    # Options: "mutual_info", "correlation", "all"
+    chosen_method: "mutual_info"
+
+
+# Model Configuration
+models:
+  ridge_regression:
+    enabled: true
+    degrees: [1, 2, 3]  # Polynomial degrees to test
+    alpha: 1000         # Ridge regularization parameter
+    
+  random_forest:
+    enabled: true
+    n_estimators: 100
+
+  gradient_boosted_tree:
+    enabled: true
+
+  #   
+  # svm:
+  #   enabled: false
+  #   kernel: "rbf"
+  #   C: 1.0
+
+# Advanced Configuration
+advanced:
+  verbose: true  # Set to false to reduce logging output

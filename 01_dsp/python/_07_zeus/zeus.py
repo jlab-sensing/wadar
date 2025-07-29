@@ -15,6 +15,7 @@ from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_err
 from _06_hermes.parameters import num2label
 import pandas as pd
 import yaml
+from _04_athena.tree import train_gradient_boosted_tree, train_random_forest
 
 def evaluate_model(results_file_name, dataset_dir, features_name, model_name, true_labels, model_predictions):
     mae = mean_absolute_error(true_labels, model_predictions)
@@ -38,38 +39,109 @@ def evaluate_model(results_file_name, dataset_dir, features_name, model_name, tr
 
     return metrics
 
-def display_model_metrics(model_name, poly_metrics, metrics):
+def display_model_metrics(model_name, training_metrics, validation_metrics):
     print("="*60)
     print(f"[METRICS] {model_name}")
     print(f"{'Metric':<12} {'[TRAINING]':<20} {'[VALIDATION]':<20}")
-    print(f"{'MAE':<12} {poly_metrics['mae']:<20.4f} {metrics['mae']:<20.4f}")
-    print(f"{'R2':<12} {poly_metrics['r2']:<20.4f} {metrics['r2']:<20.4f}")
-    print(f"{'RMSE':<12} {poly_metrics['rmse']:<20.4f} {metrics['rmse']:<20.4f}")
-    print(f"{'Accuracy':<12} {poly_metrics['accuracy']:<20.4f} {metrics['accuracy']:<20.4f}")
+    print(f"{'MAE':<12} {training_metrics['mae']:<20.4f} {validation_metrics['mae']:<20.4f}")
+    print(f"{'R2':<12} {training_metrics['r2']:<20.4f} {validation_metrics['r2']:<20.4f}")
+    print(f"{'RMSE':<12} {training_metrics['rmse']:<20.4f} {validation_metrics['rmse']:<20.4f}")
+    print(f"{'Accuracy':<12} {training_metrics['accuracy']:<20.4f} {validation_metrics['accuracy']:<20.4f}")
     print("="*60)
 
-def full_monty_ridge_regression(training_dataset, validation_dataset, training_labels, validation_labels, chosen_training_feature_array, chosen_validation_feature_array):
-    print("[INFO] Training ridge regression models...")
+def evaluate_ridge_regression(training_dataset, validation_dataset, training_labels, validation_labels, chosen_training_feature_array, chosen_validation_feature_array, feature_type_name, zeus_params):
 
-    for degree in [1, 2, 3]:
+    ridge_params = zeus_params['models']['ridge_regression']
+    degrees = ridge_params.get('degrees', [1, 2, 3])
+    alpha = ridge_params.get('alpha', 1.0)
+
+    for degree in degrees:
+
         model_name = f"Ridge Regression Degree {degree}"
-        poly_model, poly_metrics = polynomial_regression(feature_array=chosen_training_feature_array,
-                                                        labels=training_labels,
-                                                        degree=degree,
-                                                        kfold_splits=5)
+        print(f"[INFO] Evaluating {model_name} model on {feature_type_name}...")
 
-        update_results(training_dataset, model_name, "Ridge Regression", poly_metrics, "training_results.csv", verbose=False)
+        poly_model, poly_metrics = polynomial_regression(
+            feature_array=chosen_training_feature_array,
+            labels=training_labels,
+            degree=degree,
+            alpha=alpha
+        )
+
+        update_results(training_dataset, feature_type_name, model_name, poly_metrics, "training_results.csv", verbose=False)
 
         poly_model_predictions = poly_model.predict(chosen_validation_feature_array)
 
-        metrics = evaluate_model(results_file_name="validation_results.csv",
-                    dataset_dir=validation_dataset,
-                    features_name="Handcrafted Features",
-                    model_name=model_name,
-                    true_labels=validation_labels,
-                    model_predictions=poly_model_predictions)
+        metrics = evaluate_model(
+            results_file_name="validation_results.csv",
+            dataset_dir=validation_dataset,
+            features_name=feature_type_name,
+            model_name=model_name,
+            true_labels=validation_labels,
+            model_predictions=poly_model_predictions
+        )
         
         display_model_metrics(model_name, poly_metrics, metrics)
+
+def evaluate_random_forest(training_dataset, validation_dataset, training_labels, validation_labels, chosen_training_feature_array, chosen_validation_feature_array, feature_type_name, zeus_params):
+
+    model_name = "Random Forest"
+    print(f"[INFO] Evaluating {model_name} model on {feature_type_name}...")
+
+    rf_params = zeus_params['models']['random_forest']
+    n_estimators = rf_params.get('n_estimators', 100)
+
+    model, training_metrics = train_random_forest(
+        feature_array=chosen_training_feature_array,
+        labels=training_labels,
+        n_estimators=n_estimators
+    )
+
+    update_results(training_dataset, feature_type_name, model_name, training_metrics, "training_results.csv", verbose=False)
+
+    rf_model_predictions = model.predict(chosen_validation_feature_array)
+
+    validation_metrics = evaluate_model(
+        results_file_name="validation_results.csv",
+        dataset_dir=validation_dataset,
+        features_name=feature_type_name,
+        model_name=model_name,
+        true_labels=validation_labels,
+        model_predictions=rf_model_predictions
+    )
+
+    display_model_metrics(model_name="Random Forest", 
+                          training_metrics=training_metrics, 
+                          validation_metrics=validation_metrics)
+    
+def evaluate_gradient_boosted_tree(training_dataset, validation_dataset, training_labels, validation_labels, chosen_training_feature_array, chosen_validation_feature_array, feature_type_name, zeus_params):
+    model_name = "Gradient Boosted Tree"
+    print(f"[INFO] Evaluating {model_name} model on {feature_type_name}...")
+
+    gbt_params = zeus_params['models']['gradient_boosted_tree']
+    n_estimators = gbt_params.get('n_estimators', 100)
+
+    model, training_metrics = train_gradient_boosted_tree(
+        feature_array=chosen_training_feature_array,
+        labels=training_labels,
+        n_estimators=n_estimators
+    )
+
+    update_results(training_dataset, feature_type_name, model_name, training_metrics, "training_results.csv", verbose=False)
+
+    gbt_model_predictions = model.predict(chosen_validation_feature_array)
+
+    validation_metrics = evaluate_model(
+        results_file_name="validation_results.csv",
+        dataset_dir=validation_dataset,
+        features_name=feature_type_name,
+        model_name=model_name,
+        true_labels=validation_labels,
+        model_predictions=gbt_model_predictions
+    )
+
+    display_model_metrics(model_name="Gradient Boosted Tree", 
+                          training_metrics=training_metrics, 
+                          validation_metrics=validation_metrics)
 
 if __name__ == "__main__":
 
@@ -104,7 +176,9 @@ if __name__ == "__main__":
 
     # Assembling handcrafted features
 
-    TEST_HANDCRAFTED_FEATURES = zeus_params['features']['handcrafted']['test_handcrafted_features']
+    print("[INFO] Assembling handcrafted features...", zeus_params)
+
+    TEST_HANDCRAFTED_FEATURES = zeus_params['features']['handcrafted']['enabled']
     N_FEATURES = zeus_params['features']['handcrafted']['n_features']
 
     if TEST_HANDCRAFTED_FEATURES:
@@ -162,13 +236,34 @@ if __name__ == "__main__":
             training_labels = training_labels
             validation_labels = validation_labels
 
-    # ====================================================
+        # Testing the feature table on enabled models
+        
+        if zeus_params['models']['ridge_regression']['enabled']:
+            evaluate_ridge_regression(training_dataset=training_dataset,
+                                      validation_dataset=validation_dataset,
+                                      training_labels=training_labels,
+                                      validation_labels=validation_labels,
+                                      chosen_training_feature_array=chosen_training_feature_array,
+                                      chosen_validation_feature_array=chosen_validation_feature_array,
+                                      feature_type_name="Handcrafted Features",
+                                      zeus_params=zeus_params)
+            
+        if zeus_params['models']['random_forest']['enabled']:
+            evaluate_random_forest(training_dataset=training_dataset,
+                                    validation_dataset=validation_dataset,
+                                    training_labels=training_labels,
+                                    validation_labels=validation_labels,
+                                    chosen_training_feature_array=chosen_training_feature_array,
+                                    chosen_validation_feature_array=chosen_validation_feature_array,
+                                    feature_type_name="Handcrafted Features",
+                                    zeus_params=zeus_params)
 
-    # Train models with selected features
-
-    # Ridge Regression
-
-    full_monty_ridge_regression(training_dataset, validation_dataset, training_labels, validation_labels, chosen_training_feature_array, chosen_validation_feature_array)
-    
-    # ====================================================
-
+        if zeus_params['models']['gradient_boosted_tree']['enabled']:
+            evaluate_gradient_boosted_tree(training_dataset=training_dataset,
+                                           validation_dataset=validation_dataset,
+                                           training_labels=training_labels,
+                                           validation_labels=validation_labels,
+                                           chosen_training_feature_array=chosen_training_feature_array,
+                                           chosen_validation_feature_array=chosen_validation_feature_array,
+                                           feature_type_name="Handcrafted Features",
+                                           zeus_params=zeus_params)
