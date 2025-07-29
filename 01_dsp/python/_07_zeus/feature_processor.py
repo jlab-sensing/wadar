@@ -8,6 +8,7 @@ import pandas as pd
 from _03_hephaestus.feature_tools import FeatureTools
 from _03_hephaestus import feature_tools
 from _03_hephaestus.pca_tools import PCAProcessor
+from _03_hephaestus.autoencoder import AutoencoderFeatureSelector
 
 
 def process_handcrafted_features(X_train, y_train, X_val, y_val, training_dataset, validation_dataset, 
@@ -137,5 +138,147 @@ def process_pca_features(X_train, y_train, X_val, y_val, zeus_params):
             'val': features_combined_val,
             'labels_train': y_train,
             'labels_val': y_val
+        }
+    }
+
+
+def process_autoencoder_features(X_train, y_train, X_val, y_val, zeus_params):
+    """
+    Process autoencoder-based features for amplitude, phase, and combined.
+    
+    Args:
+        X_train, y_train: Training data
+        X_val, y_val: Validation data
+        zeus_params: Configuration parameters
+        
+    Returns:
+        Dictionary with amplitude, phase, and combined feature arrays
+    """
+    print("[INFO] Processing autoencoder-based features...")
+    
+    n_components = zeus_params['features']['autoencoder']['n_features']
+    autoencoder_params = zeus_params['features']['autoencoder']
+    
+    # Extract amplitude and phase components
+    X_train_amplitude = np.abs(X_train)
+    X_val_amplitude = np.abs(X_val)
+    X_train_phase = np.angle(X_train)
+    X_val_phase = np.angle(X_val)
+
+    print(f"[INFO] Training autoencoder with {n_components} encoding dimensions...")
+    
+    # Autoencoder for amplitude features
+    print("[INFO] Processing amplitude features with autoencoder...")
+    if not zeus_params['features']['autoencoder']['load_model']:
+        autoencoder_amplitude = AutoencoderFeatureSelector(
+            X_train_amplitude, 
+            encoding_dim=n_components, 
+            signal_type='magnitude'
+        )
+    else:
+        print(f"[INFO] Loading pre-trained autoencoder from {zeus_params['features']['autoencoder']['save_directory']}")
+        autoencoder_amplitude = AutoencoderFeatureSelector(
+            X_train_amplitude, 
+            encoding_dim=n_components, 
+            signal_type='magnitude',
+            model_name='autoencoder_amplitude.keras',
+            model_dir=zeus_params['features']['autoencoder']['save_directory'],
+        )
+    features_amplitude_train = autoencoder_amplitude.fit(
+        epochs=autoencoder_params.get('epochs', 50),
+        batch_size=autoencoder_params.get('batch_size', 32),
+        patience=autoencoder_params.get('patience', 10),
+        verbose=autoencoder_params.get('verbose', 0)
+    )
+    features_amplitude_val = autoencoder_amplitude.transform(
+        autoencoder_amplitude.pre_process(X_val_amplitude, signal_type='magnitude')
+    )
+    
+    # Autoencoder for phase features  
+    print("[INFO] Processing phase features with autoencoder...")
+    if not zeus_params['features']['autoencoder']['load_model']:
+        autoencoder_phase = AutoencoderFeatureSelector(
+            X_train_phase,
+            encoding_dim=n_components,
+            signal_type='phase'
+        )
+    else:
+        print(f"[INFO] Loading pre-trained autoencoder from {zeus_params['features']['autoencoder']['save_directory']}")
+        autoencoder_phase = AutoencoderFeatureSelector(
+            X_train_phase,
+            encoding_dim=n_components,
+            signal_type='phase',
+            model_name='autoencoder_phase.keras',
+            model_dir=zeus_params['features']['autoencoder']['save_directory'],
+        )
+    features_phase_train = autoencoder_phase.fit(
+        epochs=autoencoder_params.get('epochs', 50),
+        batch_size=autoencoder_params.get('batch_size', 32),
+        patience=autoencoder_params.get('patience', 10),
+        verbose=autoencoder_params.get('verbose', 0)
+    )
+    features_phase_val = autoencoder_phase.transform(
+        autoencoder_phase.pre_process(X_val_phase, signal_type='phase')
+    )
+    
+    # Autoencoder for combined magnitude and phase
+    print("[INFO] Processing combined features with autoencoder...")
+    if not zeus_params['features']['autoencoder']['load_model']:
+        autoencoder_combined = AutoencoderFeatureSelector(
+            X_train, 
+            encoding_dim=n_components,  # Double the encoding dimension for combined
+            signal_type=None  # This will stack magnitude and phase
+        )
+    else:
+        print(f"[INFO] Loading pre-trained autoencoder from {zeus_params['features']['autoencoder']['save_directory']}")
+        autoencoder_combined = AutoencoderFeatureSelector(
+            X_train,
+            encoding_dim=n_components,
+            signal_type=None,
+            model_name='autoencoder_combined.keras',
+            model_dir=zeus_params['features']['autoencoder']['save_directory'],
+        )
+    features_combined_train = autoencoder_combined.fit(
+        epochs=autoencoder_params.get('epochs', 50),
+        batch_size=autoencoder_params.get('batch_size', 32),
+        patience=autoencoder_params.get('patience', 10),
+        verbose=autoencoder_params.get('verbose', 0)
+    )
+    features_combined_val = autoencoder_combined.transform(
+        autoencoder_combined.pre_process(X_val, signal_type=None)
+    )
+    
+    # Save models if specified
+    if autoencoder_params.get('save_models', False):
+        save_dir = autoencoder_params.get('save_directory', './autoencoder_models')
+        print(f"[INFO] Saving autoencoder models to {save_dir}...")
+        import os
+        os.makedirs(save_dir, exist_ok=True)
+        
+        autoencoder_amplitude.save_model(save_dir, 'autoencoder_amplitude.keras')
+        autoencoder_phase.save_model(save_dir, 'autoencoder_phase.keras')
+        autoencoder_combined.save_model(save_dir, 'autoencoder_combined.keras')
+
+    return {
+        'amplitude': {
+            'train': features_amplitude_train,
+            'val': features_amplitude_val,
+            'labels_train': y_train,
+            'labels_val': y_val,
+            'model': autoencoder_amplitude
+        },
+        'phase': {
+            'train': features_phase_train,
+            'val': features_phase_val,
+            'labels_train': y_train,
+            'labels_val': y_val,
+            'model': autoencoder_phase
+        },
+        'combined': {
+            'train': features_combined_train,
+            'val': features_combined_val,
+            'labels_train': y_train,
+            'labels_val': y_val,
+            'model': autoencoder_combined
         }
     }

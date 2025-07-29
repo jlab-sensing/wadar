@@ -153,3 +153,60 @@ def tsne_plot(reduced_training_features, reduced_validation_features, labels_tra
     ax.legend(loc='best')
     plt.colorbar(scatter_train, ax=ax, label='Label')
     plt.tight_layout()
+
+def visualize_dimensionality_reduction(X_train_reduced, y_train, X_val_reduced, y_val, method='Autoencoder', title=None):
+    """
+    Generic function to visualize already-reduced dimensionality data.
+    
+    Args:
+        X_train_reduced: Already reduced training features (2D array)
+        y_train: Training labels (1D array)
+        X_val_reduced: Already reduced validation features (2D array)
+        y_val: Validation labels (1D array)
+        method: Name of the reduction method (for labeling)
+        title: Optional plot title
+    """
+    # Take first 2 dimensions if more than 2 are available
+    if X_train_reduced.shape[1] > 2:
+        X_train_plot = X_train_reduced[:, :2]
+        X_val_plot = X_val_reduced[:, :2]
+    else:
+        X_train_plot = X_train_reduced
+        X_val_plot = X_val_reduced
+    
+    # Create plot
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    # Training set: circles
+    scatter_train = ax.scatter(
+        X_train_plot[:, 0], X_train_plot[:, 1],
+        c=y_train, cmap='tab10', alpha=0.7,
+        edgecolors='black', linewidth=0.5,
+        marker='o', s=60, label='Training'
+    )
+    
+    # Validation set: triangles
+    scatter_val = ax.scatter(
+        X_val_plot[:, 0], X_val_plot[:, 1],
+        c=y_val, cmap='tab10', alpha=0.8,
+        edgecolors='black', linewidth=0.5,
+        marker='^', s=80, label='Validation'
+    )
+    
+    # Styling
+    ax.set_xlabel(f'{method} Component 1', fontsize=12)
+    ax.set_ylabel(f'{method} Component 2', fontsize=12)
+    
+    if title is None:
+        title = f'{method} Visualization: Training vs Validation'
+    ax.set_title(title, fontsize=14, fontweight='bold')
+    
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc='best', fontsize=11)
+    
+    # Add colorbar
+    cbar = plt.colorbar(scatter_train, ax=ax, label='Labels')
+    cbar.set_label('Labels', fontsize=11)
+    
+    plt.tight_layout()
+    plt.show()

@@ -18,7 +18,7 @@ from _01_gaia.dataset import combine_datasets
 
 # Zeus modules
 from evaluators import evaluate_all_models
-from feature_processor import process_handcrafted_features, process_pca_features
+from feature_processor import process_handcrafted_features, process_pca_features, process_autoencoder_features
 from visualization import generate_results_summary, plot_reduced_features, tsne_plot
 import numpy as np
 import matplotlib.pyplot as plt
@@ -66,7 +66,7 @@ def main():
     print(f"[INFO] Validation data shape: {X_val.shape}")
 
     # ====================================================
-    # Handcrafted Features Evaluation
+    # Handcrafted Features
     # ====================================================
 
     if zeus_params['features']['handcrafted']['enabled']:
@@ -93,7 +93,7 @@ def main():
         print("[INFO] Handcrafted features evaluation completed.")
 
     # ====================================================
-    # PCA-based Features Evaluation
+    # PCA-based Features
     # ====================================================
 
     if zeus_params['features']['pca']['enabled']:
@@ -177,8 +177,89 @@ def main():
             # )
             plt.show()
 
-        print("[INFO] PCA-based features evaluation completed.")
+        print("[INFO] PCA-based features evaluation completed.")    # ====================================================
+    # Autoencoder-based Features 
+    # ====================================================
 
+    if zeus_params['features']['autoencoder']['enabled']:
+        print("\n" + "="*60)
+        print("AUTOENCODER-BASED FEATURES EVALUATION")
+        print("="*60)
+
+        autoencoder_features = process_autoencoder_features(X_train, y_train, X_val, y_val, zeus_params)
+
+        # Evaluate Autoencoder Amplitude features
+        print("\n[INFO] Evaluating Autoencoder Amplitude features...")
+        evaluate_all_models(
+            zeus_params=zeus_params,
+            training_dataset=target_training_datasets,
+            validation_dataset=target_validation_dataset,
+            training_labels=autoencoder_features['amplitude']['labels_train'],
+            validation_labels=autoencoder_features['amplitude']['labels_val'],
+            training_features=autoencoder_features['amplitude']['train'],
+            validation_features=autoencoder_features['amplitude']['val'],
+            feature_type_name="Autoencoder Amplitude"
+        )
+
+        # Evaluate Autoencoder Phase features
+        print("\n[INFO] Evaluating Autoencoder Phase features...")
+        evaluate_all_models(
+            zeus_params=zeus_params,
+            training_dataset=target_training_datasets,
+            validation_dataset=target_validation_dataset,
+            training_labels=autoencoder_features['phase']['labels_train'],
+            validation_labels=autoencoder_features['phase']['labels_val'],
+            training_features=autoencoder_features['phase']['train'],
+            validation_features=autoencoder_features['phase']['val'],
+            feature_type_name="Autoencoder Phase"
+        )
+        
+        # Evaluate Autoencoder Combined features
+        print("\n[INFO] Evaluating Autoencoder Combined features...")
+        evaluate_all_models(
+            zeus_params=zeus_params,
+            training_dataset=target_training_datasets,
+            validation_dataset=target_validation_dataset,
+            training_labels=autoencoder_features['combined']['labels_train'],
+            validation_labels=autoencoder_features['combined']['labels_val'],
+            training_features=autoencoder_features['combined']['train'],
+            validation_features=autoencoder_features['combined']['val'],
+            feature_type_name="Autoencoder Combined"
+        )
+
+        # Visualization
+        if zeus_params['features']['autoencoder']['visualize']:
+            print("\n[INFO] Visualizing autoencoder features...")
+            
+            # Visualize Autoencoder features
+            plot_reduced_features(
+                autoencoder_features['amplitude']['train'], 
+                autoencoder_features['amplitude']['val'], 
+                autoencoder_features['amplitude']['labels_train'], 
+                autoencoder_features['amplitude']['labels_val'], 
+                "Autoencoder Amplitude Features"
+            )
+            
+            plot_reduced_features(
+                autoencoder_features['phase']['train'], 
+                autoencoder_features['phase']['val'], 
+                autoencoder_features['phase']['labels_train'], 
+                autoencoder_features['phase']['labels_val'], 
+                "Autoencoder Phase Features"
+            )
+            
+            plot_reduced_features(
+                autoencoder_features['combined']['train'], 
+                autoencoder_features['combined']['val'], 
+                autoencoder_features['combined']['labels_train'], 
+                autoencoder_features['combined']['labels_val'], 
+                "Autoencoder Combined Features"
+            )
+            
+            plt.show()
+
+        print("[INFO] Autoencoder-based features evaluation completed.")
+        
     # ====================================================
     # Results Summary
     # ====================================================
