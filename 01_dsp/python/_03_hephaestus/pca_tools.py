@@ -45,6 +45,23 @@ class PCAProcessor:
         X_flat = X.reshape(N, R * T)
         reduced = self.pca.fit_transform(X_flat)  # shape: (N, n_components)
         return reduced
+    
+    def transform(self, X):
+        """
+        Apply the previously fitted PCA to new data.
+
+        Args:
+            X (np.ndarray): Input data of shape (samples, features) or (samples, R, T).
+
+        Returns:
+            np.ndarray: Transformed data of shape (samples, n_components).
+        """
+        if X.ndim == 3:
+            N, R, T = X.shape
+            X_flat = X.reshape(N, R * T)
+        else:
+            X_flat = X
+        return self.pca.transform(X_flat)
 
     def plot_variance_samplewise(self, max_components=10):
         """
