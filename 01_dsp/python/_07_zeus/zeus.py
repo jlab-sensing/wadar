@@ -386,69 +386,97 @@ def main():
     # ====================================================
     # End-to-End CNN Regressor
     # ====================================================
-
+    
     if zeus_params['models']['cnn_regressor']['enabled']:
         print("\n" + "="*60)
         print("END-TO-END CNN REGRESSOR EVALUATION")
         print("="*60)
-
-        from _04_athena.pretrained_cnn import PretrainedCNNRegressor
         
-        cnn_params = zeus_params['models']['cnn_regressor']
-        epochs = cnn_params.get('epochs', 30)
-        img_size = tuple(cnn_params.get('img_size', [160, 160]))
-        batch_size = cnn_params.get('batch_size', 32)
-        output_dir = cnn_params.get('output_dir', './cnn_temp_images_regressor')
-        verbose = zeus_params.get('advanced', {}).get('verbose', False)
-
-        print(f"[INFO] Training end-to-end CNN regressor with {epochs} epochs...")
-        print(f"[INFO] Image size: {img_size}, Batch size: {batch_size}")
+        try:
+            from _07_zeus.evaluators import evaluate_cnn_regressor
+            evaluate_cnn_regressor(
+                training_dataset=target_training_datasets,
+                validation_dataset=target_validation_dataset,
+                X_train=X_train,
+                y_train=y_train,
+                X_val=X_val,
+                y_val=y_val,
+                feature_type_name="End-to-End CNN Regressor",
+                zeus_params=zeus_params
+            )
+            print("[INFO] End-to-end CNN regressor evaluation completed.")
+        except Exception as e:
+            print(f"[ERROR] CNN regressor evaluation failed: {e}")
         
-        # Initialize CNN regressor with raw radar data
-        cnn_regressor = PretrainedCNNRegressor(
-            X=X_train, 
-            y=y_train, 
-            output_dir=output_dir,
-            img_size=img_size,
-            batch_size=batch_size,
-            verbose=verbose
-        )
+    # ====================================================
+    # 1D CNN Regressor  
+    # ====================================================
+    
+    if zeus_params['models']['cnn1d']['enabled']:
+        print("\n" + "="*60)
+        print("1D CNN REGRESSOR EVALUATION")
+        print("="*60)
 
-        # Train the model
-        model, training_metrics = cnn_regressor.full_monty(epochs=epochs)
+        print("\n[INFO] Evaluating CNN Amplitude features...")
 
-        # Make predictions on validation set
-        print(f"[INFO] Making CNN regressor predictions on validation set...")
-        cnn_predictions = cnn_regressor.predict(X_val)
+        X_amplitude = np.abs(X_train)
+        X_val_amplitude = np.abs(X_val)
+        
+        try:
+            from _07_zeus.evaluators import evaluate_cnn1d
+            evaluate_cnn1d(
+                training_dataset=target_training_datasets,
+                validation_dataset=target_validation_dataset,
+                X_train=X_amplitude,
+                y_train=y_train,
+                X_val=X_val_amplitude,
+                y_val=y_val,
+                feature_type_name="Signal Amplitude",
+                zeus_params=zeus_params
+            )
+            print("[INFO] 1D CNN regressor evaluation completed.")
+        except Exception as e:
+            print(f"[ERROR] 1D CNN evaluation failed: {e}")
 
-        # Evaluate validation performance
-        from _07_zeus.evaluators import evaluate_model
-        validation_metrics = evaluate_model(
-            results_file_name="validation_results.csv",
-            dataset_dir=target_validation_dataset,
-            features_name="End-to-End CNN Regressor",
-            model_name="CNN Regressor",
-            true_labels=y_val,
-            model_predictions=cnn_predictions.flatten() if len(cnn_predictions.shape) > 1 else cnn_predictions
-        )
+        print("\n[INFO] Evaluating CNN Phase features...")
 
-        # Log training metrics
-        from _06_hermes.logger import update_results
-        update_results(target_training_datasets, "End-to-End CNN Regressor", "CNN Regressor", training_metrics, "training_results.csv", verbose=False)
+        X_phase = np.angle(X_train)
+        X_val_phase = np.angle(X_val)
 
-        # Display results
-        from _07_zeus.evaluators import display_model_metrics
-        display_model_metrics(model_name="End-to-End CNN Regressor", 
-                              training_metrics=training_metrics, 
-                              validation_metrics=validation_metrics)
+        try:
+            evaluate_cnn1d(
+                training_dataset=target_training_datasets,
+                validation_dataset=target_validation_dataset,
+                X_train=X_phase,
+                y_train=y_train,
+                X_val=X_val_phase,
+                y_val=y_val,
+                feature_type_name="Signal Phase",
+                zeus_params=zeus_params
+            )
+            print("[INFO] 1D CNN regressor evaluation completed.")
+        except Exception as e:
+            print(f"[ERROR] 1D CNN evaluation failed: {e}")\
+            
+        print("\n[INFO] Evaluating CNN Combined features...")
 
-        # Save the trained model if requested
-        if cnn_params.get('save_model', False):
-            save_dir = cnn_params.get('save_directory', './models')
-            cnn_regressor.save_model(save_dir, "cnn_regressor_model.keras")
-            print(f"[INFO] CNN regressor model saved to {save_dir}")
+        X_combined = np.concatenate((X_amplitude, X_phase), axis=-1)
+        X_val_combined = np.concatenate((X_val_amplitude, X_val_phase), axis=-1)
 
-        print("[INFO] End-to-end CNN regressor evaluation completed.")
+        try:
+            evaluate_cnn1d(
+                training_dataset=target_training_datasets,
+                validation_dataset=target_validation_dataset,
+                X_train=X_combined,
+                y_train=y_train,
+                X_val=X_val_combined,
+                y_val=y_val,
+                feature_type_name="Signal Combined",
+                zeus_params=zeus_params
+            )
+            print("[INFO] 1D CNN regressor evaluation completed.")
+        except Exception as e:
+            print(f"[ERROR] 1D CNN evaluation failed: {e}")
         
     # ====================================================
     # Results Summary

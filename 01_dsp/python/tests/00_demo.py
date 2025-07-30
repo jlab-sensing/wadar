@@ -5,7 +5,7 @@ import sys
 import random
 from sklearn.preprocessing import MinMaxScaler
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)) # https://stackoverflow.com/questions/21005822/what-does-os-path-abspathos-path-joinos-path-dirname-file-os-path-pardir
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 sys.path.insert(0, parent_dir)
 
 from _01_gaia.loader import FrameLoader
@@ -28,50 +28,60 @@ def set_seed(seed=42):
     
 set_seed(42)
 
-def preprocess(X_complex):
-    """Convert complex input to amplitude and phase and reshape for LSTM."""
-    X_amp = np.abs(X_complex)
-    X_phase = np.angle(X_complex)
-
-    n_samples, n_range_bins, n_slow_time = X_amp.shape
-
-    # Reshape: (samples, range_bins, slow_time) → (samples * slow_time, range_bins)
-    X_amp_flat = X_amp.transpose(0, 2, 1).reshape(n_samples * n_slow_time, n_range_bins)
-    X_phase_flat = X_phase.transpose(0, 2, 1).reshape(n_samples * n_slow_time, n_range_bins)
-
-    # Stack amplitude and phase
-    X_features = np.concatenate((X_amp_flat, X_phase_flat), axis=1)
-
-    # Reshape for LSTM: (samples * slow_time, range_bins, 2)
-    X_lstm = X_features.reshape(n_samples * n_slow_time, n_range_bins, 2)
-
-    return X_lstm
+def preprocess_for_cnn1d(X_complex):
+    """Convert complex radar data to amplitude/phase features for 1D CNN."""
+    # Extract amplitude and phase
+    X_amplitude = np.abs(X_complex)  # (samples, range_bins, slow_time)
+    X_phase = np.angle(X_complex)    # (samples, range_bins, slow_time)
+    
+    # Use range profiles (average over slow time) - this is more meaningful than flattening
+    X_amp_profile = np.mean(X_amplitude, axis=2)  # (samples, range_bins)
+    X_phase_profile = np.mean(X_phase, axis=2)    # (samples, range_bins)
+    
+    # Stack amplitude and phase as channels for 1D CNN
+    X_features = np.stack([X_amp_profile, X_phase_profile], axis=-1)  # (samples, range_bins, 2)
+    
+    return X_features
 
 def normalize_data(X_train, X_test):
     """Normalize train and test separately to prevent leakage."""
-    n_timesteps, n_bins, n_features = X_train.shape
-    X_train_reshaped = X_train.reshape(-1, n_bins * n_features)
-    X_test_reshaped = X_test.reshape(-1, n_bins * n_features)
+    # Flatten each sample for normalization, then reshape back
+    n_samples_train, n_bins, n_features = X_train.shape
+    n_samples_test = X_test.shape[0]
+    
+    X_train_flat = X_train.reshape(n_samples_train, -1)
+    X_test_flat = X_test.reshape(n_samples_test, -1)
 
     scaler = MinMaxScaler()
-    X_train_scaled = scaler.fit_transform(X_train_reshaped)
-    X_test_scaled = scaler.transform(X_test_reshaped)
+    X_train_scaled = scaler.fit_transform(X_train_flat)
+    X_test_scaled = scaler.transform(X_test_flat)
 
-    # Reshape back
-    X_train_scaled = X_train_scaled.reshape(-1, n_bins, n_features)
-    X_test_scaled = X_test_scaled.reshape(-1, n_bins, n_features)
+    # Reshape back to original shape
+    X_train_scaled = X_train_scaled.reshape(n_samples_train, n_bins, n_features)
+    X_test_scaled = X_test_scaled.reshape(n_samples_test, n_bins, n_features)
 
     return X_train_scaled, X_test_scaled, scaler
 
-def build_lstm_model(input_shape):
+def build_cnn1d_model(input_shape):
+    """Build 1D CNN architecture for radar data regression."""
     model = keras.Sequential([
-        layers.LSTM(128, return_sequences=True, input_shape=input_shape, dropout=0.2, recurrent_dropout=0.2),
-        layers.LSTM(64, return_sequences=False, dropout=0.2, recurrent_dropout=0.2),
+        # First conv block
+        layers.Conv1D(32, kernel_size=5, activation='relu', input_shape=input_shape),
+        layers.Conv1D(32, kernel_size=3, activation='relu'),
+        layers.MaxPooling1D(pool_size=2),
+        layers.Dropout(0.2),
+        
+        # Second conv block  
+        layers.Conv1D(64, kernel_size=3, activation='relu'),
+        layers.MaxPooling1D(pool_size=2),
+        layers.Dropout(0.2),
+        
+        # Dense layers
+        layers.Flatten(),
         layers.Dense(32, activation='relu'),
         layers.Dropout(0.3),
         layers.Dense(16, activation='relu'),
-        layers.Dropout(0.2),
-        layers.Dense(1, activation='linear')
+        layers.Dense(1, activation='linear')  # Single output for regression
     ])
 
     model.compile(
@@ -83,54 +93,55 @@ def build_lstm_model(input_shape):
 
 def main():
     print("="*80)
-    print("🎯 LSTM RADAR SIGNAL ANALYSIS for BULK DENSITY PREDICTION")
+    print("🎯 1D CNN RADAR SIGNAL ANALYSIS for BULK DENSITY PREDICTION")
     print("="*80)
 
     # Load dataset
     print("[INFO] Loading dataset...")
-    dataset_dir = "../data/training-dataset"
+    dataset_dir = "../data/combined-training-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X_complex, y = hydros.X, hydros.y
 
-    # Split first to avoid leakage
-    X_train_c, X_test_c, y_train_base, y_test_base = train_test_split(
-        X_complex, y, test_size=0.2, random_state=42
-    )
+    dataset_dir = "../data/validation-dataset"
+    hydros_val = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
+    X_val_complex, y_val = hydros_val.X, hydros_val.y
 
-    # Preprocess and expand labels
-    X_train_lstm = preprocess(X_train_c)
-    X_test_lstm = preprocess(X_test_c)
+    # Use separate train/val sets (no artificial sample expansion)
+    X_train_c, X_test_c, y_train, y_test = X_complex, X_val_complex, y, y_val
 
-    n_slow_time = X_train_c.shape[2]
-    y_train = np.repeat(y_train_base, n_slow_time)
-    y_test = np.repeat(y_test_base, n_slow_time)
+    # Preprocess for 1D CNN (no sample expansion - keep original sample count)
+    X_train_cnn = preprocess_for_cnn1d(X_train_c)
+    X_test_cnn = preprocess_for_cnn1d(X_test_c)
+
+    print(f"[INFO] Training data shape: {X_train_c.shape} -> {X_train_cnn.shape}")
+    print(f"[INFO] Validation data shape: {X_test_c.shape} -> {X_test_cnn.shape}")
+    print(f"[INFO] Labels shape - train: {y_train.shape}, test: {y_test.shape}")
 
     # Normalize
-    X_train_lstm, X_test_lstm, scaler = normalize_data(X_train_lstm, X_test_lstm)
+    X_train_cnn, X_test_cnn, scaler = normalize_data(X_train_cnn, X_test_cnn)
 
-    print(f"[INFO] Final LSTM input shape: {X_train_lstm.shape}")
-    print(f"[INFO] y_train shape: {y_train.shape}")
+    print(f"[INFO] Final 1D CNN input shape: {X_train_cnn.shape}")
 
     # Build model
-    model = build_lstm_model((X_train_lstm.shape[1], X_train_lstm.shape[2]))
+    model = build_cnn1d_model((X_train_cnn.shape[1], X_train_cnn.shape[2]))
     model.summary()
 
     # Train
     print("\n[INFO] Training model...")
     history = model.fit(
-        X_train_lstm, y_train,
-        validation_data=(X_test_lstm, y_test),
-        epochs=50,
-        batch_size=32,
+        X_train_cnn, y_train,
+        validation_data=(X_test_cnn, y_test),
+        epochs=50,  # More epochs since we have fewer artificial samples
+        batch_size=16,
         verbose=1,
         callbacks=[
-            keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True),
-            keras.callbacks.ReduceLROnPlateau(patience=5, factor=0.5, min_lr=1e-6)
+            keras.callbacks.EarlyStopping(patience=100, restore_best_weights=True),
+            keras.callbacks.ReduceLROnPlateau(patience=50, factor=0.5, min_lr=1e-6)
         ]
     )
 
     # Predict
-    y_pred = model.predict(X_test_lstm).flatten()
+    y_pred = model.predict(X_test_cnn).flatten()
 
     # Evaluate
     mse = mean_squared_error(y_test, y_pred)
@@ -142,11 +153,10 @@ def main():
     print(f"  RMSE : {np.sqrt(mse):.6f}")
     print(f"  R²   : {r2:.6f}")
 
-    # Save model and history
-    model.save("lstm_bulk_density_model.h5")
-    pd.DataFrame(history.history).to_csv("training_history.csv", index=False)
 
-    # Plotting omitted here to keep it short — reinsert from original if needed
+    # Save model and history
+    model.save("cnn1d_bulk_density_model.h5")
+    pd.DataFrame(history.history).to_csv("training_history.csv", index=False)
 
     print("\n[INFO] Sample Predictions:")
     print(f"{'Actual':<10} {'Predicted':<10} {'Error':<10}")

@@ -12,6 +12,7 @@ from _04_athena.tree import train_gradient_boosted_tree, train_random_forest
 import _04_athena.svr as svr
 from _04_athena.multi_later_percepetron import MultiLayerPerceptron
 from _04_athena.pretrained_cnn import PretrainedCNNRegressor
+from _04_athena.cnn_models import CNN1D
 
 
 def evaluate_model(results_file_name, dataset_dir, features_name, model_name, true_labels, model_predictions):
@@ -148,6 +149,8 @@ def evaluate_gradient_boosted_tree(training_dataset, validation_dataset, trainin
     update_results(training_dataset, feature_type_name, model_name, training_metrics, "training_results.csv", verbose=False)
     gbt_model_predictions = model.predict(chosen_validation_feature_array)
 
+  
+
     validation_metrics = evaluate_model(
         results_file_name="validation_results.csv",
         dataset_dir=validation_dataset,
@@ -225,8 +228,7 @@ def evaluate_mlp(training_dataset, validation_dataset, training_labels, validati
 def evaluate_cnn_regressor(training_dataset, validation_dataset, X_train, y_train, X_val, y_val,
                           feature_type_name, zeus_params):
     """Evaluate end-to-end CNN regressor model."""
-    model_name = "CNN Regressor"
-    print(f"[INFO] Evaluating {model_name} model on {feature_type_name}...")
+    print(f"\n[INFO] Evaluating CNN regressor on raw radar data...")
 
     cnn_params = zeus_params['models']['cnn_regressor']
     epochs = cnn_params.get('epochs', 30)
@@ -258,15 +260,15 @@ def evaluate_cnn_regressor(training_dataset, validation_dataset, X_train, y_trai
         results_file_name="validation_results.csv",
         dataset_dir=validation_dataset,
         features_name=feature_type_name,
-        model_name=model_name,
+        model_name="CNN Regressor",
         true_labels=y_val,
         model_predictions=cnn_predictions.flatten() if len(cnn_predictions.shape) > 1 else cnn_predictions
     )
 
     # Log training metrics
-    update_results(training_dataset, feature_type_name, model_name, training_metrics, "training_results.csv", verbose=False)
+    update_results(training_dataset, feature_type_name, "CNN Regressor", training_metrics, "training_results.csv", verbose=False)
 
-    display_model_metrics(model_name="CNN Regressor", 
+    display_model_metrics(model_name=feature_type_name, 
                           training_metrics=training_metrics, 
                           validation_metrics=validation_metrics)
 
@@ -276,13 +278,88 @@ def evaluate_cnn_regressor(training_dataset, validation_dataset, X_train, y_trai
         cnn_regressor.save_model(save_dir, "cnn_regressor_model.keras")
         print(f"[INFO] CNN regressor model saved to {save_dir}")
 
+    
     return cnn_regressor, training_metrics, validation_metrics
 
+
+def evaluate_cnn1d(training_dataset, validation_dataset, X_train, y_train, X_val, y_val, 
+                   feature_type_name, zeus_params):
+    """
+    Evaluate 1D CNN model on raw radar data.
+    
+    Args:
+        training_dataset: Training dataset directory
+        validation_dataset: Validation dataset directory  
+        X_train: Training radar data (complex)
+        y_train: Training labels
+        X_val: Validation radar data (complex)
+        y_val: Validation labels
+        feature_type_name: Name of feature type for logging
+        zeus_params: Zeus configuration parameters
+    
+    Returns:
+        Trained CNN1D model and metrics
+    """
+    print(f"\n[INFO] Evaluating 1D CNN on raw radar data...")
+    
+    # Get CNN1D parameters
+    cnn1d_params = zeus_params['models'].get('cnn1d', {})
+    epochs = cnn1d_params.get('epochs', 30)
+    batch_size = cnn1d_params.get('batch_size', 16)
+    save_model = cnn1d_params.get('save_model', False)
+    save_directory = cnn1d_params.get('save_directory', './models')
+    
+    # Initialize and train 1D CNN
+    cnn1d = CNN1D(X_train, y_train)
+    
+    # Train model and get cross-validation metrics
+    model, training_metrics = cnn1d.full_monty(epochs=epochs, batch_size=batch_size)
+    
+    # Make predictions on validation set
+    print(f"[INFO] Making 1D CNN predictions on validation set...")
+    y_pred_val = cnn1d.predict(X_val)
+    
+    # Evaluate validation performance
+    validation_metrics = evaluate_model(
+        results_file_name="validation_results.csv",
+        dataset_dir=validation_dataset,
+        features_name=feature_type_name,
+        model_name="1D CNN",
+        true_labels=y_val,
+        model_predictions=y_pred_val
+    )
+    
+    # Log training metrics
+    update_results(
+        training_dataset, 
+        feature_type_name, 
+        "1D CNN", 
+        training_metrics, 
+        "training_results.csv", 
+        verbose=False
+    )
+    
+    # Display results
+    display_model_metrics(
+        model_name=feature_type_name, 
+        training_metrics=training_metrics, 
+        validation_metrics=validation_metrics
+    )
+    
+    # Save model if requested
+    if save_model:
+        try:
+            cnn1d.save_model(save_directory, "cnn1d_regressor.keras")
+            print(f"[INFO] 1D CNN model saved to {save_directory}")
+        except Exception as e:
+            print(f"[WARNING] Failed to save 1D CNN model: {e}")
+    
+    return cnn1d, training_metrics, validation_metrics
 
 def evaluate_all_models(zeus_params, training_dataset, validation_dataset, training_labels, validation_labels, 
                        training_features, validation_features, feature_type_name, 
                        X_train=None, y_train=None, X_val=None, y_val=None):
-    """Evaluate all enabled models on given feature set."""
+    """Evaluate all enabled models on given feature set (excluding end-to-end CNN models)."""
     model_configs = zeus_params['models']
     
     if model_configs['ridge_regression']['enabled']:
@@ -304,11 +381,3 @@ def evaluate_all_models(zeus_params, training_dataset, validation_dataset, train
     if model_configs['mlp']['enabled']:
         evaluate_mlp(training_dataset, validation_dataset, training_labels, validation_labels,
                     training_features, validation_features, feature_type_name, zeus_params)
-
-    # CNN regressor evaluation (requires raw radar data)
-    if model_configs.get('cnn_regressor', {}).get('enabled', False):
-        if X_train is not None and y_train is not None and X_val is not None and y_val is not None:
-            evaluate_cnn_regressor(training_dataset, validation_dataset, X_train, y_train, X_val, y_val,
-                                  feature_type_name, zeus_params)
-        else:
-            print("[WARNING] CNN regressor enabled but raw radar data (X_train, y_train, X_val, y_val) not provided. Skipping CNN regressor evaluation.")
