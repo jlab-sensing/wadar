@@ -111,6 +111,15 @@ models:
     save_model: true
     save_directory: "./models"
 
+  # Transformer regression model with BLIP vision encoder
+  transformer:
+    enabled: true
+    epochs: 20
+    batch_size: 4
+    img_size: [160, 160]
+    save_model: true
+    save_directory: "./models"
+
   #   
   # svm:
   #   enabled: false

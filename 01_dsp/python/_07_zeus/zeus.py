@@ -477,6 +477,31 @@ def main():
             print("[INFO] 1D CNN regressor evaluation completed.")
         except Exception as e:
             print(f"[ERROR] 1D CNN evaluation failed: {e}")
+    
+    # ====================================================
+    # Transformer Regressor
+    # ====================================================
+    
+    if zeus_params['models']['transformer']['enabled']:
+        print("\n" + "="*60)
+        print("TRANSFORMER REGRESSOR EVALUATION")
+        print("="*60)
+        
+        try:
+            from _07_zeus.evaluators import evaluate_transformer
+            evaluate_transformer(
+                training_dataset=target_training_datasets,
+                validation_dataset=target_validation_dataset,
+                X_train=X_train,
+                y_train=y_train,
+                X_val=X_val,
+                y_val=y_val,
+                feature_type_name="End-to-End Transformer",
+                zeus_params=zeus_params
+            )
+            print("[INFO] Transformer regressor evaluation completed.")
+        except Exception as e:
+            print(f"[ERROR] Transformer evaluation failed: {e}")
         
     # ====================================================
     # Results Summary

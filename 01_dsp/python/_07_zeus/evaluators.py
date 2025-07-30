@@ -13,6 +13,7 @@ import _04_athena.svr as svr
 from _04_athena.multi_later_percepetron import MultiLayerPerceptron
 from _04_athena.pretrained_cnn import PretrainedCNNRegressor
 from _04_athena.cnn_models import CNN1D
+from _04_athena.transformer import TransformerRegressionHead
 
 
 def evaluate_model(results_file_name, dataset_dir, features_name, model_name, true_labels, model_predictions):
@@ -355,6 +356,125 @@ def evaluate_cnn1d(training_dataset, validation_dataset, X_train, y_train, X_val
             print(f"[WARNING] Failed to save 1D CNN model: {e}")
     
     return cnn1d, training_metrics, validation_metrics
+
+
+def evaluate_transformer(training_dataset, validation_dataset, X_train, y_train, X_val, y_val,
+                         feature_type_name, zeus_params):
+    """
+    Evaluate Transformer model on raw radar data.
+    
+    Args:
+        training_dataset: Training dataset directory
+        validation_dataset: Validation dataset directory  
+        X_train: Training radar data (complex)
+        y_train: Training labels
+        X_val: Validation radar data (complex)
+        y_val: Validation labels
+        feature_type_name: Name of feature type for logging
+        zeus_params: Zeus configuration parameters
+    
+    Returns:
+        Trained transformer model and metrics
+    """
+    print(f"\n[INFO] Evaluating Transformer on raw radar data...")
+    
+    # Get transformer parameters
+    transformer_params = zeus_params['models'].get('transformer', {})
+    epochs = transformer_params.get('epochs', 20)
+    batch_size = transformer_params.get('batch_size', 4)
+    save_model = transformer_params.get('save_model', False)
+    save_directory = transformer_params.get('save_directory', './models')
+    img_size = tuple(transformer_params.get('img_size', [160, 160]))
+    
+    # Convert complex radar data to amplitude images for transformer
+    X_amplitude = np.abs(X_train)
+    X_val_amplitude = np.abs(X_val)
+    
+    # Average over slow time dimension to create 2D images
+    X_train_img = np.mean(X_amplitude, axis=2)  # (samples, range_bins, slow_time) -> (samples, range_bins)
+    X_val_img = np.mean(X_val_amplitude, axis=2)
+    
+    # Resize to required image size and normalize
+    from skimage.transform import resize
+    X_train_resized = np.array([resize(img, img_size, anti_aliasing=True) for img in X_train_img])
+    X_val_resized = np.array([resize(img, img_size, anti_aliasing=True) for img in X_val_img])
+    
+    # Normalize to [0, 1] range
+    X_train_norm = (X_train_resized - X_train_resized.min()) / (X_train_resized.max() - X_train_resized.min())
+    X_val_norm = (X_val_resized - X_val_resized.min()) / (X_val_resized.max() - X_val_resized.min())
+    
+    try:
+        # Initialize transformer with BLIP processor
+        from transformers import BlipProcessor, BlipModel
+        
+        print("[INFO] Loading BLIP processor and model...")
+        processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+        blip_model = BlipModel.from_pretrained("Salesforce/blip-image-captioning-base")
+        
+        # Initialize transformer regressor
+        transformer = TransformerRegressionHead(blip_model, output_dim=768)
+        
+        # Train model and get cross-validation metrics
+        print(f"[INFO] Training transformer for {epochs} epochs...")
+        training_metrics = transformer.full_monty_eval(X_train_norm, y_train, processor, 
+                                                       epochs=epochs, batch_size=batch_size)
+        
+        # Make predictions on validation set
+        print(f"[INFO] Making transformer predictions on validation set...")
+        y_pred_val = transformer.predict(X_val_norm, processor, batch_size=batch_size)
+        
+        # Flatten predictions if needed
+        if len(y_pred_val.shape) > 1:
+            y_pred_val = y_pred_val.flatten()
+        
+        # Evaluate validation performance
+        validation_metrics = evaluate_model(
+            results_file_name="validation_results.csv",
+            dataset_dir=validation_dataset,
+            features_name=feature_type_name,
+            model_name="Transformer",
+            true_labels=y_val,
+            model_predictions=y_pred_val
+        )
+        
+        # Log training metrics
+        update_results(
+            training_dataset, 
+            feature_type_name, 
+            "Transformer", 
+            training_metrics, 
+            "training_results.csv", 
+            verbose=False
+        )
+        
+        # Display results
+        display_model_metrics(
+            model_name=feature_type_name, 
+            training_metrics=training_metrics, 
+            validation_metrics=validation_metrics
+        )
+        
+        # Save model if requested
+        if save_model:
+            try:
+                import os
+                os.makedirs(save_directory, exist_ok=True)
+                model_path = os.path.join(save_directory, "transformer_regressor.pth")
+                import torch
+                torch.save(transformer.state_dict(), model_path)
+                print(f"[INFO] Transformer model saved to {model_path}")
+            except Exception as e:
+                print(f"[WARNING] Failed to save transformer model: {e}")
+        
+        return transformer, training_metrics, validation_metrics
+        
+    except ImportError as e:
+        print(f"[ERROR] Failed to import transformers library: {e}")
+        print("[INFO] Please install transformers library: pip install transformers")
+        return None, {}, {}
+    except Exception as e:
+        print(f"[ERROR] Transformer evaluation failed: {e}")
+        return None, {}, {}
 
 def evaluate_all_models(zeus_params, training_dataset, validation_dataset, training_labels, validation_labels, 
                        training_features, validation_features, feature_type_name, 
