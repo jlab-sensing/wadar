@@ -7,17 +7,20 @@ sys.path.insert(0, parent_dir)
 
 from _01_gaia.loader import FrameLoader
 from _05_apollo import viz_tools
+from scipy.signal import welch, find_peaks, hilbert
+from scipy.fft import fft, fftfreq
+from scipy.optimize import curve_fit
+from scipy.linalg import lstsq
+import pandas as pd
+import seaborn as sns
 
-# A bunch of figures to visually see the difference between soil compaction 
-# levels. If you are looking into how to use the functions in this
-# pipeline, this is not the file to look at.
-
-if __name__ == "__main__":
-
-    # load the dataset
-    dataset_dir = "../data/combined-soil-compaction-dataset"
+def main():
+    
+    # Load the dataset
+    dataset_dir = "../data/training-dataset"
     hydros = FrameLoader(dataset_dir, new_dataset=False, ddc_flag=True)
     X, y = hydros.X, hydros.y
+    
 
-    viz_tools.plot_IQ_signals(X, y)
-    plt.show()
+if __name__ == "__main__":
+    main()

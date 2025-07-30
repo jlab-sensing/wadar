@@ -11,9 +11,11 @@ import pandas as pd
 from scipy.stats import skew, kurtosis
 from scipy.signal import find_peaks, peak_widths
 from sklearn.linear_model import Lasso, LassoCV
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import mutual_info_regression
+from _06_hermes.parameters import RANDOM_SEED
 
 
 class FeatureTools:
@@ -973,88 +975,6 @@ class FeatureTools:
                         mid_freq_energy[i] = np.sum(mid_freq ** 2)
         
         return low_freq_energy, mid_freq_energy, high_freq_energy
-
-    def signal_complexity_features(self) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Advanced DSP: Signal complexity measures.
-        Computes Higuchi fractal dimension and approximate entropy.
-        
-        Returns:
-            Tuple of (fractal_dimension, approximate_entropy)
-        """
-        
-        fractal_dim = np.zeros(self.X.shape[0])
-        approx_entropy = np.zeros(self.X.shape[0])
-        
-        for i in range(self.X.shape[0]):
-            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
-            
-            # Higuchi Fractal Dimension (simplified version)
-            if len(avg_signal) > 10:
-                k_max = min(5, len(avg_signal) // 3)
-                lk_values = []
-                
-                for k in range(1, k_max + 1):
-                    lk = 0
-                    n = len(avg_signal)
-                    normalization = (n - 1) / (((n - 1) // k) * k)
-                    
-                    for m in range(k):
-                        lm = 0
-                        max_idx = (n - 1 - m) // k
-                        for j in range(max_idx):
-                            idx1 = m + j * k
-                            idx2 = m + (j + 1) * k
-                            if idx2 < len(avg_signal):
-                                lm += abs(avg_signal[idx2] - avg_signal[idx1])
-                        
-                        if max_idx > 0:
-                            lm = lm * normalization / k
-                            lk += lm
-                    
-                    if k > 0:
-                        lk_values.append(lk / k)
-                
-                # Compute fractal dimension
-                if len(lk_values) > 1:
-                    try:
-                        k_vals = np.arange(1, len(lk_values) + 1)
-                        log_k = np.log(k_vals)
-                        log_lk = np.log(np.array(lk_values) + 1e-10)
-                        slope, _ = np.polyfit(log_k, log_lk, 1)
-                        fractal_dim[i] = -slope
-                    except:
-                        fractal_dim[i] = 1.0
-                else:
-                    fractal_dim[i] = 1.0
-            
-            # Approximate Entropy (simplified)
-            if len(avg_signal) > 20:
-                m = 2  # Pattern length
-                r = 0.2 * np.std(avg_signal)  # Tolerance
-                
-                def _maxdist(xi, xj, m):
-                    return max([abs(ua - va) for ua, va in zip(xi, xj)])
-                
-                def _phi(m):
-                    patterns = np.array([avg_signal[i:i + m] for i in range(len(avg_signal) - m + 1)])
-                    C = np.zeros(len(patterns))
-                    
-                    for i in range(len(patterns)):
-                        template_i = patterns[i]
-                        for j in range(len(patterns)):
-                            if _maxdist(template_i, patterns[j], m) <= r:
-                                C[i] += 1.0
-                    
-                    phi = np.mean(np.log(C / len(patterns) + 1e-10))
-                    return phi
-                
-                try:
-                    approx_entropy[i] = _phi(m) - _phi(m + 1)
-                except:
-                    approx_entropy[i] = 0.0
-        
-        return fractal_dim, approx_entropy
     
     # TODO: FFT and some time domain features. Maybe correlation between peaks?
     #       There are advanced radar clutter analysis techniques.
@@ -1168,7 +1088,7 @@ class FeatureTools:
         self.feature_table['Dominant Freq 2'] = dominant_freq[:, 1]
         self.feature_table['Dominant Freq 3'] = dominant_freq[:, 2]
 
-    def depth_segmented_features(self, segment_size: int = 100) -> None:
+    def depth_segmented_features(self, segment_size: int = 128) -> None:
         """
         Extract features from different depth segments (range bins).
         """
@@ -1180,7 +1100,7 @@ class FeatureTools:
         n_segments = max(1, fast_time_bins // segment_size)
         
         # Extract multiple features for each segment
-        for seg_idx in range(min(n_segments, 4)):  # Limit to 4 segments to avoid too many features
+        for seg_idx in range(n_segments):
             start_bin = seg_idx * segment_size
             end_bin = min((seg_idx + 1) * segment_size, fast_time_bins)
             
@@ -1233,11 +1153,6 @@ class FeatureTools:
         total_energy = low_freq_energy + mid_freq_energy + high_freq_energy + 1e-10
         self.feature_table['Low Freq Ratio'] = low_freq_energy / total_energy
         self.feature_table['High Freq Ratio'] = high_freq_energy / total_energy
-        
-        # Signal complexity features
-        fractal_dim, approx_entropy = self.signal_complexity_features()
-        self.feature_table['Fractal Dimension'] = fractal_dim
-        self.feature_table['Approximate Entropy'] = approx_entropy
     
     def feature_full_monty(self, label, destination: Optional[str] = None) -> pd.DataFrame:
         """
@@ -1259,7 +1174,7 @@ class FeatureTools:
         self.spectral_features()
         self.depth_segmented_features()
         self.attenuation_features()
-        # self.advanced_dsp_features()
+        self.advanced_dsp_features()
 
         self.feature_table['Label'] = label
 
@@ -1351,6 +1266,117 @@ def correlation_minimize_features(feature_table: pd.DataFrame, top_n: int = 10) 
     })
 
     return df_best, corr_scores_df
+
+def lasso_minimize_features(feature_table: pd.DataFrame, top_n: int = 10, alpha: float = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Select features using Lasso regression with L1 regularization.
+    
+    Parameters:
+        feature_table: DataFrame containing features and labels
+        top_n: Number of top features to select
+        alpha: Regularization strength. If None, uses cross-validation to find optimal alpha
+        
+    Returns:
+        Tuple of (selected_features_df, lasso_scores_df)
+    """
+    
+    print(f"[INFO] Selecting top {top_n} features using Lasso regression...")
+    
+    feature_array = feature_table.drop(columns=['Label']).values
+    feature_names = feature_table.drop(columns=['Label']).columns.tolist()
+    labels = feature_table['Label'].values
+    
+    # Standardize features for Lasso
+    scaler = StandardScaler()
+    feature_array_scaled = scaler.fit_transform(feature_array)
+    
+    # Use cross-validation to find optimal alpha if not provided
+    if alpha is None:
+        lasso_cv = LassoCV(cv=5, random_state=RANDOM_SEED, max_iter=20000)
+        lasso_cv.fit(feature_array_scaled, labels)
+        alpha = lasso_cv.alpha_
+        print(f"[INFO] Optimal Lasso alpha found: {alpha:.6f}")
+    
+    # Fit Lasso with the selected alpha
+    lasso = Lasso(alpha=alpha, random_state=RANDOM_SEED, max_iter=20000)
+    lasso.fit(feature_array_scaled, labels)
+    
+    # Get feature coefficients and select top features by absolute coefficient value
+    coefficients = np.abs(lasso.coef_)
+    
+    # Get indices of non-zero coefficients first, then select top_n
+    non_zero_indices = np.where(coefficients > 1e-10)[0]
+    
+    if len(non_zero_indices) == 0:
+        raise ValueError("[ERROR] No features selected by lasso_minimize_features")
+    
+    # Sort non-zero coefficients and select top_n
+    sorted_non_zero = sorted(non_zero_indices, key=lambda i: coefficients[i], reverse=True)
+    top_feature_indices = sorted_non_zero[:min(top_n, len(sorted_non_zero))]
+    
+    selected_features = [feature_names[i] for i in top_feature_indices]
+    selected_coefficients = [float(coefficients[i]) for i in top_feature_indices]
+    
+    # Create results
+    best_features_array = feature_array[:, top_feature_indices]
+    df_best = pd.DataFrame(best_features_array, columns=selected_features)
+    df_best['Label'] = labels
+    
+    lasso_scores_df = pd.DataFrame({
+        'Feature': selected_features,
+        'Lasso Coefficient': selected_coefficients
+    })
+    
+    print(f"[INFO] Lasso selected {len(selected_features)} features out of {len(feature_names)} total")
+    
+    return df_best, lasso_scores_df
+
+def random_forest_minimize_features(feature_table: pd.DataFrame, top_n: int = 10, 
+                                  n_estimators: int = 100, random_state: int = 42) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Select features using Random Forest feature importance.
+    
+    Parameters:
+        feature_table: DataFrame containing features and labels
+        top_n: Number of top features to select
+        n_estimators: Number of trees in the random forest
+        random_state: Random state for reproducibility
+        
+    Returns:
+        Tuple of (selected_features_df, importance_scores_df)
+    """
+    
+    print(f"[INFO] Selecting top {top_n} features using Random Forest importance...")
+    
+    feature_array = feature_table.drop(columns=['Label']).values
+    feature_names = feature_table.drop(columns=['Label']).columns.tolist()
+    labels = feature_table['Label'].values
+    
+    # Fit Random Forest
+    rf = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state, n_jobs=-1)
+    rf.fit(feature_array, labels)
+    
+    # Get feature importances
+    importances = rf.feature_importances_
+    
+    # Select top features by importance
+    top_feature_indices = np.argsort(importances)[-top_n:][::-1]  # Descending order
+    selected_features = [feature_names[i] for i in top_feature_indices]
+    selected_importances = [float(importances[i]) for i in top_feature_indices]
+    
+    # Create results
+    best_features_array = feature_array[:, top_feature_indices]
+    df_best = pd.DataFrame(best_features_array, columns=selected_features)
+    df_best['Label'] = labels
+    
+    rf_scores_df = pd.DataFrame({
+        'Feature': selected_features,
+        'RF Importance': selected_importances
+    })
+    
+    print(f"[INFO] Random Forest feature importance calculated for {len(feature_names)} features")
+    
+    return df_best, rf_scores_df
 
 def save_feature_table(feature_table: pd.DataFrame, destination: str, 
                       feature_file_name: str = 'features_selected.csv') -> None:

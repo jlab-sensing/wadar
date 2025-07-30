@@ -45,36 +45,82 @@ def process_handcrafted_features(X_train, y_train, X_val, y_val, training_datase
     training_feature_table, training_feature_array, training_feature_names, training_labels = feature_tools.load_feature_table(training_dataset)
     validation_feature_table, validation_feature_array, validation_feature_names, validation_labels = feature_tools.load_feature_table(validation_dataset)
 
-    # Feature selection based on mutual information
-    print(f"[INFO] Performing mutual information feature selection (top {n_features})...")
-    mi_training_feature_table, _ = feature_tools.mutual_info_minimize_features(training_feature_table, top_n=n_features)
-    feature_tools.save_feature_table(mi_training_feature_table, training_dataset, "mi_features.csv")
-    _, mi_feature_array, mi_feature_names, mi_labels = feature_tools.load_feature_table(training_dataset, "mi_features.csv")
-    
-    mi_validation_feature_table = pd.concat(
-        [validation_feature_table[mi_feature_names], validation_feature_table[['Label']]], axis=1
-    )
-    feature_tools.save_feature_table(mi_validation_feature_table, validation_dataset, "mi_features.csv")
-    _, mi_validation_feature_array, mi_validation_feature_names, mi_validation_labels = feature_tools.load_feature_table(validation_dataset, "mi_features.csv")
-
-    # Feature selection based on correlation
-    print(f"[INFO] Performing correlation feature selection (top {n_features})...")
-    corr_training_feature_table, _ = feature_tools.correlation_minimize_features(training_feature_table, top_n=n_features)
-    feature_tools.save_feature_table(corr_training_feature_table, training_dataset, "corr_features.csv")
-    _, corr_feature_array, corr_feature_names, corr_labels = feature_tools.load_feature_table(training_dataset, "corr_features.csv")
-    
-    # Temporarily commented out because I keep getting KeyError: "['Amplitude To Entropy Ratio 2'] not in index"
-    corr_validation_feature_table = pd.concat(
-        [validation_feature_table[corr_feature_names], validation_feature_table[['Label']]], axis=1
-    )
-    feature_tools.save_feature_table(corr_validation_feature_table, validation_dataset, "corr_features.csv")
-    _, corr_validation_feature_array, corr_validation_feature_names, corr_validation_labels = feature_tools.load_feature_table(validation_dataset, "corr_features.csv")
-
     # Select features based on chosen method
     if chosen_method == 'mutual_info':
+
+        # Feature selection based on mutual information
+        print(f"[INFO] Performing mutual information feature selection (top {n_features})...")
+        mi_training_feature_table, mi_scores_df = feature_tools.mutual_info_minimize_features(training_feature_table, top_n=n_features)
+        feature_tools.save_feature_table(mi_training_feature_table, training_dataset, "mi_features.csv")
+        _, mi_feature_array, mi_feature_names, mi_labels = feature_tools.load_feature_table(training_dataset, "mi_features.csv")
+        
+        mi_validation_feature_table = pd.concat(
+            [validation_feature_table[mi_feature_names], validation_feature_table[['Label']]], axis=1
+        )
+        feature_tools.save_feature_table(mi_validation_feature_table, validation_dataset, "mi_features.csv")
+        _, mi_validation_feature_array, mi_validation_feature_names, mi_validation_labels = feature_tools.load_feature_table(validation_dataset, "mi_features.csv")
+
+        print("[INFO] Mutual Information Scores:")
+        print(mi_scores_df)
+
         return mi_feature_array, mi_validation_feature_array, mi_labels, mi_validation_labels
-    # elif chosen_method == 'correlation':
-    #     return corr_feature_array, corr_validation_feature_array, corr_labels, corr_validation_labels
+    
+    elif chosen_method == 'correlation':
+
+        # Feature selection based on correlation
+        print(f"[INFO] Performing correlation feature selection (top {n_features})...")
+        corr_training_feature_table, corr_scores_df = feature_tools.correlation_minimize_features(training_feature_table, top_n=n_features)
+        feature_tools.save_feature_table(corr_training_feature_table, training_dataset, "corr_features.csv")
+        _, corr_feature_array, corr_feature_names, corr_labels = feature_tools.load_feature_table(training_dataset, "corr_features.csv")
+        
+        corr_validation_feature_table = pd.concat(
+            [validation_feature_table[corr_feature_names], validation_feature_table[['Label']]], axis=1
+        )
+        feature_tools.save_feature_table(corr_validation_feature_table, validation_dataset, "corr_features.csv")
+        _, corr_validation_feature_array, corr_validation_feature_names, corr_validation_labels = feature_tools.load_feature_table(validation_dataset, "corr_features.csv")
+
+        print("[INFO] Correlation Scores:")
+        print(corr_scores_df)
+
+        return corr_feature_array, corr_validation_feature_array, corr_labels, corr_validation_labels
+    
+    elif chosen_method == 'lasso':
+
+        # Feature selection based on Lasso regression
+        print(f"[INFO] Performing Lasso feature selection (top {n_features})...")
+        lasso_training_feature_table, lasso_scores_df = feature_tools.lasso_minimize_features(training_feature_table, top_n=n_features)
+        feature_tools.save_feature_table(lasso_training_feature_table, training_dataset, "lasso_features.csv")
+        _, lasso_feature_array, lasso_feature_names, lasso_labels = feature_tools.load_feature_table(training_dataset, "lasso_features.csv")
+        
+        lasso_validation_feature_table = pd.concat(
+            [validation_feature_table[lasso_feature_names], validation_feature_table[['Label']]], axis=1
+        )
+        feature_tools.save_feature_table(lasso_validation_feature_table, validation_dataset, "lasso_features.csv")
+        _, lasso_validation_feature_array, lasso_validation_feature_names, lasso_validation_labels = feature_tools.load_feature_table(validation_dataset, "lasso_features.csv")
+
+        print("[INFO] Lasso Regression Scores:")
+        print(lasso_scores_df)
+
+        return lasso_feature_array, lasso_validation_feature_array, lasso_labels, lasso_validation_labels
+    
+    elif chosen_method == 'random_forest':
+
+        # Feature selection based on Random Forest importance
+        print(f"[INFO] Performing Random Forest feature selection (top {n_features})...")
+        rf_training_feature_table, rf_scores_df = feature_tools.random_forest_minimize_features(training_feature_table, top_n=n_features)
+        feature_tools.save_feature_table(rf_training_feature_table, training_dataset, "rf_features.csv")
+        _, rf_feature_array, rf_feature_names, rf_labels = feature_tools.load_feature_table(training_dataset, "rf_features.csv")
+        
+        rf_validation_feature_table = pd.concat(
+            [validation_feature_table[rf_feature_names], validation_feature_table[['Label']]], axis=1
+        )
+        feature_tools.save_feature_table(rf_validation_feature_table, validation_dataset, "rf_features.csv")
+        _, rf_validation_feature_array, rf_validation_feature_names, rf_validation_labels = feature_tools.load_feature_table(validation_dataset, "rf_features.csv")
+
+        print("[INFO] Random Forest Importance Scores:")
+        print(rf_scores_df)
+
+        return rf_feature_array, rf_validation_feature_array, rf_labels, rf_validation_labels
     else:
         print("[WARNING] No specific feature selection method chosen, using all features.")
         return training_feature_array, validation_feature_array, training_labels, validation_labels
