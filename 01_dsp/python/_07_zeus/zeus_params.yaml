@@ -6,19 +6,19 @@ data:
   # Training dataset configuration
   training:
     # Raw datasets to combine (list of directories)
-    # raw_datasets:
-    #   - "../data/wet-0-soil-compaction-dataset"
-    #   - "../data/wet-1-soil-compaction-dataset" 
-    #   - "../data/wet-2-soil-compaction-dataset"
-    # # Target combined training dataset directory
-    # target_dataset: "../data/training-dataset"
     raw_datasets:
       - "../data/wet-0-soil-compaction-dataset"
       - "../data/wet-1-soil-compaction-dataset" 
       - "../data/wet-2-soil-compaction-dataset"
-      - "../data/field-soil-compaction-dataset"
     # Target combined training dataset directory
-    target_dataset: "../data/combined-training-dataset"
+    target_dataset: "../data/training-dataset"
+    # raw_datasets:
+    #   - "../data/wet-0-soil-compaction-dataset"
+    #   - "../data/wet-1-soil-compaction-dataset" 
+    #   - "../data/wet-2-soil-compaction-dataset"
+    #   - "../data/field-soil-compaction-dataset"
+    # # Target combined training dataset directory
+    # target_dataset: "../data/combined-training-dataset"
   
   # Validation dataset configuration
   validation:
@@ -38,18 +38,9 @@ features:
     # Number of top features to select
     n_features: 16
     
-    # Feature selection methods to use
-    selection_methods:
-      mutual_info:
-        enabled: true
-        filename: "mi_features.csv"
-      correlation:
-        enabled: true  
-        filename: "corr_features.csv"
-    
     # Which feature set to use for final model training
-    # Options: "mutual_info", "correlation", "all"
-    chosen_method: "mutual_info"
+    # Options: "mutual_info", "correlation", "lasso", "random_forest", "all"
+    chosen_method: "random_forest"
 
   pca:
     enabled: false
