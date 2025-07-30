@@ -98,8 +98,8 @@ def process_pca_features(X_train, y_train, X_val, y_val, zeus_params):
     # Extract amplitude and phase components
     X_train_amplitude = np.abs(X_train)
     X_val_amplitude = np.abs(X_val)
-    X_train_phase = np.angle(X_train)
-    X_val_phase = np.angle(X_val)
+    X_train_phase = np.unwrap(np.angle(X_train))
+    X_val_phase = np.unwrap(np.angle(X_val))
 
     # PCA processing
     print(f"[INFO] Applying PCA with {n_components} components...")
@@ -162,8 +162,8 @@ def process_autoencoder_features(X_train, y_train, X_val, y_val, zeus_params):
     # Extract amplitude and phase components
     X_train_amplitude = np.abs(X_train)
     X_val_amplitude = np.abs(X_val)
-    X_train_phase = np.angle(X_train)
-    X_val_phase = np.angle(X_val)
+    X_train_phase = np.unwrap(np.angle(X_train))
+    X_val_phase = np.unwrap(np.angle(X_val))
 
     print(f"[INFO] Training autoencoder with {n_components} encoding dimensions...")
     

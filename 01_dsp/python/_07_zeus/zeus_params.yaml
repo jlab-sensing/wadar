@@ -6,12 +6,19 @@ data:
   # Training dataset configuration
   training:
     # Raw datasets to combine (list of directories)
+    # raw_datasets:
+    #   - "../data/wet-0-soil-compaction-dataset"
+    #   - "../data/wet-1-soil-compaction-dataset" 
+    #   - "../data/wet-2-soil-compaction-dataset"
+    # # Target combined training dataset directory
+    # target_dataset: "../data/training-dataset"
     raw_datasets:
       - "../data/wet-0-soil-compaction-dataset"
       - "../data/wet-1-soil-compaction-dataset" 
       - "../data/wet-2-soil-compaction-dataset"
+      - "../data/field-soil-compaction-dataset"
     # Target combined training dataset directory
-    target_dataset: "../data/training-dataset"
+    target_dataset: "../data/combined-training-dataset"
   
   # Validation dataset configuration
   validation:
@@ -27,9 +34,9 @@ data:
 # Feature Engineering Configuration
 features:
   handcrafted:
-    enabled: true  # Set to false to skip handcrafted feature generation
+    enabled: false  # Set to false to skip handcrafted feature generation
     # Number of top features to select
-    n_features: 8
+    n_features: 16
     
     # Feature selection methods to use
     selection_methods:
@@ -44,20 +51,45 @@ features:
     # Options: "mutual_info", "correlation", "all"
     chosen_method: "mutual_info"
 
+  pca:
+    enabled: false
+    n_features: 16
+    visualize: true
+
+  autoencoder:
+    enabled: true
+    n_features: 16
+    load_model: false
+    visualize: true
+    save_models: true
+    save_directory: "./models"
+    epochs: 30
+    patience: 10
+    batch_size: 32
+    verbose: 0
+    
 
 # Model Configuration
 models:
   ridge_regression:
-    enabled: true
+    enabled: false
     degrees: [1, 2, 3]  # Polynomial degrees to test
     alpha: 1000         # Ridge regularization parameter
     
   random_forest:
-    enabled: true
+    enabled: false
     n_estimators: 100
 
   gradient_boosted_tree:
-    enabled: true
+    enabled: false
+    n_estimators: 100
+
+  svr:
+    enabled: false
+
+  mlp:
+    enabled: false
+    epochs: 30
 
   #   
   # svm:
