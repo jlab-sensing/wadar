@@ -538,6 +538,524 @@ class FeatureTools:
             
         return phase_jitter
     
+    def spectral_centroid(self) -> np.ndarray:
+        """
+        Compute spectral centroid for each sample (frequency center of mass).
+        Higher bulk density may shift the spectral centroid.
+        
+        Returns:
+            np.ndarray: Spectral centroid for each sample
+        """
+        
+        centroids = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            # Average across slow time, then take FFT
+            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
+            
+            # Compute FFT
+            fft_signal = np.fft.fft(avg_signal)
+            magnitude = np.abs(fft_signal[:len(fft_signal)//2])
+            
+            # Frequency bins
+            freqs = np.arange(len(magnitude))
+            
+            # Compute centroid
+            if np.sum(magnitude) > 0:
+                centroids[i] = np.sum(freqs * magnitude) / np.sum(magnitude)
+            else:
+                centroids[i] = 0.0
+                
+        return centroids
+
+    def spectral_bandwidth(self) -> np.ndarray:
+        """
+        Compute spectral bandwidth for each sample.
+        
+        Returns:
+            np.ndarray: Spectral bandwidth for each sample
+        """
+        
+        bandwidths = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
+            fft_signal = np.fft.fft(avg_signal)
+            magnitude = np.abs(fft_signal[:len(fft_signal)//2])
+            
+            freqs = np.arange(len(magnitude))
+            
+            if np.sum(magnitude) > 0:
+                centroid = np.sum(freqs * magnitude) / np.sum(magnitude)
+                bandwidth = np.sqrt(np.sum(((freqs - centroid) ** 2) * magnitude) / np.sum(magnitude))
+                bandwidths[i] = bandwidth
+            else:
+                bandwidths[i] = 0.0
+                
+        return bandwidths
+
+    def spectral_rolloff(self, rolloff_percent: float = 0.85) -> np.ndarray:
+        """
+        Compute spectral rolloff frequency - the frequency below which a given percentage 
+        of the total spectral energy is contained.
+        
+        Returns:
+            np.ndarray: Spectral rolloff for each sample
+        """
+        
+        rolloffs = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
+            fft_signal = np.fft.fft(avg_signal)
+            magnitude = np.abs(fft_signal[:len(fft_signal)//2])
+            
+            cumsum_mag = np.cumsum(magnitude)
+            total_energy = cumsum_mag[-1]
+            
+            if total_energy > 0:
+                rolloff_idx = np.where(cumsum_mag >= rolloff_percent * total_energy)[0]
+                rolloffs[i] = rolloff_idx[0] if len(rolloff_idx) > 0 else len(magnitude) - 1
+            else:
+                rolloffs[i] = 0.0
+                
+        return rolloffs
+
+    def spectral_flatness(self) -> np.ndarray:
+        """
+        Compute spectral flatness (Wiener entropy) - measure of how noise-like vs. tonal the spectrum is.
+        Low values indicate tonal signals, high values indicate noise-like signals.
+        
+        Returns:
+            np.ndarray: Spectral flatness for each sample
+        """
+        
+        flatness = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
+            fft_signal = np.fft.fft(avg_signal)
+            magnitude = np.abs(fft_signal[:len(fft_signal)//2])
+            
+            # Avoid zeros
+            magnitude = magnitude + 1e-10
+            
+            geometric_mean = np.exp(np.mean(np.log(magnitude)))
+            arithmetic_mean = np.mean(magnitude)
+            
+            if arithmetic_mean > 0:
+                flatness[i] = geometric_mean / arithmetic_mean
+            else:
+                flatness[i] = 0.0
+                
+        return flatness
+
+    def spectral_flux(self) -> np.ndarray:
+        """
+        Compute spectral flux - measure of how quickly the power spectrum changes.
+        Can indicate material transitions or boundaries.
+        
+        Returns:
+            np.ndarray: Spectral flux for each sample
+        """
+        
+        flux = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            # Compute magnitude spectrum for each slow time sample
+            slow_time_spectra = []
+            for j in range(self.X.shape[2]):
+                fft_signal = np.fft.fft(self.X[i, :, j])
+                magnitude = np.abs(fft_signal[:len(fft_signal)//2])
+                slow_time_spectra.append(magnitude)
+            
+            # Compute flux as sum of squared differences between consecutive spectra
+            if len(slow_time_spectra) > 1:
+                flux_sum = 0.0
+                for j in range(1, len(slow_time_spectra)):
+                    diff = slow_time_spectra[j] - slow_time_spectra[j-1]
+                    flux_sum += np.sum(diff ** 2)
+                flux[i] = flux_sum / (len(slow_time_spectra) - 1)
+            else:
+                flux[i] = 0.0
+                
+        return flux
+
+    def dominant_frequency_components(self, n_components: int = 3) -> np.ndarray:
+        """
+        Extract dominant frequency components and their relative strengths.
+        
+        Returns:
+            np.ndarray: Dominant frequency indices for each sample
+        """
+        
+        dominant_freqs = np.zeros((self.X.shape[0], n_components))
+        
+        for i in range(self.X.shape[0]):
+            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
+            fft_signal = np.fft.fft(avg_signal)
+            magnitude = np.abs(fft_signal[:len(fft_signal)//2])
+            
+            # Find top frequency components
+            if len(magnitude) >= n_components:
+                top_indices = np.argsort(magnitude)[-n_components:][::-1]
+                dominant_freqs[i] = top_indices
+            else:
+                # Pad with zeros if not enough frequency bins
+                available = len(magnitude)
+                top_indices = np.argsort(magnitude)[::-1]
+                dominant_freqs[i, :available] = top_indices
+                dominant_freqs[i, available:] = 0
+                
+        return dominant_freqs
+
+    def segment_entropy(self, start_bin: int, end_bin: int) -> np.ndarray:
+        """
+        Compute entropy for a specific depth segment.
+        
+        Returns:
+            np.ndarray: Entropy for each sample in the segment
+        """
+        
+        entropy_values = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            segment_data = np.abs(self.X[i, start_bin:end_bin, :])
+            
+            if segment_data.size > 0:
+                # Flatten the segment and compute histogram
+                flat_data = segment_data.flatten()
+                hist, _ = np.histogram(flat_data, bins=30, density=True)
+                hist = hist[hist > 0]  # Remove zero bins
+                
+                if len(hist) > 0:
+                    entropy_values[i] = -np.sum(hist * np.log(hist + 1e-10))
+                else:
+                    entropy_values[i] = 0.0
+            else:
+                entropy_values[i] = 0.0
+                
+        return entropy_values
+
+    def segment_energy(self, start_bin: int, end_bin: int) -> np.ndarray:
+        """
+        Compute energy for a specific depth segment.
+        
+        Returns:
+            np.ndarray: Energy for each sample in the segment
+        """
+        
+        energy_values = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            segment_data = np.abs(self.X[i, start_bin:end_bin, :])
+            energy_values[i] = np.sum(segment_data ** 2)
+            
+        return energy_values
+
+    def segment_variance(self, start_bin: int, end_bin: int) -> np.ndarray:
+        """
+        Compute variance for a specific depth segment.
+        
+        Returns:
+            np.ndarray: Variance for each sample in the segment
+        """
+        
+        variance_values = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            segment_data = np.abs(self.X[i, start_bin:end_bin, :])
+            if segment_data.size > 0:
+                variance_values[i] = np.var(segment_data)
+            else:
+                variance_values[i] = 0.0
+                
+        return variance_values
+
+    def segment_coherence(self, start_bin: int, end_bin: int) -> np.ndarray:
+        """
+        Compute coherence for a specific depth segment across slow time.
+        
+        Returns:
+            np.ndarray: Coherence for each sample in the segment
+        """
+        
+        coherence_values = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            segment_data = self.X[i, start_bin:end_bin, :]
+            
+            if segment_data.shape[1] > 1:
+                # Compute correlation between adjacent slow time samples
+                correlations = []
+                for j in range(segment_data.shape[1] - 1):
+                    sig1 = np.abs(segment_data[:, j])
+                    sig2 = np.abs(segment_data[:, j+1])
+                    if len(sig1) > 1 and len(sig2) > 1:
+                        corr = np.corrcoef(sig1, sig2)[0, 1]
+                        if not np.isnan(corr):
+                            correlations.append(abs(corr))  # Use absolute value
+                
+                coherence_values[i] = np.mean(correlations) if correlations else 0.0
+            else:
+                coherence_values[i] = 0.0
+                
+        return coherence_values
+
+    def segment_skewness(self, start_bin: int, end_bin: int) -> np.ndarray:
+        """
+        Compute skewness for a specific depth segment.
+        
+        Returns:
+            np.ndarray: Skewness for each sample in the segment
+        """
+        
+        skewness_values = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            segment_data = np.abs(self.X[i, start_bin:end_bin, :])
+            
+            if segment_data.size > 2:  # Need at least 3 points for skewness
+                flat_data = segment_data.flatten()
+                try:
+                    skewness_values[i] = skew(flat_data)
+                except:
+                    skewness_values[i] = 0.0
+            else:
+                skewness_values[i] = 0.0
+                
+        return skewness_values
+
+    def segment_peak_density(self, start_bin: int, end_bin: int) -> np.ndarray:
+        """
+        Compute peak density (number of peaks per unit length) for a depth segment.
+        
+        Returns:
+            np.ndarray: Peak density for each sample in the segment
+        """
+        
+        peak_density_values = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            # Average across slow time for this segment
+            segment_signal = np.mean(np.abs(self.X[i, start_bin:end_bin, :]), axis=1)
+            
+            if len(segment_signal) > 2:
+                # Find peaks with adaptive threshold
+                threshold = np.max(segment_signal) * 0.1
+                peaks, _ = find_peaks(segment_signal, height=threshold, distance=2)
+                peak_density_values[i] = len(peaks) / len(segment_signal)
+            else:
+                peak_density_values[i] = 0.0
+                
+        return peak_density_values
+
+    def attenuation_coefficient(self) -> np.ndarray:
+        """
+        Estimate attenuation coefficient from signal decay with depth.
+        
+        Returns:
+            np.ndarray: Attenuation coefficient for each sample
+        """
+        
+        attenuation = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            # Average signal across slow time
+            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
+            
+            # Fit exponential decay (log-linear relationship)
+            depths = np.arange(len(avg_signal))
+            log_signal = np.log(avg_signal + 1e-10)
+            
+            # Linear fit to log(signal) vs depth
+            if len(depths) > 1:
+                try:
+                    slope, _ = np.polyfit(depths, log_signal, 1)
+                    attenuation[i] = -slope  # Negative slope indicates attenuation
+                except (np.linalg.LinAlgError, ValueError):
+                    attenuation[i] = 0.0
+            else:
+                attenuation[i] = 0.0
+                
+        return attenuation
+    
+    def autocorrelation_features(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Advanced DSP: Compute autocorrelation-based features.
+        Autocorrelation can reveal periodic structures and layer characteristics.
+        
+        Returns:
+            Tuple of (max_autocorr, autocorr_lag, autocorr_decay)
+        """
+        
+        max_autocorr = np.zeros(self.X.shape[0])
+        autocorr_lag = np.zeros(self.X.shape[0])
+        autocorr_decay = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            # Average signal across slow time
+            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
+            
+            # Compute autocorrelation
+            signal_len = len(avg_signal)
+            if signal_len > 10:  # Need sufficient length
+                # Normalize signal
+                signal_norm = (avg_signal - np.mean(avg_signal)) / (np.std(avg_signal) + 1e-10)
+                
+                # Full autocorrelation
+                autocorr = np.correlate(signal_norm, signal_norm, mode='full')
+                autocorr = autocorr[signal_len-1:]  # Take positive lags only
+                
+                # Normalize by zero-lag value
+                if autocorr[0] > 0:
+                    autocorr = autocorr / autocorr[0]
+                
+                    # Find maximum autocorrelation (excluding zero lag)
+                    if len(autocorr) > 1:
+                        max_idx = np.argmax(autocorr[1:]) + 1
+                        max_autocorr[i] = autocorr[max_idx]
+                        autocorr_lag[i] = max_idx
+                        
+                        # Compute decay rate
+                        if max_idx > 0 and len(autocorr) > max_idx + 5:
+                            decay_region = autocorr[max_idx:max_idx+10]
+                            if len(decay_region) > 1:
+                                try:
+                                    # Fit exponential decay
+                                    x = np.arange(len(decay_region))
+                                    log_vals = np.log(np.abs(decay_region) + 1e-10)
+                                    slope, _ = np.polyfit(x, log_vals, 1)
+                                    autocorr_decay[i] = -slope
+                                except:
+                                    autocorr_decay[i] = 0.0
+        
+        return max_autocorr, autocorr_lag, autocorr_decay
+
+    def wavelet_energy_features(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Advanced DSP: Wavelet-based multi-resolution analysis.
+        Uses discrete wavelet transform to analyze signal at different scales.
+        
+        Returns:
+            Tuple of (low_freq_energy, mid_freq_energy, high_freq_energy)
+        """
+        
+        low_freq_energy = np.zeros(self.X.shape[0])
+        mid_freq_energy = np.zeros(self.X.shape[0])
+        high_freq_energy = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            # Average signal across slow time
+            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
+            
+            # Simple wavelet-like decomposition using multiple filtering
+            signal_len = len(avg_signal)
+            
+            if signal_len >= 8:  # Need minimum length for decomposition
+                # Low-pass filter (approximation)
+                low_pass_kernel = np.ones(4) / 4
+                if signal_len >= len(low_pass_kernel):
+                    low_freq = np.convolve(avg_signal, low_pass_kernel, mode='valid')
+                    low_freq_energy[i] = np.sum(low_freq ** 2)
+                
+                # High-pass filter (detail)
+                high_pass_kernel = np.array([-1, 1])
+                if signal_len >= len(high_pass_kernel):
+                    high_freq = np.convolve(avg_signal, high_pass_kernel, mode='valid')
+                    high_freq_energy[i] = np.sum(high_freq ** 2)
+                
+                # Mid-frequency using bandpass-like operation
+                if signal_len >= 6:
+                    mid_pass_kernel = np.array([-1, 0, 2, 0, -1]) / 2
+                    if signal_len >= len(mid_pass_kernel):
+                        mid_freq = np.convolve(avg_signal, mid_pass_kernel, mode='valid')
+                        mid_freq_energy[i] = np.sum(mid_freq ** 2)
+        
+        return low_freq_energy, mid_freq_energy, high_freq_energy
+
+    def signal_complexity_features(self) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Advanced DSP: Signal complexity measures.
+        Computes Higuchi fractal dimension and approximate entropy.
+        
+        Returns:
+            Tuple of (fractal_dimension, approximate_entropy)
+        """
+        
+        fractal_dim = np.zeros(self.X.shape[0])
+        approx_entropy = np.zeros(self.X.shape[0])
+        
+        for i in range(self.X.shape[0]):
+            avg_signal = np.mean(np.abs(self.X[i]), axis=1)
+            
+            # Higuchi Fractal Dimension (simplified version)
+            if len(avg_signal) > 10:
+                k_max = min(5, len(avg_signal) // 3)
+                lk_values = []
+                
+                for k in range(1, k_max + 1):
+                    lk = 0
+                    n = len(avg_signal)
+                    normalization = (n - 1) / (((n - 1) // k) * k)
+                    
+                    for m in range(k):
+                        lm = 0
+                        max_idx = (n - 1 - m) // k
+                        for j in range(max_idx):
+                            idx1 = m + j * k
+                            idx2 = m + (j + 1) * k
+                            if idx2 < len(avg_signal):
+                                lm += abs(avg_signal[idx2] - avg_signal[idx1])
+                        
+                        if max_idx > 0:
+                            lm = lm * normalization / k
+                            lk += lm
+                    
+                    if k > 0:
+                        lk_values.append(lk / k)
+                
+                # Compute fractal dimension
+                if len(lk_values) > 1:
+                    try:
+                        k_vals = np.arange(1, len(lk_values) + 1)
+                        log_k = np.log(k_vals)
+                        log_lk = np.log(np.array(lk_values) + 1e-10)
+                        slope, _ = np.polyfit(log_k, log_lk, 1)
+                        fractal_dim[i] = -slope
+                    except:
+                        fractal_dim[i] = 1.0
+                else:
+                    fractal_dim[i] = 1.0
+            
+            # Approximate Entropy (simplified)
+            if len(avg_signal) > 20:
+                m = 2  # Pattern length
+                r = 0.2 * np.std(avg_signal)  # Tolerance
+                
+                def _maxdist(xi, xj, m):
+                    return max([abs(ua - va) for ua, va in zip(xi, xj)])
+                
+                def _phi(m):
+                    patterns = np.array([avg_signal[i:i + m] for i in range(len(avg_signal) - m + 1)])
+                    C = np.zeros(len(patterns))
+                    
+                    for i in range(len(patterns)):
+                        template_i = patterns[i]
+                        for j in range(len(patterns)):
+                            if _maxdist(template_i, patterns[j], m) <= r:
+                                C[i] += 1.0
+                    
+                    phi = np.mean(np.log(C / len(patterns) + 1e-10))
+                    return phi
+                
+                try:
+                    approx_entropy[i] = _phi(m) - _phi(m + 1)
+                except:
+                    approx_entropy[i] = 0.0
+        
+        return fractal_dim, approx_entropy
+    
     # TODO: FFT and some time domain features. Maybe correlation between peaks?
     #       There are advanced radar clutter analysis techniques.
     #       Persistence, but that might be the same as variance.
@@ -625,6 +1143,101 @@ class FeatureTools:
         self.feature_table['Circularity Coefficient 2'] = circularity_coefficient[:, 1]
         self.feature_table['Phase Jitter 1'] = phase_jitter[:, 0]
         self.feature_table['Phase Jitter 2'] = phase_jitter[:, 1]
+
+    def spectral_features(self) -> None:
+        """
+        Extract spectral domain features that may correlate with bulk density.
+        """
+        
+        self._info("Extracting spectral features...")
+        
+        # Get spectral characteristics
+        spectral_centroid = self.spectral_centroid()
+        spectral_bandwidth = self.spectral_bandwidth()
+        spectral_rolloff = self.spectral_rolloff()
+        spectral_flatness = self.spectral_flatness()
+        spectral_flux = self.spectral_flux()
+        dominant_freq = self.dominant_frequency_components()
+        
+        self.feature_table['Spectral Centroid'] = spectral_centroid
+        self.feature_table['Spectral Bandwidth'] = spectral_bandwidth
+        self.feature_table['Spectral Rolloff'] = spectral_rolloff
+        self.feature_table['Spectral Flatness'] = spectral_flatness
+        self.feature_table['Spectral Flux'] = spectral_flux
+        self.feature_table['Dominant Freq 1'] = dominant_freq[:, 0]
+        self.feature_table['Dominant Freq 2'] = dominant_freq[:, 1]
+        self.feature_table['Dominant Freq 3'] = dominant_freq[:, 2]
+
+    def depth_segmented_features(self, segment_size: int = 100) -> None:
+        """
+        Extract features from different depth segments (range bins).
+        """
+        
+        self._info(f"Extracting depth-segmented features (segment size: {segment_size})...")
+        
+        # Calculate number of segments based on fast time dimension
+        fast_time_bins = self.X.shape[1]
+        n_segments = max(1, fast_time_bins // segment_size)
+        
+        # Extract multiple features for each segment
+        for seg_idx in range(min(n_segments, 4)):  # Limit to 4 segments to avoid too many features
+            start_bin = seg_idx * segment_size
+            end_bin = min((seg_idx + 1) * segment_size, fast_time_bins)
+            
+            entropy_seg = self.segment_entropy(start_bin, end_bin)
+            energy_seg = self.segment_energy(start_bin, end_bin)
+            variance_seg = self.segment_variance(start_bin, end_bin)
+            coherence_seg = self.segment_coherence(start_bin, end_bin)
+            skewness_seg = self.segment_skewness(start_bin, end_bin)
+            peak_density_seg = self.segment_peak_density(start_bin, end_bin)
+            
+            self.feature_table[f'Segment_{seg_idx+1}_Entropy'] = entropy_seg
+            self.feature_table[f'Segment_{seg_idx+1}_Energy'] = energy_seg
+            self.feature_table[f'Segment_{seg_idx+1}_Variance'] = variance_seg
+            self.feature_table[f'Segment_{seg_idx+1}_Coherence'] = coherence_seg
+            self.feature_table[f'Segment_{seg_idx+1}_Skewness'] = skewness_seg
+            self.feature_table[f'Segment_{seg_idx+1}_Peak_Density'] = peak_density_seg
+
+    def attenuation_features(self) -> None:
+        """
+        Extract attenuation-related features that may indicate soil density.
+        """
+        
+        self._info("Extracting attenuation features...")
+        
+        # Get attenuation characteristics
+        attenuation_coeff = self.attenuation_coefficient()
+        
+        self.feature_table['Attenuation Coefficient'] = attenuation_coeff
+
+    def advanced_dsp_features(self) -> None:
+        """
+        Extract advanced DSP features including autocorrelation, wavelet, and complexity measures.
+        """
+        
+        self._info("Extracting advanced DSP features...")
+        
+        # Autocorrelation features
+        max_autocorr, autocorr_lag, autocorr_decay = self.autocorrelation_features()
+        self.feature_table['Max Autocorrelation'] = max_autocorr
+        self.feature_table['Autocorr Lag'] = autocorr_lag
+        self.feature_table['Autocorr Decay'] = autocorr_decay
+        
+        # Wavelet energy features
+        low_freq_energy, mid_freq_energy, high_freq_energy = self.wavelet_energy_features()
+        self.feature_table['Low Freq Energy'] = low_freq_energy
+        self.feature_table['Mid Freq Energy'] = mid_freq_energy
+        self.feature_table['High Freq Energy'] = high_freq_energy
+        
+        # Compute energy ratios for additional insights
+        total_energy = low_freq_energy + mid_freq_energy + high_freq_energy + 1e-10
+        self.feature_table['Low Freq Ratio'] = low_freq_energy / total_energy
+        self.feature_table['High Freq Ratio'] = high_freq_energy / total_energy
+        
+        # Signal complexity features
+        fractal_dim, approx_entropy = self.signal_complexity_features()
+        self.feature_table['Fractal Dimension'] = fractal_dim
+        self.feature_table['Approximate Entropy'] = approx_entropy
     
     def feature_full_monty(self, label, destination: Optional[str] = None) -> pd.DataFrame:
         """
@@ -643,6 +1256,10 @@ class FeatureTools:
         self.initialize_feature_table()
         self.magnitude_features()
         self.phase_features()
+        self.spectral_features()
+        self.depth_segmented_features()
+        self.attenuation_features()
+        # self.advanced_dsp_features()
 
         self.feature_table['Label'] = label
 
