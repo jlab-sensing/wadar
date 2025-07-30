@@ -18,7 +18,7 @@ from _01_gaia.dataset import combine_datasets
 
 # Zeus modules
 from evaluators import evaluate_all_models
-from feature_processor import process_handcrafted_features, process_pca_features, process_autoencoder_features
+from feature_processor import process_handcrafted_features, process_pca_features, process_autoencoder_features, process_pretrained_cnn_features
 from visualization import generate_results_summary, plot_reduced_features, tsne_plot
 import numpy as np
 import matplotlib.pyplot as plt
@@ -259,6 +259,89 @@ def main():
             plt.show()
 
         print("[INFO] Autoencoder-based features evaluation completed.")
+        
+    # ====================================================
+    # Pretrained CNN-based Features
+    # ====================================================
+
+    if zeus_params['features']['pretrained_cnn']['enabled']:
+        print("\n" + "="*60)
+        print("PRETRAINED CNN-BASED FEATURES EVALUATION")
+        print("="*60)
+
+        cnn_features = process_pretrained_cnn_features(X_train, y_train, X_val, y_val, zeus_params)
+
+        # Evaluate CNN Amplitude features
+        print("\n[INFO] Evaluating CNN Amplitude features...")
+        evaluate_all_models(
+            zeus_params=zeus_params,
+            training_dataset=target_training_datasets,
+            validation_dataset=target_validation_dataset,
+            training_labels=cnn_features['amplitude']['labels_train'],
+            validation_labels=cnn_features['amplitude']['labels_val'],
+            training_features=cnn_features['amplitude']['train'],
+            validation_features=cnn_features['amplitude']['val'],
+            feature_type_name="CNN Amplitude"
+        )
+
+        # Evaluate CNN Phase features
+        print("\n[INFO] Evaluating CNN Phase features...")
+        evaluate_all_models(
+            zeus_params=zeus_params,
+            training_dataset=target_training_datasets,
+            validation_dataset=target_validation_dataset,
+            training_labels=cnn_features['phase']['labels_train'],
+            validation_labels=cnn_features['phase']['labels_val'],
+            training_features=cnn_features['phase']['train'],
+            validation_features=cnn_features['phase']['val'],
+            feature_type_name="CNN Phase"
+        )
+        
+        # Evaluate CNN Combined features
+        print("\n[INFO] Evaluating CNN Combined features...")
+        evaluate_all_models(
+            zeus_params=zeus_params,
+            training_dataset=target_training_datasets,
+            validation_dataset=target_validation_dataset,
+            training_labels=cnn_features['combined']['labels_train'],
+            validation_labels=cnn_features['combined']['labels_val'],
+            training_features=cnn_features['combined']['train'],
+            validation_features=cnn_features['combined']['val'],
+            feature_type_name="CNN Combined"
+        )
+
+        # Visualization
+        if zeus_params['features']['pretrained_cnn']['visualize']:
+            print("\n[INFO] Visualizing CNN features...")
+            
+            # Visualize CNN features
+            plot_reduced_features(
+                cnn_features['amplitude']['train'], 
+                cnn_features['amplitude']['val'], 
+                cnn_features['amplitude']['labels_train'], 
+                cnn_features['amplitude']['labels_val'], 
+                "CNN Amplitude Features"
+            )
+            
+            plot_reduced_features(
+                cnn_features['phase']['train'], 
+                cnn_features['phase']['val'], 
+                cnn_features['phase']['labels_train'], 
+                cnn_features['phase']['labels_val'], 
+                "CNN Phase Features"
+            )
+            
+            plot_reduced_features(
+                cnn_features['combined']['train'], 
+                cnn_features['combined']['val'], 
+                cnn_features['combined']['labels_train'], 
+                cnn_features['combined']['labels_val'], 
+                "CNN Combined Features"
+            )
+            
+            plt.show()
+
+        print("[INFO] CNN-based features evaluation completed.")
         
     # ====================================================
     # Results Summary

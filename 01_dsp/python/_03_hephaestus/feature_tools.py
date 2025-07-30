@@ -673,7 +673,6 @@ def mutual_info_minimize_features(feature_table: pd.DataFrame, top_n: int = 10) 
     
     feature_array = feature_table.drop(columns=['Label']).values
     feature_names = feature_table.drop(columns=['Label']).columns.tolist()
-    feature_names = [name.replace('_', ' ').title() for name in feature_names]
     labels = feature_table['Label'].values
 
     # Compute mutual information
@@ -711,7 +710,6 @@ def correlation_minimize_features(feature_table: pd.DataFrame, top_n: int = 10) 
     
     feature_array = feature_table.drop(columns=['Label']).values
     feature_names = feature_table.drop(columns=['Label']).columns.tolist()
-    feature_names = [name.replace('_', ' ').title() for name in feature_names]
     labels = feature_table['Label'].values
 
     # Compute correlations efficiently
@@ -785,7 +783,6 @@ def load_feature_table(directory: str, feature_file_name: str = 'features.csv') 
 
         feature_array = feature_table.drop(columns=['Label']).values
         feature_names = feature_table.drop(columns=['Label']).columns.tolist()
-        feature_names = [name.replace('_', ' ').title() for name in feature_names]
         labels = feature_table['Label'].values
 
         print(f"[INFO] Loaded feature table: {feature_table.shape[0]} samples, {len(feature_names)} features")

@@ -27,16 +27,17 @@ class PretrainedCNNFeatureExtractor:
         batch_size (int):              Batch size for training (default: 32).
     """
 
-    def __init__(self, X, output_dir, dimensions=128, img_size=(160, 160), batch_size=32):
+    def __init__(self, X, output_dir, dimensions=128, img_size=(160, 160), batch_size=32, verbose=False):
         """
         Initialize the PretrainedCNN with images and labels.
 
         Args:
             X (np.ndarray):                Array of images of shape (samples, height, width).
-            y (np.ndarray):                Array of labels of shape (samples,).
             output_dir (str):              Directory to save images and labels.
+            dimensions (int):              Number of output feature dimensions (default: 128).
             img_size (tuple):              Size to which images will be resized (default: (160, 160)).
-            batch_size (int):              Batch size for training (default: 32
+            batch_size (int):              Batch size for training (default: 32).
+            verbose (bool):                Whether to print debug information (default: False).
 
         Returns:
             None
@@ -47,6 +48,7 @@ class PretrainedCNNFeatureExtractor:
         self.img_size = img_size
         self.dimensions = dimensions
         self.batch_size = batch_size
+        self.verbose = verbose
         os.makedirs(self.output_dir, exist_ok=True)
         self.labels = []
         self.df = None
@@ -88,7 +90,8 @@ class PretrainedCNNFeatureExtractor:
             img.save(os.path.join(self.output_dir, file_name))
             self.labels.append({'filename': file_name, 'label': label})
 
-        print(f"Saved {len(self.X)} images to {self.output_dir}")
+        if self.verbose:
+            print(f"Saved {len(self.X)} images to {self.output_dir}")
         self.df = pd.DataFrame(self.labels)
         self.df.to_csv(os.path.join(self.output_dir, "labels.csv"), index=False)
 
@@ -147,9 +150,10 @@ class PretrainedCNNFeatureExtractor:
                                                        include_top=False,
                                                        weights='imagenet')
         
-        image_batch, label_batch = next(iter(train_dataset))
-        feature_batch = base_model(image_batch)
-        print(feature_batch.shape)
+        if self.verbose:
+            image_batch, label_batch = next(iter(train_dataset))
+            feature_batch = base_model(image_batch)
+            print(f"Feature batch shape: {feature_batch.shape}")
 
         # =====================================================
         # Feature extraction
@@ -157,30 +161,21 @@ class PretrainedCNNFeatureExtractor:
 
         base_model.trainable = False
 
-        # Let's take a look at the base model architecture
-        base_model.summary()
-
-        # No head needed for feature extraction
-
-        # global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-        # feature_batch_average = global_average_layer(feature_batch)
-        # print(feature_batch_average.shape)
-
-        # prediction_layer = tf.keras.layers.Dense(1)
-        # prediction_batch = prediction_layer(feature_batch_average)
-        # print(prediction_batch.shape)
+        if self.verbose:
+            print("Base model architecture:")
+            base_model.summary()
 
         inputs = tf.keras.Input(shape=IMG_SHAPE)
         x = rescale(inputs)
         x = base_model(x, training=False)
         x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        x = tf.keras.layers.Dense(self.dimensions)(x) # projecting to (samples x self.dimensions)
+        x = tf.keras.layers.Dense(self.dimensions)(x)  # projecting to (samples x self.dimensions)
         x = tf.keras.layers.Dropout(0.2)(x)
-        # outputs = prediction_layer(x)
         self.model = tf.keras.Model(inputs, x)
 
-        self.model.summary()
-        print("Number of trainable variables:", len(self.model.trainable_variables))
+        if self.verbose:
+            self.model.summary()
+            print(f"Number of trainable variables: {len(self.model.trainable_variables)}")
 
     def train_full(self, epochs=10):
         """
@@ -227,12 +222,19 @@ class PretrainedCNNFeatureExtractor:
         return predictions
     
     def save_model(self, model_path):
+        """Save the trained model to the specified path."""
+        if self.model is None:
+            print("No model to save. Train the model first.")
+            return
         self.model.save(model_path)
-        print(f"Model saved to {model_path}")
+        if self.verbose:
+            print(f"Model saved to {model_path}")
 
     def load_model(self, model_path):
+        """Load a pre-trained model from the specified path."""
         self.model = tf.keras.models.load_model(model_path)
-        print(f"Model loaded from {model_path}")
+        if self.verbose:
+            print(f"Model loaded from {model_path}")
         return self.model
 
 class PretrainedCNNRegressor:
@@ -249,7 +251,7 @@ class PretrainedCNNRegressor:
         batch_size (int):              Batch size for training (default: 32).
     """
 
-    def __init__(self, X, y, output_dir, img_size=(160, 160), batch_size=32):
+    def __init__(self, X, y, output_dir, img_size=(160, 160), batch_size=32, verbose=False):
         """
         Initialize the PretrainedCNN with images and labels.
 
@@ -258,7 +260,8 @@ class PretrainedCNNRegressor:
             y (np.ndarray):                Array of labels of shape (samples,).
             output_dir (str):              Directory to save images and labels.
             img_size (tuple):              Size to which images will be resized (default: (160, 160)).
-            batch_size (int):              Batch size for training (default: 32
+            batch_size (int):              Batch size for training (default: 32).
+            verbose (bool):                Whether to print debug information (default: False).
 
         Returns:
             None
@@ -269,6 +272,7 @@ class PretrainedCNNRegressor:
         self.output_dir = output_dir
         self.img_size = img_size
         self.batch_size = batch_size
+        self.verbose = verbose
         os.makedirs(self.output_dir, exist_ok=True)
         self.labels = []
         self.df = None
@@ -312,7 +316,8 @@ class PretrainedCNNRegressor:
             img.save(os.path.join(self.output_dir, file_name))
             self.labels.append({'filename': file_name, 'label': label})
 
-        print(f"Saved {len(self.X)} images to {self.output_dir}")
+        if self.verbose:
+            print(f"Saved {len(self.X)} images to {self.output_dir}")
         self.df = pd.DataFrame(self.labels)
         self.df.to_csv(os.path.join(self.output_dir, "labels.csv"), index=False)
 
@@ -371,9 +376,10 @@ class PretrainedCNNRegressor:
                                                        include_top=False,
                                                        weights='imagenet')
         
-        image_batch, label_batch = next(iter(train_dataset))
-        feature_batch = self.base_model(image_batch)
-        print(feature_batch.shape)
+        if self.verbose:
+            image_batch, label_batch = next(iter(train_dataset))
+            feature_batch = self.base_model(image_batch)
+            print(f"Feature batch shape: {feature_batch.shape}")
 
         # =====================================================
         # Feature extraction
@@ -381,17 +387,20 @@ class PretrainedCNNRegressor:
 
         self.base_model.trainable = False
 
-        # Let's take a look at the base model architecture
-        self.base_model.summary()
+        if self.verbose:
+            print("Base model architecture:")
+            self.base_model.summary()
 
         # Add a regression head
         global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-        feature_batch_average = global_average_layer(feature_batch)
-        print(feature_batch_average.shape)
+        if self.verbose:
+            feature_batch_average = global_average_layer(feature_batch)
+            print(f"Feature batch average shape: {feature_batch_average.shape}")
 
         prediction_layer = tf.keras.layers.Dense(1)
-        prediction_batch = prediction_layer(feature_batch_average)
-        print(prediction_batch.shape)
+        if self.verbose:
+            prediction_batch = prediction_layer(feature_batch_average)
+            print(f"Prediction batch shape: {prediction_batch.shape}")
 
         inputs = tf.keras.Input(shape=IMG_SHAPE)
         x = rescale(inputs)
@@ -401,8 +410,9 @@ class PretrainedCNNRegressor:
         outputs = prediction_layer(x)
         self.model = tf.keras.Model(inputs, outputs)
 
-        self.model.summary()
-        print("Number of trainable variables:", len(self.model.trainable_variables))
+        if self.verbose:
+            self.model.summary()
+            print(f"Number of trainable variables: {len(self.model.trainable_variables)}")
 
     def train(self, train_dataset, validation_dataset, epochs=10):
         """
@@ -496,7 +506,8 @@ class PretrainedCNNRegressor:
         fold_training_times = []
 
         for fold, (train_idx, val_idx) in enumerate(kf.split(images)):
-            print(f"\n===== Fold {fold+1}/{kfold_splits} =====")
+            if self.verbose:
+                print(f"\n===== Fold {fold+1}/{kfold_splits} =====")
 
             train_images, val_images = images[train_idx], images[val_idx]
             train_labels, val_labels = labels[train_idx], labels[val_idx]
@@ -556,11 +567,19 @@ class PretrainedCNNRegressor:
         return predictions
     
     def save_model(self, model_dir, model_name="model_pretrained_cnn.keras"):
+        """Save the trained model to the specified directory and filename."""
+        if self.model is None:
+            print("No model to save. Train the model first.")
+            return
         os.makedirs(model_dir, exist_ok=True)
-        self.model.save(os.path.join(model_dir, model_name))
-        print(f"Model saved to {os.path.join(model_dir, model_name)}")
+        model_path = os.path.join(model_dir, model_name)
+        self.model.save(model_path)
+        if self.verbose:
+            print(f"Model saved to {model_path}")
 
     def load_model(self, model_path):
+        """Load a pre-trained model from the specified path."""
         self.model = tf.keras.models.load_model(model_path)
-        print(f"Model loaded from {model_path}")
+        if self.verbose:
+            print(f"Model loaded from {model_path}")
         return self.model
