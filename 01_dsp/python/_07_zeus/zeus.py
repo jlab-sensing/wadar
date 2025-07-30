@@ -507,12 +507,12 @@ def main():
     # Results Summary
     # ====================================================
 
-    # print("\n" + "="*60)
-    # print("RESULTS SUMMARY")
-    # print("="*60)
-    
-    # generate_results_summary(target_validation_dataset, top_n=10)
-    
+    print("\n" + "="*60)
+    print("RESULTS SUMMARY")
+    print("="*60)
+
+    generate_results_summary(target_training_datasets, "training_results.csv", top_n=10)
+
     print("\n[INFO] Zeus evaluation pipeline completed successfully!")
 
 

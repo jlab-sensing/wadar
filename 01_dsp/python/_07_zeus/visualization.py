@@ -59,7 +59,7 @@ def plot_results(top_n, results):
     plt.show()
 
 
-def generate_results_summary(validation_dataset, top_n=10):
+def generate_results_summary(validation_dataset, results_file_name="validation_results.csv", top_n=10):
     """
     Generate and display results summary with visualization.
     
@@ -70,7 +70,7 @@ def generate_results_summary(validation_dataset, top_n=10):
     print("[INFO] Generating results summary...")
     
     try:
-        results = load_results(validation_dataset, "validation_results.csv")
+        results = load_results(validation_dataset, results_file_name)
         plot_results(top_n, results)
     except Exception as e:
         print(f"[ERROR] Failed to load or plot results: {e}")
