@@ -87,7 +87,11 @@ def main():
             validation_labels=validation_labels,
             training_features=training_features,
             validation_features=validation_features,
-            feature_type_name="Handcrafted Features"
+            feature_type_name="Handcrafted Features",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
         
         print("[INFO] Handcrafted features evaluation completed.")
@@ -113,7 +117,11 @@ def main():
             validation_labels=pca_features['amplitude']['labels_val'],
             training_features=pca_features['amplitude']['train'],
             validation_features=pca_features['amplitude']['val'],
-            feature_type_name="PCA Amplitude"
+            feature_type_name="PCA Amplitude",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
 
         # Evaluate PCA Phase features
@@ -126,7 +134,11 @@ def main():
             validation_labels=pca_features['phase']['labels_val'],
             training_features=pca_features['phase']['train'],
             validation_features=pca_features['phase']['val'],
-            feature_type_name="PCA Phase"
+            feature_type_name="PCA Phase",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
         
         # Evaluate PCA Combined features
@@ -139,7 +151,11 @@ def main():
             validation_labels=pca_features['combined']['labels_val'],
             training_features=pca_features['combined']['train'],
             validation_features=pca_features['combined']['val'],
-            feature_type_name="PCA Combined"
+            feature_type_name="PCA Combined",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
 
 
@@ -198,7 +214,11 @@ def main():
             validation_labels=autoencoder_features['amplitude']['labels_val'],
             training_features=autoencoder_features['amplitude']['train'],
             validation_features=autoencoder_features['amplitude']['val'],
-            feature_type_name="Autoencoder Amplitude"
+            feature_type_name="Autoencoder Amplitude",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
 
         # Evaluate Autoencoder Phase features
@@ -211,7 +231,11 @@ def main():
             validation_labels=autoencoder_features['phase']['labels_val'],
             training_features=autoencoder_features['phase']['train'],
             validation_features=autoencoder_features['phase']['val'],
-            feature_type_name="Autoencoder Phase"
+            feature_type_name="Autoencoder Phase",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
         
         # Evaluate Autoencoder Combined features
@@ -224,7 +248,11 @@ def main():
             validation_labels=autoencoder_features['combined']['labels_val'],
             training_features=autoencoder_features['combined']['train'],
             validation_features=autoencoder_features['combined']['val'],
-            feature_type_name="Autoencoder Combined"
+            feature_type_name="Autoencoder Combined",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
 
         # Visualization
@@ -281,7 +309,11 @@ def main():
             validation_labels=cnn_features['amplitude']['labels_val'],
             training_features=cnn_features['amplitude']['train'],
             validation_features=cnn_features['amplitude']['val'],
-            feature_type_name="CNN Amplitude"
+            feature_type_name="CNN Amplitude",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
 
         # Evaluate CNN Phase features
@@ -294,7 +326,11 @@ def main():
             validation_labels=cnn_features['phase']['labels_val'],
             training_features=cnn_features['phase']['train'],
             validation_features=cnn_features['phase']['val'],
-            feature_type_name="CNN Phase"
+            feature_type_name="CNN Phase",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
         
         # Evaluate CNN Combined features
@@ -307,7 +343,11 @@ def main():
             validation_labels=cnn_features['combined']['labels_val'],
             training_features=cnn_features['combined']['train'],
             validation_features=cnn_features['combined']['val'],
-            feature_type_name="CNN Combined"
+            feature_type_name="CNN Combined",
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val
         )
 
         # Visualization
@@ -342,6 +382,73 @@ def main():
             plt.show()
 
         print("[INFO] CNN-based features evaluation completed.")
+        
+    # ====================================================
+    # End-to-End CNN Regressor
+    # ====================================================
+
+    if zeus_params['models']['cnn_regressor']['enabled']:
+        print("\n" + "="*60)
+        print("END-TO-END CNN REGRESSOR EVALUATION")
+        print("="*60)
+
+        from _04_athena.pretrained_cnn import PretrainedCNNRegressor
+        
+        cnn_params = zeus_params['models']['cnn_regressor']
+        epochs = cnn_params.get('epochs', 30)
+        img_size = tuple(cnn_params.get('img_size', [160, 160]))
+        batch_size = cnn_params.get('batch_size', 32)
+        output_dir = cnn_params.get('output_dir', './cnn_temp_images_regressor')
+        verbose = zeus_params.get('advanced', {}).get('verbose', False)
+
+        print(f"[INFO] Training end-to-end CNN regressor with {epochs} epochs...")
+        print(f"[INFO] Image size: {img_size}, Batch size: {batch_size}")
+        
+        # Initialize CNN regressor with raw radar data
+        cnn_regressor = PretrainedCNNRegressor(
+            X=X_train, 
+            y=y_train, 
+            output_dir=output_dir,
+            img_size=img_size,
+            batch_size=batch_size,
+            verbose=verbose
+        )
+
+        # Train the model
+        model, training_metrics = cnn_regressor.full_monty(epochs=epochs)
+
+        # Make predictions on validation set
+        print(f"[INFO] Making CNN regressor predictions on validation set...")
+        cnn_predictions = cnn_regressor.predict(X_val)
+
+        # Evaluate validation performance
+        from _07_zeus.evaluators import evaluate_model
+        validation_metrics = evaluate_model(
+            results_file_name="validation_results.csv",
+            dataset_dir=target_validation_dataset,
+            features_name="End-to-End CNN Regressor",
+            model_name="CNN Regressor",
+            true_labels=y_val,
+            model_predictions=cnn_predictions.flatten() if len(cnn_predictions.shape) > 1 else cnn_predictions
+        )
+
+        # Log training metrics
+        from _06_hermes.logger import update_results
+        update_results(target_training_datasets, "End-to-End CNN Regressor", "CNN Regressor", training_metrics, "training_results.csv", verbose=False)
+
+        # Display results
+        from _07_zeus.evaluators import display_model_metrics
+        display_model_metrics(model_name="End-to-End CNN Regressor", 
+                              training_metrics=training_metrics, 
+                              validation_metrics=validation_metrics)
+
+        # Save the trained model if requested
+        if cnn_params.get('save_model', False):
+            save_dir = cnn_params.get('save_directory', './models')
+            cnn_regressor.save_model(save_dir, "cnn_regressor_model.keras")
+            print(f"[INFO] CNN regressor model saved to {save_dir}")
+
+        print("[INFO] End-to-end CNN regressor evaluation completed.")
         
     # ====================================================
     # Results Summary

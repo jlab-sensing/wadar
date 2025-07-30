@@ -93,6 +93,15 @@ models:
     enabled: false
     epochs: 30
 
+  cnn_regressor:
+    enabled: true
+    epochs: 20
+    img_size: [160, 160]
+    batch_size: 32
+    output_dir: "./cnn_temp_images_regressor"
+    save_model: true
+    save_directory: "./models"
+
   #   
   # svm:
   #   enabled: false
