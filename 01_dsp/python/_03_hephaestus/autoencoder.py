@@ -48,7 +48,7 @@ class AutoencoderFeatureSelector:
         self.model_name = model_name
         self.model_dir = model_dir
 
-        # the model itself, simple feedforward autoencoder
+        # The model itself, simple feedforward autoencoder
         input_layer = keras.layers.Input(shape=(self.input_dim,))
         encoder_layer = keras.layers.Dense(self.encoding_dim, activation="relu")(input_layer)
         decoder_layer = keras.layers.Dense(self.input_dim, activation="sigmoid")(encoder_layer)

@@ -50,6 +50,8 @@ def novelda_digital_downconvert(raw_frame):
 def remove_anomalies(X, threshold=50):
     """
     Replace values in X that deviate from the median by more than threshold with the median.
+    This has been done since the beginning of the project because of odd spikes in the 
+    DAC output that cause large deviations in the data.
 
     Parameters:
         X (np.ndarray): Input array of shape (frames, range_bins, time_bins).

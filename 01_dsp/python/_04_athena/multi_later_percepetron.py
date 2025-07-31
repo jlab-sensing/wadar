@@ -169,9 +169,6 @@ class MultiLayerPerceptron:
             
         Returns:
             Predictions array
-            
-        Raises:
-            ValueError: If model hasn't been trained yet
         """
 
         if self.model is None:
@@ -192,9 +189,6 @@ class MultiLayerPerceptron:
         Parameters:
             dataset_dir: Directory to save files
             name: Base name for saved files
-            
-        Raises:
-            ValueError: If model hasn't been trained yet
         """
 
         if self.model is None:

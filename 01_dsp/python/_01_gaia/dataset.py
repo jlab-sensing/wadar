@@ -14,23 +14,18 @@ class Dataset:
     This class processes raw .frames files, converts them to CSV format,
     and optionally applies labels from a data log file.
 
-    Args:
+    Components:
         dataset_dir (str): Directory containing the dataset
         process_frames (bool): Whether to automatically process frames during initialization
         require_datalog (bool): Whether to require a data log file to exist
         verbose (bool): Whether to print detailed progress information
-
-    Attributes:
-        data_dir (Path): Path to the dataset directory
-        data_log (Path): Path to the data log CSV file
-        has_datalog (bool): Whether a data log file exists
-        df (Optional[pd.DataFrame]): DataFrame containing the data log
-        verbose (bool): Controls verbosity of output
     """
 
     def __init__(self, dataset_dir: str, process_frames: bool = True, 
                  require_datalog: bool = False, verbose: bool = True):
-        """Initialize the Dataset class."""
+        """
+        Initialize the Dataset class.
+        """
 
         self.verbose = verbose
         self.data_dir = Path(dataset_dir)

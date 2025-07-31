@@ -15,32 +15,21 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 class PretrainedCNNFeatureExtractor:
     """
-    Pretrained CNN model for image classification. Much of the code is adapter from 
+    Pretrained CNN model for image classification. Much of the code is adapted from 
     https://www.tensorflow.org/tutorials/images/transfer_learning.
 
-    Args:
-        X (np.ndarray):                Array of images of shape (samples, height, width). 
-                                       For raw radargrams, it should be of shape (samples, fast time, slow time).
-        y (np.ndarray):                Array of labels of shape (samples,).
+    Parameters:
+        X (np.ndarray):                Array of images of shape (samples, height, width).
         output_dir (str):              Directory to save images and labels.
+        dimensions (int):              Number of output feature dimensions (default: 128).
         img_size (tuple):              Size to which images will be resized (default: (160, 160)).
         batch_size (int):              Batch size for training (default: 32).
+        verbose (bool):                Whether to print debug information (default: False).
     """
 
     def __init__(self, X, output_dir, dimensions=128, img_size=(160, 160), batch_size=32, verbose=False):
         """
         Initialize the PretrainedCNN with images and labels.
-
-        Args:
-            X (np.ndarray):                Array of images of shape (samples, height, width).
-            output_dir (str):              Directory to save images and labels.
-            dimensions (int):              Number of output feature dimensions (default: 128).
-            img_size (tuple):              Size to which images will be resized (default: (160, 160)).
-            batch_size (int):              Batch size for training (default: 32).
-            verbose (bool):                Whether to print debug information (default: False).
-
-        Returns:
-            None
         """
 
         self.X = X
@@ -58,7 +47,7 @@ class PretrainedCNNFeatureExtractor:
         """
         Run the full training and evaluation process.
 
-        Args:
+        Parameters:
             epochs (int):                 Number of epochs for training (default: 10).
 
         Returns:
@@ -74,9 +63,6 @@ class PretrainedCNNFeatureExtractor:
     def prepare_data(self):
         """
         Prepare the dataset by saving images and labels to the output directory.
-
-        Returns:
-            None
         """
 
         # Save images and labels
@@ -130,11 +116,8 @@ class PretrainedCNNFeatureExtractor:
         """
         Build the CNN model using a pre-trained MobileNetV2 as the base model.
 
-        Args:
+        Parameters:
             train_dataset (tf.data.Dataset): Dataset for training (optional, used for input shape).
-
-        Returns:
-            None
         """
 
         # Rescale pixel values 
@@ -182,11 +165,8 @@ class PretrainedCNNFeatureExtractor:
         Train the model with the entire dataset. Should only be used after cross-validation, as any validation
         done with this method will not be representative.
 
-        Args:
+        Parameters:
             epochs (int):                 Number of epochs for training (default: 10).
-
-        Returns:
-            None
         """
 
         images, labels = self.load_dataset()
@@ -209,6 +189,12 @@ class PretrainedCNNFeatureExtractor:
         return self.model, features
     
     def predict(self, X):
+        """
+        Make predictions on a batch of images.
+
+        Parameters:
+            X (np.ndarray):                Array of images of shape (samples, height, width).
+        """
         images = []
         for sample in X:
             sample_min = sample.min()
@@ -222,7 +208,10 @@ class PretrainedCNNFeatureExtractor:
         return predictions
     
     def save_model(self, model_path):
-        """Save the trained model to the specified path."""
+        """
+        Save the trained model to the specified path.
+        """
+
         if self.model is None:
             print("No model to save. Train the model first.")
             return
@@ -231,7 +220,10 @@ class PretrainedCNNFeatureExtractor:
             print(f"Model saved to {model_path}")
 
     def load_model(self, model_path):
-        """Load a pre-trained model from the specified path."""
+        """
+        Load a pre-trained model from the specified path.
+        """
+
         self.model = tf.keras.models.load_model(model_path)
         if self.verbose:
             print(f"Model loaded from {model_path}")
@@ -239,32 +231,21 @@ class PretrainedCNNFeatureExtractor:
 
 class PretrainedCNNRegressor:
     """
-    Pretrained CNN model for image classification. Much of the code is adapter from 
+    Pretrained CNN model for image classification. Much of the code is adapted from 
     https://www.tensorflow.org/tutorials/images/transfer_learning.
 
-    Args:
-        X (np.ndarray):                Array of images of shape (samples, height, width). 
-                                       For raw radargrams, it should be of shape (samples, fast time, slow time).
+    Parameters:
+        X (np.ndarray):                Array of images of shape (samples, height, width).
         y (np.ndarray):                Array of labels of shape (samples,).
         output_dir (str):              Directory to save images and labels.
         img_size (tuple):              Size to which images will be resized (default: (160, 160)).
         batch_size (int):              Batch size for training (default: 32).
+        verbose (bool):                Whether to print debug information (default: False).
     """
 
     def __init__(self, X, y, output_dir, img_size=(160, 160), batch_size=32, verbose=False):
         """
         Initialize the PretrainedCNN with images and labels.
-
-        Args:
-            X (np.ndarray):                Array of images of shape (samples, height, width).
-            y (np.ndarray):                Array of labels of shape (samples,).
-            output_dir (str):              Directory to save images and labels.
-            img_size (tuple):              Size to which images will be resized (default: (160, 160)).
-            batch_size (int):              Batch size for training (default: 32).
-            verbose (bool):                Whether to print debug information (default: False).
-
-        Returns:
-            None
         """
 
         self.X = X
@@ -283,7 +264,7 @@ class PretrainedCNNRegressor:
         """
         Run the full training and evaluation process.
 
-        Args:
+        Parameters:
             epochs (int):                 Number of epochs for training (default: 10).
 
         Returns:
@@ -356,7 +337,7 @@ class PretrainedCNNRegressor:
         """
         Build the CNN model using a pre-trained MobileNetV2 as the base model.
 
-        Args:
+        Parameters:
             train_dataset (tf.data.Dataset): Dataset for training (optional, used for input shape).
 
         Returns:
@@ -418,7 +399,7 @@ class PretrainedCNNRegressor:
         """
         Train the CNN model.
 
-        Args:
+        Parameters:
             train_dataset (tf.data.Dataset):        Dataset for training.
             validation_dataset (tf.data.Dataset):   Dataset for validation.
             epochs (int):                           Number of epochs for training (default: 10).
@@ -453,11 +434,8 @@ class PretrainedCNNRegressor:
         Train the model with the entire dataset. Should only be used after cross-validation, as any validation
         done with this method will not be representative.
 
-        Args:
+        Parameters:
             epochs (int):                 Number of epochs for training (default: 10).
-
-        Returns:
-            None
         """
 
         images, labels = self.load_dataset()
@@ -470,12 +448,6 @@ class PretrainedCNNRegressor:
 
         self.build_model(train_dataset) # in case it was not called before
         model = self.train(train_dataset, train_dataset, epochs=epochs)  # Using the same dataset for training and validation
-
-        # base_learning_rate = 0.0001
-        # self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
-        #                    loss=tf.keras.losses.MeanAbsoluteError(),
-        #                    metrics=[tf.keras.metrics.MeanAbsoluteError(name='mae')])
-        # history = self.model.fit(train_dataset, epochs=epochs)
 
         return self.model
 
@@ -554,6 +526,13 @@ class PretrainedCNNRegressor:
         return fold_histories, metrics
     
     def predict(self, X):
+        """
+        Make predictions on a batch of images.
+
+        Parameters:
+            X (np.ndarray):                Array of images of shape (samples, height, width).
+        """
+
         images = []
         for sample in X:
             sample_min = sample.min()
@@ -567,7 +546,10 @@ class PretrainedCNNRegressor:
         return predictions
     
     def save_model(self, model_dir, model_name="model_pretrained_cnn.keras"):
-        """Save the trained model to the specified directory and filename."""
+        """
+        Save the trained model to the specified directory and filename.
+        """
+
         if self.model is None:
             print("No model to save. Train the model first.")
             return
@@ -578,7 +560,10 @@ class PretrainedCNNRegressor:
             print(f"Model saved to {model_path}")
 
     def load_model(self, model_path):
-        """Load a pre-trained model from the specified path."""
+        """
+        Load a pre-trained model from the specified path.
+        """
+        
         self.model = tf.keras.models.load_model(model_path)
         if self.verbose:
             print(f"Model loaded from {model_path}")

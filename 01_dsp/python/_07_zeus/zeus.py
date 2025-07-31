@@ -22,6 +22,10 @@ from feature_processor import process_handcrafted_features, process_pca_features
 from visualization import generate_results_summary, plot_reduced_features, tsne_plot
 import numpy as np
 import matplotlib.pyplot as plt
+from _07_zeus.evaluators import evaluate_cnn1d
+from _07_zeus.evaluators import evaluate_cnn_regressor
+from _07_zeus.evaluators import evaluate_transformer
+from _07_zeus.evaluators import evaluate_lstm
 
 def main():
     """
@@ -393,7 +397,7 @@ def main():
         print("="*60)
         
         try:
-            from _07_zeus.evaluators import evaluate_cnn_regressor
+            
             evaluate_cnn_regressor(
                 training_dataset=target_training_datasets,
                 validation_dataset=target_validation_dataset,
@@ -423,7 +427,7 @@ def main():
         X_val_amplitude = np.abs(X_val)
         
         try:
-            from _07_zeus.evaluators import evaluate_cnn1d
+            
             evaluate_cnn1d(
                 training_dataset=target_training_datasets,
                 validation_dataset=target_validation_dataset,
@@ -488,7 +492,7 @@ def main():
         print("="*60)
         
         try:
-            from _07_zeus.evaluators import evaluate_transformer
+            
             evaluate_transformer(
                 training_dataset=target_training_datasets,
                 validation_dataset=target_validation_dataset,
@@ -502,6 +506,30 @@ def main():
             print("[INFO] Transformer regressor evaluation completed.")
         except Exception as e:
             print(f"[ERROR] Transformer evaluation failed: {e}")
+    
+    # ====================================================
+    # LSTM Regressor
+    # ====================================================
+    
+    if zeus_params['models']['lstm']['enabled']:
+        print("\n" + "="*60)
+        print("LSTM REGRESSOR EVALUATION")
+        print("="*60)
+        
+        try:
+            evaluate_lstm(
+                training_dataset=target_training_datasets,
+                validation_dataset=target_validation_dataset,
+                X_train=X_train,
+                y_train=y_train,
+                X_val=X_val,
+                y_val=y_val,
+                feature_type_name="End-to-End LSTM",
+                zeus_params=zeus_params
+            )
+            print("[INFO] LSTM regressor evaluation completed.")
+        except Exception as e:
+            print(f"[ERROR] LSTM evaluation failed: {e}")
         
     # ====================================================
     # Results Summary

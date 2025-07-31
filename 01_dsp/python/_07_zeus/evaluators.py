@@ -3,6 +3,8 @@ Model Evaluation Utilities
 Contains functions for evaluating different ML models and displaying results.
 """
 
+import os
+import torch
 import numpy as np
 from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_error
 from _06_hermes.parameters import num2label
@@ -14,6 +16,9 @@ from _04_athena.multi_later_percepetron import MultiLayerPerceptron
 from _04_athena.pretrained_cnn import PretrainedCNNRegressor
 from _04_athena.cnn_models import CNN1D
 from _04_athena.transformer import TransformerRegressionHead
+from _04_athena.lstm_models import LSTMRegressor
+from skimage.transform import resize
+from transformers import BlipProcessor, BlipModel
 
 
 def evaluate_model(results_file_name, dataset_dir, features_name, model_name, true_labels, model_predictions):
@@ -395,7 +400,6 @@ def evaluate_transformer(training_dataset, validation_dataset, X_train, y_train,
     X_val_img = np.mean(X_val_amplitude, axis=2)
     
     # Resize to required image size and normalize
-    from skimage.transform import resize
     X_train_resized = np.array([resize(img, img_size, anti_aliasing=True) for img in X_train_img])
     X_val_resized = np.array([resize(img, img_size, anti_aliasing=True) for img in X_val_img])
     
@@ -405,7 +409,7 @@ def evaluate_transformer(training_dataset, validation_dataset, X_train, y_train,
     
     try:
         # Initialize transformer with BLIP processor
-        from transformers import BlipProcessor, BlipModel
+        
         
         print("[INFO] Loading BLIP processor and model...")
         processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
@@ -457,10 +461,9 @@ def evaluate_transformer(training_dataset, validation_dataset, X_train, y_train,
         # Save model if requested
         if save_model:
             try:
-                import os
                 os.makedirs(save_directory, exist_ok=True)
                 model_path = os.path.join(save_directory, "transformer_regressor.pth")
-                import torch
+                
                 torch.save(transformer.state_dict(), model_path)
                 print(f"[INFO] Transformer model saved to {model_path}")
             except Exception as e:
@@ -474,6 +477,107 @@ def evaluate_transformer(training_dataset, validation_dataset, X_train, y_train,
         return None, {}, {}
     except Exception as e:
         print(f"[ERROR] Transformer evaluation failed: {e}")
+        return None, {}, {}
+
+
+def evaluate_lstm(training_dataset, validation_dataset, X_train, y_train, X_val, y_val,
+                 feature_type_name, zeus_params):
+    """
+    Evaluate LSTM model on raw radar data.
+    
+    Args:
+        training_dataset: Training dataset directory
+        validation_dataset: Validation dataset directory  
+        X_train: Training radar data (complex)
+        y_train: Training labels
+        X_val: Validation radar data (complex)
+        y_val: Validation labels
+        feature_type_name: Name of feature type for logging
+        zeus_params: Zeus configuration parameters
+    
+    Returns:
+        Trained LSTM model and metrics
+    """
+    print(f"\n[INFO] Evaluating LSTM on raw radar data...")
+    
+    # Get LSTM parameters
+    lstm_params = zeus_params['models'].get('lstm', {})
+    epochs = lstm_params.get('epochs', 50)
+    batch_size = lstm_params.get('batch_size', 16)
+    save_model = lstm_params.get('save_model', False)
+    save_directory = lstm_params.get('save_directory', './models')
+    lstm_units_1 = lstm_params.get('lstm_units_1', 64)
+    lstm_units_2 = lstm_params.get('lstm_units_2', 32)
+    dense_units_1 = lstm_params.get('dense_units_1', 32)
+    dense_units_2 = lstm_params.get('dense_units_2', 16)
+    dropout_rate = lstm_params.get('dropout_rate', 0.2)
+    
+    try:
+        
+        # Initialize LSTM regressor
+        lstm = LSTMRegressor()
+        
+        # Train model and get cross-validation metrics
+        print(f"[INFO] Training LSTM for {epochs} epochs...")
+        training_metrics = lstm.full_monty_eval(X_train, y_train, 
+                                               epochs=epochs, batch_size=batch_size, verbose=0)
+        
+        # Train final model on all training data
+        print(f"[INFO] Training final LSTM model...")
+        lstm.train_final_model(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=0)
+        
+        # Make predictions on validation set
+        print(f"[INFO] Making LSTM predictions on validation set...")
+        y_pred_val = lstm.predict(X_val)
+        
+        # Flatten predictions if needed
+        if len(y_pred_val.shape) > 1:
+            y_pred_val = y_pred_val.flatten()
+        
+        # Evaluate validation performance
+        validation_metrics = evaluate_model(
+            results_file_name="validation_results.csv",
+            dataset_dir=validation_dataset,
+            features_name=feature_type_name,
+            model_name="LSTM",
+            true_labels=y_val,
+            model_predictions=y_pred_val
+        )
+        
+        # Log training metrics
+        update_results(
+            training_dataset, 
+            feature_type_name, 
+            "LSTM", 
+            training_metrics, 
+            "training_results.csv", 
+            verbose=False
+        )
+        
+        # Display results
+        display_model_metrics(
+            model_name=feature_type_name, 
+            training_metrics=training_metrics, 
+            validation_metrics=validation_metrics
+        )
+        
+        # Save model if requested
+        if save_model:
+            try:
+                os.makedirs(save_directory, exist_ok=True)
+                model_path = os.path.join(save_directory, "lstm_regressor.h5")
+                lstm.model.save(model_path)
+                print(f"[INFO] LSTM model saved to {model_path}")
+            except Exception as e:
+                print(f"[WARNING] Failed to save LSTM model: {e}")
+        
+        return lstm, training_metrics, validation_metrics
+        
+    except ImportError as e:
+        print(f"[ERROR] Failed to import LSTM model: {e}")
+        return None, {}, {}
+    except Exception as e:
+        print(f"[ERROR] LSTM evaluation failed: {e}")
         return None, {}, {}
 
 def evaluate_all_models(zeus_params, training_dataset, validation_dataset, training_labels, validation_labels, 

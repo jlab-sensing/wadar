@@ -105,7 +105,7 @@ models:
 
   # 1D CNN model for radar signal processing
   cnn1d:
-    enabled: false
+    enabled: true
     epochs: 100
     batch_size: 16
     save_model: true
@@ -117,6 +117,19 @@ models:
     epochs: 20
     batch_size: 4
     img_size: [160, 160]
+    save_model: true
+    save_directory: "./models"
+
+  # LSTM regression model for sequential radar data
+  lstm:
+    enabled: false
+    epochs: 50
+    batch_size: 16
+    lstm_units_1: 64
+    lstm_units_2: 32
+    dense_units_1: 32
+    dense_units_2: 16
+    dropout_rate: 0.2
     save_model: true
     save_directory: "./models"
 

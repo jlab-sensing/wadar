@@ -20,18 +20,11 @@ class FrameLoader:
     Each frame is expected to be in a CSV file, with labels extracted from JSON files 
     in each folder. The class can perform digital downconversion and anomaly removal.
 
-    Args:
+    Components:
         dataset_dir (str): Directory containing the dataset
         new_dataset (bool): If True, load from CSV files; if False, load from saved .npy files
         ddc_flag (bool): Whether to perform digital downconversion
         verbose (bool): Whether to print detailed progress information
-    
-    Attributes:
-        dataset_dir (str): Path to the dataset directory
-        X (np.ndarray): Loaded feature data
-        y (np.ndarray): Loaded label data
-        ddc (bool): Digital downconversion flag
-        verbose (bool): Verbosity control
     """
     
     def __init__(self, dataset_dir: str, new_dataset: bool = True, 
@@ -39,6 +32,7 @@ class FrameLoader:
         """
         Initialize the FrameLoader.
         """
+
         self.dataset_dir = dataset_dir
         self.verbose = verbose
         self.X = None
@@ -58,6 +52,7 @@ class FrameLoader:
         """
         Print info message if verbose mode is enabled.
         """
+
         if self.verbose:
             print(f"[INFO] {message}")
 
@@ -107,6 +102,7 @@ class FrameLoader:
         """
         Load dataset from existing .npy files.
         """
+
         self._info("Loading dataset from existing .npy files...")
         self.X, self.y = self.load_raw_data()
         if self.X is not None and self.y is not None:
@@ -119,9 +115,6 @@ class FrameLoader:
         
         Parameters:
             data_dir: Path to the directory containing data_params.json
-            
-        Returns:
-            Extracted label value or 0.0 if not found
         """
 
         data_path = Path(data_dir)
@@ -157,9 +150,6 @@ class FrameLoader:
         
         Parameters:
             filename: Path to the CSV file
-            
-        Returns:
-            Frame data as complex64 array or None if loading fails
         """
 
         try:
@@ -175,9 +165,6 @@ class FrameLoader:
         
         Parameters:
             csv_dir: Directory containing CSV files and data_params.json
-            
-        Returns:
-            Tuple of (features, labels) or (None, None) if loading fails
         """
 
         # Extract label for this directory

@@ -18,18 +18,18 @@ class CNN1D:
     
     Processes complex radar signals by extracting amplitude and phase components,
     then applies 1D CNN for bulk density prediction.
+
+    Parameters:
+        X: Complex radar data of shape (samples, range_bins, slow_time)
+        y: Target labels (bulk density values)
+        n_splits: Number of splits for cross-validation
     """
     
     def __init__(self, X, y, n_splits=KFOLD_SPLITS):
         """
         Initialize CNN1D model.
-        
-        Args:
-            X: Complex radar data of shape (samples, range_bins, slow_time)
-            y: Target labels (bulk density values)
-            n_splits: Number of splits for cross-validation
         """
-        self.X_raw = X
+
         self.y = y
         self.n_splits = n_splits
         self.model = None
@@ -37,7 +37,10 @@ class CNN1D:
         self.X = X
         
     def scale_each_sample(self, X):
-        """Scale each sample independently to [0,1] range (same as demo normalization approach)."""
+        """
+        Scale each sample independently to [0,1] range.
+        """
+
         # Flatten each sample for normalization, then reshape back
         n_samples, n_bins, n_features = X.shape
         
@@ -59,13 +62,14 @@ class CNN1D:
         """
         Complete training pipeline with cross-validation and final model training.
         
-        Args:
+        Parameters:
             epochs: Number of training epochs
             batch_size: Training batch size
             
         Returns:
             Trained model and cross-validation metrics
         """
+
         print(f"[INFO] Starting 1D CNN training with {epochs} epochs, batch size {batch_size}")
         
         # Scale the data
@@ -84,29 +88,20 @@ class CNN1D:
         """
         Build 1D CNN architecture for radar data regression (same as demo).
         
-        Args:
+        Parameters:
             input_shape: Shape of input data (range_bins, channels)
             filters: Number of convolutional filters
             dense_units: Number of units in dense layers
         """
+        
         model = Sequential([
-            # First conv block
-            Conv1D(32, kernel_size=5, activation='relu', input_shape=input_shape),
-            Conv1D(32, kernel_size=3, activation='relu'),
+            Conv1D(filters, kernel_size=5, activation='relu', input_shape=input_shape),
             MaxPooling1D(pool_size=2),
-            Dropout(0.2),
             
-            # Second conv block  
-            Conv1D(64, kernel_size=3, activation='relu'),
-            MaxPooling1D(pool_size=2),
-            Dropout(0.2),
-            
-            # Dense layers
             Flatten(),
-            Dense(32, activation='relu'),
-            Dropout(0.3),
-            Dense(16, activation='relu'),
-            Dense(1, activation='linear')  # Single output for regression
+            Dropout(0.1),
+            Dense(dense_units, activation='relu'),
+            Dense(1, activation='linear')
         ])
         
         model.compile(
@@ -117,7 +112,10 @@ class CNN1D:
         return model
 
     def train(self, X_scaled, epochs=30, batch_size=16):
-        """Train the final model on all available data."""
+        """
+        Train the final model on all available data.
+        """
+
         input_shape = (X_scaled.shape[1], X_scaled.shape[2])
         self.model = self.build_model(input_shape=input_shape)
         
@@ -145,7 +143,10 @@ class CNN1D:
         return self.model
     
     def cross_validate(self, X_scaled, epochs=30, batch_size=16):
-        """Perform k-fold cross-validation to estimate model performance."""
+        """
+        Perform k-fold cross-validation to estimate model performance.
+        """
+
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=RANDOM_SEED)
 
         mae_scores = []
@@ -221,7 +222,10 @@ class CNN1D:
         return metrics
 
     def predict(self, X):
-        """Make predictions on new data."""
+        """
+        Make predictions on new data.
+        """
+
         X_processed = X
         X_scaled = self.scale_each_sample(X_processed)
         
@@ -232,7 +236,10 @@ class CNN1D:
         return y_pred
 
     def save_model(self, model_dir, model_name="cnn1d_regressor.keras"):
-        """Save the trained model."""
+        """
+        Save the trained model.
+        """
+
         if self.model is None:
             raise ValueError("No model to save. Train the model first.")
         
@@ -243,7 +250,10 @@ class CNN1D:
         print(f"[INFO] Model saved to {model_path}")
 
     def load_model(self, model_dir, model_name="cnn1d_regressor.keras"):
-        """Load a pre-trained model."""
+        """
+        Load a pre-trained model.
+        """
+
         import os
         model_path = os.path.join(model_dir, model_name)
         if not os.path.exists(model_path):

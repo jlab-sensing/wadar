@@ -1,7 +1,7 @@
-# Feature engineering tools for radar signal processing:
-# - Peak Amplitude, Shape, and Timing Analysis
-# - Signal Entropy and Variance Features
-# - Phase Analysis and Circularity Metrics
+"""
+Feature engineering tools for radar signal processing. Also includes functions for
+pruning features using various methods.
+"""
 
 import os
 from typing import Optional, Tuple
@@ -32,7 +32,10 @@ class FeatureTools:
     """
 
     def __init__(self, X: np.ndarray, verbose: bool = True, cache_computations: bool = True):
-        """Initialize the FeatureTools with input data and configuration."""
+        """
+        Initialize the FeatureTools with input data and configuration.
+        """
+
         if not isinstance(X, np.ndarray) or X.ndim != 3:
             raise ValueError(f"Input X must be 3D numpy array, got {type(X)} with shape {getattr(X, 'shape', 'unknown')}")
         
@@ -52,6 +55,7 @@ class FeatureTools:
         """
         Print info message if verbose mode is enabled.
         """
+
         if self.verbose:
             print(f"[INFO] {message}")
 
@@ -62,6 +66,7 @@ class FeatureTools:
         Returns:
             np.ndarray: Average frame of shape (samples, fast_time)
         """
+
         if self.cache_computations and self._cached_average_frame is not None:
             return self._cached_average_frame
             
@@ -80,6 +85,7 @@ class FeatureTools:
         Returns:
             np.ndarray: Peak indices of shape (samples, 2)
         """
+
         if self.cache_computations and self._cached_peak_indices is not None:
             return self._cached_peak_indices
             
@@ -975,12 +981,6 @@ class FeatureTools:
                         mid_freq_energy[i] = np.sum(mid_freq ** 2)
         
         return low_freq_energy, mid_freq_energy, high_freq_energy
-    
-    # TODO: FFT and some time domain features. Maybe correlation between peaks?
-    #       There are advanced radar clutter analysis techniques.
-    #       Persistence, but that might be the same as variance.
-    #       Definitely missing some phase features that I don't know about.
-    #       With the feature pruning methods I've implemented, there's no such thing as "too many features".
 
     def initialize_feature_table(self) -> None:
         """

@@ -18,10 +18,6 @@ class PCAProcessor:
     def __init__(self, X, n_components=None):
         """
         Initialize the PCAProcessor with the input data and number of components.
-
-        Args:
-            X (np.ndarray):         Input data of shape (samples, features).
-            n_components (int):     Number of components to keep.
         """
 
         self.n_components = n_components
@@ -50,7 +46,7 @@ class PCAProcessor:
         """
         Apply the previously fitted PCA to new data.
 
-        Args:
+        Parameters:
             X (np.ndarray): Input data of shape (samples, features) or (samples, R, T).
 
         Returns:
@@ -68,7 +64,7 @@ class PCAProcessor:
         Plot the cumulative variance explained by the PCA components for each sample. Useful for understanding how many components are needed
         to explain the variance in the data.
 
-        Args:
+        Parameters:
             max_components (int): Maximum number of components to consider for the plot.
         """
         N, R, T = self.X.shape
