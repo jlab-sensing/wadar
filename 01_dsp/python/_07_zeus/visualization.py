@@ -12,7 +12,7 @@ from sklearn.manifold import TSNE
 def plot_results(top_n, results):
     """
     Plot and display top performing models.
-    
+
     Args:
         top_n: Number of top models to display
         results: DataFrame with model results
@@ -27,35 +27,55 @@ def plot_results(top_n, results):
         return
 
     # Prepare data for plotting
-    best_models_plot = best_models[['Feature', 'Model', 'MAE']].copy()
-    features = best_models_plot['Feature'].unique()
-    models = best_models_plot['Model'].unique()
+    best_models_plot = best_models[['Feature', 'Model', 'MAE', 'Accuracy']].copy()
+    # Combine feature and model for x-axis labels, abbreviate if too long
+    def abbreviate(text, maxlen=12):
+        return text if len(text) <= maxlen else text[:maxlen-3] + '...'
+    best_models_plot['Name'] = best_models_plot['Feature'].apply(abbreviate) + '→' + best_models_plot['Model'].apply(abbreviate)
+    names = best_models_plot['Name']
+    mae = best_models_plot['MAE']
+    accuracy = best_models_plot['Accuracy']
+    index = np.arange(len(names))
+    bar_width = 0.35
 
-    # Create a pivot table for MAE
-    mae_pivot = best_models_plot.pivot(index='Feature', columns='Model', values='MAE')
-
-    x = np.arange(len(features))  # the label locations
-    width = 0.7  # the width of the bars
-    n_models = len(models)
-    bar_width = width / n_models
-
-    fig, ax = plt.subplots(figsize=(6, 3))  # IEEE column width
+    fig, ax1 = plt.subplots(figsize=(max(8, len(names)*0.8), 6))
 
     # Plot MAE bars
-    for idx, model in enumerate(models):
-        offsets = (idx - (n_models-1)/2) * bar_width
-        ax.bar(x + offsets, mae_pivot[model], bar_width, label=f"{model}")
+    mae_bars = ax1.bar(index, mae, bar_width, label='MAE', color='#1f77b4', edgecolor='black', linewidth=1)
+    # Plot Accuracy bars (secondary axis)
+    ax2 = ax1.twinx()
+    acc_bars = ax2.bar(index + bar_width, accuracy, bar_width, label='Accuracy', color='#ff7f0e', edgecolor='black', linewidth=1)
 
-    ax.set_ylabel('MAE', fontsize=8)
-    ax.set_title('Top Models by Feature: MAE', fontsize=9)
-    ax.set_xticks(x)
-    ax.set_xticklabels(features, rotation=45, ha='right', fontsize=7)
-    ax.tick_params(axis='y', labelsize=7)
-    ax.grid(axis='y', linestyle='--', alpha=0.5, linewidth=0.5)
-    ax.legend(title='Model', loc='upper right', fontsize=7, title_fontsize=7, frameon=False)
+    # Axis labels and ticks
+    ax1.set_xlabel('Feature→Model', fontsize=14, fontweight='bold')
+    ax1.set_ylabel('MAE', color='#1f77b4', fontsize=14, fontweight='bold')
+    ax2.set_ylabel('Accuracy', color='#ff7f0e', fontsize=14, fontweight='bold')
+    ax1.set_xticks(index + bar_width / 2)
+    ax1.set_xticklabels(names, rotation=30, ha='right', fontsize=12, wrap=True)
 
-    plt.tight_layout(pad=0.5)
-    plt.subplots_adjust(bottom=0.25)
+    # Add grid for MAE axis
+    ax1.grid(True, axis='y', linestyle='--', alpha=0.6)
+
+    # Add value labels on bars
+    for bar in mae_bars:
+        height = bar.get_height()
+        ax1.annotate(f'{height:.2f}', xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3), textcoords="offset points",
+                        ha='center', va='bottom', fontsize=10)
+    for bar in acc_bars:
+        height = bar.get_height()
+        ax2.annotate(f'{height:.2f}', xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3), textcoords="offset points",
+                        ha='center', va='bottom', fontsize=10)
+
+    bars = [mae_bars, acc_bars]
+    labels = ['MAE (g/cm^3)', 'Accuracy']
+    ax1.legend(bars, labels, loc='best', fontsize=12)
+
+    ax1.set_ylim(0, mae.max() * 1.5)
+    ax2.set_ylim(0, accuracy.max() * 1.1)
+
+    plt.tight_layout()
     plt.show()
 
 

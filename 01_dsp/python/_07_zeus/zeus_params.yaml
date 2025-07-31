@@ -34,7 +34,7 @@ data:
 # Feature Engineering Configuration
 features:
   handcrafted:
-    enabled: true  # Set to false to skip handcrafted feature generation
+    enabled: false  # Set to false to skip handcrafted feature generation
     # Number of top features to select
     n_features: 16
     
@@ -105,7 +105,7 @@ models:
 
   # 1D CNN model for radar signal processing
   cnn1d:
-    enabled: true
+    enabled: false
     epochs: 100
     batch_size: 16
     save_model: true
@@ -113,7 +113,7 @@ models:
 
   # Transformer regression model with BLIP vision encoder
   transformer:
-    enabled: false
+    enabled: true
     epochs: 20
     batch_size: 4
     img_size: [160, 160]

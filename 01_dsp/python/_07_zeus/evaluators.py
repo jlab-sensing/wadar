@@ -409,14 +409,15 @@ def evaluate_transformer(training_dataset, validation_dataset, X_train, y_train,
     
     try:
         # Initialize transformer with BLIP processor
-        
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         
         print("[INFO] Loading BLIP processor and model...")
         processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
         blip_model = BlipModel.from_pretrained("Salesforce/blip-image-captioning-base")
-        
+        output_dim = blip_model.vision_model.config.hidden_size
+
         # Initialize transformer regressor
-        transformer = TransformerRegressionHead(blip_model, output_dim=768)
+        transformer = TransformerRegressionHead(blip_model, output_dim=output_dim).to(device)
         
         # Train model and get cross-validation metrics
         print(f"[INFO] Training transformer for {epochs} epochs...")

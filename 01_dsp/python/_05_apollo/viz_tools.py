@@ -149,7 +149,7 @@ def plot_IQ_signals(X, y):
                          color=colors[i], alpha=0.2)
     
     plt.xlabel("Range Bin", fontsize=14)
-    plt.ylabel("Absolute Value of I/Q Signal", fontsize=14)
+    plt.ylabel("Amplitude of I/Q Signal", fontsize=14)
     plt.legend(title="Compaction Level", fontsize=12, title_fontsize=13, loc="best")
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()

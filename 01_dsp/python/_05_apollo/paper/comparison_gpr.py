@@ -15,6 +15,7 @@ for i in range(len(labels)):
 
 # ax.set_xscale('log')
 ax.set_yscale('log')
+ax.set_ylim(ax.get_ylim()[::-1])  # Reverse the y-axis (range resolution)
 ax.set_xlim(0, 1)
 
 ax.set_xlabel('Depth (m)', fontsize=12)

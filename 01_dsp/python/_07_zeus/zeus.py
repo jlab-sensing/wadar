@@ -539,7 +539,7 @@ def main():
     print("RESULTS SUMMARY")
     print("="*60)
 
-    generate_results_summary(target_training_datasets, "training_results.csv", top_n=10)
+    generate_results_summary(target_training_datasets, "training_results.csv", top_n=3)
 
     print("\n[INFO] Zeus evaluation pipeline completed successfully!")
 
