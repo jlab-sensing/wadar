@@ -1,1 +1,0 @@
-I used these files when scripting and testing functions as I wrote them. They are all out of data. See _07_zeus/zeus.py for the most up to data use of the functions in this library.
