@@ -15,9 +15,10 @@ from sklearn.model_selection import GridSearchCV
 from ..parameters import KFOLD_SPLITS, RANDOM_SEED, num2label
 
 class RidgeRegression:
-    def __init__(self):
+    def __init__(self, tune_model_params:bool = True):
         self.model = None
         self.metrics = None
+        self.tune_model_params = tune_model_params
 
     def full_monty(self, feature_array, labels):
         metrics = self.cross_validate(feature_array=feature_array, labels=labels)
@@ -96,6 +97,11 @@ class RidgeRegression:
         return metrics
     
     def tune(self, X, y):
+
+        if self.tune_model_params:
+            alpha = 1000
+            degree = 2
+            return alpha, degree
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore") # Suppresses to warnings that rise from poor parameters in the parameter grid search
