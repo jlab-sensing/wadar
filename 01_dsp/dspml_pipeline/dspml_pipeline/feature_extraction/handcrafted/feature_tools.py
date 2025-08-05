@@ -87,3 +87,15 @@ def load_feature_table(directory: str, feature_file_name: str = 'features.csv'):
     except Exception as e:
         logger.error(f"Failed to load feature table: {e}")
         sys.exit(1)
+
+def process_feature_table(feature_table: pd.DataFrame):
+    try:
+        feature_array = feature_table.drop(columns=['Label']).values
+        feature_names = feature_table.drop(columns=['Label']).columns.tolist()
+        labels = feature_table['Label'].values
+
+        logger.info(f"Loaded feature table: {feature_table.shape[0]} samples, {len(feature_names)} features")
+        return feature_array, feature_names, labels
+    except Exception as e:
+        logger.error(f"Failed to process feature table: {e}")
+        sys.exit(1)
