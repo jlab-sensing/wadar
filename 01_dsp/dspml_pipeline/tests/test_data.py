@@ -7,6 +7,10 @@ from dspml_pipeline.setup_logging import setup_logging
 
 if __name__ == "__main__":
     setup_logging(verbose=True)
-    dataset_dir = "../data/wet-0-soil-compaction-dataset"
-    frameLoader = FrameLoader(dataset_dir)
+    dataset_dirs = ["../data/wet-0-soil-compaction-dataset"]
+    target_dir = "../data/training-dataset"
+    frameLoader = FrameLoader(dataset_dirs, target_dir)
     frameLoader.read_frames()
+
+    print(frameLoader.X.shape)
+    print(frameLoader.Y.shape)
