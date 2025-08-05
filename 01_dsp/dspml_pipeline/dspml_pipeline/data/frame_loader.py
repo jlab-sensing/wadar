@@ -7,6 +7,9 @@ from ..setup_logging import setup_logging
 import json
 import pandas as pd
 import sys
+from scipy import signal
+
+THRESHOLD = 50 # For anomoly removal
 
 class FrameLoader:
     def __init__(self, dataset_dirs:list, target_dir:str,
@@ -14,6 +17,7 @@ class FrameLoader:
                  verbose:bool = False):
         self.verbose = verbose
         self.dataset_dirs = dataset_dirs
+        self.target_dir = target_dir
         self.data_log = data_log
         self.X = None
         self.y = None
@@ -28,7 +32,7 @@ class FrameLoader:
                 logger.error(f"Data log file {data_log_i} does not exist.")
                 sys.exit(1)
 
-    def read_frames(self):
+    def extract_data(self):
         logger.info("Starting frame processing")
 
         all_frame_data = []
@@ -80,10 +84,22 @@ class FrameLoader:
                             logger.warning(f"Failed to process: {capture_file.name}")
                             continue
 
-                        # baseband ddc conversion goes here
-
+                        # Anomoly removal. Replaces values that deviate from the median by more
+                        # than a threshold with the median. This has been done since the beginning 
+                        # of the project because of odd spikes in the raw DAC output that causes
+                        # large deviations in the data.
+                        median = np.median(frame_data, axis=1, keepdims=True)
+                        mask = np.abs(frame_data - median) > THRESHOLD
+                        frame_data_clean = frame_data.copy()
+                        frame_data_clean[mask] = np.broadcast_to(median, frame_data.shape)[mask]
+                        
+                        # DDC
+                        ddc_frame_data = np.zeros_like(frame_data_clean, dtype=np.complex64)
+                        for i in range(frame_data_clean.shape[1]):
+                            ddc_frame_data[:, i] = novelda_digital_downconvert(frame_data_clean[:, i])
+                        
                         try:
-                            all_frame_data.append(frame_data)
+                            all_frame_data.append(ddc_frame_data)
                             all_labels.append(bulk_density)
                         except:
                             logger.error(f"Failed to stack radar data from {capture_file.name}")
@@ -100,8 +116,41 @@ class FrameLoader:
                 logger.info(f"Saved parameters: {params_file.name}")
 
         self.X = np.stack(all_frame_data)
-        self.Y = np.stack(all_labels)
+        self.y = np.stack(all_labels)
 
+        return self.X, self.y
+    
+    def save_dataset(self):
+
+        if not Path(self.target_dir).exists():
+            Path(self.target_dir).mkdir(parents=True)
+
+        X_path = Path(self.target_dir) / "X.npy"
+        y_path = Path(self.target_dir) / "y.npy"
+
+        np.save(X_path, self.X)
+        np.save(y_path, self.y)
+
+        logger.info(f"Raw dataset saved as X_raw.npy and y_raw.npy")
+        logger.info(f"Saved shapes: X={self.X.shape}, y={self.y.shape}")
+
+def load_dataset(dataset_dir:str):
+    X_path = Path(dataset_dir) / "X.npy"
+    y_path = Path(dataset_dir) / "y.npy"
+
+    if not X_path.exists() or not y_path.exists():
+        logger.error("X.npy and/or y.npy not found in the dataset directory")
+        sys.exit(1)
+
+    X = np.load(X_path)
+    y = np.load(y_path)
+    
+    logger.info(f"Loaded from existing dataset: X={X.shape}, y={y.shape}")
+
+    return X, y
+        
+
+        
 def process_frames(file_path:Path, capture_name:str):
     """
     Process Novelda radar data capture file to extract raw frames.
@@ -322,3 +371,49 @@ def NoveldaChipParams(chip_set:str, pgen:int, sampler:str='4mm'):
     bw_hz = fH - fL if 'fH' in locals() else bw_hz
 
     return fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz
+
+def novelda_digital_downconvert(raw_frame):
+    """
+    Function to apply a digital downcovert (DDC) to a high frequency radar
+    signal. Brings signal to baseband frequencies and provides an analytic
+    signal (i.e. I & Q, in-phase & quadrature, outputs). Inherited from
+    NoveldaDDC.m.
+
+    TODO: Quite certain this can be optimized, but since it's derived from
+    DSP concepts I do not fully understand, I am leaving it as is for now.
+
+    Parameters:
+        raw_frame (np.ndarray):         Input radar frame data, shape (N,).
+
+    Returns:
+        baseband_signal (np.ndarray):   Baseband signal after DDC, shape (N,).
+    """
+
+    # These parameters are for true the X1-IPG1
+    Fs = 39e9           # Mean system sampling rate for 4mm
+    fL = 435e6;         # -10 dB low cutoff for pgen 0
+    fH = 3165e6;        # -10 dB high cutoff
+    Fc = (fH + fL) / 2
+
+    # Digital Down-Convert parameters (normalized frequency index)
+    N = len(raw_frame)                             
+    freqIndex = Fc / Fs * N
+    t = np.linspace(0, 1, N, endpoint=False)
+
+    # Generate the complex sinusoid LO (local oscillator) to mix into the signal 
+    phi = 0         # Phase offset?
+    LO = np.sin(2 * np.pi * freqIndex * t + phi) + 1j * np.cos(2 * np.pi * freqIndex * t + phi)
+
+    # Digital Downconvert (the DDC) via direct multiplication subtracting the mean removes DC offset
+    rf_signal = raw_frame - np.mean(raw_frame)
+    mixed = rf_signal * LO
+
+    # LPF Design to eliminate the upper mixing frequencies after the DDC (21- tap hamming window)
+    M = 20                                  # Filter order, equal to # of filter taps - 1. Inherited this from NoveldaDDC.m.
+    window = np.hamming(M + 1)
+    window /= np.sum(window[:(M//2 + 1)])   # Normalize the weights
+
+    # Baseband signal using convolution (provides downcoverted, filtered analytic signal)
+    baseband_signal = signal.convolve(mixed, window, mode='same')
+
+    return baseband_signal
