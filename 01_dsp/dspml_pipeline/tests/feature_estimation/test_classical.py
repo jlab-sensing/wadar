@@ -9,6 +9,7 @@ from dspml_pipeline.setup_logging import setup_logging
 from dspml_pipeline.feature_extraction.handcrafted.feature_tools import full_monty_features, save_feature_table, load_feature_table, process_feature_table
 from dspml_pipeline.feature_extraction.handcrafted.feature_pruning import lasso_minimize_features, correlation_minimize_features, mutual_info_minimize_features
 from dspml_pipeline.feature_estimation.regression import RidgeRegression
+from dspml_pipeline.results import update_results
 
 from scipy import stats
 
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     corr_feature_table, corr_features = correlation_minimize_features(feature_table=feature_table)
     corr_feature_array, corr_feature_names, corr_labels = process_feature_table(corr_feature_table)
 
-    ridgeRegressor = RidgeRegression(degree=1)
-    metrics = ridgeRegressor.cross_validate(feature_array, labels)
-    ridgeRegressor.train(feature_array, labels)
-    y_pred = ridgeRegressor.estimate(feature_array)
+    ridgeRegressor = RidgeRegression()
+    models, metrics = ridgeRegressor.full_monty(feature_array, labels)
+
+    update_results(target_dir, "Handcrafted", f"Ridge Regression Degree", metrics)

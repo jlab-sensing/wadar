@@ -4,33 +4,38 @@ logger = logging.getLogger(__name__)
 import time
 import numpy as np
 import sys
+import warnings
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.linear_model import Ridge
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.model_selection import GridSearchCV
 
 from ..parameters import KFOLD_SPLITS, RANDOM_SEED, num2label
 
 class RidgeRegression:
-    def __init__(self, degree=1, kfold_splits=KFOLD_SPLITS, alpha=1000, random_seed=RANDOM_SEED):
-        self.degree = degree
-        self.kfold_splits = kfold_splits
-        self.alpha = alpha
-        self.random_seed = random_seed
+    def __init__(self):
         self.model = None
         self.metrics = None
 
-    def build_model(self):
+    def full_monty(self, feature_array, labels):
+        metrics = self.cross_validate(feature_array=feature_array, labels=labels)
+        alpha, degree = self.tune(feature_array, labels)
+        logger.info(f"Final model trained: Ridge Regression with alpha={alpha}, degree={degree}")
+        model = self.train(feature_array, labels, alpha, degree)
+        return model, metrics
+
+    def build_model(self, alpha, degree):
         return Pipeline([
-            ('poly', PolynomialFeatures(degree=self.degree, include_bias=False)),
+            ('poly', PolynomialFeatures(degree=degree, include_bias=False)),
             ('scaler', StandardScaler()),
-            ('ridge', Ridge(alpha=self.alpha, random_state=self.random_seed))
+            ('ridge', Ridge(alpha=alpha, random_state=RANDOM_SEED))
         ])
 
     def cross_validate(self, feature_array, labels):
         X, y = feature_array, labels
-        kf = KFold(n_splits=self.kfold_splits, shuffle=True, random_state=self.random_seed)
+        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=RANDOM_SEED)
 
         # Store metrics for each fold
         metrics = {'mae': [], 'rmse': [], 'accuracy': [], 'inference_time': [], 'training_time': []}
@@ -43,12 +48,11 @@ class RidgeRegression:
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
 
-            # Create and train model
-            model = self.build_model()
+            alpha, degree = self.tune(X_train, y_train)
 
             # Time training
             train_start = time.time()
-            model.fit(X_train, y_train)
+            model = self.train(X_train, y_train, alpha, degree)
             training_time = time.time() - train_start
 
             # Time inference
@@ -91,11 +95,41 @@ class RidgeRegression:
 
         return metrics
     
-    def train(self, X, y):
+    def tune(self, X, y):
 
-        # Train final model on full dataset
-        self.model = self.build_model()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore") # Suppresses to warnings that rise from poor parameters in the parameter grid search
+
+            pipe = Pipeline([
+                ('poly', PolynomialFeatures(include_bias=False)),
+                ('scaler', StandardScaler()),
+                ('ridge', Ridge(random_state=RANDOM_SEED))
+            ])
+
+            alpha_values = [0.1, 1, 10, 100, 1000]
+            degrees = [1, 2, 3, 4]
+            
+
+            param_grid = {
+                'ridge__alpha': alpha_values,
+                'poly__degree': degrees,
+            }
+
+            grid_search = GridSearchCV(pipe, param_grid, cv=KFOLD_SPLITS, scoring='neg_mean_absolute_error')
+            grid_search.fit(X, y)
+
+            best_params = grid_search.best_params_
+            alpha = best_params['ridge__alpha']
+            degree = best_params['poly__degree']
+
+        return alpha, degree
+    
+    def train(self, X, y, alpha, degree):
+
+        self.model = self.build_model(alpha=alpha, degree=degree)
         self.model.fit(X, y)
+
+        return self.model
 
     def estimate(self, X):
         if self.model is None:
