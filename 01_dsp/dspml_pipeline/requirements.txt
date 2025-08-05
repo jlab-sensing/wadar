@@ -3,3 +3,4 @@ pandas
 scipy
 matplotlib
 PyQt6
+PyWavelets

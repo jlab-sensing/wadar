@@ -372,7 +372,7 @@ def NoveldaChipParams(chip_set:str, pgen:int, sampler:str='4mm'):
 
     return fc, bw, bwr, vp, n, bw_hz, pwr_dBm, fs_hz
 
-def novelda_digital_downconvert(raw_frame):
+def novelda_digital_downconvert(raw_frame:np.ndarray):
     """
     Function to apply a digital downcovert (DDC) to a high frequency radar
     signal. Brings signal to baseband frequencies and provides an analytic
