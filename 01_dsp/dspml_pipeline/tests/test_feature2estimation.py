@@ -20,10 +20,10 @@ from scipy import stats
 import matplotlib.pyplot as plt
 
 HANDCRAFTED = True
-PCA = True
-KPCA = True
-AUTOENCODER = True
-CNN = True
+PCA = False
+KPCA = False
+AUTOENCODER = False
+CNN = False
 
 TUNE_MODEL_PARAMS = False # Because tuning with a grid search is time laborious
 

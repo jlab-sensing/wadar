@@ -12,6 +12,8 @@ from dspml_pipeline.feature_estimation.eval_tools import evaluate_classic_models
 from dspml_pipeline.results import load_results, display_feature_results
 from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
 from dspml_pipeline.results import update_results
+from dspml_pipeline.end_to_end_estimation.cnn import CNNEstimator
+from dspml_pipeline.end_to_end_estimation.transformer import TransformerEstimator
 
 from scipy import stats
 
@@ -39,6 +41,18 @@ if __name__ == "__main__":
 
     # ==
     
-    lst = LSTMEstimator(X, y, epochs=50, batch_size=32, verbose=False)
-    model, metrics = lst.full_monty()
-    update_results(target_dir, "End-to-end", f"LSTM", metrics)
+    # lst = LSTMEstimator(X, y, epochs=50, batch_size=32, verbose=False)
+    # model, metrics = lst.full_monty()
+    # update_results(target_dir, "End-to-end", f"LSTM", metrics)
+
+    # ==
+
+    # cn = CNNEstimator(X, y, epochs=50, verbose=False)
+    # model, metrics = cn.full_monty()
+    # update_results(target_dir, "End-to-end", f"Pretrained CNN", metrics)
+
+    # ==
+
+    trans = TransformerEstimator(X, y, verbose=True)
+    model, metrics = trans.full_monty()
+    update_results(target_dir, "End-to-end", f"Transformer", metrics)
