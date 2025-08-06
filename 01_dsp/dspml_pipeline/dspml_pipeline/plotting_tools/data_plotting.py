@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 mpl.set_loglevel("warning") 
 
-def plot_IQ_signals(X, y):
+def plot_IQ_signals(X, y, show_plot:bool = True):
     """
     Plot the mean and standard deviation of the absolute value and angle of the I/Q signals using a colorbar.
     Generated almost entirely by AI.
@@ -78,4 +78,16 @@ def plot_IQ_signals(X, y):
     
     plt.tight_layout()
 
-    plt.show()
+    if show_plot:
+        plt.show()
+
+def plot_feature_reduction(label, features, title, show_plot:bool=True):
+    plt.figure(figsize=(8, 6))
+    scatter = plt.scatter(features[:, 0], features[:, 1], c=label, cmap='inferno', edgecolor='k', s=60)
+    plt.colorbar(scatter, label='Bulk density (g/cm^3)')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.title(title)
+    plt.tight_layout()
+
+    if show_plot:
+        plt.show()

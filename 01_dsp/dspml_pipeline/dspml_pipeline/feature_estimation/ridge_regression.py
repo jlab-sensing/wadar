@@ -14,7 +14,7 @@ from sklearn.model_selection import GridSearchCV
 
 from ..parameters import KFOLD_SPLITS, RANDOM_SEED, num2label, GRID_SEARCH_SCORING
 
-class MLPRegression:
+class RidgeRegression:
     def __init__(self, tune_model_params:bool = True):
         self.model = None
         self.metrics = None
