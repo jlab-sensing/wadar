@@ -64,9 +64,6 @@ class kPCALearnedFeatures:
         self.pca_amp = KernelPCA(n_components=self.n_components, **amp_params)
         self.pca_ang = KernelPCA(n_components=self.n_components, **ang_params)
         self.pca_com = KernelPCA(n_components=self.n_components, **com_params)
-        reduced_amp, reduced_ang, reduced_combined = self.dimensionality_reduction()
-
-        return reduced_amp, reduced_ang, reduced_combined
     
     def dimensionality_reduction(self):
         """
@@ -92,7 +89,7 @@ class kPCALearnedFeatures:
             ('kpca', KernelPCA(fit_inverse_transform=True)),
             ('clf', LinearRegression())
         ])
-        
+
         param_grid = {
             'kpca__kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
             'kpca__gamma': [0.001, 0.01, 0.1, 1],
