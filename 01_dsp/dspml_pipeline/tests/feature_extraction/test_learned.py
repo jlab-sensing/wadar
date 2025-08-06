@@ -4,7 +4,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 
 from dspml_pipeline.data.frame_loader import FrameLoader, load_dataset
 from dspml_pipeline.setup_logging import setup_logging
-from dspml_pipeline.feature_extraction.learned.pca import PCAProcessor
+from dspml_pipeline.feature_extraction.learned.pca import PCALearnedFeatures
+from dspml_pipeline.feature_extraction.learned.kpca import kPCALearnedFeatures
 import numpy as np
 from dspml_pipeline.plotting_tools.data_plotting import plot_feature_reduction
 import matplotlib.pyplot as plt
@@ -35,10 +36,18 @@ if __name__ == "__main__":
 
     n_components = 2
     
-    pca_tool = PCAProcessor(X, n_components=n_components)
-    pca_amp, pca_ang, pca_combined = pca_tool.dimensionality_reduction()
+    # pca_tool = PCALearnedFeatures(X, n_components=n_components)
+    # pca_amp, pca_ang, pca_combined = pca_tool.full_monty()
 
-    plot_feature_reduction(y, pca_amp, "PCA of I/Q signal amplitude", show_plot=False)
-    plot_feature_reduction(y, pca_ang, "PCA of I/Q signal angle", show_plot=False)
-    plot_feature_reduction(y, pca_combined, "PCA of I/Q signal amplitude and angle", show_plot=False)
+    # plot_feature_reduction(y, pca_amp, "PCA of I/Q signal amplitude", show_plot=False)
+    # plot_feature_reduction(y, pca_ang, "PCA of I/Q signal angle", show_plot=False)
+    # plot_feature_reduction(y, pca_combined, "PCA of I/Q signal amplitude and angle", show_plot=False)
+    # plt.show()
+
+    kpca_tool = kPCALearnedFeatures(X, y, n_components=n_components)
+    pca_amp, pca_ang, pca_combined = kpca_tool.full_monty()
+
+    plot_feature_reduction(y, pca_amp, "kPCA of I/Q signal amplitude", show_plot=False)
+    plot_feature_reduction(y, pca_ang, "kPCA of I/Q signal angle", show_plot=False)
+    plot_feature_reduction(y, pca_combined, "kPCA of I/Q signal amplitude and angle", show_plot=False)
     plt.show()
