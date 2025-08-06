@@ -12,6 +12,8 @@ import pandas as pd
 import sys
 from pathlib import Path
 
+from .plotting_tools.data_plotting import plot_accuracy_mae
+
 
 def update_results(target_dir: str, feature_name: str, model_name: str, 
     metrics: dict, results_file_name: str = "results.csv"
@@ -117,3 +119,10 @@ def load_results(dataset_dir: str, results_file_name: str = "results.csv"):
         
     results_df = pd.read_csv(file_path)
     return results_df
+
+def display_feature_results(feature_name, results_df, show_plot=False):
+    handcrafted_results = results_df[results_df['Feature'] == feature_name]
+
+    print(handcrafted_results)
+
+    plot_accuracy_mae(handcrafted_results, title=feature_name, show_plot=show_plot)

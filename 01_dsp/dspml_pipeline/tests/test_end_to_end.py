@@ -10,6 +10,7 @@ from dspml_pipeline.feature_extraction.handcrafted.feature_tools import full_mon
 from dspml_pipeline.feature_extraction.handcrafted.feature_pruning import lasso_minimize_features, correlation_minimize_features, mutual_info_minimize_features
 from dspml_pipeline.feature_estimation.eval_tools import evaluate_classic_models, evaluate_deep_models
 from dspml_pipeline.results import load_results, display_feature_results
+from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
 
 from scipy import stats
 
@@ -35,20 +36,6 @@ if __name__ == "__main__":
     # frameLoader.save_dataset()
     X, y = load_dataset(dataset_dir=target_dir)
 
-    # feature_table = full_monty_features(X=X, label=y)
-    # save_feature_table(feature_table, target_dir)
-    feature_table, feature_array, feature_names, labels = load_feature_table(directory=target_dir)
-
-    corr_feature_table, corr_features = correlation_minimize_features(feature_table=feature_table)
-    corr_feature_array, corr_feature_names, corr_labels = process_feature_table(corr_feature_table)
-
-    tune_model_params = False # Because tuning with a grid search is time laborious
-    feature_name = "Handcrafted"
-
     # ==
     
-    evaluate_classic_models(target_dir, corr_feature_array, corr_labels, tune_model_params, feature_name)
-    evaluate_deep_models(target_dir, corr_feature_array, corr_labels, feature_name)
-
-    results_df = load_results(target_dir)
-    display_feature_results(feature_name, results_df)
+    lst = LSTM
