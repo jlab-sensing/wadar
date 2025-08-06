@@ -35,17 +35,10 @@ def prepare_tensor_data(X, y=None, batch_size=256):
 
 class AutoencoderLearnedFeatures:
     """
-    PCAProcessor is a class to perform Principal Component Analysis (PCA) on radar data.
-
-    Parameters:
-        X (np.ndarray):         Input data of shape (samples, features).
-        n_components (int):     Number of components to keep.
+    https://github.com/rasbt/deeplearning-models/blob/master/pytorch_ipynb/autoencoder/ae-basic-with-rf.ipynb
     """
 
     def __init__(self, X, y, epochs=10, batch_size=256, verbose=False):
-        """
-        Initialize the PCAProcessor.
-        """
 
         if torch.cuda.is_available():
             torch.backends.cudnn.deterministic = True

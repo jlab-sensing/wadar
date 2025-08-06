@@ -7,6 +7,7 @@ from dspml_pipeline.setup_logging import setup_logging
 from dspml_pipeline.feature_extraction.learned.pca import PCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.kpca import kPCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.autoencoder import AutoencoderLearnedFeatures
+from dspml_pipeline.feature_extraction.learned.cnn import CNNLearnedFeatures
 import numpy as np
 from dspml_pipeline.plotting_tools.data_plotting import plot_feature_reduction
 import matplotlib.pyplot as plt
@@ -53,147 +54,38 @@ if __name__ == "__main__":
     # plot_feature_reduction(y, pca_combined, "kPCA of I/Q signal amplitude and angle", show_plot=False)
     # plt.show()
 
-    # import time
-    # import numpy as np
-    # import torch
-    # import torch.nn.functional as F
-    # from torch.utils.data import DataLoader
-    # from sklearn.model_selection import train_test_split
-    # from sklearn.preprocessing import MinMaxScaler
+    # epochs = 1000
 
-    # if torch.cuda.is_available():
-    #     torch.backends.cudnn.deterministic = True
+    # X_amp = np.abs(X)
+    # autoencoder = AutoencoderLearnedFeatures(X_amp, y, epochs=epochs, batch_size=256, verbose=True)
+    # encoded_amplitude = autoencoder.full_monty(X_amp)
+    # X_pha = np.unwrap(np.angle(X))
+    # autoencoder = AutoencoderLearnedFeatures(X_pha, y, epochs=epochs, batch_size=256, verbose=True)
+    # encoded_phase = autoencoder.full_monty(X_pha)
+    # X_com = np.concatenate((np.abs(X), np.unwrap(np.angle(X))), axis=1)
+    # autoencoder = AutoencoderLearnedFeatures(X_com, y, epochs=epochs, batch_size=256, verbose=True)
+    # encoded_combined = autoencoder.full_monty(X_com)
 
-    # ##########################
-    # ### SETTINGS
-    # ##########################
+    # # Plot the encoded features
+    # plot_feature_reduction(y, encoded_amplitude, "Autoencoder Feature Reduction (Amplitude)", show_plot=False)
+    # plot_feature_reduction(y, encoded_phase, "Autoencoder Feature Reduction (Phase)", show_plot=False)
+    # plot_feature_reduction(y, encoded_combined, "Autoencoder Feature Reduction (Combined)", show_plot=False)
+    # plt.show()
 
-    # # Device
-    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # print('Device:', device)
-
-    # # Hyperparameters
-    # random_seed = 123
-    # learning_rate = 0.005
-    # num_epochs = 100
-    # batch_size = 256
-
-    # # Architecture
-    # num_features = 81920
-    # num_hidden_1 = 32
-
-    # X = np.abs(X) # TODO: Dont't leave it like this
-    # X = X.reshape(X.shape[0], -1) # Flatten
-    # X = MinMaxScaler().fit_transform(X)  # Better scaling
-    
-    # X_train, X_test, y_train, y_test = train_test_split(
-    #     X, y, test_size=0.2, random_state=random_seed, stratify=y
-    # )
-
-    # # Convert numpy arrays to torch tensors
-    # X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
-    # X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
-    # y_train_tensor = torch.tensor(y_train, dtype=torch.float32)
-    # y_test_tensor = torch.tensor(y_test, dtype=torch.float32)
-
-    # # Create TensorDatasets
-    # train_dataset = torch.utils.data.TensorDataset(X_train_tensor, y_train_tensor)
-    # test_dataset = torch.utils.data.TensorDataset(X_test_tensor, y_test_tensor)
-
-    # # Create DataLoaders
-    # train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
-    # test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
-
-    # ##########################
-    # ### MODEL
-    # ##########################
-
-    # class Autoencoder(torch.nn.Module):
-
-    #     def __init__(self, num_features):
-    #         super(Autoencoder, self).__init__()
-            
-    #         ### ENCODER
-            
-    #         self.linear_1 = torch.nn.Linear(num_features, num_hidden_1)
-    #         # The following to lones are not necessary, 
-    #         # but used here to demonstrate how to access the weights
-    #         # and use a different weight initialization.
-    #         # By default, PyTorch uses Xavier/Glorot initialization, which
-    #         # should usually be preferred.
-    #         self.linear_1.weight.detach().normal_(0.0, 0.1)
-    #         self.linear_1.bias.detach().zero_()
-            
-    #         ### DECODER
-    #         self.linear_2 = torch.nn.Linear(num_hidden_1, num_features)
-    #         self.linear_1.weight.detach().normal_(0.0, 0.1)
-    #         self.linear_1.bias.detach().zero_()
-            
-    #     def encoder(self, x):
-    #         encoded = self.linear_1(x)
-    #         encoded = F.leaky_relu(encoded)
-    #         return encoded
-        
-    #     def decoder(self, encoded_x):
-    #         logits = self.linear_2(encoded_x)
-    #         decoded = torch.sigmoid(logits)
-    #         return decoded
-            
-
-    #     def forward(self, x):
-            
-    #         ### ENCODER
-    #         encoded = self.encoder(x)
-            
-    #         ### DECODER
-    #         decoded = self.decoder(encoded)
-            
-    #         return decoded
-
-        
-    # torch.manual_seed(random_seed)
-    # model = Autoencoder(num_features=num_features)
-    # model = model.to(device)
-
-    # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-    # ## Training
-
-    # start_time = time.time()
-    # for epoch in range(num_epochs):
-    #     for batch_idx, (features, targets) in enumerate(train_loader):
-            
-    #         # don't need labels, only the images (features)
-    #         features = features.view(-1, num_features).to(device)
-                
-    #         ### FORWARD AND BACK PROP
-    #         decoded = model(features)
-    #         cost = F.mse_loss(decoded, features)
-    #         optimizer.zero_grad()
-            
-    #         cost.backward()
-            
-    #         ### UPDATE MODEL PARAMETERS
-    #         optimizer.step()
-            
-    #         ### LOGGING
-    #         if not batch_idx % 50:
-    #             print ('Epoch: %03d/%03d | Batch %03d/%03d | Cost: %.4f' 
-    #                 %(epoch+1, num_epochs, batch_idx, 
-    #                     len(train_loader), cost))
-                
-    #     print('Time elapsed: %.2f min' % ((time.time() - start_time)/60))
-        
-    # print('Total Training Time: %.2f min' % ((time.time() - start_time)/60))
-
-    # # Get encoded features from the entire set
-    # model.eval()
-    # with torch.no_grad():
-    #     encoded_all = model.encoder(torch.tensor(X, dtype=torch.float32).to(device)).cpu().numpy()
-
+    # Amplitude
     X_amp = np.abs(X)
-    autoencoder = AutoencoderLearnedFeatures(X_amp, y, epochs=10, batch_size=256, verbose=True)
-    encoded_all = autoencoder.full_monty(X_amp)
+    cnn_amp = CNNLearnedFeatures(X_amp, y, epochs=20, verbose=False)
+    features_amp = cnn_amp.full_monty(X_amp)
+    plot_feature_reduction(y, features_amp, "CNN Feature Reduction (Amplitude)", show_plot=False)
 
-    # Plot the encoded features
-    plot_feature_reduction(y, encoded_all, "Autoencoder Feature Reduction (All Data)", show_plot=True)
+    # Phase
+    X_pha = np.unwrap(np.angle(X))
+    cnn_pha = CNNLearnedFeatures(X_pha, y, epochs=20, verbose=False)
+    features_pha = cnn_pha.full_monty(X_pha)
+    plot_feature_reduction(y, features_pha, "CNN Feature Reduction (Phase)", show_plot=False)
+
+    # Combined
+    X_com = np.concatenate((X_amp, X_pha), axis=1)
+    cnn_com = CNNLearnedFeatures(X_com, y, epochs=20, verbose=False)
+    features_com = cnn_com.full_monty(X_com)
+    plot_feature_reduction(y, features_com, "CNN Feature Reduction (Combined)", show_plot=True)
