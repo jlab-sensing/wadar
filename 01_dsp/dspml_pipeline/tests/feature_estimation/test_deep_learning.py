@@ -8,10 +8,7 @@ from dspml_pipeline.data.frame_loader import FrameLoader, load_dataset
 from dspml_pipeline.setup_logging import setup_logging
 from dspml_pipeline.feature_extraction.handcrafted.feature_tools import full_monty_features, save_feature_table, load_feature_table, process_feature_table
 from dspml_pipeline.feature_extraction.handcrafted.feature_pruning import lasso_minimize_features, correlation_minimize_features, mutual_info_minimize_features
-from dspml_pipeline.feature_estimation.ridge_regression import RidgeRegression
-from dspml_pipeline.feature_estimation.random_forest import RandomForest
-from dspml_pipeline.feature_estimation.xgboost_tree import XGBoostTree
-from dspml_pipeline.feature_estimation.svr import SVRRegression
+from dspml_pipeline.feature_estimation.mlp import MLPRegression
 from dspml_pipeline.results import update_results
 
 from scipy import stats
@@ -42,31 +39,8 @@ if __name__ == "__main__":
     # save_feature_table(feature_table, target_dir)
     feature_table, feature_array, feature_names, labels = load_feature_table(directory=target_dir)
 
-    # corr_feature_table, corr_features = correlation_minimize_features(feature_table=feature_table)
-    # corr_feature_array, corr_feature_names, corr_labels = process_feature_table(corr_feature_table)
+    corr_feature_table, corr_features = correlation_minimize_features(feature_table=feature_table)
+    corr_feature_array, corr_feature_names, corr_labels = process_feature_table(corr_feature_table)
 
-    tune_model_params = True # Because tuning with a grid search is time laborious
-
-    # ==
-    
-    ridgeRegressor = RidgeRegression()
-    models, metrics = ridgeRegressor.full_monty(feature_array, labels)
-    update_results(target_dir, "Handcrafted", f"Ridge Regression Degree", metrics)
-
-    # ==
-
-    randomForest = RandomForest(tune_model_params=tune_model_params)
-    model, metrics = randomForest.full_monty(feature_array, labels)
-    update_results(target_dir, "Handcrafted", "Random Forest", metrics)
-
-    # ==
-
-    gbTree = XGBoostTree(tune_model_params)
-    model, metrics = gbTree.full_monty(feature_array, labels)
-    update_results(target_dir, "Handcrafted", "Gradient Boosted Tree", metrics)
-
-    # ==
-
-    svr = SVRRegression(tune_model_params)
-    model, metrics = svr.full_monty(feature_array, labels)
-    update_results(target_dir, "Handcrafted", "SVR", metrics)
+    mlp = MLPRegression()
+    mlp.full_monty(corr_feature_array, corr_labels)

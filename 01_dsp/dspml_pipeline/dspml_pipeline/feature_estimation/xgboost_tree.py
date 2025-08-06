@@ -12,7 +12,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import GridSearchCV
 
-from ..parameters import KFOLD_SPLITS, RANDOM_SEED, num2label
+from ..parameters import KFOLD_SPLITS, RANDOM_SEED, num2label, GRID_SEARCH_SCORING
 
 class XGBoostTree:
     def __init__(self, tune_model_params:bool = True):
@@ -119,7 +119,7 @@ class XGBoostTree:
                 'xgb__max_depth': max_depth_values,
             }
 
-            grid_search = GridSearchCV(pipe, param_grid, cv=KFOLD_SPLITS, scoring='neg_mean_absolute_error')
+            grid_search = GridSearchCV(pipe, param_grid, cv=KFOLD_SPLITS, scoring=GRID_SEARCH_SCORING)
             grid_search.fit(X, y)
 
             best_params = grid_search.best_params_

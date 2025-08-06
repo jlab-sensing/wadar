@@ -6,32 +6,31 @@ import numpy as np
 import sys
 import warnings
 from sklearn.model_selection import KFold
-from sklearn.preprocessing import PolynomialFeatures, StandardScaler
-from sklearn.linear_model import Ridge
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVR
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import GridSearchCV
 
 from ..parameters import KFOLD_SPLITS, RANDOM_SEED, num2label, GRID_SEARCH_SCORING
 
-class MLPRegression:
-    def __init__(self, tune_model_params:bool = True):
+class SVRRegression:
+    def __init__(self, tune_model_params: bool = True):
         self.model = None
         self.metrics = None
         self.tune_model_params = tune_model_params
 
     def full_monty(self, feature_array, labels):
         metrics = self.cross_validate(feature_array=feature_array, labels=labels)
-        alpha, degree = self.tune(feature_array, labels)
-        logger.info(f"Final model trained: Ridge Regression with alpha={alpha}, degree={degree}")
-        model = self.train(feature_array, labels, alpha, degree)
+        C, gamma, epsilon = self.tune(feature_array, labels)
+        logger.info(f"Final model trained: SVR with C={C}, gamma={gamma}, epsilon={epsilon}")
+        model = self.train(feature_array, labels, C, gamma, epsilon)
         return model, metrics
 
-    def build_model(self, alpha, degree):
+    def build_model(self, C, gamma, epsilon):
         return Pipeline([
-            ('poly', PolynomialFeatures(degree=degree, include_bias=False)),
             ('scaler', StandardScaler()),
-            ('ridge', Ridge(alpha=alpha, random_state=RANDOM_SEED))
+            ('svr', SVR(kernel='rbf', C=C, gamma=gamma, epsilon=epsilon))
         ])
 
     def cross_validate(self, feature_array, labels):
@@ -49,11 +48,11 @@ class MLPRegression:
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
 
-            alpha, degree = self.tune(X_train, y_train)
+            C, gamma, epsilon = self.tune(X_train, y_train)
 
             # Time training
             train_start = time.time()
-            model = self.train(X_train, y_train, alpha, degree)
+            model = self.train(X_train, y_train, C, gamma, epsilon)
             training_time = time.time() - train_start
 
             # Time inference
@@ -98,41 +97,44 @@ class MLPRegression:
     
     def tune(self, X, y):
 
-        if self.tune_model_params:
-            alpha = 1000
-            degree = 2
-            return alpha, degree
+        if not self.tune_model_params:
+            C = 1.0
+            gamma = 'scale'
+            epsilon = 0.1
+            return C, gamma, epsilon
 
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore") # Suppresses to warnings that rise from poor parameters in the parameter grid search
+            warnings.simplefilter("ignore") # Suppresses warnings that rise from poor parameters in the parameter grid search
 
             pipe = Pipeline([
-                ('poly', PolynomialFeatures(include_bias=False)),
                 ('scaler', StandardScaler()),
-                ('ridge', Ridge(random_state=RANDOM_SEED))
+                ('svr', SVR(kernel='rbf'))
             ])
 
-            alpha_values = [0.1, 1, 10, 100, 1000]
-            degrees = [1, 2, 3, 4]
+            C_values = [0.1, 1, 10, 100]
+            gamma_values = [0.01, 0.1, 1, 'scale']
+            epsilon_values = [0.01, 0.1, 0.5]
             
 
             param_grid = {
-                'ridge__alpha': alpha_values,
-                'poly__degree': degrees,
+                'svr__C': C_values,
+                'svr__gamma': gamma_values,
+                'svr__epsilon': epsilon_values,
             }
 
             grid_search = GridSearchCV(pipe, param_grid, cv=KFOLD_SPLITS, scoring=GRID_SEARCH_SCORING)
             grid_search.fit(X, y)
 
             best_params = grid_search.best_params_
-            alpha = best_params['ridge__alpha']
-            degree = best_params['poly__degree']
+            C = best_params['svr__C']
+            gamma = best_params['svr__gamma']
+            epsilon = best_params['svr__epsilon']
 
-        return alpha, degree
+        return C, gamma, epsilon
     
-    def train(self, X, y, alpha, degree):
+    def train(self, X, y, C, gamma, epsilon):
 
-        self.model = self.build_model(alpha=alpha, degree=degree)
+        self.model = self.build_model(C=C, gamma=gamma, epsilon=epsilon)
         self.model.fit(X, y)
 
         return self.model

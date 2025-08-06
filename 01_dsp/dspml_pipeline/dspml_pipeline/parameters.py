@@ -1,6 +1,6 @@
 KFOLD_SPLITS = 5
 RANDOM_SEED = 42
-
+GRID_SEARCH_SCORING = "neg_mean_squared_error"
 
 def bulk_density_to_label(bulk_density: float, soil_type: str = "silty") -> str:
     """
