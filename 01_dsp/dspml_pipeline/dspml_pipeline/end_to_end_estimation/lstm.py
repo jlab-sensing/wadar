@@ -8,7 +8,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 import time
 
 from ..parameters import RANDOM_SEED, KFOLD_SPLITS, num2label
@@ -23,7 +23,7 @@ class LSTMEstimator:
     LSTM-based regression model for radar signal analysis.
     """
     
-    def __init__(self):
+    def __init__(self, X, y, epochs=50, batch_size=16, verbose=0):
         """
         Initialize LSTM regressor.
         
@@ -31,25 +31,42 @@ class LSTMEstimator:
             kfold_splits: Number of folds for cross-validation
         """
 
-        self.kfold_splits = KFOLKFOLD_SPLITSD_SPLIT
+        self.kfold_splits = KFOLD_SPLITS
         self.model = None
         self.history = None
         self.scaler = MinMaxScaler()
+
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.verbose = verbose
+
+        # Store raw data for cross-validation
+        self.X_raw = X
+        self.y = y
+
+    def full_monty(self):
+        """
+        Complete LSTM evaluation pipeline: data processing + cross-validation.
+        """
+
+        logger.info(f"Processing complex radar data for LSTM...")
+
+        # Perform cross-validation
+        metrics = self.cross_validate()
         
-    def _process_complex_data(self, X_complex):
+        # Process complex data to LSTM-friendly format
+        self.model = self.train_final_model()
+                                            
+        return self.model, metrics
+        
+    def _process_complex_data(self, X):
         """
         Convert complex radar data to amplitude/phase features for LSTM.
-        
-        Components:
-            X_complex: Complex radar data (samples, fast_time, slow_time)
-            
-        Returns:
-            Processed features (samples, timesteps, features)
         """
 
         # Extract amplitude and phase
-        X_amplitude = np.abs(X_complex) 
-        X_phase = np.angle(X_complex)   
+        X_amplitude = np.abs(X) 
+        X_phase = np.angle(X)   
         
         # Transpose to treat slow_time as timesteps and range_bins as features so that it tracks
         # the changes in signal over slow time
@@ -61,85 +78,71 @@ class LSTMEstimator:
         
         return X_features
     
-    def _normalize_data(self, X_train, X_val=None):
+    def _normalize_data(self, X_train, X_val=None, fit_scaler=True):
         """
         Normalize training and validation data.
         
-        Components:
+        Parameters:
             X_train: Training data (samples, timesteps, features)
             X_val: Validation data (optional)
+            fit_scaler: Whether to fit the scaler on training data
             
         Returns:
-            Normalized data
+            Normalized training data, and optionally normalized validation data
         """
 
         # Flatten for normalization, then reshape back
         n_samples, n_timesteps, n_features = X_train.shape
         X_train_flat = X_train.reshape(n_samples, -1)
         
-        X_train_norm = self.scaler.fit_transform(X_train_flat)
+        if fit_scaler:
+            X_train_norm = self.scaler.fit_transform(X_train_flat)
+        else:
+            X_train_norm = self.scaler.transform(X_train_flat)
+        
         X_train_norm = X_train_norm.reshape(n_samples, n_timesteps, n_features)
         
         if X_val is not None:
-            n_val_samples = X_val.shape[0]
+            n_val_samples, n_val_timesteps, n_val_features = X_val.shape
             X_val_flat = X_val.reshape(n_val_samples, -1)
             X_val_norm = self.scaler.transform(X_val_flat)
-            X_val_norm = X_val_norm.reshape(n_val_samples, n_timesteps, n_features)
+            X_val_norm = X_val_norm.reshape(n_val_samples, n_val_timesteps, n_val_features)
             return X_train_norm, X_val_norm
         
         return X_train_norm
     
-    def build_model(self, input_shape, lstm_units_1=64, lstm_units_2=32, 
-                   dense_units_1=32, dense_units_2=16, dropout_rate=0.2):
+    def build_model(self, input_shape):
         """
-        Build LSTM architecture for radar data regression.
-        
-        Components:
-            input_shape: Input shape (timesteps, features)
-            lstm_units_1: Units in first LSTM layer
-            lstm_units_2: Units in second LSTM layer
-            dense_units_1: Units in first dense layer
-            dense_units_2: Units in second dense layer
-            dropout_rate: Dropout rate
-            
-        Returns:
-            Compiled Keras model
+        Build LSTM architecture for radar
         """
         
         timesteps, features = input_shape
-        model = keras.Sequential([
-            layers.LSTM(32, input_shape=(timesteps, features)),
+        self.model = keras.Sequential([
+            layers.Input(shape=(timesteps, features)),
+            layers.LSTM(32),
             layers.Dense(16, activation='relu'),
             layers.Dense(1)
         ])
         
-        model.compile(
+        self.model.compile(
             optimizer='adam',
-            loss='mse',  # Mean Absolute Error for regression
+            loss='mse',
             metrics=['mse', 'mae']
         )
         
-        return model
+        return self.model
     
-    def _cross_validate(self, X_features, y, epochs=50, batch_size=16, verbose=0):
+    def cross_validate(self):
         """
-        Perform cross-validation to evaluate model performance.
-        
-        Components:
-            X_features: Processed feature array (samples, timesteps, features)
-            y: Target labels
-            epochs: Number of training epochs
-            batch_size: Training batch size
-            verbose: Verbosity level
-            
-        Returns:
-            Dictionary of cross-validation metrics
+        Perform k-fold cross-validation with proper normalization to prevent data leakage.
         """
 
+        # Use raw processed data (before normalization) for cross-validation
+        X_processed = self._process_complex_data(self.X_raw)
+        
         kfold = KFold(n_splits=self.kfold_splits, shuffle=True, random_state=RANDOM_SEED)
         
         cv_mse_scores = []
-        cv_r2_scores = []
         cv_mae_scores = []
         cv_rmse_scores = []
         cv_accuracy_scores = []
@@ -147,20 +150,32 @@ class LSTMEstimator:
         fold_training_times = []
         fold_inference_times = []
         
-        print(f"[INFO] Starting {self.kfold_splits}-fold cross-validation...")
+        logger.info(f"Starting {self.kfold_splits}-fold cross-validation...")
         
-        for fold, (train_idx, val_idx) in enumerate(kfold.split(X_features)):
+        for fold, (train_idx, val_idx) in enumerate(kfold.split(X_processed)):
             fold_start_time = time.time()
             
             # Split data
-            X_train_fold = X_features[train_idx]
-            X_val_fold = X_features[val_idx]
-            y_train_fold = y[train_idx]
-            y_val_fold = y[val_idx]
+            X_train_fold = X_processed[train_idx]
+            X_val_fold = X_processed[val_idx]
+            y_train_fold = self.y[train_idx]
+            y_val_fold = self.y[val_idx]
+            
+            # Create a new scaler for this fold to prevent data leakage
+            fold_scaler = MinMaxScaler()
             
             # Normalize data for this fold
-            X_train_norm, X_val_norm = self._normalize_data(X_train_fold, X_val_fold)
+            n_train_samples, n_timesteps, n_features = X_train_fold.shape
+            X_train_flat = X_train_fold.reshape(n_train_samples, -1)
+            X_train_norm = fold_scaler.fit_transform(X_train_flat)
+            X_train_norm = X_train_norm.reshape(n_train_samples, n_timesteps, n_features)
             
+            n_val_samples = X_val_fold.shape[0]
+            X_val_flat = X_val_fold.reshape(n_val_samples, -1)
+            X_val_norm = fold_scaler.transform(X_val_flat)
+            X_val_norm = X_val_norm.reshape(n_val_samples, n_timesteps, n_features)
+            
+
             # Build and train model
             model = self.build_model((X_train_norm.shape[1], X_train_norm.shape[2]))
             
@@ -179,9 +194,9 @@ class LSTMEstimator:
             model.fit(
                 X_train_norm, y_train_fold,
                 validation_data=(X_val_norm, y_val_fold),
-                epochs=epochs,
-                batch_size=batch_size,
-                verbose=verbose,
+                epochs=self.epochs,
+                batch_size=self.batch_size,
+                verbose=self.verbose,
                 callbacks=callbacks
             )
             training_time = time.time() - training_start_time
@@ -195,7 +210,6 @@ class LSTMEstimator:
             
             # Calculate metrics
             mse = mean_squared_error(y_val_fold, y_pred_fold)
-            r2 = r2_score(y_val_fold, y_pred_fold)
             mae = mean_absolute_error(y_val_fold, y_pred_fold)
             rmse = np.sqrt(mse)
             
@@ -205,7 +219,6 @@ class LSTMEstimator:
             accuracy = np.mean([pred_label == true_label for pred_label, true_label in zip(y_pred_labels, y_labels)])
             
             cv_mse_scores.append(mse)
-            cv_r2_scores.append(r2)
             cv_mae_scores.append(mae)
             cv_rmse_scores.append(rmse)
             cv_accuracy_scores.append(accuracy)
@@ -213,87 +226,51 @@ class LSTMEstimator:
             fold_time = time.time() - fold_start_time
             fold_times.append(fold_time)
             
-            print(f"[INFO] Fold {fold + 1}/{self.kfold_splits} - "
-                  f"MAE: {mae:.6f}, R²: {r2:.6f}, RMSE: {rmse:.6f}, Acc: {accuracy:.6f}, Time: {fold_time:.2f}s")
-        
+            logger.info(f"Fold {fold+1}/{KFOLD_SPLITS} - MAE: {mae:.2f}, RMSE: {rmse:.2f}, "
+                        f"Accuracy: {100*accuracy:.2f}%, Training time: {1000*training_time:.2f}ms, "
+                        f"Inference time: {1000*inference_time:.2f}ms")
+            
         # Calculate average metrics
         metrics = {
             'mae': np.mean(cv_mae_scores),
             'mse': np.mean(cv_mse_scores),
-            'r2': np.mean(cv_r2_scores),
             'rmse': np.mean(cv_rmse_scores),
             'accuracy': np.mean(cv_accuracy_scores),
             'training_time': np.mean(fold_training_times),
             'inference_time': np.mean(fold_inference_times),
             'total_time': np.sum(fold_times)
         }
+
+        logger.info(f"Average metrics - MAE: {metrics['mae']:.2f}, RMSE: {metrics['rmse']:.2f}, "
+                   f"Accuracy: {100*metrics['accuracy']:.2f}%, Training time: {1000*metrics['training_time']:.2f}ms, "
+                   f"Inference time: {1000*metrics['inference_time']:.2f}ms")
         
         return metrics
     
-    def full_monty(self, X_complex, y, epochs=50, batch_size=16, verbose=0):
-        """
-        Complete LSTM evaluation pipeline: data processing + cross-validation.
+    def train_final_model(self):
         
-        Components:
-            X_complex: Complex radar data (samples, range_bins, slow_time)
-            y: Target labels
-            epochs: Number of training epochs
-            batch_size: Training batch size
-            verbose: Verbosity level
-            
-        Returns:
-            Dictionary of cross-validation metrics
-        """
+        # Process complex data to amplitude/phase features
+        X_features = self._process_complex_data(self.X_raw)
+        # Normalize using the scaler (fit on all data)
+        X_norm = self._normalize_data(X_features, fit_scaler=True)
 
-        print(f"[INFO] Processing complex radar data for LSTM...")
-        print(f"[INFO] Input shape: {X_complex.shape}")
-        
-        # Process complex data to LSTM-friendly format
-        X_features = self._process_complex_data(X_complex)
-        print(f"[INFO] Processed shape: {X_features.shape}")
-        print(f"[INFO] Timesteps: {X_features.shape[1]}, Features: {X_features.shape[2]}")
-        
-        # Perform cross-validation
-        metrics = self._cross_validate(X_features, y, epochs, batch_size, verbose)
-        
-        return metrics
-    
-    def train_final_model(self, X_complex, y, epochs=50, batch_size=16, verbose=1):
-        """
-        Train final model on all data.
-        
-        Components:
-            X_complex: Complex radar data
-            y: Target labels
-            epochs: Number of training epochs
-            batch_size: Training batch size
-            verbose: Verbosity level
-            
-        Returns:
-            Trained model
-        """
-
-        # Process data
-        X_features = self._process_complex_data(X_complex)
-        X_norm = self._normalize_data(X_features)
-        
         # Build and train final model
         self.model = self.build_model((X_norm.shape[1], X_norm.shape[2]))
-        
+
         callbacks = [
             keras.callbacks.EarlyStopping(
-                patience=20, restore_best_weights=True, monitor='loss'
+            patience=20, restore_best_weights=True, monitor='loss'
             ),
             keras.callbacks.ReduceLROnPlateau(
-                monitor='loss', factor=0.5, patience=10, min_lr=1e-6
+            monitor='loss', factor=0.5, patience=10, min_lr=1e-6
             )
         ]
         
         self.history = self.model.fit(
-            X_norm, y,
-            epochs=epochs,
-            batch_size=batch_size,
-            verbose=verbose,
+            X_norm, self.y,
+            epochs=self.epochs,
+            batch_size=self.batch_size,
+            verbose=self.verbose,
             callbacks=callbacks
         )
         
@@ -303,7 +280,7 @@ class LSTMEstimator:
         """
         Make predictions on new data.
         
-        Components:
+        Parameters:
             X_complex: Complex radar data
             
         Returns:
@@ -313,7 +290,7 @@ class LSTMEstimator:
         if self.model is None:
             raise ValueError("Model not trained. Call train_final_model first.")
         
-        # Process and normalize data
+        # Process and normalize data using the fitted scaler
         X_features = self._process_complex_data(X_complex)
         
         # Use the same scaler fitted during training
