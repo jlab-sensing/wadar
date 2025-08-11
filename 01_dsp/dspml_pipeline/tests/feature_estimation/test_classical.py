@@ -33,14 +33,15 @@ if __name__ == "__main__":
 
     dataset_dirs = ["../../data/wet-0-soil-compaction-dataset",
                     "../../data/wet-1-soil-compaction-dataset",
-                    "../../data/wet-2-soil-compaction-dataset"]
+                    "../../data/wet-2-soil-compaction-dataset",
+                    "../../data/field-soil-compaction-dataset"]
     target_dir = "../../data/training-dataset"
     frameLoader = FrameLoader(dataset_dirs, target_dir)
     # X_train, y_train = frameLoader.extract_data()
     # frameLoader.save_dataset()
     X_train, y_train = load_dataset(dataset_dir=target_dir)
 
-    validation_dirs = ["../../data/field-soil-compaction-dataset"]
+    validation_dirs = ["../../data/field-2-soil-compaction-dataset"]
     validation_target_dir = "../../data/validation-dataset"
     frameLoader = FrameLoader(validation_dirs, validation_target_dir)
     # X_val, y_val = frameLoader.extract_data()
@@ -61,11 +62,11 @@ if __name__ == "__main__":
     # validation_corr_feature_table, validation_corr_features = correlation_minimize_features(feature_table=validation_feature_table)
     # validation_corr_feature_array, validation_corr_feature_names, validation_corr_labels = process_feature_table(validation_corr_feature_table)
 
-    tune_model_params = False # Because tuning with a grid search is time laborious
+    tune_model_params = True # Because tuning with a grid search is time laborious
     feature_name = "Handcrafted"
 
 
-    # ==
+    # # ==
     
     ridgeRegressor, randomForest, gbTree, svr = evaluate_classic_models(target_dir, training_feature_array, training_labels, tune_model_params, feature_name)
     evaluate_deep_models(target_dir, validation_feature_array, validation_labels, feature_name)
