@@ -1,0 +1,12 @@
+numpy
+pandas
+scipy
+matplotlib
+PyQt6
+PyWavelets
+scikit-learn
+xgboost
+torch
+tqdm
+tensorflow
+transformers
