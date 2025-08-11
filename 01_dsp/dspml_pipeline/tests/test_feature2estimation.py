@@ -288,12 +288,12 @@ if __name__ == "__main__":
         features_val_com = cnn_com.transform(X_val_com)
         feature_name_com = "CNN Combined"
         classical_models_full_monty(
-            training_dir=target_dir,
-            training_labels=y_train,
-            validation_dir=validation_target_dir,
-            validation_labels=y_val,
-            tune_model_params=TUNE_MODEL_PARAMS,
-            training_features=features_train_com,
-            validation_features=features_val_com,
-            feature_name=feature_name_com
+            training_dir = target_dir,
+            training_labels = y_train,
+            validation_dir = validation_target_dir,
+            validation_labels = y_val,
+            tune_model_params = TUNE_MODEL_PARAMS,
+            training_features = features_train_com,
+            validation_features = features_val_com,
+            feature_name = feature_name_com
         )

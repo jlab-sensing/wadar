@@ -12,3 +12,5 @@ def setup_logging(verbose: bool = True) -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
         stream=sys.stdout
     )
+
+    logging.info("Logging enabled.")

@@ -1,32 +1,60 @@
 # Data configuration
 data:       
-
   label_name: "Bulk Density (g/cm^3)"     # Name of label used data_log.csv
-  new_dataset: false                       # Set to true if this is a new dataset
-
+  new_dataset: false                      # Set to true if this is a new dataset
   # Training dataset 
   training:       
-  
     # Raw datasets to combine (list of directories)
     dataset_dirs:       
       - "../data/wet-0-soil-compaction-dataset"
       - "../data/wet-1-soil-compaction-dataset" 
       - "../data/wet-2-soil-compaction-dataset"
       - "../data/field-soil-compaction-dataset"
-
     # Target combined training dataset directory
     target_dir: "../data/training-dataset"
-  
   # Validation dataset
   validation:
-
     # Raw validation datasets to combine
     dataset_dirs:
       - "../data/field-2-soil-compaction-dataset"
-
     # Target combined validation dataset directory
     target_dir: "../data/validation-dataset"
 
+# For handcrafted features
+handcrafted:
+  enabled: false               # Enable or disable handcrafted features
+  new_features: false         # Set to true if this is a new dataset or if features have not been generated yet
+
+# For learned features
+learned:
+  n_features: 8               # Desired number of features
+  # PCA-based feature extraction
+  pca:
+    enabled: false             # Enable or disable PCA features
+  # Kernel-PCA-based feature extraction
+  kpca:
+    enabled: false             # Enable or disable kPCA features
+  # Autoencoder-based feature extraction
+  autoencoder:
+    enabled: true
+    epochs: 1000
+    batch_size: 256
+    verbose: false
+  # CNN-based feature extraction
+  cnn:
+    enabled: true
+    epochs: 20
+    batch_size: 32
+    verbose: true
+    
+# Classical model configuration for feature regression
+classical:
+  enabled: true               # Enable or disable the evaluation and validation of classical models (on all features)
+  tune_model_params: false    # Set to true to tune the models, or false to save time
+
+# Deep learning model configuration for feature regression
+deep_learning:
+  enabled: false
 
 advanced:
-  verbose: true  # Set to false to reduce logging output
+  verbose: true               # Set to false to reduce logging output  

@@ -40,10 +40,14 @@ if __name__ == "__main__":
     X, y = load_dataset(dataset_dir=target_dir)
 
     # ==
+
+    epochs = 50
+    batch_size = 32
+    verbose = False
     
-    # lst = LSTMEstimator(X, y, epochs=50, batch_size=32, verbose=False)
-    # model, metrics = lst.full_monty()
-    # update_results(target_dir, "End-to-end", f"LSTM", metrics)
+    lst = LSTMEstimator(X, y, epochs=epochs, batch_size=batch_size, verbose=verbose)
+    model, metrics = lst.full_monty()
+    update_results(target_dir, "End-to-end", f"LSTM", metrics)
 
     # ==
 
@@ -53,6 +57,6 @@ if __name__ == "__main__":
 
     # ==
 
-    trans = TransformerEstimator(X, y, verbose=True)
-    model, metrics = trans.full_monty()
-    update_results(target_dir, "End-to-end", f"Transformer", metrics)
+    # trans = TransformerEstimator(X, y, verbose=True)
+    # model, metrics = trans.full_monty()
+    # update_results(target_dir, "End-to-end", f"Transformer", metrics)

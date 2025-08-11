@@ -55,255 +55,249 @@ def main():
         X_train, y_train = load_dataset(dataset_dir=params['data']['training']['target_dir'])
         X_val, y_val = load_dataset(dataset_dir=params['data']['validation']['target_dir'])
      
-    # if HANDCRAFTED:
-
-    #     tune_model_params = False # Because tuning with a grid search is time laborious
+    if params['handcrafted']['enabled']:
         
-    #     # feature_table = full_monty_features(X=X, label=y)
-    #     # save_feature_table(feature_table, target_dir)
-    #     # training_feature_table = full_monty_features(X=X_train, label=y_train)
-    #     # save_feature_table(training_feature_table, target_dir)
-    #     training_feature_table, training_feature_array, training_feature_names, training_labels = load_feature_table(directory=target_dir)
-
-    #     # training_corr_feature_table, training_corr_features = correlation_minimize_features(feature_table=training_feature_table)
-    #     # training_corr_feature_array, training_corr_feature_names, training_corr_labels = process_feature_table(training_corr_feature_table)
-
-    #     # validation_feature_table = full_monty_features(X=X_val, label=y_val)
-    #     # save_feature_table(validation_feature_table, validation_target_dir)
-    #     validation_feature_table, validation_feature_array, validation_feature_names, validation_labels = load_feature_table(directory=validation_target_dir)
-
-    #     feature_name = "Handcrafted"
+        # If a new dataset, generate handcrafted features
+        if params['handcrafted']['new_features']:
+            training_feature_table = full_monty_features(X=X_train, 
+                                                label=y_train)
+            save_feature_table(training_feature_table, 
+                               params['data']['training']['target_dir'])
+            validation_feature_table = full_monty_features(X=X_val, 
+                                                         label=y_val)
+            save_feature_table(validation_feature_table, 
+                               params['data']['validation']['target_dir'])
         
+        # Load features from saved feature table
+        training_feature_table, training_feature_array, training_feature_names, training_labels = load_feature_table(directory=params['data']['training']['target_dir'])
+        validation_feature_table, validation_feature_array, validation_feature_names, validation_labels = load_feature_table(directory=params['data']['validation']['target_dir'])
 
-    #     ridgeRegressor, randomForest, gbTree, svr = evaluate_classic_models(target_dir, training_feature_array, training_labels, tune_model_params, feature_name)
-    #     evaluate_deep_models(target_dir, validation_feature_array, validation_labels, feature_name)
-    #     results_df = load_results(target_dir)
-    #     # display_feature_results(feature_name, results_df)
+        # Train and evaluate classical models
+        if params['classical']['enabled']:
+            classical_models_full_monty(
+                training_dir = params['data']['training']['target_dir'],
+                training_labels = training_labels,
+                validation_dir = params['data']['validation']['target_dir'],
+                validation_labels = validation_labels,
+                tune_model_params = params['classical']['tune_model_params'],
+                training_features = training_feature_array,
+                validation_features = validation_feature_array,
+                feature_name = "Handcrafted"
+            )
 
-    #     # Predict on the validation dataset using all trained models
-    #     models = {
-    #         "Ridge Regression": ridgeRegressor,
-    #         "Random Forest": randomForest,
-    #         "Gradient Boosting": gbTree,
-    #         "SVR": svr
-    #     }
-    #     validate_classical_models(validation_target_dir, validation_feature_array, validation_labels, feature_name, models)
-    #     results_df = load_results(validation_target_dir)
-    #     display_feature_results(feature_name, results_df)
+        # TODO: Set up training and validation for deep learning (MLP)
+        # training_corr_feature_table, training_corr_features = correlation_minimize_features(feature_table=training_feature_table)
+        # training_corr_feature_array, training_corr_feature_names, training_corr_labels = process_feature_table(training_corr_feature_table)
 
-    # if PCA:
+    if params['learned']['pca']['enabled']:
 
-    #     n_components = 8
-    #     tune_model_params = False # Because tuning with a grid search is time laborious
+        n_components = params['learned']['n_features']
 
-    #     pca_train_tool = PCALearnedFeatures(X_train, n_components=n_components)
-    #     pca_train_amplitude, pca_train_phase, pca_train_combined = pca_train_tool.full_monty()
-    #     pca_val_amplitude, pca_val_phase, pca_val_combined = pca_train_tool.transform(X_val)
+        # Create PCA-based features
+        pca_train_tool = PCALearnedFeatures(X_train, n_components=n_components)
+        pca_train_amplitude, pca_train_phase, pca_train_combined = pca_train_tool.full_monty()
+        pca_val_amplitude, pca_val_phase, pca_val_combined = pca_train_tool.transform(X_val)
 
-    #     # Amplitude
-    #     feature_name_amp = "PCA Amplitude"
+        # Evaluate classical models on amplitude-based PCA features
+        classical_models_full_monty(
+            training_dir = params['data']['training']['target_dir'],
+            training_labels = y_train,
+            validation_dir = params['data']['validation']['target_dir'],
+            validation_labels = y_val,
+            tune_model_params = params['classical']['tune_model_params'],
+            training_features = pca_train_amplitude,
+            validation_features = pca_val_amplitude,
+            feature_name = "PCA Amplitude"
+        )
 
-    #     # classical_models_full_monty(target_dir, y_train, validation_target_dir, y_val, tune_model_params, pca_train_amplitude, pca_val_amplitude, feature_name_amp)
-    #     classical_models_full_monty(
-    #         training_dir = target_dir,
-    #         training_labels = y_train,
-    #         validation_dir = validation_target_dir,
-    #         validation_labels = y_val,
-    #         tune_model_params = tune_model_params,
-    #         training_features = pca_train_amplitude,
-    #         validation_features = pca_val_amplitude,
-    #         feature_name = feature_name_amp
-    #     )
+        # Evaluate classical models on phase-based PCA features
+        classical_models_full_monty(
+            training_dir = params['data']['training']['target_dir'],
+            training_labels = y_train,
+            validation_dir = params['data']['validation']['target_dir'],
+            validation_labels = y_val,
+            tune_model_params = params['classical']['tune_model_params'],
+            training_features = pca_train_phase,
+            validation_features = pca_val_phase,
+            feature_name = "PCA Phase"
+        )
 
-    #     # Phase
-    #     feature_name_ang = "PCA Phase"
+        # Evaluate classical models on combined PCA features
+        classical_models_full_monty(
+            training_dir = params['data']['training']['target_dir'],
+            training_labels = y_train,
+            validation_dir = params['data']['validation']['target_dir'],
+            validation_labels = y_val,
+            tune_model_params = params['classical']['tune_model_params'],
+            training_features = pca_train_combined,
+            validation_features = pca_val_combined,
+            feature_name = "PCA Combined"
+        )
 
-    #     classical_models_full_monty(
-    #         training_dir = target_dir,
-    #         training_labels = y_train,
-    #         validation_dir = validation_target_dir,
-    #         validation_labels = y_val,
-    #         tune_model_params = tune_model_params,
-    #         training_features = pca_train_phase,
-    #         validation_features = pca_val_phase,
-    #         feature_name = feature_name_ang
-    #     )
-            
-    #     # Combined
-    #     feature_name_combined = "PCA Combined"
+        # TODO: Set up training and validation for deep learning (MLP)
 
-    #     classical_models_full_monty(
-    #         training_dir = target_dir,
-    #         training_labels = y_train,
-    #         validation_dir = validation_target_dir,
-    #         validation_labels = y_val,
-    #         tune_model_params = tune_model_params,
-    #         training_features = pca_train_combined,
-    #         validation_features = pca_val_combined,
-    #         feature_name = feature_name_combined
-    #     )
+    if params['learned']['kpca']['enabled']:
 
-    # if KPCA:
+        n_components = params['learned']['n_features']
 
-    #     n_components = 8
-    #     tune_model_params = False # Because tuning with a grid search is time laborious
+        kpca_train_tool = kPCALearnedFeatures(X_train, y_train, n_components=n_components)
+        kpca_train_amplitude, kpca_train_phase, kpca_train_combined = kpca_train_tool.full_monty()
+        kpca_val_amplitude, kpca_val_phase, kpca_val_combined = kpca_train_tool.transform(X_val)
 
-    #     kpca_train_tool = kPCALearnedFeatures(X_train, y_train, n_components=n_components)
-    #     kpca_train_amplitude, kpca_train_phase, kpca_train_combined = kpca_train_tool.full_monty()
-    #     kpca_val_amplitude, kpca_val_phase, kpca_val_combined = kpca_train_tool.transform(X_val)
+        # Evaluate classical models on amplitude-based kPCA features
+        classical_models_full_monty(
+            training_dir = params['data']['training']['target_dir'],
+            training_labels = y_train,
+            validation_dir = params['data']['validation']['target_dir'],
+            validation_labels = y_val,
+            tune_model_params = params['classical']['tune_model_params'],
+            training_features = kpca_train_amplitude,
+            validation_features = kpca_val_amplitude,
+            feature_name = "kPCA Amplitude"
+        )
 
-    #     # Amplitude
-    #     feature_name_amp = "kPCA Amplitude"
-    #     classical_models_full_monty(
-    #         training_dir = target_dir,
-    #         training_labels = y_train,
-    #         validation_dir = validation_target_dir,
-    #         validation_labels = y_val,
-    #         tune_model_params = tune_model_params,
-    #         training_features = kpca_train_amplitude,
-    #         validation_features = kpca_val_amplitude,
-    #         feature_name = feature_name_amp
-    #     )
+        # Evaluate classical models on phase-based kPCA features
+        classical_models_full_monty(
+            training_dir = params['data']['training']['target_dir'],
+            training_labels = y_train,
+            validation_dir = params['data']['validation']['target_dir'],
+            validation_labels = y_val,
+            tune_model_params = params['classical']['tune_model_params'],
+            training_features = kpca_train_phase,
+            validation_features = kpca_val_phase,
+            feature_name = "kPCA Phase"
+        )
 
-    #     # Phase
-    #     feature_name_ang = "kPCA Phase"
-    #     classical_models_full_monty(
-    #         training_dir = target_dir,
-    #         training_labels = y_train,
-    #         validation_dir = validation_target_dir,
-    #         validation_labels = y_val,
-    #         tune_model_params = TUNE_MODEL_PARAMS,
-    #         training_features = kpca_train_phase,
-    #         validation_features = kpca_val_phase,
-    #         feature_name = feature_name_ang
-    #     )
+        # Evaluate classical models on combined kPCA features
+        classical_models_full_monty(
+            training_dir = params['data']['training']['target_dir'],
+            training_labels = y_train,
+            validation_dir = params['data']['validation']['target_dir'],
+            validation_labels = y_val,
+            tune_model_params = params['classical']['tune_model_params'],
+            training_features = kpca_train_combined,
+            validation_features = kpca_val_combined,
+            feature_name = "kPCA Combined"
+        )
 
-    #     # Combined
-    #     feature_name_combined = "kPCA Combined"
-    #     classical_models_full_monty(
-    #         training_dir = target_dir,
-    #         training_labels = y_train,
-    #         validation_dir = validation_target_dir,
-    #         validation_labels = y_val,
-    #         tune_model_params = tune_model_params,
-    #         training_features = kpca_train_combined,
-    #         validation_features = kpca_val_combined,
-    #         feature_name = feature_name_combined
-    #     )
+    if params['learned']['autoencoder']['enabled']:
 
-    # if AUTOENCODER:
-    #     epochs = 1000
+        epochs = params['learned']['autoencoder']['epochs']
+        batch_size = params['learned']['autoencoder']['batch_size']
+        verbose = params['learned']['autoencoder']['verbose']
 
-    #     # Amplitude
-    #     X_train_amp = np.abs(X_train)
-    #     X_val_amp = np.abs(X_val)
-    #     autoencoder_amp = AutoencoderLearnedFeatures(X_train_amp, y_train, epochs=epochs, batch_size=256, verbose=False)
-    #     encoded_train_amp = autoencoder_amp.full_monty(X_train_amp)
-    #     encoded_val_amp = autoencoder_amp.transform(X_val_amp)
-    #     feature_name_amp = "Autoencoder Amplitude"
-    #     classical_models_full_monty(
-    #         training_dir=target_dir,
-    #         training_labels=y_train,
-    #         validation_dir=validation_target_dir,
-    #         validation_labels=y_val,
-    #         tune_model_params=TUNE_MODEL_PARAMS,
-    #         training_features=encoded_train_amp,
-    #         validation_features=encoded_val_amp,
-    #         feature_name=feature_name_amp
-    #     )
+        # Amplitude
+        X_train_amp = np.abs(X_train)
+        X_val_amp = np.abs(X_val)
+        autoencoder_amp = AutoencoderLearnedFeatures(X_train_amp, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
+        encoded_train_amp = autoencoder_amp.full_monty(X_train_amp)
+        encoded_val_amp = autoencoder_amp.transform(X_val_amp)
 
-    #     # Phase
-    #     X_train_pha = np.unwrap(np.angle(X_train))
-    #     X_val_pha = np.unwrap(np.angle(X_val))
-    #     autoencoder_pha = AutoencoderLearnedFeatures(X_train_pha, y_train, epochs=epochs, batch_size=256, verbose=False)
-    #     encoded_train_pha = autoencoder_pha.full_monty(X_train_pha)
-    #     encoded_val_pha = autoencoder_pha.transform(X_val_pha)
-    #     feature_name_pha = "Autoencoder Phase"
-    #     classical_models_full_monty(
-    #         training_dir=target_dir,
-    #         training_labels=y_train,
-    #         validation_dir=validation_target_dir,
-    #         validation_labels=y_val,
-    #         tune_model_params=TUNE_MODEL_PARAMS,
-    #         training_features=encoded_train_pha,
-    #         validation_features=encoded_val_pha,
-    #         feature_name=feature_name_pha
-    #     )
+        classical_models_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            tune_model_params=params['classical']['tune_model_params'],
+            training_features=encoded_train_amp,
+            validation_features=encoded_val_amp,
+            feature_name="Autoencoder Amplitude"
+        )
 
-    #     # Combined
-    #     X_train_com = np.concatenate((X_train_amp, X_train_pha), axis=1)
-    #     X_val_com = np.concatenate((X_val_amp, X_val_pha), axis=1)
-    #     autoencoder_com = AutoencoderLearnedFeatures(X_train_com, y_train, epochs=epochs, batch_size=256, verbose=False)
-    #     encoded_train_com = autoencoder_com.full_monty(X_train_com)
-    #     encoded_val_com = autoencoder_com.transform(X_val_com)
-    #     feature_name_com = "Autoencoder Combined"
-    #     classical_models_full_monty(
-    #         training_dir=target_dir,
-    #         training_labels=y_train,
-    #         validation_dir=validation_target_dir,
-    #         validation_labels=y_val,
-    #         tune_model_params=TUNE_MODEL_PARAMS,
-    #         training_features=encoded_train_com,
-    #         validation_features=encoded_val_com,
-    #         feature_name=feature_name_com
-    #     )
+        # Phase
+        X_train_pha = np.unwrap(np.angle(X_train))
+        X_val_pha = np.unwrap(np.angle(X_val))
+        autoencoder_pha = AutoencoderLearnedFeatures(X_train_pha, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
+        encoded_train_pha = autoencoder_pha.full_monty(X_train_pha)
+        encoded_val_pha = autoencoder_pha.transform(X_val_pha)
 
-    # if CNN:
-    #     epochs = 20
+        classical_models_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            tune_model_params=params['classical']['tune_model_params'],
+            training_features=encoded_train_pha,
+            validation_features=encoded_val_pha,
+            feature_name="Autoencoder Phase"
+        )
 
-    #     # Amplitude
-    #     X_train_amp = np.abs(X_train)
-    #     X_val_amp = np.abs(X_val)
-    #     cnn_amp = CNNLearnedFeatures(X_train_amp, y_train, epochs=epochs, verbose=False)
-    #     features_train_amp = cnn_amp.full_monty(X_train_amp)
-    #     features_val_amp = cnn_amp.transform(X_val_amp)
-    #     feature_name_amp = "CNN Amplitude"
-    #     classical_models_full_monty(
-    #         training_dir=target_dir,
-    #         training_labels=y_train,
-    #         validation_dir=validation_target_dir,
-    #         validation_labels=y_val,
-    #         tune_model_params=TUNE_MODEL_PARAMS,
-    #         training_features=features_train_amp,
-    #         validation_features=features_val_amp,
-    #         feature_name=feature_name_amp
-    #     )
+        # Combined
+        X_train_com = np.concatenate((X_train_amp, X_train_pha), axis=1)
+        X_val_com = np.concatenate((X_val_amp, X_val_pha), axis=1)
+        autoencoder_com = AutoencoderLearnedFeatures(X_train_com, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
+        encoded_train_com = autoencoder_com.full_monty(X_train_com)
+        encoded_val_com = autoencoder_com.transform(X_val_com)
 
-    #     # Phase
-    #     X_train_pha = np.unwrap(np.angle(X_train))
-    #     X_val_pha = np.unwrap(np.angle(X_val))
-    #     cnn_pha = CNNLearnedFeatures(X_train_pha, y_train, epochs=epochs, verbose=False)
-    #     features_train_pha = cnn_pha.full_monty(X_train_pha)
-    #     features_val_pha = cnn_pha.transform(X_val_pha)
-    #     feature_name_pha = "CNN Phase"
-    #     classical_models_full_monty(
-    #         training_dir=target_dir,
-    #         training_labels=y_train,
-    #         validation_dir=validation_target_dir,
-    #         validation_labels=y_val,
-    #         tune_model_params=TUNE_MODEL_PARAMS,
-    #         training_features=features_train_pha,
-    #         validation_features=features_val_pha,
-    #         feature_name=feature_name_pha
-    #     )
+        classical_models_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            tune_model_params=params['classical']['tune_model_params'],
+            training_features=encoded_train_com,
+            validation_features=encoded_val_com,
+            feature_name="Autoencoder Combined"
+        )
 
-    #     # Combined
-    #     X_train_com = np.concatenate((X_train_amp, X_train_pha), axis=1)
-    #     X_val_com = np.concatenate((X_val_amp, X_val_pha), axis=1)
-    #     cnn_com = CNNLearnedFeatures(X_train_com, y_train, epochs=epochs, verbose=False)
-    #     features_train_com = cnn_com.full_monty(X_train_com)
-    #     features_val_com = cnn_com.transform(X_val_com)
-    #     feature_name_com = "CNN Combined"
-    #     classical_models_full_monty(
-    #         training_dir = target_dir,
-    #         training_labels = y_train,
-    #         validation_dir = validation_target_dir,
-    #         validation_labels = y_val,
-    #         tune_model_params = TUNE_MODEL_PARAMS,
-    #         training_features = features_train_com,
-    #         validation_features = features_val_com,
-    #         feature_name = feature_name_com
-    #     )
+    if params['learned']['cnn']['enabled']:
+        epochs = params['learned']['cnn']['epochs']
+        verbose = params['learned']['cnn']['verbose']
+        batch_size = params['learned']['cnn']['batch_size']
+
+        # Amplitude
+        X_train_amp = np.abs(X_train)
+        X_val_amp = np.abs(X_val)
+        cnn_amp = CNNLearnedFeatures(X_train_amp, y_train, batch_size=batch_size, epochs=epochs, verbose=verbose)
+        features_train_amp = cnn_amp.full_monty(X_train_amp)
+        features_val_amp = cnn_amp.transform(X_val_amp)
+        feature_name_amp = "CNN Amplitude"
+        classical_models_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            tune_model_params=params['classical']['tune_model_params'],
+            training_features=features_train_amp,
+            validation_features=features_val_amp,
+            feature_name=feature_name_amp
+        )
+
+        # Phase
+        X_train_pha = np.unwrap(np.angle(X_train))
+        X_val_pha = np.unwrap(np.angle(X_val))
+        cnn_pha = CNNLearnedFeatures(X_train_pha, y_train, batch_size=batch_size, epochs=epochs, verbose=verbose)
+        features_train_pha = cnn_pha.full_monty(X_train_pha)
+        features_val_pha = cnn_pha.transform(X_val_pha)
+        feature_name_pha = "CNN Phase"
+        classical_models_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            tune_model_params=params['classical']['tune_model_params'],
+            training_features=features_train_pha,
+            validation_features=features_val_pha,
+            feature_name=feature_name_pha
+        )
+
+        # Combined
+        X_train_com = np.concatenate((X_train_amp, X_train_pha), axis=1)
+        X_val_com = np.concatenate((X_val_amp, X_val_pha), axis=1)
+        cnn_com = CNNLearnedFeatures(X_train_com, y_train, batch_size=batch_size, epochs=epochs, verbose=verbose)
+        features_train_com = cnn_com.full_monty(X_train_com)
+        features_val_com = cnn_com.transform(X_val_com)
+        feature_name_com = "CNN Combined"
+        classical_models_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            tune_model_params=params['classical']['tune_model_params'],
+            training_features=features_train_com,
+            validation_features=features_val_com,
+            feature_name=feature_name_com
+        )
 
 if __name__ == "__main__":
     main()
