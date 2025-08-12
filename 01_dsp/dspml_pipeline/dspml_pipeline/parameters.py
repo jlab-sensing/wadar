@@ -1,3 +1,5 @@
+"""Standardized parameters throughout the pipeline."""
+
 KFOLD_SPLITS = 5
 RANDOM_SEED = 42
 FEATURE_COUNT = 8

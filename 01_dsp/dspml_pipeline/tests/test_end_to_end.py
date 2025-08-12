@@ -33,7 +33,7 @@ if __name__ == "__main__":
     dataset_dirs = ["../data/wet-0-soil-compaction-dataset",
                     "../data/wet-1-soil-compaction-dataset",
                     "../data/wet-2-soil-compaction-dataset"]
-    target_dir = "../data/training-dataset"
+    target_dir = "../data/new-training-dataset"
     frameLoader = FrameLoader(dataset_dirs, target_dir)
     # X, y = frameLoader.extract_data()
     # frameLoader.save_dataset()
@@ -45,9 +45,9 @@ if __name__ == "__main__":
     batch_size = 32
     verbose = False
     
-    lst = LSTMEstimator(X, y, epochs=epochs, batch_size=batch_size, verbose=verbose)
-    model, metrics = lst.full_monty()
-    update_results(target_dir, "End-to-end", f"LSTM", metrics)
+    # lst = LSTMEstimator(X, y, epochs=epochs, batch_size=batch_size, verbose=verbose)
+    # model, metrics = lst.full_monty()
+    # update_results(target_dir, "End-to-end", f"LSTM", metrics)
 
     # ==
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # update_results(target_dir, "End-to-end", f"Pretrained CNN", metrics)
 
     # ==
-
-    # trans = TransformerEstimator(X, y, verbose=True)
-    # model, metrics = trans.full_monty()
+    X = np.abs(X)
+    trans = TransformerEstimator(X, y, verbose=verbose)
+    model, metrics = trans.full_monty()
     # update_results(target_dir, "End-to-end", f"Transformer", metrics)

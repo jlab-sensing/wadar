@@ -73,8 +73,8 @@ end-to-end:
   # Transformer-based end-to-end regression
   transformer:
     enabled: true
-    batch_size: 32
-    epochs: 1
+    batch_size: 4
+    epochs: 10
     verbose: true
 
 advanced:

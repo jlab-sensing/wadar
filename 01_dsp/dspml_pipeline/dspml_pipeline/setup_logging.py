@@ -13,7 +13,8 @@ def setup_logging(verbose: bool = True) -> None:
     Args:
         verbose (bool): Enables or disables INFO logging.
     """
-    level = logging.DEBUG if verbose else logging.WARNING
+    
+    level = logging.INFO if verbose else logging.WARNING
 
     logging.basicConfig(
         level=level,

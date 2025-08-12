@@ -1,6 +1,4 @@
-"""
-Tools to consolidate results.
-"""
+"""Tools to consolidate results."""
 
 import logging
 logger = logging.getLogger(__name__)
@@ -23,8 +21,8 @@ def update_results(target_dir: str, feature_name: str, model_name: str,
     Used to maintain a log of model performance across different feature sets 
     and model types.
 
-    Parameters:
-        target_dir: Directory where the results CSV file is stored
+    Args:
+        target_dir (str): Directory where the results CSV file is stored
         feature_name: Name/description of the feature set used
         model_name: Name of the model (e.g., 'RandomForest', 'SVM', etc.)
         metrics: Dictionary containing performance metrics with keys:

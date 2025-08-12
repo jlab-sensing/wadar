@@ -339,7 +339,7 @@ def main():
         transformer = TransformerEstimator(X_train, y_train, 
                                            epochs=model_config['epochs'],
                                            batch_size=model_config['batch_size'],
-                                           verbose=True)
+                                           verbose=model_config['verbose'])
         end_to_end_model_validation(
             training_dir=params['data']['training']['target_dir'],
             validation_features=X_val,
