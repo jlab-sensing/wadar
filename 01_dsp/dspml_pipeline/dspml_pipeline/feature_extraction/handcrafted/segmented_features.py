@@ -16,11 +16,11 @@ def get_segment_entropy(X: np.ndarray, n_segments: int = 5):
     Compute entropy for different depth segments.
     
     Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        n_segments: Number of depth segments to analyze
+        X (np.ndarray):                     Input radar data of shape (samples, fast_time, slow_time)
+        n_segments (int):                   Number of depth segments to analyze
         
     Returns:
-        np.ndarray: Entropy features for each sample (n_segments columns)
+        segment_entropies (np.ndarray):     Entropy features for each sample (n_segments columns)
     """
     
     logger.info("Computing segment entropy...")
@@ -58,11 +58,11 @@ def get_segment_energy(X: np.ndarray, n_segments: int = 5):
     Compute energy (sum of squares) for different depth segments.
     
     Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        n_segments: Number of depth segments to analyze
+        X (np.ndarray):                     Input radar data of shape (samples, fast_time, slow_time)
+        n_segments (int):                   Number of depth segments to analyze
         
     Returns:
-        np.ndarray: Energy features for each sample (n_segments columns)
+        segment_energies (np.ndarray):      Energy features for each sample (n_segments columns)
     """
     
     logger.info("Computing segment energy...")
@@ -88,11 +88,11 @@ def get_segment_variance(X: np.ndarray, n_segments: int = 5):
     Compute variance for different depth segments.
     
     Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        n_segments: Number of depth segments to analyze
+        X (np.ndarray):                     Input radar data of shape (samples, fast_time, slow_time)
+        n_segments (int):                   Number of depth segments to analyze
         
     Returns:
-        np.ndarray: Variance features for each sample (n_segments columns)
+        segment_variances (np.ndarray):     Variance features for each sample (n_segments columns)
     """
     
     logger.info("Computing segment variance...")
@@ -115,15 +115,14 @@ def get_segment_variance(X: np.ndarray, n_segments: int = 5):
 
 def get_segment_coherence(X: np.ndarray, n_segments: int = 5):
     """
-    Compute coherence measure for different depth segments.
-    Coherence indicates signal consistency across slow time.
-    
+    Compute coherence for different depth segments.
+
     Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        n_segments: Number of depth segments to analyze
-        
+        X (np.ndarray):                     Input radar data of shape (samples, fast_time, slow_time)
+        n_segments (int):                   Number of depth segments to analyze
+
     Returns:
-        np.ndarray: Coherence features for each sample (n_segments columns)
+        segment_coherences (np.ndarray):    Coherence features for each sample (n_segments columns)
     """
     
     logger.info("Computing segment coherence...")
@@ -157,11 +156,11 @@ def get_segment_skewness(X: np.ndarray, n_segments: int = 5):
     Compute skewness for different depth segments.
     
     Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        n_segments: Number of depth segments to analyze
+        X (np.ndarray):                     Input radar data of shape (samples, fast_time, slow_time)
+        n_segments (int):                   Number of depth segments to analyze
         
     Returns:
-        np.ndarray: Skewness features for each sample (n_segments columns)
+        segment_skewness (np.ndarray):      Skewness features for each sample (n_segments columns)
     """
     
     logger.info("Computing segment skewness...")
@@ -192,11 +191,11 @@ def get_segment_peak_density(X: np.ndarray, n_segments: int = 5):
     Compute peak density for different depth segments.
     
     Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        n_segments: Number of depth segments to analyze
+        X (np.ndarray):                         Input radar data of shape (samples, fast_time, slow_time)
+        n_segments (int):                       Number of depth segments to analyze
         
     Returns:
-        np.ndarray: Peak density features for each sample (n_segments columns)
+        segment_peak_densities (np.ndarray):    Peak density features for each sample (n_segments columns)
     """
     
     logger.info("Computing segment peak density...")
@@ -230,13 +229,12 @@ def get_segment_peak_density(X: np.ndarray, n_segments: int = 5):
 def get_attenuation_coefficient(X: np.ndarray):
     """
     Estimate attenuation coefficient from signal decay with depth.
-    Higher bulk density typically increases attenuation.
     
     Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
+        X (np.ndarray):                     Input radar data of shape (samples, fast_time, slow_time)
         
     Returns:
-        np.ndarray: Attenuation coefficient for each sample
+        attenuation_coeffs (np.ndarray):    Attenuation coefficient for each sample (1D array)
     """
     
     logger.info("Computing attenuation coefficients...")
@@ -271,14 +269,14 @@ def get_attenuation_coefficient(X: np.ndarray):
 
 def segmented_features(X: np.ndarray, n_segments: int = 5):
     """
-    Extract all segmented and depth-based features efficiently.
-    
+    Extract segmented and depth-based features from radar data.
+
     Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        n_segments: Number of depth segments to analyze
-        
+        X (np.ndarray):                 Input radar data of shape (samples, fast_time, slow_time)
+        n_segments (int):               Number of depth segments to analyze
+
     Returns:
-        pd.DataFrame: Feature table with segmented features
+        feature_table (pd.DataFrame):   Feature table with segmented and attenuation features for each sample
     """
     
     logger.info("Extracting segmented features...")

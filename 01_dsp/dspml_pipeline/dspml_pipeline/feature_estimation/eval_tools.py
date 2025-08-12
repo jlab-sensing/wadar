@@ -108,12 +108,14 @@ def classical_models_full_monty(training_dir:str, training_labels, validation_di
     results_df_amp = load_results(validation_dir)
     display_feature_results(feature_name, results_df_amp)
 
-def end_to_end_model_validation(params, X_val, y_val, val_dir, fat_model):
-    model, metrics = fat_model.full_monty()
-    update_results(params['data']['training']['target_dir'], "End-to-end", "LSTM", metrics)
-    y_pred = fat_model.estimate(X_complex=X_val)
-    metrics = compute_metrics(validation_target_dir=val_dir,
-                                  validation_labels=y_val,
+def end_to_end_model_validation(model_params:dict, validation_features:np.ndarray, 
+                                validation_labels:np.ndarray, validation_directory:str, 
+                                model_class:type):
+    model, metrics = model_class.full_monty()
+    update_results(model_params['data']['training']['target_dir'], "End-to-end", "LSTM", metrics)
+    y_pred = model.estimate(X_complex=validation_features)
+    metrics = compute_metrics(validation_target_dir=validation_directory,
+                                  validation_labels=validation_labels,
                                   feature_name="End-to-end",
                                   val_predictions=y_pred)
-    update_results(val_dir, "End-to-end", "LSTM", metrics)
+    update_results(validation_directory, "End-to-end", "LSTM", metrics)

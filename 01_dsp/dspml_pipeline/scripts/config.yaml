@@ -23,7 +23,7 @@ data:
 # For handcrafted features
 handcrafted:
   enabled: false               # Enable or disable handcrafted features
-  new_features: false         # Set to true if this is a new dataset or if features have not been generated yet
+  new_features: true         # Set to true if this is a new dataset or if features have not been generated yet
 
 # For learned features
 learned:
@@ -60,10 +60,15 @@ deep_learning:
 end-to-end:
   # LSTM-based end-to-end regression
   lstm:
-    enabled: true
+    enabled: false
     epochs: 50
     batch_size: 32
     verbose: false
+  # CNN-based end-to-end regression
+  cnn:
+    enabled: true
+    epochs: 50
+    verbose: true
 
 advanced:
   verbose: true               # Set to false to reduce logging output  

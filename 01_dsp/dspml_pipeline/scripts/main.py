@@ -15,7 +15,8 @@ from dspml_pipeline.feature_extraction.learned.pca import PCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.kpca import kPCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.autoencoder import AutoencoderLearnedFeatures
 from dspml_pipeline.feature_extraction.learned.cnn import CNNLearnedFeatures
-
+from dspml_pipeline.end_to_end_estimation.cnn import CNNEstimator
+from dspml_pipeline.end_to_end_estimation.transformer import TransformerEstimator
 from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
 from dspml_pipeline.results import update_results, load_results, display_feature_results
 
@@ -304,18 +305,24 @@ def main():
             feature_name=feature_name_com
         )
 
-    val_dir = params['data']['validation']['target_dir']
-    training_dir = params['data']['training']['target_dir']
-
     # ======== LSTM Regression ========
     model_config = params['end-to-end']['lstm']
     if model_config['enabled']:
-        epochs = model_config['epochs']
-        batch_size = model_config['batch_size']
-        verbose = model_config['verbose']
-        fat_model = LSTMEstimator(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
-        end_to_end_model_validation(params, X_val, y_val, val_dir, fat_model)
+        lstm_model = LSTMEstimator(X_train, y_train, epochs=model_config['epochs'], 
+                                   batch_size=model_config['batch_size'], verbose=model_config['verbose'])
+        end_to_end_model_validation(params, X_val, y_val, 
+                                    params['data']['validation']['target_dir'], lstm_model)
 
+    # ======== CNN Regression ========
+    model_config = params['end-to-end']['cnn']
+    if model_config['enabled']:
+        cnn = CNNEstimator(X_train, y_train, epochs=model_config['epochs'], verbose=model_config['verbose'])
+        end_to_end_model_validation(model_params=model_config,
+                                    validation_features=X_val,
+                                    validation_labels=y_val,
+                                    validation_directory=params['data']['validation']['target_dir'],
+                                    model_class=cnn)
+        
     # Display end-to-end results
     results_df_amp = load_results(params['data']['training']['target_dir'])
     display_feature_results("End-to-end", results_df_amp)

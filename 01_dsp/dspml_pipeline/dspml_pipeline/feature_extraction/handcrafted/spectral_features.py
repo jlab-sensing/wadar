@@ -14,11 +14,11 @@ def get_spectral_centroid(X: np.ndarray):
     """
     Compute spectral centroid for each sample (frequency center of mass).
     
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
+    Args:
+        X (np.ndarray):             Input radar data of shape (samples, fast_time, slow_time)
         
     Returns:
-        np.ndarray: Spectral centroid for each sample
+        centroids (np.ndarray):     Spectral centroid for each sample
     """
     
     logger.info("Computing spectral centroids...")
@@ -47,13 +47,13 @@ def get_spectral_centroid(X: np.ndarray):
 
 def get_spectral_bandwidth(X: np.ndarray):
     """
-    Compute spectral bandwidth for each sample.
+    Compute spectral bandwidth for each sample (spread of the spectrum around the centroid).
     
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
+    Args:
+        X (np.ndarray):             Input radar data of shape (samples, fast_time, slow_time)
         
     Returns:
-        np.ndarray: Spectral bandwidth for each sample
+        bandwidths (np.ndarray):    Spectral bandwidth for each sample
     """
     
     logger.info("Computing spectral bandwidths...")
@@ -79,15 +79,14 @@ def get_spectral_bandwidth(X: np.ndarray):
 
 def get_spectral_rolloff(X: np.ndarray, rolloff_percent: float = 0.85):
     """
-    Compute spectral rolloff frequency - the frequency below which a given percentage 
-    of the total spectral energy is contained.
-    
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        rolloff_percent: Percentage of energy for rolloff calculation
-        
+    Compute spectral rolloff frequency for each sample (the frequency below which a given percentage of the total spectral energy is contained).
+
+    Args:
+        X (np.ndarray):             Input radar data of shape (samples, fast_time, slow_time)
+        rolloff_percent (float):    Percentage of energy for rolloff calculation (default: 0.85)
+
     Returns:
-        np.ndarray: Spectral rolloff for each sample
+        rolloffs (np.ndarray):      Spectral rolloff for each sample
     """
     
     logger.info("Computing spectral rolloffs...")
@@ -113,14 +112,13 @@ def get_spectral_rolloff(X: np.ndarray, rolloff_percent: float = 0.85):
 
 def get_spectral_flatness(X: np.ndarray):
     """
-    Compute spectral flatness (Wiener entropy) - measure of how noise-like vs. tonal the spectrum is.
-    Low values indicate tonal signals, high values indicate noise-like signals.
+    Compute spectral flatness (Wiener entropy) for each sample (measure of how noise-like vs. tonal the spectrum is).
     
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
+    Args:
+        X (np.ndarray):             Input radar data of shape (samples, fast_time, slow_time)
         
     Returns:
-        np.ndarray: Spectral flatness for each sample
+        flatness (np.ndarray):      Spectral flatness for each sample
     """
     
     logger.info("Computing spectral flatness...")
@@ -148,14 +146,13 @@ def get_spectral_flatness(X: np.ndarray):
 
 def get_spectral_flux(X: np.ndarray):
     """
-    Compute spectral flux - measure of how quickly the power spectrum changes.
-    Can indicate material transitions or boundaries.
-    
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        
+    Compute spectral flux for each sample (measure of how quickly the power spectrum changes between consecutive slow time frames).
+
+    Args:
+        X (np.ndarray):             Input radar data of shape (samples, fast_time, slow_time)
+
     Returns:
-        np.ndarray: Spectral flux for each sample
+        flux (np.ndarray):          Spectral flux for each sample
     """
     
     logger.info("Computing spectral flux...")
@@ -186,13 +183,13 @@ def get_spectral_flux(X: np.ndarray):
 
 def spectral_features(X: np.ndarray):
     """
-    Extract all spectral domain features.
-    
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        
+    Extract all spectral domain features for each sample.
+
+    Args:
+        X (np.ndarray): Input radar data of shape (samples, fast_time, slow_time)
+
     Returns:
-        pd.DataFrame: Feature table with spectral features
+        pd.DataFrame: Feature table with spectral features for each sample
     """
     
     logger.info("Extracting spectral features...")

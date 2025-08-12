@@ -13,14 +13,14 @@ import sys
 
 def full_monty_features(X: np.ndarray, label: np.ndarray):
     """
-    Extract all available features for the full feature analysis.
+    Extract all available features for the full handcrafted feature stack.
     
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        label: Target labels corresponding to each sample
+    Args:
+        X (np.ndarray):                 Input radar data of shape (samples, fast_time, slow_time)
+        label (np.ndarray):             Target labels corresponding to each sample
         
     Returns:
-        pd.DataFrame: Complete feature table with all amplitude and phase features and labels
+        feature_table (pd.DataFrame):   Complete feature table with labels
     """
     
     logger.info("Extracting full feature set (amplitude + phase)...")
@@ -32,7 +32,6 @@ def full_monty_features(X: np.ndarray, label: np.ndarray):
     segmented_feat = segmented_features(X)
     spectral_feat = spectral_features(X)
 
-    
     # Combine features
     feature_table = pd.concat([amplitude_feat, phase_feat, dsp_feat, segmented_feat, spectral_feat], axis=1)
     
@@ -89,6 +88,15 @@ def load_feature_table(directory: str, feature_file_name: str = 'features.csv'):
         sys.exit(1)
 
 def process_feature_table(feature_table: pd.DataFrame):
+    """"
+    Process feature table into features, feature names, and labels.
+
+    Returns:
+        feature_array (list):   Matrix of features
+        feature_names (list):   Feature names in order
+        labels (list):          List of labels
+    """
+
     try:
         feature_array = feature_table.drop(columns=['Label']).values
         feature_names = feature_table.drop(columns=['Label']).columns.tolist()

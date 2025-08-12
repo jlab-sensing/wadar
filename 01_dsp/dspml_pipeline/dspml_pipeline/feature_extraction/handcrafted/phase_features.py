@@ -14,11 +14,11 @@ def get_median_frames_phase(X: np.ndarray):
     """
     Get the median frame across slow time for phase calculations.
 
-    Parameters:
-        X: Raw data (samples, fast time, slow time)
+    Args:
+        X (np.ndarray):             Raw data (samples, fast time, slow time)
 
     Returns:
-        np.ndarray: Median frames of shape (samples, fast_time)
+        median_frames (np.ndarray): Median frames of shape (samples, fast_time)
     """
     
     logger.info("Computing median frame across slow time for phase features")
@@ -30,19 +30,20 @@ def get_median_frames_phase(X: np.ndarray):
 
 def get_peak_phase(median_frames: np.ndarray, peak_idxs: np.ndarray):
     """
-    Extract phase of the two largest peaks using vectorized operations.
+    Extract phase of the two largest peaks.
 
-    Parameters:
-        median_frames: Median frames of shape (samples, fast_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        median_frames (np.ndarray):     Median frames of shape (samples, fast_time)
+        peak_idxs (np.ndarray):         Peak indices of shape (samples, 2)
 
     Returns:
-        np.ndarray: Peak phases of shape (samples, 2)
+        peak_phases (np.ndarray):       Peak phases of shape (samples, 2)
     """
     
     logger.info("Computing peak phases...")
     
     signal = np.angle(median_frames)
+    signal = np.unwrap(signal)
     
     # Vectorized phase extraction
     samples_idx = np.arange(median_frames.shape[0])
@@ -56,18 +57,20 @@ def get_peak_phase(median_frames: np.ndarray, peak_idxs: np.ndarray):
 
 def get_phase_variance(X: np.ndarray, idx: int):
     """
-    Computes the variance of the phase of the signal at idx. Phase variance is the variance of the phase of the signal.
-    We hypothesize that the phase variance is related to the soil condition, as it may indicate the stability of the signal.
+    Computes the variance of the phase of the signal at idx. Phase variance is the 
+    variance of the phase of the signal.
 
-    Parameters:
-        X: Input radar data
-        idx: Index of the scan to compute the phase variance for.
+    Args:
+        X (np.ndarray):         Input radar data
+        idx (int):              Index of the scan to compute the phase variance for.
         
     Returns:
-        np.ndarray: Phase variance for each fast time bin
+        variance (np.ndarray):  Phase variance for each fast time bin
     """
     
     signal = np.angle(X[idx, :, :])
+    signal = np.unwrap(signal)
+    
     return np.var(signal, axis=1)
 
 
@@ -75,12 +78,12 @@ def get_peak_phase_variance(X: np.ndarray, peak_idxs: np.ndarray):
     """
     Extract variance of the phase of the two largest peaks for each sample.
 
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        X (np.ndarray):                 Input radar data of shape (samples, fast_time, slow_time)
+        peak_idxs (np.ndarray):         Peak indices of shape (samples, 2)
 
     Returns:
-        np.ndarray: Variance of the phase of the two largest peaks for each scan.
+        phase_variance (np.ndarray):    Variance of the phase of the two largest peaks for each scan.
     """
     
     logger.info("Computing peak phase variances...")
@@ -97,12 +100,12 @@ def get_circularity_coefficient(X: np.ndarray, idx: int = 0):
     """
     Compute circularity coefficient with improved numerical stability.
 
-    Parameters:
-        X: Input radar data
-        idx: Sample index to compute circularity coefficient for
+    Args:
+        X (np.ndarray):         Input radar data
+        idx (idx):              Sample index to compute circularity coefficient for
         
     Returns:
-        np.ndarray: Circularity coefficients for each fast time bin
+        coeffs (np.ndarray):    Circularity coefficients for each fast time bin
     """
     
     signal = X[idx, :, :]
@@ -131,12 +134,12 @@ def get_peak_circularity_coefficient(X: np.ndarray, peak_idxs: np.ndarray):
     """
     Extract circularity coefficient of the two largest peaks for each sample.
 
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        X (np.ndarray):         Input radar data of shape (samples, fast_time, slow_time)
+        peak_idxs (np.ndarray): Peak indices of shape (samples, 2)
 
     Returns:
-        np.ndarray: Circularity coefficient of the two largest peaks for each scan.
+        coeffs (np.ndarray):    Circularity coefficient of the two largest peaks for each scan.
     """
     
     logger.info("Computing peak circularity coefficients...")
@@ -154,13 +157,13 @@ def get_phase_jitter(X: np.ndarray, scan_idx: int = 0, spec_idx: int = 0):
     """
     Compute phase jitter with improved error handling.
 
-    Parameters:
-        X: Input radar data
-        scan_idx: Sample index
-        spec_idx: Fast time index
+    Args:
+        X (np.ndarray):         Input radar data
+        scan_idx (int):         Sample index
+        spec_idx (int):         Fast time index
 
     Returns:
-        float: Phase jitter value
+        phase_jitter (float):   Phase jitter value
     """
     
     try:
@@ -181,12 +184,12 @@ def get_peak_phase_jitter(X: np.ndarray, peak_idxs: np.ndarray):
     """
     Extract phase jitter of the two largest peaks.
 
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        X (np.ndarray):             Input radar data of shape (samples, fast_time, slow_time)
+        peak_idxs (np.ndarray):     Peak indices of shape (samples, 2)
 
     Returns:
-        np.ndarray: Peak phase jitters of shape (samples, 2)
+        phase_jitter (np.ndarray):  Peak phase jitters of shape (samples, 2)
     """
     
     logger.info("Computing peak phase jitters...")
@@ -204,11 +207,11 @@ def phase_features(X: np.ndarray):
     """
     Extract all phase-related features.
     
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
+    Args:
+        X (np.ndarray):                 Input radar data of shape (samples, fast_time, slow_time)
         
     Returns:
-        pd.DataFrame: Feature table with phase features
+        feature_table (pd.DataFrame):   Feature table with phase features
     """
     
     logger.info("Extracting phase features...")
