@@ -9,8 +9,9 @@ import numpy as np
 
 from dspml_pipeline.data.frame_loader import FrameLoader, load_dataset
 from dspml_pipeline.setup_logging import setup_logging
-from dspml_pipeline.feature_extraction.handcrafted.feature_tools import full_monty_features, save_feature_table, load_feature_table
-from dspml_pipeline.feature_estimation.eval_tools import classical_models_full_monty, end_to_end_model_validation, show_results_summary
+from dspml_pipeline.feature_extraction.handcrafted.feature_tools import full_monty_features, save_feature_table, load_feature_table, process_feature_table
+from dspml_pipeline.feature_extraction.handcrafted.feature_pruning import lasso_minimize_features, correlation_minimize_features, mutual_info_minimize_features
+from dspml_pipeline.feature_estimation.eval_tools import classical_models_full_monty, end_to_end_model_validation, show_results_summary, deep_full_monty
 from dspml_pipeline.feature_extraction.learned.pca import PCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.kpca import kPCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.autoencoder import AutoencoderLearnedFeatures
@@ -18,7 +19,6 @@ from dspml_pipeline.feature_extraction.learned.cnn import CNNLearnedFeatures
 from dspml_pipeline.end_to_end_estimation.cnn import CNNEstimator
 from dspml_pipeline.end_to_end_estimation.transformer import TransformerEstimator
 from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
-from dspml_pipeline.results import update_results, load_results, display_feature_results
 
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -74,6 +74,20 @@ def main():
         training_feature_table, training_feature_array, training_feature_names, training_labels = load_feature_table(directory=params['data']['training']['target_dir'])
         validation_feature_table, validation_feature_array, validation_feature_names, validation_labels = load_feature_table(directory=params['data']['validation']['target_dir'])
 
+        if params['handcrafted']['pruning_method'] == "corr":
+            training_corr_feature_table, training_corr_features = correlation_minimize_features(feature_table=training_feature_table, top_n=params['deep_learning']['enabled']['top_n'])
+            training_feature_array, training_feature_names, training_labels = process_feature_table(training_corr_feature_table)
+        elif params['handcrafted']['pruning_method'] == "mi":
+            training_corr_feature_table, training_corr_features = mutual_info_minimize_features(feature_table=training_feature_table, top_n=params['deep_learning']['enabled']['top_n'])
+            training_feature_array, training_feature_names, training_labels = process_feature_table(training_corr_feature_table)
+        elif params['handcrafted']['pruning_method'] == "lasso":
+            training_corr_feature_table, training_corr_features = lasso_minimize_features(feature_table=training_feature_table, top_n=params['deep_learning']['enabled']['top_n'])
+            training_feature_array, training_feature_names, training_labels = process_feature_table(training_corr_feature_table)
+
+        # Use the selected features from the pruning method in the validation feature array.
+        selected_feature_indices = [validation_feature_names.index(name) for name in training_feature_names]
+        validation_feature_array = validation_feature_array[:, selected_feature_indices]
+    
         # Train and evaluate classical models
         if params['classical']['enabled']:
             classical_models_full_monty(
@@ -87,9 +101,19 @@ def main():
                 feature_name = "Handcrafted"
             )
 
-        # TODO: Set up training and validation for deep learning (MLP)
-        # training_corr_feature_table, training_corr_features = correlation_minimize_features(feature_table=training_feature_table)
-        # training_corr_feature_array, training_corr_feature_names, training_corr_labels = process_feature_table(training_corr_feature_table)
+        # Train and evaluate classical models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=training_labels,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=validation_labels,
+                training_features=training_feature_array,
+                validation_features=validation_feature_array,
+                feature_name="Handcrafted"
+            )
+
+        show_results_summary("Handcrafted", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
     # ======== PCA Features ========
     if params['learned']['pca']['enabled']:
@@ -112,6 +136,18 @@ def main():
             validation_features = pca_val_amplitude,
             feature_name = "PCA Amplitude"
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=pca_train_amplitude,
+                validation_features=pca_val_amplitude,
+                feature_name="PCA Amplitude"
+            )
+        show_results_summary("PCA Amplitude", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
         # Evaluate classical models on phase-based PCA features
         classical_models_full_monty(
@@ -124,6 +160,18 @@ def main():
             validation_features = pca_val_phase,
             feature_name = "PCA Phase"
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=pca_train_phase,
+                validation_features=pca_val_phase,
+                feature_name="PCA Phase"
+            )
+        show_results_summary("PCA Phase", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
         # Evaluate classical models on combined PCA features
         classical_models_full_monty(
@@ -136,8 +184,18 @@ def main():
             validation_features = pca_val_combined,
             feature_name = "PCA Combined"
         )
-
-        # TODO: Set up training and validation for deep learning (MLP)
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=pca_train_combined,
+                validation_features=pca_val_combined,
+                feature_name="PCA Combined"
+            )
+        show_results_summary("PCA Combined", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
     # ======== kPCA Features ========
     if params['learned']['kpca']['enabled']:
@@ -147,7 +205,6 @@ def main():
         kpca_train_tool = kPCALearnedFeatures(X_train, y_train, n_components=n_components)
         kpca_train_amplitude, kpca_train_phase, kpca_train_combined = kpca_train_tool.full_monty()
         kpca_val_amplitude, kpca_val_phase, kpca_val_combined = kpca_train_tool.transform(X_val)
-
         # Evaluate classical models on amplitude-based kPCA features
         classical_models_full_monty(
             training_dir = params['data']['training']['target_dir'],
@@ -159,6 +216,18 @@ def main():
             validation_features = kpca_val_amplitude,
             feature_name = "kPCA Amplitude"
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            training_features=kpca_train_amplitude,
+            validation_features=kpca_val_amplitude,
+            feature_name="kPCA Amplitude"
+            )
+        show_results_summary("kPCA Amplitude", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
         # Evaluate classical models on phase-based kPCA features
         classical_models_full_monty(
@@ -171,6 +240,18 @@ def main():
             validation_features = kpca_val_phase,
             feature_name = "kPCA Phase"
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            training_features=kpca_train_phase,
+            validation_features=kpca_val_phase,
+            feature_name="kPCA Phase"
+            )
+        show_results_summary("kPCA Phase", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
         # Evaluate classical models on combined kPCA features
         classical_models_full_monty(
@@ -183,6 +264,18 @@ def main():
             validation_features = kpca_val_combined,
             feature_name = "kPCA Combined"
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            training_features=kpca_train_combined,
+            validation_features=kpca_val_combined,
+            feature_name="kPCA Combined"
+            )
+        show_results_summary("kPCA Combined", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
     # ======== Autoencoder Features ========
     if params['learned']['autoencoder']['enabled']:
@@ -208,6 +301,18 @@ def main():
             validation_features=encoded_val_amp,
             feature_name="Autoencoder Amplitude"
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            training_features=encoded_train_amp,
+            validation_features=encoded_val_amp,
+            feature_name="Autoencoder Amplitude"
+            )
+        show_results_summary("Autoencoder Amplitude", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
         # Phase
         X_train_pha = np.unwrap(np.angle(X_train))
@@ -226,6 +331,18 @@ def main():
             validation_features=encoded_val_pha,
             feature_name="Autoencoder Phase"
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            training_features=encoded_train_pha,
+            validation_features=encoded_val_pha,
+            feature_name="Autoencoder Phase"
+            )
+        show_results_summary("Autoencoder Phase", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
         # Combined
         X_train_com = np.concatenate((X_train_amp, X_train_pha), axis=1)
@@ -244,6 +361,18 @@ def main():
             validation_features=encoded_val_com,
             feature_name="Autoencoder Combined"
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            training_features=encoded_train_com,
+            validation_features=encoded_val_com,
+            feature_name="Autoencoder Combined"
+            )
+        show_results_summary("Autoencoder Combined", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
     # ======== CNN Features ========
     if params['learned']['cnn']['enabled']:
@@ -268,6 +397,18 @@ def main():
             validation_features=features_val_amp,
             feature_name=feature_name_amp
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            training_features=features_train_amp,
+            validation_features=features_val_amp,
+            feature_name=feature_name_amp
+            )
+        show_results_summary(feature_name_amp, params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
         # Phase
         X_train_pha = np.unwrap(np.angle(X_train))
@@ -286,6 +427,18 @@ def main():
             validation_features=features_val_pha,
             feature_name=feature_name_pha
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            training_features=features_train_pha,
+            validation_features=features_val_pha,
+            feature_name=feature_name_pha
+            )
+        show_results_summary(feature_name_pha, params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
         # Combined
         X_train_com = np.concatenate((X_train_amp, X_train_pha), axis=1)
@@ -304,6 +457,18 @@ def main():
             validation_features=features_val_com,
             feature_name=feature_name_com
         )
+        # Train and evaluate deep learning models
+        if params['deep_learning']['enabled']:
+            deep_full_monty(
+            training_dir=params['data']['training']['target_dir'],
+            training_labels=y_train,
+            validation_dir=params['data']['validation']['target_dir'],
+            validation_labels=y_val,
+            training_features=features_train_com,
+            validation_features=features_val_com,
+            feature_name=feature_name_com
+            )
+        show_results_summary(feature_name_com, params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
     # ======== LSTM Regression ========
     model_config = params['end-to-end']['lstm']
@@ -350,7 +515,8 @@ def main():
         )
         
     # Display end-to-end results
-    show_results_summary("End-to-end", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
+    if params['end-to-end']['transformer']['enabled'] or params['end-to-end']['cnn']['enabled'] or params['end-to-end']['lstm']['enabled']:
+        show_results_summary("End-to-end", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
     
 
 

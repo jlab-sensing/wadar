@@ -24,25 +24,27 @@ data:
 handcrafted:
   enabled: false               # Enable or disable handcrafted features
   new_features: true         # Set to true if this is a new dataset or if features have not been generated yet
+  pruning_method: all      # Options: corr, mi, lasso, none
+  top_n: 16             # Only used if pruning_method is not none
 
 # For learned features
 learned:
   n_features: 8               # Desired number of features
   # PCA-based feature extraction
   pca:
-    enabled: false             # Enable or disable PCA features
+    enabled: true             # Enable or disable PCA features
   # Kernel-PCA-based feature extraction
   kpca:
-    enabled: false             # Enable or disable kPCA features
+    enabled: true             # Enable or disable kPCA features
   # Autoencoder-based feature extraction
   autoencoder:
-    enabled: false
+    enabled: true
     epochs: 1000
     batch_size: 256
     verbose: false
   # CNN-based feature extraction
   cnn:
-    enabled: false
+    enabled: true
     epochs: 20
     batch_size: 32
     verbose: true
@@ -50,23 +52,23 @@ learned:
 # Classical model configuration for feature regression
 classical:
   enabled: true               # Enable or disable the evaluation and validation of classical models (on all features)
-  tune_model_params: false    # Set to true to tune the models, or false to save time
+  tune_model_params: true    # Set to true to tune the models, or false to save time
 
 # Deep learning model configuration for feature regression
 deep_learning:
-  enabled: false
+  enabled: true
 
 # End-to-end model configurations for raw data regression
 end-to-end:
   # LSTM-based end-to-end regression
   lstm:
-    enabled: false
+    enabled: true
     epochs: 50
     batch_size: 32
     verbose: false
   # CNN-based end-to-end regression
   cnn:
-    enabled: false
+    enabled: true
     epochs: 20
     batch_size: 32
     verbose: false

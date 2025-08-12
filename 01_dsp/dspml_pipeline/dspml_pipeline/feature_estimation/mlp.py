@@ -136,8 +136,8 @@ class MLPRegression:
         self.build_model(X_train)
 
         # Training parameters
-        n_epochs = 100   # number of epochs to run
-        batch_size = 10  # size of each batch
+        n_epochs = 1000   # number of epochs to run
+        batch_size = 32  # size of each batch
         batch_start = torch.arange(0, len(X_train), batch_size)
 
         # Hold the best model
@@ -198,6 +198,7 @@ class MLPRegression:
             logger.error("Model has not been fitted yet. Call train() first.")
             sys.exit(1)
         X = self.scaler.transform(X)
+        X = self.preprocess_input(X)
         self.model.eval()
         with torch.no_grad():
             return self.model(X).numpy().flatten()
