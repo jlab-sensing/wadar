@@ -1,3 +1,5 @@
+"""Learned feature reduction using pretrained CNN."""
+
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import absl.logging
@@ -18,8 +20,19 @@ from PIL import Image
 logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 from ...parameters import RANDOM_SEED, KFOLD_SPLITS, num2label
 
-def prepare_image_data(X, y=None, img_size=(160, 160)):
-    """Prepare image data for CNN training/inference."""
+def prepare_image_data(X: np.ndarray, y: np.ndarray = None, img_size: tuple = (160, 160)):
+    """
+    Prepare image data for CNN training or inference.
+
+    Args:
+        X (np.ndarray): Input data to be converted to image format.
+        y (np.ndarray, optional): Labels corresponding to the input data.
+        img_size (tuple): Target image size (height, width).
+
+    Returns:
+        images (np.ndarray): Array of processed images.
+        y (np.ndarray, optional): Labels, if provided.
+    """
     images = []
     for sample in X:
         sample_min = sample.min()
@@ -38,12 +51,38 @@ def prepare_image_data(X, y=None, img_size=(160, 160)):
 
 class CNNLearnedFeatures:
     """
-    CNN-based feature extractor using pre-trained MobileNetV2.
-    Similar structure to AutoencoderLearnedFeatures but for CNN feature extraction.
+    Class for learned feature reduction using a pre-trained CNN (MobileNetV2).
+
+    Attributes:
+        X (np.ndarray):                 Input feature data.
+        y (np.ndarray):                 Target labels.
+        epochs (int):                   Number of training epochs.
+        batch_size (int):               Batch size for training.
+        dimensions (int):               Output feature dimension.
+        img_size (tuple):               Image size for CNN input.
+        output_dir (str):               Directory for saving images and labels.
+        labels (list):                  List of label dictionaries.
+        df (pd.DataFrame):              DataFrame of image filenames and labels.
+        model (tf.keras.Model):         Keras model for feature extraction.
+        verbose (bool):                 Verbosity flag for logging.
     """
 
-    def __init__(self, X, y, epochs=10, batch_size=32, dimensions=128, img_size=(160, 160), verbose=False):
+    def __init__(self, X: np.ndarray, y: np.ndarray, 
+                 epochs: int = 10, batch_size: int = 32, dimensions: int = 128, 
+                 img_size: tuple = (160, 160), verbose: bool = False):
+        """
+        Initialize the class for CNN-based feature extraction.
         
+        Args:
+            X (np.ndarray): Input feature data.
+            y (np.ndarray): Target labels.
+            epochs (int, optional): Number of training epochs. Defaults to 10.
+            batch_size (int, optional): Batch size for training. Defaults to 32.
+            dimensions (int, optional): Output feature dimensions. Defaults to 128.
+            img_size (tuple, optional): Image size as (height, width). Defaults to (160, 160).
+            verbose (bool, optional): Verbosity flag for logging. Defaults to False.
+        """
+                        
         self.verbose = verbose
         self.epochs = epochs
         self.batch_size = batch_size
@@ -60,22 +99,43 @@ class CNNLearnedFeatures:
         self.model = None
 
     def full_monty(self, X):
-        """Run the full feature extraction process."""
+        """
+        Performs the entire feature extraction process using the CNN.
+
+        Args:
+            X (np.ndarray): Input data to extract features from.
+
+        Returns:
+            features (np.ndarray): Extracted CNN-based features.
+        """
+        
         self.prepare_data()
         model, features = self.train_full()
         return features
 
-    def preprocess(self, X):
-        """Preprocess input data for CNN."""
-        
+    def preprocess(self, X: np.ndarray):
+        """
+        Preprocesses raw data and ensures that data isn't in IQ form.
+
+        Args:
+            X (np.ndarray): Raw input data.
+
+        Returns:
+            X (np.ndarray): Preprocessed data.
+        """
+
         if np.iscomplex(X).any():
             logger.error("Convert the IQ data to amplitude, phase, or combine them before using as CNN input.")
         
         return X
 
     def prepare_data(self):
-        """Prepare the dataset by saving images and labels to the output directory."""
-        
+        """
+        Prepares the dataset by saving images and labels to the output directory.
+
+        Saves each sample as an image file and creates a CSV file with filenames and labels.
+        """
+
         # Save images and labels
         for idx, sample in enumerate(self.X):
             sample_min = sample.min()           # normalize to 0-255
@@ -92,8 +152,14 @@ class CNNLearnedFeatures:
         self.df.to_csv(os.path.join(self.output_dir, "labels.csv"), index=False)
 
     def load_dataset(self):
-        """Load the dataset from the output directory."""
-        
+        """
+        Loads the dataset from the output directory.
+
+        Returns:
+            images (np.ndarray): Array of loaded images.
+            labels (np.ndarray): Array of labels.
+        """
+
         df = pd.read_csv(os.path.join(self.output_dir, "labels.csv"))
 
         def load_image(filename):
@@ -115,9 +181,14 @@ class CNNLearnedFeatures:
 
         return images, labels
 
-    def build_model(self, train_dataset=None):
-        """Build the CNN model using a pre-trained MobileNetV2 as the base model."""
-        
+    def build_model(self, train_dataset: 'tf.data.Dataset' = None):
+        """
+        Builds the CNN model using a pre-trained MobileNetV2 as the base model.
+
+        Args:
+            train_dataset (tf.data.Dataset, optional): Training dataset for model summary/logging.
+        """
+
         # Rescale pixel values 
         rescale = tf.keras.layers.Rescaling(1./127.5, offset=-1) # Rescale from [0, 255] to [-1, 1]
 
@@ -126,7 +197,6 @@ class CNNLearnedFeatures:
         base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
                                                        include_top=False,
                                                        weights='imagenet')
-        
         if self.verbose and train_dataset is not None:
             image_batch, label_batch = next(iter(train_dataset))
             feature_batch = base_model(image_batch)
@@ -152,8 +222,14 @@ class CNNLearnedFeatures:
             logger.info(f"Number of trainable variables: {len(self.model.trainable_variables)}")
 
     def train_full(self):
-        """Train the model with the entire dataset."""
-        
+        """
+        Trains the CNN model with the entire dataset and extracts features.
+
+        Returns:
+            model (tf.keras.Model): Trained Keras model.
+            features (np.ndarray): Extracted features from the model.
+        """
+
         images, labels = self.load_dataset()
 
         train_ds = Dataset.from_tensor_slices((images, labels)).batch(self.batch_size)
@@ -168,13 +244,19 @@ class CNNLearnedFeatures:
         self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
                            loss=tf.keras.losses.MeanSquaredError(),
                            metrics=[tf.keras.metrics.MeanSquaredError(name='mse')])
-        
         features = self.model.predict(images)
-
         return self.model, features
-    
-    def transform(self, X):
-        """Extract features from input data."""
+
+    def transform(self, X: np.ndarray):
+        """
+        Applies the trained CNN model to new data to extract features.
+
+        Args:
+            X (np.ndarray): New input data of shape (samples, features).
+
+        Returns:
+            features (np.ndarray): Extracted CNN-based features.
+        """
         
         images = prepare_image_data(X, img_size=self.img_size)
         features = self.model.predict(images)

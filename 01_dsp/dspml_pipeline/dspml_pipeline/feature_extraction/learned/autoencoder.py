@@ -1,3 +1,5 @@
+"""Learned feature reduction using autoencoder."""
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from ...parameters import RANDOM_SEED
 
-def prepare_tensor_data(X, y=None, batch_size=256):
+def prepare_tensor_data(X:np.ndarray, y:np.ndarray = None, batch_size:int = 256):
+    """
+    Convert numpy arrays to tensor data for PyTorch.
+
+    Args:
+        X (np.ndarray): Radar data to be converted to tensor form
+        y (np.ndarray, optional): Labels to be converted to tensor form
+        batch_size (int): Batch size for tensor dataset
+
+    Returns:
+        X_tensor (torch.Tensor):    X converted to a float32 PyTorch tensor.
+        y_tensor (torch.Tensor):    y converted to a float32 PyTorch tensor.
+        dataset (TensorDataset):    Dataset containing X and y tensors.
+        loader (DataLoader):        DataLoader for batching and shuffling the dataset.
+    """
+
     X_tensor = torch.tensor(X, dtype=torch.float32)
     
     if y is None:
@@ -35,11 +52,38 @@ def prepare_tensor_data(X, y=None, batch_size=256):
 
 class AutoencoderLearnedFeatures:
     """
-    https://github.com/rasbt/deeplearning-models/blob/master/pytorch_ipynb/autoencoder/ae-basic-with-rf.ipynb
+    Class for learned feature reduction using an autoencoder. Much of the structure has bee sourced from
+    https://github.com/rasbt/deeplearning-models/blob/master/pytorch_ipynb/autoencoder/ae-basic-with-rf.ipynb.
+
+    Attributes:
+        X (np.ndarray):                     Input feature data.
+        y (np.ndarray):                     Target labels.
+        epochs (int):                       Number of training epochs.
+        batch_size (int):                   Batch size for training.
+        verbose (bool):                     Verbosity flag for logging.
+        device (torch.device):              Device used for computation (CPU or CUDA).
+        scaler (MinMaxScaler):              Scaler for input normalization.
+        num_features (int):                 Number of input features.
+        model (torch.nn.Module):            PyTorch autoencoder model.
+        optimizer (torch.optim.Optimizer):  Optimizer for training.
+        dataset (TensorDataset):            PyTorch dataset for training.
+        loader (DataLoader):                DataLoader for batching during training.
     """
 
-    def __init__(self, X, y, epochs=10, batch_size=256, verbose=False):
+    def __init__(self, X:np.ndarray, y:np.ndarray, epochs:int = 10, 
+                 batch_size:int = 256, verbose:bool = False):
+        """
+        Initialize the AutoencoderLearnedFeatures class.
+        
+        Args:
+            X (np.ndarray):     Input feature data.
+            y (np.ndarray):     Target labels.
+            epochs (int):       Number of training epochs. 
+            batch_size (int):   Batch size for training. 
+            verbose (bool):     Verbosity flag for logging. 
+        """
 
+        # Sets deterministic for reproducability
         if torch.cuda.is_available():
             torch.backends.cudnn.deterministic = True
 
@@ -54,12 +98,28 @@ class AutoencoderLearnedFeatures:
         X = self.preprocess(X)
         self.X, self.y, self.dataset, self.loader = prepare_tensor_data(X, y, batch_size=batch_size)
 
-    def full_monty(self, X):
+    def full_monty(self, X:np.ndarray):
+        """
+        Performs the entire dimensionality reduction process.
+
+        Returns:
+            reduced (np.ndarray):   Autoencoder-based features.
+        """
+
         self.build_model()
         self.train()
         return self.transform(X)
 
-    def preprocess(self, X):
+    def preprocess(self, X:np.ndarray):
+        """
+        Preprocesses raw data and ensures that data isn't in IQ form.
+
+        Args:
+            X (np.ndarray):     Raw data
+
+        Returns
+            X (np.ndarray):     Preprocessed data
+        """
 
         if np.iscomplex(X).any():
             logging.error("Convert the IQ data to amplitude, phase, or combine them two before using it as input.")
@@ -71,6 +131,9 @@ class AutoencoderLearnedFeatures:
         return X
     
     def build_model(self):
+        """
+        Builds autoencoder model for feature extraction.
+        """
 
         # Hyperparameters
         learning_rate = 0.005
@@ -128,7 +191,10 @@ class AutoencoderLearnedFeatures:
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
     
     def train(self):
-        start_time = time.time()
+        """
+        Trains autoencoder.
+        """
+
         for epoch in range(self.epochs):
             for batch_idx, (features, targets) in enumerate(self.loader):
                 
@@ -153,6 +219,15 @@ class AutoencoderLearnedFeatures:
                                 len(self.loader), cost))
     
     def transform(self, X):
+        """
+        Apply the previously fitted autoencoder to new data.
+
+        Args:
+            X (np.ndarray):                 New input data of shape (samples, features).
+
+        Returns:
+            encoded_all (np.ndarray):       Autoencoder-based features
+        """
         
         X = X.reshape(X.shape[0], -1)
         X = self.scaler.transform(X)

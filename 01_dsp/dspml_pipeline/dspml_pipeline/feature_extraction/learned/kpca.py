@@ -60,7 +60,7 @@ class kPCALearnedFeatures:
         Performs the entire dimensionality reduction process.
 
         Returns:
-            reduced_amplitude (np.ndarray):       PCA-based features from amplitude
+            reduced_amplitude (np.ndarray):     PCA-based features from amplitude
             reduced_phase (np.ndarray):         PCA-based features from phase
             reduced_combined (np.ndarray):      PCA-based features from amplitude and phase
         """
