@@ -181,7 +181,7 @@ class CNNLearnedFeatures:
 
         return images, labels
 
-    def build_model(self, train_dataset: 'tf.data.Dataset' = None):
+    def build_model(self, train_dataset:tf.data.Dataset = None):
         """
         Builds the CNN model using a pre-trained MobileNetV2 as the base model.
 
@@ -257,7 +257,7 @@ class CNNLearnedFeatures:
         Returns:
             features (np.ndarray): Extracted CNN-based features.
         """
-        
+
         images = prepare_image_data(X, img_size=self.img_size)
         features = self.model.predict(images)
         return features

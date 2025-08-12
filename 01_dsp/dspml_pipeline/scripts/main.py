@@ -10,7 +10,7 @@ import numpy as np
 from dspml_pipeline.data.frame_loader import FrameLoader, load_dataset
 from dspml_pipeline.setup_logging import setup_logging
 from dspml_pipeline.feature_extraction.handcrafted.feature_tools import full_monty_features, save_feature_table, load_feature_table
-from dspml_pipeline.feature_estimation.eval_tools import classical_models_full_monty, end_to_end_model_validation
+from dspml_pipeline.feature_estimation.eval_tools import classical_models_full_monty, end_to_end_model_validation, show_results_summary
 from dspml_pipeline.feature_extraction.learned.pca import PCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.kpca import kPCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.autoencoder import AutoencoderLearnedFeatures
@@ -310,25 +310,48 @@ def main():
     if model_config['enabled']:
         lstm_model = LSTMEstimator(X_train, y_train, epochs=model_config['epochs'], 
                                    batch_size=model_config['batch_size'], verbose=model_config['verbose'])
-        end_to_end_model_validation(params, X_val, y_val, 
-                                    params['data']['validation']['target_dir'], lstm_model)
+        end_to_end_model_validation(
+            training_dir=params['data']['training']['target_dir'],
+            validation_features=X_val,
+            validation_labels=y_val,
+            validation_directory=params['data']['validation']['target_dir'],
+            model_class=lstm_model,
+            model_name="LSTM"
+        )
 
     # ======== CNN Regression ========
     model_config = params['end-to-end']['cnn']
     if model_config['enabled']:
-        cnn = CNNEstimator(X_train, y_train, epochs=model_config['epochs'], verbose=model_config['verbose'])
-        end_to_end_model_validation(model_params=model_config,
-                                    validation_features=X_val,
-                                    validation_labels=y_val,
-                                    validation_directory=params['data']['validation']['target_dir'],
-                                    model_class=cnn)
+        cnn = CNNEstimator(X_train, y_train, epochs=model_config['epochs'], 
+                           batch_size=model_config['batch_size'], verbose=model_config['verbose'])
+        end_to_end_model_validation(
+            training_dir=params['data']['training']['target_dir'],
+            validation_features=X_val,
+            validation_labels=y_val,
+            validation_directory=params['data']['validation']['target_dir'],
+            model_class=cnn,
+            model_name="CNN"
+        )
+        
+    # ======== Transformer Regression ========
+    model_config = params['end-to-end']['transformer']
+    if model_config['enabled']:
+        transformer = TransformerEstimator(X_train, y_train, 
+                                           epochs=model_config['epochs'],
+                                           batch_size=model_config['batch_size'],
+                                           verbose=True)
+        end_to_end_model_validation(
+            training_dir=params['data']['training']['target_dir'],
+            validation_features=X_val,
+            validation_labels=y_val,
+            validation_directory=params['data']['validation']['target_dir'],
+            model_class=transformer,
+            model_name="Transformer"
+        )
         
     # Display end-to-end results
-    results_df_amp = load_results(params['data']['training']['target_dir'])
-    display_feature_results("End-to-end", results_df_amp)
-    results_df_amp = load_results(params['data']['validation']['target_dir'])
-    display_feature_results("End-to-end", results_df_amp)
-
+    show_results_summary("End-to-end", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
+    
 
 
 

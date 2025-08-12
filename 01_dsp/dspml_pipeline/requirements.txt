@@ -10,3 +10,4 @@ torch
 tqdm
 tensorflow
 transformers
+graphviz

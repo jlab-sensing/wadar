@@ -178,7 +178,10 @@ class CNNEstimator:
             val_ds = val_ds.prefetch(buffer_size=AUTOTUNE)
             
             # Build and train model
-            model = self.build_model()
+            if fold == 0:
+                model = self.build_model()
+                initial_weights = model.get_weights()
+            model.set_weights(initial_weights)
             
             # Train with early stopping
             callbacks = [

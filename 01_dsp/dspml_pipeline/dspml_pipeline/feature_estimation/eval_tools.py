@@ -108,14 +108,27 @@ def classical_models_full_monty(training_dir:str, training_labels, validation_di
     results_df_amp = load_results(validation_dir)
     display_feature_results(feature_name, results_df_amp)
 
-def end_to_end_model_validation(model_params:dict, validation_features:np.ndarray, 
+def end_to_end_model_validation(training_dir:np.ndarray,
+                                validation_features:np.ndarray, 
                                 validation_labels:np.ndarray, validation_directory:str, 
-                                model_class:type):
-    model, metrics = model_class.full_monty()
-    update_results(model_params['data']['training']['target_dir'], "End-to-end", "LSTM", metrics)
-    y_pred = model.estimate(X_complex=validation_features)
+                                model_class:type, model_name:str):
+    _, metrics = model_class.full_monty()
+    update_results(training_dir, "End-to-end", model_name, metrics)
+    y_pred = model_class.estimate(X_complex=validation_features)
     metrics = compute_metrics(validation_target_dir=validation_directory,
                                   validation_labels=validation_labels,
                                   feature_name="End-to-end",
                                   val_predictions=y_pred)
-    update_results(validation_directory, "End-to-end", "LSTM", metrics)
+    update_results(validation_directory, "End-to-end", model_name, metrics)
+
+def show_results_summary(feature_type, training_dir, validation_dir):
+    print("="*40)
+    print(f"Training Results for {feature_type}".center(40))
+    print("="*40)
+    results_df_amp = load_results(training_dir)
+    display_feature_results(feature_type, results_df_amp)
+    print("="*40)
+    print(f"Validation Results for {feature_type}".center(40))
+    print("="*40)
+    results_df_amp = load_results(validation_dir)
+    display_feature_results(feature_type, results_df_amp)

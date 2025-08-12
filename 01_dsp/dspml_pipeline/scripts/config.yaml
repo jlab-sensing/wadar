@@ -66,8 +66,15 @@ end-to-end:
     verbose: false
   # CNN-based end-to-end regression
   cnn:
+    enabled: false
+    epochs: 20
+    batch_size: 32
+    verbose: false
+  # Transformer-based end-to-end regression
+  transformer:
     enabled: true
-    epochs: 50
+    batch_size: 32
+    epochs: 1
     verbose: true
 
 advanced:

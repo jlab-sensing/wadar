@@ -3,19 +3,33 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 mpl.set_loglevel("warning") 
 
-def plot_IQ_signals(X, y, show_plot:bool = True):
+import pandas as pd
+
+def plot_IQ_signals(X:np.ndarray, y:np.ndarray, show_plot:bool = True):
     """
     Plot the mean and standard deviation of the absolute value and angle of the I/Q signals using a colorbar.
-    Generated almost entirely by AI.
 
     Args:
-        X (np.ndarray):         Input data of shape (samples, range_bins, time_bins).
-        y (np.ndarray):         Labels of shape (samples,).
+        X (np.ndarray):     Input data of shape (samples, range_bins, time_bins)
+        y (np.ndarray):     Labels of shape (samples,)
+        show_plot (bool):   Determines whether plt.show() is called at the end
     """
+
+    # Set font for publication-quality figures
+    plt.rcParams.update({
+        "font.size": 16,
+        "font.family": "serif",
+        "axes.labelsize": 18,
+        "axes.titlesize": 20,
+        "xtick.labelsize": 15,
+        "ytick.labelsize": 15,
+        "legend.fontsize": 15,
+        "figure.titlesize": 22
+    })
 
     unique_Y = np.unique(y)
 
-    # Plotting amplitude
+    # ===== Plotting amplitude =====
 
     X_abs = np.median(np.abs(X), axis=2)
 
@@ -31,31 +45,27 @@ def plot_IQ_signals(X, y, show_plot:bool = True):
 
         mean_curve = np.mean(X_abs[idx], axis=0)
         std_curve = np.std(X_abs[idx], axis=0)
-        plt.plot(mean_curve, color=color, linewidth=2)
-        plt.fill_between(np.arange(mean_curve.size), mean_curve - std_curve, mean_curve + std_curve,
-                         color=color, alpha=0.2)
+        ax.plot(mean_curve, color=color, linewidth=2)
+        ax.fill_between(np.arange(mean_curve.size), mean_curve - std_curve, mean_curve + std_curve,
+                        color=color, alpha=0.2)
     
-    plt.xlabel("Range Bin", fontsize=14)
-    plt.ylabel("Amplitude of I/Q Signal", fontsize=14)
-    plt.grid(True, linestyle='--', alpha=0.5)
+    ax.set_xlabel("Range Bin")
+    ax.set_ylabel("Amplitude of I/Q Signal")
+    ax.grid(True, linestyle='--', alpha=0.5)
     
     # Add colorbar
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     cbar = plt.colorbar(sm, ax=ax)
-    cbar.set_label("Compaction Level", fontsize=13)
+    cbar.set_label("Compaction Level")
     
     plt.tight_layout()
 
-    # Plotting angle
+    # ===== Plotting angle =====
 
     X_angle = np.median(np.angle(X), axis=2)
     X_angle = np.unwrap(X_angle)
 
     fig, ax = plt.subplots(figsize=(12, 7))
-
-    sorted_unique_Y = np.sort(unique_Y)
-    norm = mpl.colors.Normalize(vmin=sorted_unique_Y.min(), vmax=sorted_unique_Y.max())
-    cmap = plt.cm.inferno
 
     for label in sorted_unique_Y:
         idx = np.where(y == label)[0]
@@ -63,42 +73,56 @@ def plot_IQ_signals(X, y, show_plot:bool = True):
 
         mean_curve = np.mean(X_angle[idx], axis=0)
         std_curve = np.std(X_angle[idx], axis=0)
-        plt.plot(mean_curve, color=color, linewidth=2)
-        plt.fill_between(np.arange(mean_curve.size), mean_curve - std_curve, mean_curve + std_curve,
-                         color=color, alpha=0.2)
+        ax.plot(mean_curve, color=color, linewidth=2)
+        ax.fill_between(np.arange(mean_curve.size), mean_curve - std_curve, mean_curve + std_curve,
+                        color=color, alpha=0.2)
     
-    plt.xlabel("Range Bin", fontsize=14)
-    plt.ylabel("Amplitude of I/Q Signal", fontsize=14)
-    plt.grid(True, linestyle='--', alpha=0.5)
+    ax.set_xlabel("Range Bin")
+    ax.set_ylabel("Phase of I/Q Signal (radians)")
+    ax.grid(True, linestyle='--', alpha=0.5)
     
     # Add colorbar
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     cbar = plt.colorbar(sm, ax=ax)
-    cbar.set_label("Compaction Level", fontsize=13)
+    cbar.set_label("Compaction Level")
     
     plt.tight_layout()
 
     if show_plot:
         plt.show()
 
-def plot_feature_reduction(label, features, title, show_plot:bool=True):
+def plot_feature_reduction(labels:np.ndarray, feature_array:np.ndarray, figure_title:str, show_plot:bool=True):
+    """
+    Plots a 2D scatter of feature-reduced data colored by labels.
+
+    Args:
+        labels (np.ndarray): Array of labels for each sample.
+        feature_array (np.ndarray): 2D array of reduced features (samples, 2).
+        figure_title (str): Title for the plot.
+        show_plot (bool): Whether to display the plot immediately.
+    """
+
     plt.figure(figsize=(8, 6))
-    scatter = plt.scatter(features[:, 0], features[:, 1], c=label, cmap='inferno', edgecolor='k', s=60)
+    scatter = plt.scatter(feature_array[:, 0], feature_array[:, 1], c=labels, cmap='inferno', edgecolor='k', s=60)
     plt.colorbar(scatter, label='Bulk density (g/cm^3)')
     plt.grid(True, linestyle='--', alpha=0.7)
-    plt.title(title)
+    plt.title(figure_title)
     plt.tight_layout()
 
     if show_plot:
         plt.show()
 
-def plot_accuracy_mae(results, title, show_plot=True):
+def plot_accuracy_mae(results:pd.DataFrame, figure_title:str, show_plot:bool = True):
     """
-    Plots Accuracy and MAE for the given results DataFrame. Generated by CoPilot.
+    Plots a grouped bar chart of MAE and Accuracy for each model. Generated almost entirely
+    by copilot.
 
     Args:
         results (pd.DataFrame): DataFrame containing 'Model', 'MAE', and 'Accuracy' columns.
+        figure_title (str): Title for the plot.
+        show_plot (bool): Whether to display the plot immediately.
     """
+
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
     # Sort by Accuracy descending
@@ -149,7 +173,7 @@ def plot_accuracy_mae(results, title, show_plot=True):
     ax1.set_ylim(0, mae.max() * 1.5) 
     ax2.set_ylim(0, accuracy.max() * 1.1)  
 
-    plt.title(f"Features: {title}")
+    plt.title(f"Features: {figure_title}")
 
     plt.tight_layout()
     if show_plot:

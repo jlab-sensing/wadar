@@ -40,7 +40,7 @@ class FrameLoader:
 
     def __init__(self, dataset_dirs:list, target_dir:str,
                  data_log:str = "data-log.csv", 
-                 folder_name:str = "Sampe $", label_name:str = "Bulk Density (g/cm^3)", 
+                 folder_name:str = "Sample #", label_name:str = "Bulk Density (g/cm^3)", 
                  verbose:bool = False):
         """
         Initializes the FrameLoader instance based on the provided directories.

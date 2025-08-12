@@ -180,8 +180,8 @@ class LSTMEstimator:
             # Build and train model just once
             if fold == 0:
                 model = self.build_model((X_train_norm.shape[1], X_train_norm.shape[2]))
-                initial_weights = model.get_weights()
-            model.set_weights(initial_weights)
+                self.initial_weights = model.get_weights()
+            model.set_weights(self.initial_weights)
             
             # Train with early stopping
             callbacks = [
@@ -260,7 +260,7 @@ class LSTMEstimator:
         X_norm = self._normalize_data(X_features, fit_scaler=True)
 
         # Build and train final model
-        self.model = self.build_model((X_norm.shape[1], X_norm.shape[2]))
+        self.model.set_weights(self.initial_weights)
 
         callbacks = [
             keras.callbacks.EarlyStopping(

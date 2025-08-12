@@ -125,4 +125,4 @@ def display_feature_results(feature_name, results_df, show_plot=False):
 
     print(handcrafted_results)
 
-    plot_accuracy_mae(handcrafted_results, title=feature_name, show_plot=show_plot)
+    plot_accuracy_mae(handcrafted_results, figure_title=feature_name, show_plot=show_plot)
