@@ -12,9 +12,47 @@ from scipy import signal
 THRESHOLD = 50 # For anomoly removal
 
 class FrameLoader:
+    """
+    FrameLoader class for processing radar data into standardized input (X) and output (y) matrices for regression tasks.
+
+    Expected directory structure for each dataset:
+        dataset_dir/
+            folder1/
+                *.frames
+            folder2/
+                *.frames
+            data_log.csv
+
+    The data_log.csv file should contain:
+        - A column with folder names (specified by folder_name)
+        - A column with target labels (specified by label_name)
+
+    Attributes:
+        dataset_dirs (list):    List of dataset directory paths.
+        target_dir (str):       Directory to save processed datasets.
+        data_log (str):         Name of the data log CSV file (default: "data-log.csv").
+        folder_name (str):      Column name in data_log for folder/sample names.
+        label_name (str):       Column name in data_log for target labels.
+        verbose (bool):         Verbosity flag for logging.
+        X (np.ndarray):         Processed radar data (features).
+        y (np.ndarray):         Corresponding labels (targets).
+    """
+
     def __init__(self, dataset_dirs:list, target_dir:str,
-                 data_log:str = "data-log.csv", label_name:str = "Bulk Density (g/cm^3)",
+                 data_log:str = "data-log.csv", 
+                 folder_name:str = "Sampe $", label_name:str = "Bulk Density (g/cm^3)", 
                  verbose:bool = False):
+        """
+        Initializes the FrameLoader instance based on the provided directories.
+
+        Args:
+            dataset_dirs (list):    List of dataset directory paths.
+            target_dir (str):       Directory to save processed datasets.
+            data_log (str):         Name of the data log CSV file (default: "data-log.csv").
+            folder_name (str):      Column name in data_log for folder/sample names.
+            label_name (str):       Column name in data_log for target labels.
+            verbose (bool):         Verbosity flag for logging.
+        """
         self.verbose = verbose
         self.dataset_dirs = dataset_dirs
         self.target_dir = target_dir
@@ -22,6 +60,7 @@ class FrameLoader:
         self.X = None
         self.y = None
         self.label_name = label_name
+        self.folder_name = folder_name
 
         # Validate dataset directory
         for i in self.dataset_dirs:
@@ -33,6 +72,14 @@ class FrameLoader:
                 sys.exit(1)
 
     def extract_data(self):
+        """
+        Extracts the features (X) and labels (y) from the provided directries.
+
+        Returns:
+            X (np.ndarray):         Processed radar data (features).
+            y (np.ndarray):         Corresponding labels (targets).
+        """
+
         logger.info("Starting frame processing")
 
         all_frame_data = []
@@ -48,11 +95,11 @@ class FrameLoader:
             # Get the labels from the data log
             try:
                 df = pd.read_csv(data_log)
-                df['Sample #'] = df['Sample #'].astype(str)
+                df[self.folder_name] = df[self.folder_name].astype(str)
                 df[self.label_name] = df[self.label_name].astype(float)
                 logger.info(f"Loaded data log with {len(df)} samples")
             except Exception as e:
-                logger.error("Expected CSV format: columns include 'Sample #' and '{}'".format(self.label_name))
+                logger.error(f"Expected CSV format: columns include '{self.folder_name}' and '{self.label_name}'")
                 sys.exit(1)
             
             # In each subdirectory
@@ -105,6 +152,7 @@ class FrameLoader:
                             logger.error(f"Failed to stack radar data from {capture_file.name}")
                             sys.exit(1)
 
+                    # Outputs warning when problem occurs while processing, but continues processing other radar data.
                     except Exception as e:
                         logger.warning(f"Error processing {capture_file.name}: {e}")
 
@@ -121,6 +169,9 @@ class FrameLoader:
         return self.X, self.y
     
     def save_dataset(self):
+        """
+        Saves dataset for future processing. Data is automatically stored as X.npy and y.npy.
+        """
 
         if not Path(self.target_dir).exists():
             Path(self.target_dir).mkdir(parents=True)
@@ -131,10 +182,22 @@ class FrameLoader:
         np.save(X_path, self.X)
         np.save(y_path, self.y)
 
-        logger.info(f"Raw dataset saved as X_raw.npy and y_raw.npy")
+        logger.info(f"Raw dataset saved as X.npy and y.npy")
         logger.info(f"Saved shapes: X={self.X.shape}, y={self.y.shape}")
 
 def load_dataset(dataset_dir:str):
+    """
+    Loads data that has already been processed. Assumes the features are named X.npy and the 
+    labels are named y.npy.
+
+    Args:
+        dataset_dir:        Directory containing the capture file.
+
+    Returns:
+        X (np.ndarray):     Processed radar data (features).
+        y (np.ndarray):     Corresponding labels (targets).
+    """
+
     X_path = Path(dataset_dir) / "X.npy"
     y_path = Path(dataset_dir) / "y.npy"
 
@@ -149,19 +212,17 @@ def load_dataset(dataset_dir:str):
 
     return X, y
         
-
-        
 def process_frames(file_path:Path, capture_name:str):
     """
     Process Novelda radar data capture file to extract raw frames.
 
-    Parameters:
-        file_path: Path to the directory containing the capture file
-        capture_name: Name of the data capture file
+    Args:
+        file_path (Path):           Path to the directory containing the capture file.
+        capture_name (str):         Name of the data capture file
 
     Returns:
-        - frame_data: Raw radar frames (slow time, fast time)
-        - Parameters: Dictionary containing radar parameters
+        frame_data (np.ndarray):    Raw radar frames (slow time, fast time)
+        Parameters (dict):          Dictionary containing radar parameters
     """
 
     if not file_path or not capture_name:
@@ -278,7 +339,7 @@ def NoveldaChipParams(chip_set:str, pgen:int, sampler:str='4mm'):
     """
     Get Novelda radar chip parameters based on chipset, pulse generator (PGen), and sampler.
 
-    Parameters:
+    Args:
         chip_set (str):     Chipset type ('X1-IPG0', 'X1-IPG1', 'X2', 'X4').
         pgen (int):         Pulse generator index (0, 1, or 2 for X1, 0-11 for X2).
         sampler (str):      Sampler type ('4mm', '8mm', '4cm').
@@ -381,8 +442,11 @@ def novelda_digital_downconvert(raw_frame:np.ndarray):
 
     TODO: Quite certain this can be optimized, but since it's derived from
     DSP concepts I do not fully understand, I am leaving it as is for now.
+    If you see this comment and I have already graduated, maybe message me
+    because I am quite curious whether I'd be able to implement a better
+    matched filter.
 
-    Parameters:
+    Args:
         raw_frame (np.ndarray):         Input radar frame data, shape (N,).
 
     Returns:

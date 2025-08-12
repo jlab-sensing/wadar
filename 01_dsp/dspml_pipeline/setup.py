@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-
+from dspml_pipeline import __version__
 
 with open('README.md') as f:
     readme = f.read()
@@ -9,12 +9,12 @@ with open('README.md') as f:
 
 setup(
     name='dspml_pipeline',
-    version='0.1.0',
-    description='Sample package for Python-Guide.org',
+    version=__version__,
+    description='Digital Signal Processing & Machine Learning pipeline for regression of radar data to continuous values.',
     long_description=readme,
-    author='Kenneth Reitz',
-    author_email='me@kennethreitz.com',
-    url='https://github.com/kennethreitz/samplemod',
+    author='Eric Vetha',
+    author_email='ericdvet at gmail dot com',
+    url='https://github.com/jlab-sensing/wadar',
     # license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )

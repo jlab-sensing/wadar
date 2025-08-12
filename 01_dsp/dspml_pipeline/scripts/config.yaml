@@ -22,7 +22,7 @@ data:
 
 # For handcrafted features
 handcrafted:
-  enabled: false               # Enable or disable handcrafted features
+  enabled: true               # Enable or disable handcrafted features
   new_features: false         # Set to true if this is a new dataset or if features have not been generated yet
 
 # For learned features
@@ -36,13 +36,13 @@ learned:
     enabled: false             # Enable or disable kPCA features
   # Autoencoder-based feature extraction
   autoencoder:
-    enabled: true
+    enabled: false
     epochs: 1000
     batch_size: 256
     verbose: false
   # CNN-based feature extraction
   cnn:
-    enabled: true
+    enabled: false
     epochs: 20
     batch_size: 32
     verbose: true
