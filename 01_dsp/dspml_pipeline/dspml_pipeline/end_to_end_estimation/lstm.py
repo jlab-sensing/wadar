@@ -169,15 +169,19 @@ class LSTMEstimator:
             X_train_flat = X_train_fold.reshape(n_train_samples, -1)
             X_train_norm = fold_scaler.fit_transform(X_train_flat)
             X_train_norm = X_train_norm.reshape(n_train_samples, n_timesteps, n_features)
+            X_train_norm = tf.convert_to_tensor(X_train_norm, dtype=tf.float32)
             
             n_val_samples = X_val_fold.shape[0]
             X_val_flat = X_val_fold.reshape(n_val_samples, -1)
             X_val_norm = fold_scaler.transform(X_val_flat)
             X_val_norm = X_val_norm.reshape(n_val_samples, n_timesteps, n_features)
-            
+            X_val_norm = tf.convert_to_tensor(X_val_norm, dtype=tf.float32)
 
-            # Build and train model
-            model = self.build_model((X_train_norm.shape[1], X_train_norm.shape[2]))
+            # Build and train model just once
+            if fold == 0:
+                model = self.build_model((X_train_norm.shape[1], X_train_norm.shape[2]))
+                initial_weights = model.get_weights()
+            model.set_weights(initial_weights)
             
             # Train with early stopping
             callbacks = [
@@ -204,8 +208,9 @@ class LSTMEstimator:
             
             # Track inference time
             inference_start_time = time.time()
-            y_pred_fold = model.predict(X_val_norm, verbose=0).flatten()
+            y_pred_fold = model.predict(X_val_norm, batch_size=self.batch_size, verbose=self.verbose).flatten()
             inference_time = time.time() - inference_start_time
+
             fold_inference_times.append(inference_time)
             
             # Calculate metrics
@@ -299,4 +304,4 @@ class LSTMEstimator:
         X_norm = self.scaler.transform(X_flat)
         X_norm = X_norm.reshape(n_samples, n_timesteps, n_features)
         
-        return self.model.predict(X_norm, verbose=0)
+        return self.model.predict(X_norm, batch_size=self.batch_size, verbose=self.verbose)

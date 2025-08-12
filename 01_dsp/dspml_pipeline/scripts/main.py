@@ -10,11 +10,14 @@ import numpy as np
 from dspml_pipeline.data.frame_loader import FrameLoader, load_dataset
 from dspml_pipeline.setup_logging import setup_logging
 from dspml_pipeline.feature_extraction.handcrafted.feature_tools import full_monty_features, save_feature_table, load_feature_table
-from dspml_pipeline.feature_estimation.eval_tools import classical_models_full_monty
+from dspml_pipeline.feature_estimation.eval_tools import classical_models_full_monty, end_to_end_model_validation
 from dspml_pipeline.feature_extraction.learned.pca import PCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.kpca import kPCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.autoencoder import AutoencoderLearnedFeatures
 from dspml_pipeline.feature_extraction.learned.cnn import CNNLearnedFeatures
+
+from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
+from dspml_pipeline.results import update_results, load_results, display_feature_results
 
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -51,7 +54,8 @@ def main():
     else:
         X_train, y_train = load_dataset(dataset_dir=params['data']['training']['target_dir'])
         X_val, y_val = load_dataset(dataset_dir=params['data']['validation']['target_dir'])
-     
+
+    # ======== Handcrafted Features ========
     if params['handcrafted']['enabled']:
         
         # If a new dataset, generate handcrafted features
@@ -86,6 +90,7 @@ def main():
         # training_corr_feature_table, training_corr_features = correlation_minimize_features(feature_table=training_feature_table)
         # training_corr_feature_array, training_corr_feature_names, training_corr_labels = process_feature_table(training_corr_feature_table)
 
+    # ======== PCA Features ========
     if params['learned']['pca']['enabled']:
 
         n_components = params['learned']['n_features']
@@ -133,6 +138,7 @@ def main():
 
         # TODO: Set up training and validation for deep learning (MLP)
 
+    # ======== kPCA Features ========
     if params['learned']['kpca']['enabled']:
 
         n_components = params['learned']['n_features']
@@ -177,6 +183,7 @@ def main():
             feature_name = "kPCA Combined"
         )
 
+    # ======== Autoencoder Features ========
     if params['learned']['autoencoder']['enabled']:
 
         epochs = params['learned']['autoencoder']['epochs']
@@ -237,6 +244,7 @@ def main():
             feature_name="Autoencoder Combined"
         )
 
+    # ======== CNN Features ========
     if params['learned']['cnn']['enabled']:
         epochs = params['learned']['cnn']['epochs']
         verbose = params['learned']['cnn']['verbose']
@@ -295,6 +303,28 @@ def main():
             validation_features=features_val_com,
             feature_name=feature_name_com
         )
+
+    val_dir = params['data']['validation']['target_dir']
+    training_dir = params['data']['training']['target_dir']
+
+    # ======== LSTM Regression ========
+    model_config = params['end-to-end']['lstm']
+    if model_config['enabled']:
+        epochs = model_config['epochs']
+        batch_size = model_config['batch_size']
+        verbose = model_config['verbose']
+        fat_model = LSTMEstimator(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
+        end_to_end_model_validation(params, X_val, y_val, val_dir, fat_model)
+
+    # Display end-to-end results
+    results_df_amp = load_results(params['data']['training']['target_dir'])
+    display_feature_results("End-to-end", results_df_amp)
+    results_df_amp = load_results(params['data']['validation']['target_dir'])
+    display_feature_results("End-to-end", results_df_amp)
+
+
+
+
 
 if __name__ == "__main__":
     main()

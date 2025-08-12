@@ -7,20 +7,16 @@ logger = logging.getLogger(__name__)
 
 import numpy as np
 import pandas as pd
-import pywt
-from .amplitude_features import get_median_frames, get_peak_idx
 
 def advanced_dsp_features(X: np.ndarray):
     """
-    Extract all advanced DSP features efficiently.
+    Extract all advanced DSP features.
     
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        wavelet: Wavelet type for decomposition
-        levels: Number of decomposition levels
+    Args:
+        X (np.ndarray):                 Input radar data of shape (samples, fast_time, slow_time)
         
     Returns:
-        pd.DataFrame: Feature table with advanced DSP features
+        feature_table (pd.Dataframe):   Feature table with advanced DSP features
     """
     
     logger.info("Extracting advanced DSP features...")

@@ -14,11 +14,11 @@ def get_median_frames(X:np.ndarray):
     """
     Get the median frame across slow time.
 
-    Parameters:
-        X: Raw data (samples, fast time, slow time)
+    Args:
+        X (np.ndarray):             Raw data (samples, fast time, slow time)
 
     Returns:
-        np.ndarray: Median frames of shape (samples, fast_time)
+        median_frames (np.ndarray): Median frames of shape (samples, fast_time)
     """
 
     logger.info("Computing median frame across slow time")
@@ -31,11 +31,11 @@ def get_peak_idx(median_frames:np.ndarray):
     """
     Computes the two main peaks across all frames.
 
-    Parameters:
-        median_frames: Median frames of shape (samples, fast_time)
+    Args:
+        median_frames (np.ndarray): Median frames of shape (samples, fast_time)
 
     Returns:
-        np.ndarray: Peak indices of shape (samples, 2)
+        peak_idxs (np.ndarray):     Peak indices of shape (samples, 2)
     """
 
     logger.info("Computing peak indices for all samples")
@@ -67,12 +67,12 @@ def get_peak_amplitude(median_frames: np.ndarray, peak_idxs: np.ndarray):
     """
     Extract amplitude of the two largest peaks.
 
-    Parameters:
-        median_frames: Median frames of shape (samples, fast_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        median_frames (np.ndarray): Median frames of shape (samples, fast_time)
+        peak_idxs (np.ndarray):     Peak indices of shape (samples, 2)
 
     Returns:
-        np.ndarray: Peak amplitudes of shape (samples, 2)
+        peak_amplitudes (np.ndarray): Peak amplitudes of shape (samples, 2)
     """
     
     logger.info("Extracting peak amplitudes...")
@@ -93,28 +93,29 @@ def get_signal_variance(X: np.ndarray, idx: int):
     """
     Compute variance of signal across slow time at specified sample index.
 
-    Parameters:
-        X: Input radar data
-        idx: Sample index to compute variance for
+    Args:
+        X (np.ndarray):         Input radar data (samples, fast_time, slow_time)
+        idx (int):              Sample index to compute variance for
 
     Returns:
-        np.ndarray: Variance for each fast time bin
+        variance (np.ndarray):  Variance for each fast time bin
     """
     
     signal = np.abs(X[idx, :, :])
-    return np.var(signal, axis=1)
+    variance = np.var(signal, axis=1)
+    return variance
 
 
 def get_peak_variance(X: np.ndarray, peak_idxs: np.ndarray):
     """
     Extract variance of the two largest peaks for each sample.
 
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        X (np.ndarray):         Input radar data of shape (samples, fast_time, slow_time)
+        peak_idxs (np.ndarray): Peak indices of shape (samples, 2)
 
     Returns:
-        np.ndarray: Peak variances of shape (samples, 2)
+        variance (np.ndarray):  Peak variances of shape (samples, 2)
     """
     
     logger.info("Computing peak variances...")
@@ -133,12 +134,12 @@ def get_signal_entropy(X: np.ndarray, idx: int):
     """
     Compute entropy of signal at specified sample index.
 
-    Parameters:
-        X: Input radar data
-        idx: Sample index to compute entropy for
+    Args:
+        X (np.ndarray):                 Input radar data (samples, fast_time, slow_time)
+        idx (int):                      Sample index to compute entropy for
 
     Returns:
-        np.ndarray: Entropy for each fast time bin
+        entropy_values (np.ndarray):    Entropy for each fast time bin
     """
     
     signal = np.abs(X[idx, :, :])
@@ -157,14 +158,13 @@ def get_peak_entropy(X: np.ndarray, peak_idxs: np.ndarray):
     """
     Extract entropy of the two largest peaks for each sample.
 
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        X (np.ndarray):         Input radar data of shape (samples, fast_time, slow_time)
+        peak_idxs (np.ndarray): Peak indices of shape (samples, 2)
 
     Returns:
-        np.ndarray: Peak entropies of shape (samples, 2)
+        entropy_values (np.ndarray): Peak entropies of shape (samples, 2)
     """
-    
     logger.info("Computing peak entropies...")
     
     entropy_values = np.zeros((X.shape[0], 2))
@@ -181,12 +181,12 @@ def get_peak_delay(peak_idxs: np.ndarray):
     """
     Extract timing information for the two largest peaks. 
 
-    Parameters:
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        peak_idxs (np.ndarray): Peak indices of shape (samples, 2)
 
     Returns: 
-        np.ndarray: Peak delays of shape (samples, 3)
-                   [delay_to_peak1, delay_to_peak2, delay_difference]
+        delays (np.ndarray): Peak delays of shape (samples, 3)
+                             [delay_to_peak1, delay_to_peak2, delay_difference]
     """
     
     logger.info("Computing peak delays...")
@@ -205,12 +205,12 @@ def get_peak_width(median_frames: np.ndarray, peak_idxs: np.ndarray):
     """
     Extract width of the two largest peaks.
 
-    Parameters:
-        median_frames: Median frames of shape (samples, fast_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        median_frames (np.ndarray): Median frames of shape (samples, fast_time)
+        peak_idxs (np.ndarray):     Peak indices of shape (samples, 2)
 
     Returns:
-        np.ndarray: Peak widths of shape (samples, 2)
+        widths (np.ndarray): Peak widths of shape (samples, 2)
     """
     
     logger.info("Computing peak widths...")
@@ -235,13 +235,13 @@ def get_peak_shape_stats(median_frames: np.ndarray, peak_idxs: np.ndarray):
     """
     Extract skewness and kurtosis of peak regions.
 
-    Parameters:
-        median_frames: Median frames of shape (samples, fast_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        median_frames (np.ndarray): Median frames of shape (samples, fast_time)
+        peak_idxs (np.ndarray):     Peak indices of shape (samples, 2)
 
     Returns:
-        skewness: Skewness of peak (samples, 2)
-        kurtosis: Kurtosis of peak (samples, 2)
+        skewness (np.ndarray): Skewness of peak (samples, 2)
+        kurtosis (np.ndarray): Kurtosis of peak (samples, 2)
     """
     
     logger.info("Computing peak shape statistics...")
@@ -278,32 +278,31 @@ def get_peak_shape_stats(median_frames: np.ndarray, peak_idxs: np.ndarray):
 
 def get_signal_energy(X: np.ndarray, scan_idx: int = 0, spec_idx: int = 0):
     """
-    Computes the energy of the signal at scan_idx and spec_idx. Signal energy is the sum of the squares of the signal
-    taken over slow time.
+    Computes the energy of the signal at scan_idx and spec_idx.
 
-    Parameters:
-        X: Input radar data
-        scan_idx: Index of the sample to compute the energy for.
-        spec_idx: Index of the spectrum to compute the energy for (in fast time).
+    Args:
+        X (np.ndarray):         Input radar data (samples, fast_time, slow_time)
+        scan_idx (int):         Index of the sample to compute the energy for.
+        spec_idx (int):         Index of the spectrum to compute the energy for (in fast time).
         
     Returns:
-        float: Signal energy
+        energy (float):         Signal energy (sum of squares over slow time)
     """
     
     signal = np.abs(X[scan_idx, :, :])[spec_idx]
     return np.sum(signal ** 2)
 
 
-def get_peak_signal_energy(X: np.ndarray, peak_idxs: np.ndarray) -> np.ndarray:
+def get_peak_signal_energy(X: np.ndarray, peak_idxs: np.ndarray):
     """
     Extract energy of the two largest peaks for each sample.
     
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
-        peak_idxs: Peak indices of shape (samples, 2)
+    Args:
+        X (np.ndarray):         Input radar data of shape (samples, fast_time, slow_time)
+        peak_idxs (np.ndarray): Peak indices of shape (samples, 2)
 
     Returns:
-        np.ndarray: Energy of the two largest peaks for each scan.
+        energy (np.ndarray):    Energy of the two largest peaks for each scan (samples, 2)
     """
     
     logger.info("Computing peak signal energies...")
@@ -319,13 +318,13 @@ def get_decay_rate(median_frames: np.ndarray, peak_idxs: np.ndarray, decay_point
     """
     Extract decay rate of peaks.
 
-    Parameters:
-        median_frames: Median frames of shape (samples, fast_time)
-        peak_idxs: Peak indices of shape (samples, 2)
-        decay_points: Number of points to use for slope fitting
+    Args:
+        median_frames (np.ndarray): Median frames of shape (samples, fast_time)
+        peak_idxs (np.ndarray):     Peak indices of shape (samples, 2)
+        decay_points (int):         Number of points to use for slope fitting
 
     Returns:
-        np.ndarray: Decay rates of shape (samples, 2)
+        slopes (np.ndarray):        Decay rates of shape (samples, 2)
     """
     
     logger.info("Computing peak decay rates...")
@@ -351,17 +350,17 @@ def get_decay_rate(median_frames: np.ndarray, peak_idxs: np.ndarray, decay_point
     return slopes
 
 
-def get_ascend_rate(median_frames: np.ndarray, peak_idxs: np.ndarray, ascend_points: int = 10) -> np.ndarray:
+def get_ascend_rate(median_frames: np.ndarray, peak_idxs: np.ndarray, ascend_points: int = 10):
     """
-    Extract ascent rate of peaks with improved efficiency and error handling.
+    Extract ascent rate of peaks.
 
-    Parameters:
-        median_frames: Median frames of shape (samples, fast_time)
-        peak_idxs: Peak indices of shape (samples, 2)
-        ascend_points: Number of points to use for slope fitting
+    Args:
+        median_frames (np.ndarray): Median frames of shape (samples, fast_time)
+        peak_idxs (np.ndarray):     Peak indices of shape (samples, 2)
+        ascend_points (int):        Number of points to use for slope fitting
 
     Returns:
-        np.ndarray: Ascent rates of shape (samples, 2)
+        slopes (np.ndarray):        Ascent rates of shape (samples, 2)
     """
     
     logger.info("Computing peak ascent rates...")
@@ -386,15 +385,15 @@ def get_ascend_rate(median_frames: np.ndarray, peak_idxs: np.ndarray, ascend_poi
 
     return slopes
 
-def amplitude_features(X: np.ndarray) -> pd.DataFrame:
+def amplitude_features(X: np.ndarray):
     """
     Extract all amplitude-related features efficiently.
     
-    Parameters:
-        X: Input radar data of shape (samples, fast_time, slow_time)
+    Args:
+        X (np.ndarray):         Input radar data of shape (samples, fast_time, slow_time)
         
     Returns:
-        pd.DataFrame: Feature table with amplitude features
+        feature_table (pd.DataFrame): Feature table with amplitude features
     """
     
     logger.info("Extracting amplitude features...")

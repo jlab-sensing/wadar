@@ -11,20 +11,19 @@ from sklearn.feature_selection import mutual_info_regression
 from sklearn.linear_model import Lasso, LassoCV
 from sklearn.preprocessing import StandardScaler
 
+from ...parameters import RANDOM_SEED, FEATURE_COUNT
 
-RANDOM_SEED = 42
-FEATURE_COUNT = 8
-
-def mutual_info_minimize_features(feature_table: pd.DataFrame, top_n: int = FEATURE_COUNT):
+def mutual_info_minimize_features(feature_table:pd.DataFrame, top_n:int = FEATURE_COUNT):
     """
-    Select features using mutual information with improved efficiency.
+    Select features using mutual information.
 
-    Parameters:
-        feature_table: DataFrame containing features and labels
-        top_n: Number of top features to select
+    Args:
+        feature_table (pd.DataFrame):   DataFrame containing features and labels
+        top_n (int):                    Number of top features to select
 
     Returns:
-        Tuple of (selected_features_df, mutual_info_scores_df)
+        df_best (pd.DataFrame):         top_n best features
+        mi_scores_df (pd.Dataframe):    MI scores of the selected features
     """
 
     logger.info(f"[INFO] Selecting top {top_n} features using mutual information...")
@@ -54,14 +53,15 @@ def mutual_info_minimize_features(feature_table: pd.DataFrame, top_n: int = FEAT
 
 def correlation_minimize_features(feature_table: pd.DataFrame, top_n: int = FEATURE_COUNT):
     """
-    Select features using correlation analysis with improved efficiency.
+    Select features using the correlation.
 
-    Parameters:
-        feature_table: DataFrame containing features and labels
-        top_n: Number of top features to select
+    Args:
+        feature_table (pd.DataFrame):       DataFrame containing features and labels
+        top_n (int):                        Number of top features to select
 
     Returns:
-        Tuple of (selected_features_df, correlation_scores_df)
+        df_best (pd.DataFrame):             top_n best features
+        corr_scores_df (pd.Dataframe):      Correlation scores of the selected features
     """
 
     logger.info(f"Selecting top {top_n} features using correlation analysis...")
@@ -93,19 +93,22 @@ def correlation_minimize_features(feature_table: pd.DataFrame, top_n: int = FEAT
 
     return df_best, corr_scores_df
 
-def lasso_minimize_features(feature_table: pd.DataFrame, top_n: int = FEATURE_COUNT, alpha: float = None):
+def lasso_minimize_features(feature_table:pd.DataFrame, top_n:int = FEATURE_COUNT, alpha:float = None):
     """
     Select features using Lasso regression with L1 regularization.
 
-    TODO: Currently this is doing a dogshit job at finding good features. Not sure why. Was heavily recommended in a reddit thread.
+    TODO: Currently this is doing a dogshit job at finding good features. 
+    Not sure why. Was heavily recommended in a reddit thread.
     
-    Parameters:
-        feature_table: DataFrame containing features and labels
-        top_n: Number of top features to select
-        alpha: Regularization strength. If None, uses cross-validation to find optimal alpha
+    Args:
+        feature_table (pd.DataFrame):       DataFrame containing features and labels
+        top_n (int):                        Number of top features to select
+        alpha (float):                      Regularization strength. If None, 
+                                            uses cross-validation to find optimal alpha
         
     Returns:
-        Tuple of (selected_features_df, lasso_scores_df)
+        df_best (pd.DataFrame):             top_n best features
+        lasso_scores_df (pd.Dataframe):     Lasso scores of the selected features
     """
     
     logger.info(f"Selecting top {top_n} features using Lasso regression...")
