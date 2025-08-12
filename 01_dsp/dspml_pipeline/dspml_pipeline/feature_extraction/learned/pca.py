@@ -1,3 +1,5 @@
+"""Learned feature reduction using principal component analysis."""
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -9,36 +11,66 @@ from sklearn.decomposition import PCA
 
 class PCALearnedFeatures:
     """
-    PCAProcessor is a class to perform Principal Component Analysis (PCA) on radar data.
+    Class for learned feature reduction using principal component analysis (PCA).
 
-    Parameters:
-        X (np.ndarray):         Input data of shape (samples, features).
-        n_components (int):     Number of components to keep.
+    This class separates the input complex-valued data into amplitude and angle components,
+    applies PCA to each, and can also apply PCA to the combined features.
+
+    Attributes:
+        n_components (int):         Number of principal components to retain.
+        pca_amp (PCA):              PCA instance for amplitude features.
+        pca_ang (PCA):              PCA instance for angle features.
+        pca_com (PCA):              PCA instance for combined amplitude and angle features.
+        X_amplitude (np.ndarray):   Amplitude part of the input data.
+        X_phase (np.ndarray):       Unwrapped angle part of the input data.
+        X_combined (np.ndarray):    Concatenated amplitude and angle features.
     """
 
-    def __init__(self, X, n_components=None):
+    def __init__(self, X: np.ndarray, n_components:int = None):
         """
-        Initialize the PCAProcessor.
+        Initialize the PCALearnedFeatures.
+
+        Args:
+            X (np.ndarray):     Raw radar data
+            n_components (int): Number of features desired
         """
 
         self.n_components = n_components
 
-        self.pca_amp = PCA(n_components=self.n_components)
-        self.pca_ang = PCA(n_components=self.n_components)
-        self.pca_com = PCA(n_components=self.n_components)
+        self.pca_amplitude = PCA(n_components=self.n_components)
+        self.pca_phase = PCA(n_components=self.n_components)
+        self.pca_combined = PCA(n_components=self.n_components)
         
-        self.X_amp = np.abs(X)
-        self.X_ang = np.unwrap(np.angle(X))
-        self.X_com = np.concatenate((self.X_amp, self.X_ang), axis=1)
+        self.X_amplitude = np.abs(X)
+        self.X_phase = np.unwrap(np.angle(X))
+        self.X_combined = np.concatenate((self.X_amplitude, self.X_phase), axis=1)
 
         if (n_components % 2 == 1):
             logger.warning("Using odd number of components may yield odd results.")
 
     def full_monty(self):
-        reduced_amp, reduced_ang, reduced_combined = self.dimensionality_reduction()
-        return reduced_amp, reduced_ang, reduced_combined
+        """
+        Performs the entire dimensionality reduction process.
 
-    def preprocess(self, X):
+        Returns:
+            reduced_amplitude (np.ndarray):       PCA-based features from amplitude
+            reduced_phase (np.ndarray):         PCA-based features from phase
+            reduced_combined (np.ndarray):      PCA-based features from amplitude and phase
+        """
+
+        reduced_amplitude, reduced_phase, reduced_combined = self.dimensionality_reduction()
+        return reduced_amplitude, reduced_phase, reduced_combined
+
+    def preprocess(self, X:np.ndarray):
+        """
+        Preprocess radar data for PCA class.
+
+        Args:
+            X (np.ndarray): Raw radar data
+
+        Returns:
+            X (np.ndarray): Preprocessed radar data
+        """
 
         # Flatten input matrix
         N, R, T = X.shape
@@ -47,46 +79,50 @@ class PCALearnedFeatures:
     
     def dimensionality_reduction(self):
         """
-        Perform PCA on the input data and return the reduced data.
+        Perform PCA on the input data and returns the reduced data.
 
         Returns:
-            np.ndarray: Reduced data of shape (samples, n_components).
+            reduced_amp (np.ndarray):       PCA-based features from amplitude
+            reduced_ang (np.ndarray):       PCA-based features from phase
+            reduced_combined (np.ndarray):  PCA-based features from amplitude and phase
         """
 
         logger.info("Performing PCA dimensionality reduction.")
 
-        X_amp = self.preprocess(self.X_amp)
-        reduced_amp = self.pca_amp.fit_transform(X_amp)  
+        X_amplitude = self.preprocess(self.X_amplitude)
+        reduced_amp = self.pca_amplitude.fit_transform(X_amplitude)  
 
-        X_ang = self.preprocess(self.X_ang)
-        reduced_ang = self.pca_ang.fit_transform(X_ang)
+        X_phase = self.preprocess(self.X_phase)
+        reduced_ang = self.pca_phase.fit_transform(X_phase)
 
-        X_com = self.preprocess(self.X_com)
-        reduced_combined = self.pca_com.fit_transform(X_com)
+        X_combined = self.preprocess(self.X_combined)
+        reduced_combined = self.pca_combined.fit_transform(X_combined)
 
         return reduced_amp, reduced_ang, reduced_combined
     
-    def transform(self, X):
+    def transform(self, X:np.ndarray):
         """
         Apply the previously fitted PCA to new data.
 
-        Parameters:
+        Args:
             X (np.ndarray): New input data of shape (samples, features).
 
         Returns:
-            tuple: Transformed amplitude, angle, and combined data.
+            transformed_amplitude (np.ndarray):     PCA-based features from amplitude
+            transformed_phase (np.ndarray):         PCA-based features from phase
+            transformed_combined (np.ndarray):      PCA-based features from amplitude and phase
         """
 
-        X_amp = np.abs(X)
-        X_ang = np.unwrap(np.angle(X))
-        X_com = np.concatenate((X_amp, X_ang), axis=1)
+        X_amplitude = np.abs(X)
+        X_phase = np.unwrap(np.angle(X))
+        X_combined = np.concatenate((X_amplitude, X_phase), axis=1)
 
-        X_amp_flat = self.preprocess(X_amp)
-        X_ang_flat = self.preprocess(X_ang)
-        X_com_flat = self.preprocess(X_com)
+        X_amplitude_flat = self.preprocess(X_amplitude)
+        X_phase_flat = self.preprocess(X_phase)
+        X_combined_flat = self.preprocess(X_combined)
 
-        transformed_amp = self.pca_amp.transform(X_amp_flat)
-        transformed_ang = self.pca_ang.transform(X_ang_flat)
-        transformed_combined = self.pca_com.transform(X_com_flat)
+        transformed_amplitude = self.pca_amplitude.transform(X_amplitude_flat)
+        transformed_phase = self.pca_phase.transform(X_phase_flat)
+        transformed_combined = self.pca_combined.transform(X_combined_flat)
 
-        return transformed_amp, transformed_ang, transformed_combined
+        return transformed_amplitude, transformed_phase, transformed_combined

@@ -1,3 +1,5 @@
+"""Learned feature reduction using kernel principal component analysis."""
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -17,35 +19,67 @@ from ...parameters import GRID_SEARCH_SCORING
 
 class kPCALearnedFeatures:
     """
-    PCAProcessor is a class to perform Principal Component Analysis (PCA) on radar data.
+    Class for learned feature reduction using kernel principal component analysis (kPCA).
 
-    Parameters:
-        X (np.ndarray):         Input data of shape (samples, features).
-        n_components (int):     Number of components to keep.
+    This class separates the input complex-valued data into amplitude and angle components,
+    applies kPCA to each, and can also apply kPCA to the combined features. The kernel is
+    optimized to determine the best regression using a linear regression head.
+
+    Attributes:
+        n_components (int):         Number of principal components to retain.
+        pca_amp (KernelPCA):        KernelPCA instance for amplitude features.
+        pca_ang (KernelPCA):        KernelPCA instance for angle features.
+        pca_com (KernelPCA):        KernelPCA instance for combined amplitude and angle features.
+        X_amplitude (np.ndarray):   Amplitude part of the input data.
+        X_phase (np.ndarray):       Unwrapped angle part of the input data.
+        X_combined (np.ndarray):    Concatenated amplitude and angle features.
     """
 
-    def __init__(self, X, y, n_components=None):
+    def __init__(self, X:np.ndarray, y:np.ndarray, n_components:int=None):
         """
-        Initialize the PCAProcessor.
+        Initialize the kPCALearnedFeatures.
+
+        Args:
+            X (np.ndarray):     Raw radar data
+            y (np.ndarray):     Labels
+            n_components (int): Number of features desired
         """
 
         self.n_components = n_components
         self.y = y
         
-        self.X_amp = self.preprocess(np.abs(X))
-        self.X_ang = self.preprocess(np.unwrap(np.angle(X)))
-        self.X_com = self.preprocess(np.concatenate((np.abs(X), np.unwrap(np.angle(X))), axis=1))
+        self.X_amplitude = self.preprocess(np.abs(X))
+        self.X_phase = self.preprocess(np.unwrap(np.angle(X)))
+        self.X_combined = self.preprocess(np.concatenate((np.abs(X), np.unwrap(np.angle(X))), axis=1))
 
         if (n_components % 2 == 1):
             logger.warning("Using odd number of components may yield odd results.")
 
     def full_monty(self):
+        """
+        Performs the entire dimensionality reduction process.
+
+        Returns:
+            reduced_amplitude (np.ndarray):       PCA-based features from amplitude
+            reduced_phase (np.ndarray):         PCA-based features from phase
+            reduced_combined (np.ndarray):      PCA-based features from amplitude and phase
+        """
+
         amp_best_params, ang_best_params, com_best_params = self.tune()
         self.build_model(amp_best_params, ang_best_params, com_best_params)
-        reduced_amp, reduced_ang, reduced_combined = self.dimensionality_reduction()
-        return reduced_amp, reduced_ang, reduced_combined
+        reduced_amplitude, reduced_phase, reduced_combined = self.dimensionality_reduction()
+        return reduced_amplitude, reduced_phase, reduced_combined
 
-    def preprocess(self, X):
+    def preprocess(self, X:np.ndarray):
+        """
+        Preprocess radar data for KernelPCA class.
+
+        Args:
+            X (np.ndarray): Raw radar data
+
+        Returns:
+            X (np.ndarray): Preprocessed radar data
+        """
 
         # Flatten input matrix
         N, R, T = X.shape
@@ -53,7 +87,15 @@ class kPCALearnedFeatures:
 
         return X
     
-    def build_model(self, amp_best_params, ang_best_params, com_best_params):
+    def build_model(self, amp_best_params:dict, ang_best_params:dict, com_best_params:dict):
+        """
+        Builds the KernelPCA classes based on the provided parameters.
+
+        Args:
+            amp_best_params (dict): Best parameters for amplitude features.
+            ang_best_params (dict): Best parameters for angle features.
+            com_best_params (dict): Best parameters for combined features.
+        """
 
         # Get the parameters with their corresponding names
         amp_params = {k.replace("kpca__", ""): v for k, v in amp_best_params.items()}
@@ -67,24 +109,34 @@ class kPCALearnedFeatures:
     
     def dimensionality_reduction(self):
         """
-        Perform PCA on the input data and return the reduced data.
+        Perform KernelPCA on the input data and returns the reduced data.
 
         Returns:
-            np.ndarray: Reduced data of shape (samples, n_components).
+            reduced_amp (np.ndarray):       KernelPCA-based features from amplitude
+            reduced_ang (np.ndarray):       KernelPCA-based features from phase
+            reduced_combined (np.ndarray):  KernelPCA-based features from amplitude and phase
         """
 
         logger.info("Performing PCA dimensionality reduction.")
 
         # Fit all models to corresponding features
-        reduced_amp = self.pca_amp.fit_transform(self.X_amp)  
-        reduced_ang = self.pca_ang.fit_transform(self.X_ang)
-        reduced_combined = self.pca_com.fit_transform(self.X_com)
+        reduced_amp = self.pca_amp.fit_transform(self.X_amplitude)  
+        reduced_ang = self.pca_ang.fit_transform(self.X_phase)
+        reduced_combined = self.pca_com.fit_transform(self.X_combinedbined)
 
         return reduced_amp, reduced_ang, reduced_combined
     
     def tune(self):
+        """
+        Finds optimal KernelPCA parameters using a regression head.
 
-        # Using a pipeline with lienar regression to optimize for linear separability
+        Returns:
+            amp_best_params (dict): Best parameters for amplitude features.
+            ang_best_params (dict): Best parameters for angle features.
+            com_best_params (dict): Best parameters for combined features.
+        """
+
+        # Using a pipeline with linear regression to optimize for linear separability
         pipe = Pipeline([
             ('kpca', KernelPCA(fit_inverse_transform=True)),
             ('clf', LinearRegression())
@@ -102,44 +154,46 @@ class kPCALearnedFeatures:
             warnings.simplefilter("ignore") # Suppresses warnings that rise from poor parameters in the parameter grid search
 
             logger.info("Tuning with amplitude for kPCA")
-            grid_search.fit(self.X_amp, self.y)
+            grid_search.fit(self.X_amplitude, self.y)
             amp_best_params = grid_search.best_params_
             logger.info(f"Best params for amplitude: {amp_best_params}")
 
             logger.info("Tuning with angle for kPCA")
-            grid_search.fit(self.X_ang, self.y)
+            grid_search.fit(self.X_phase, self.y)
             ang_best_params = grid_search.best_params_
             logger.info(f"Best params for angle: {ang_best_params}")
 
             logger.info("Tuning with combined for kPCA")
-            grid_search.fit(self.X_com, self.y)
+            grid_search.fit(self.X_combined, self.y)
             com_best_params = grid_search.best_params_
             logger.info(f"Best params for combined: {com_best_params}")
 
         return amp_best_params, ang_best_params, com_best_params
 
     
-    def transform(self, X):
+    def transform(self, X:np.ndarray):
         """
-        Apply the previously fitted PCA to new data.
+        Apply the previously fitted KernelPCA to new data.
 
-        Parameters:
+        Args:
             X (np.ndarray): New input data of shape (samples, features).
 
         Returns:
-            tuple: Transformed amplitude, angle, and combined data.
+            transformed_amplitude (np.ndarray):     KernelPCA-based features from amplitude
+            transformed_phase (np.ndarray):         KernelPCA-based features from phase
+            transformed_combined (np.ndarray):      KernelPCA-based features from amplitude and phase
         """
 
-        X_amp = np.abs(X)
-        X_ang = np.unwrap(np.angle(X))
-        X_com = np.concatenate((X_amp, X_ang), axis=1)
+        X_amplitude = np.abs(X)
+        X_phase = np.unwrap(np.angle(X))
+        X_combined = np.concatenate((X_amplitude, X_phase), axis=1)
 
-        X_amp_flat = self.preprocess(X_amp)
-        X_ang_flat = self.preprocess(X_ang)
-        X_com_flat = self.preprocess(X_com)
+        X_amplitude_flat = self.preprocess(X_amplitude)
+        X_phase_flat = self.preprocess(X_phase)
+        X_combined_flat = self.preprocess(X_combined)
 
-        transformed_amp = self.pca_amp.transform(X_amp_flat)
-        transformed_ang = self.pca_ang.transform(X_ang_flat)
-        transformed_combined = self.pca_com.transform(X_com_flat)
+        transformed_amplitude = self.pca_amp.transform(X_amplitude_flat)
+        transformed_phase = self.pca_ang.transform(X_phase_flat)
+        transformed_combined = self.pca_com.transform(X_combined_flat)
 
-        return transformed_amp, transformed_ang, transformed_combined
+        return transformed_amplitude, transformed_phase, transformed_combined
