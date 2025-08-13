@@ -25,7 +25,10 @@ def main():
     # visualize_previous_work_gpr()
 
     # Results plot
-    visualize_final_results()
+    # visualize_final_results()
+
+    # Visualize RMSE with range resolution
+    visualize_range_resolution_sim()
 
 # ================================
 # Helper functions for cleanliness
@@ -166,7 +169,10 @@ def visualize_final_results():
     bars1 = ax.bar(x - width/2, rmse_in_lab, width, label='In-Lab', color=colors[0], edgecolor='black', linewidth=1)
     bars2 = ax.bar(x + width/2, rmse_in_situ, width, label='In-Situ', color=colors[1], edgecolor='black', linewidth=1)
 
-    ax.set_ylabel('RMSE error (g/cm^3)', fontsize=16, fontname='Times New Roman')
+    # Add horizontal line for maximum desired error
+    ax.axhline(rmse_metric, color='red', linestyle='--', linewidth=2, label='Max Desired RMSE (0.09)')
+
+    ax.set_ylabel('RMSE (g/cm^3)', fontsize=16, fontname='Times New Roman')
     # ax.set_title('Comparison of RMSE for Different Methods', fontsize=18, fontname='Times New Roman', pad=15)
     ax.set_xticks(x)
     ax.set_xticklabels(methods, rotation=30, ha='right', fontsize=13, fontname='Times New Roman')
@@ -207,6 +213,43 @@ def visualize_final_results():
 
     ax2.spines['top'].set_visible(False)
     ax2.spines['right'].set_visible(False)
+
+    plt.tight_layout()
+    plt.show()
+
+def visualize_range_resolution_sim():
+    # Simulation of RMSE reductions for ridge regression on handcrafted features as range resolution is progressively reduced
+
+    # range resolutions in meters
+    resolutions = [0.004,   0.008,  0.016,  0.032,  0.064,  0.128]
+
+    # rmse in g/cm^3
+    rmse_scores = [0.08,    0.08,   0.08,   0.09,   0.11,   0.12]
+
+    plt.rcParams.update({
+        "font.family": "serif",
+        "font.serif": ["Times New Roman"],
+        "axes.titlesize": 18,
+        "axes.labelsize": 16,
+        "xtick.labelsize": 13,
+        "ytick.labelsize": 13,
+        "legend.fontsize": 13
+    })
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    cmap = plt.get_cmap('inferno')
+    color = cmap(0.7)
+
+    ax.plot(resolutions, rmse_scores, marker='o', color=color, linewidth=2, markersize=8, label='RMSE')
+    ax.set_xscale('log')
+    # ax.set_yscale('log')
+    ax.set_xlabel('Range Resolution (m)', fontsize=16, fontname='Times New Roman')
+    ax.set_ylabel('RMSE (g/cm³)', fontsize=16, fontname='Times New Roman')
+    ax.set_ylim(0.07, 0.13)
+    ax.grid(True, which="both", ls="--", linewidth=0.7, alpha=0.7)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
     plt.tight_layout()
     plt.show()
