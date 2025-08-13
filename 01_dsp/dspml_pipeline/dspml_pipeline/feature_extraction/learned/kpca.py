@@ -122,7 +122,7 @@ class kPCALearnedFeatures:
         # Fit all models to corresponding features
         reduced_amp = self.pca_amp.fit_transform(self.X_amplitude)  
         reduced_ang = self.pca_ang.fit_transform(self.X_phase)
-        reduced_combined = self.pca_com.fit_transform(self.X_combinedbined)
+        reduced_combined = self.pca_com.fit_transform(self.X_combined)
 
         return reduced_amp, reduced_ang, reduced_combined
     

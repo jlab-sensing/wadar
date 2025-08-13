@@ -178,6 +178,7 @@ class CNNEstimator:
             val_ds = val_ds.prefetch(buffer_size=AUTOTUNE)
             
             # Build and train model
+            tf.keras.backend.clear_session()
             if fold == 0:
                 model = self.build_model()
                 initial_weights = model.get_weights()

@@ -8,18 +8,24 @@ from dspml_pipeline.plotting_tools.data_plotting import plot_IQ_signals
 
 from graphviz import Digraph
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 def main():
 
     setup_logging(verbose=False)
 
     # Lab data visualization
-    visualize_lab_data()
+    # visualize_lab_data()
 
     # Flow chart of pipeline
-    dspml_pipeline()
+    # dspml_pipeline()
 
-    visualize_previous_work_gpr()
+    # Plot of our radar vs other radars in literature
+    # visualize_previous_work_gpr()
+
+    # Results plot
+    visualize_final_results()
 
 # ================================
 # Helper functions for cleanliness
@@ -114,6 +120,93 @@ def visualize_previous_work_gpr():
 
     ax.grid(True, which="both", ls="--", linewidth=0.5)
     ax.legend(fontsize=9, loc='best')
+
+    plt.tight_layout()
+    plt.show()
+
+def visualize_final_results():
+    rmse_metric = 0.09
+
+    d = {
+        "Handcrafted to ridge regression": [0.08, 0.11, 0.92],
+        "PCA to random forest": [0.08, 0.07, 10.74],
+        "Kernel PCA to gradient boosted tree": [0.10, 0.10, 1.33],
+        "Autoencoder to SVR": [0.08, 0.09, 0.40],
+        "Pretrained CNN to MLP": [0.11, 0.14, 0.17],
+        "End-to-end transformer": [1.36, 1.22, 142.42],
+        "End-to-end LSTM": [0.09, 0.24, 84.56],
+        "End-to-end pretrained CNN": [0.47, 0.4, 2798.87]
+    }
+    df = pd.DataFrame(data=d)
+
+    methods = df.columns.tolist()
+    rmse_in_lab = [df[method][0] for method in methods]
+    rmse_in_situ = [df[method][1] for method in methods]
+
+    x = np.arange(len(methods))
+    width = 0.35
+
+    plt.rcParams.update({
+        "font.family": "serif",
+        "font.serif": ["Times New Roman"],
+        "axes.titlesize": 18,
+        "axes.labelsize": 16,
+        "xtick.labelsize": 13,
+        "ytick.labelsize": 13,
+        "legend.fontsize": 13
+    })
+
+    # ze plot
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    cmap = plt.get_cmap('inferno')
+    colors = [cmap(0.3), cmap(0.7)]
+
+    bars1 = ax.bar(x - width/2, rmse_in_lab, width, label='In-Lab', color=colors[0], edgecolor='black', linewidth=1)
+    bars2 = ax.bar(x + width/2, rmse_in_situ, width, label='In-Situ', color=colors[1], edgecolor='black', linewidth=1)
+
+    ax.set_ylabel('RMSE error (g/cm^3)', fontsize=16, fontname='Times New Roman')
+    # ax.set_title('Comparison of RMSE for Different Methods', fontsize=18, fontname='Times New Roman', pad=15)
+    ax.set_xticks(x)
+    ax.set_xticklabels(methods, rotation=30, ha='right', fontsize=13, fontname='Times New Roman')
+    ax.legend(fontsize=13, frameon=False)
+    ax.grid(axis='y', linestyle='--', alpha=0.7, linewidth=0.8)
+    ax.set_yscale('log')
+
+    # Remove top and right spines for a cleaner look
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    # Annotate bars
+    # for bar in bars1 + bars2:
+    #     height = bar.get_height()
+    #     if height > 0:
+    #         ax.annotate(f'{height:.2f}',
+    #                     xy=(bar.get_x() + bar.get_width() / 2, height),
+    #                     xytext=(0, 3),
+    #                     textcoords="offset points",
+    #                     ha='center', va='bottom', fontsize=11, fontname='Times New Roman')
+
+    plt.tight_layout()
+    plt.show()
+
+    # Ze zecond plot
+
+    inference_time = [df[method][2] for method in methods]
+
+    fig2, ax2 = plt.subplots(figsize=(10, 6))
+
+    bars3 = ax2.bar(x, inference_time, width, color=cmap(0.5), edgecolor='black', linewidth=1)
+
+    ax2.set_ylabel('Inference Time (ms)', fontsize=16, fontname='Times New Roman')
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(methods, rotation=30, ha='right', fontsize=13, fontname='Times New Roman')
+    ax2.grid(axis='y', linestyle='--', alpha=0.7, linewidth=0.8)
+    ax2.set_yscale('log')
+
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
 
     plt.tight_layout()
     plt.show()
