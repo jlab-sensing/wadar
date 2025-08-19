@@ -10,5 +10,7 @@ The following paths display a the high-level structure and description of each f
 
 ```
 ├── c_signal_processing         # C software for embedded post processing
+├── codegen                     # C software generated using Matlab coder
 ├── matlab                      # MATLAB software for higher-level post processing
+├── dspml_pipeline              # Python software for radar signal to continuous value regression
 ```

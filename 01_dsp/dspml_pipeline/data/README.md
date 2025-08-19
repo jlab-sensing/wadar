@@ -1,3 +1,1 @@
-Placeholder so that the data folder propagates to git. Actual data is stored in huggingface. 
-
-TODO: Put the data on huggingface.
+Placeholder so that the data folder propagates to git. Data is made available upon request. Please contact the maintaners.

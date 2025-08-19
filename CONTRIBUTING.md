@@ -1,7 +1,7 @@
 # Contributing
 
 > __Note:__  
-> README last updated March 2025
+> README last updated August 2025
 
 When contributing to this repository, please first discuss the change with the owners (currently @ericdvet) of this repository before making a change.
 
@@ -25,7 +25,7 @@ When contributing to this repository, please first discuss the change with the o
 
 ## Development Environment
 
-The development environment of the platform is Debian 8.7 on the BeagleBone Black. Our custom radar is mounted on top of this embedded platform. We are in the process of creating a Docker paltform for standarized testing of post-processing algorithms. We will, as needed, permit ssh to the device through VPN.
+The development environment of the platform is Debian 8.7 on the BeagleBone Black. Our custom radar is mounted on top of this embedded platform. We will, as needed, permit ssh to the device through VPN.
 
 ## Attribution
 
