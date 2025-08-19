@@ -16,9 +16,9 @@ data:
   validation:
     # Raw validation datasets to combine
     dataset_dirs:
-      - "../data/field-2-soil-compaction-dataset"
+      - "../data/field-pie-ranch-dataset"
     # Target combined validation dataset directory
-    target_dir: "../data/hold-out-field-dataset"
+    target_dir: "../data/pie-ranch-dataset"
 
 # For handcrafted features
 handcrafted:
@@ -38,16 +38,16 @@ learned:
     enabled: false             # Enable or disable kPCA features
   # Autoencoder-based feature extraction
   autoencoder:
-    enabled: false
+    enabled: true
     epochs: 1000
     batch_size: 256
-    verbose: false
+    verbose: true
   # CNN-based feature extraction
   cnn:
     enabled: true
     epochs: 20
     batch_size: 32
-    verbose: false
+    verbose: true
     
 # Classical model configuration for feature regression
 classical:

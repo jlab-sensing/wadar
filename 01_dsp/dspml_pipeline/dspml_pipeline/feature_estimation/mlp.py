@@ -1,3 +1,5 @@
+"""Feature regression using multi layered percepetron."""
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -17,11 +19,36 @@ from sklearn.preprocessing import StandardScaler
 from ..parameters import KFOLD_SPLITS, RANDOM_SEED, num2label, GRID_SEARCH_SCORING
 
 class MLPRegression:
+    """
+    Class for feature regression using a multilayered perceptron.
+
+    Attributes:
+        model (nn.Module):          The PyTorch neural network model.
+        metrics (dict):             Stores evaluation metrics after cross-validation or training.
+        scaler (StandardScaler):    StandardScaler instance for input normalization.
+    """
+    
     def __init__(self):
+        """
+        Initalize the class for MLP-based feature regression.
+        """
+
         self.model = None
         self.metrics = None
 
-    def full_monty(self, feature_array, labels):
+    def full_monty(self, feature_array : np.ndarray, labels : np.ndarray):
+        """
+        Performs the entire feature regression process.
+
+        Args:
+            feature_array (np.ndarray): Input features for regression.
+            labels (np.ndarray):        Target values for regression.
+
+        Returns:
+            model (nn.Module):          Trained PyTorch model.
+            metrics (dict):             Cross-validation metrics.
+        """
+
         metrics = self.cross_validate(feature_array=feature_array, labels=labels)
 
         feature_array = self.scale_input(feature_array)
@@ -193,7 +220,17 @@ class MLPRegression:
 
         return self.model
 
-    def estimate(self, X):
+    def estimate(self, X : np.ndarray):
+        """
+        Estimates target values for the given input features using the trained model.
+
+        Args:
+            X (np.ndarray): Input features for prediction.
+
+        Returns:
+            np.ndarray: Predicted target values.
+        """
+
         if self.model is None:
             logger.error("Model has not been fitted yet. Call train() first.")
             sys.exit(1)

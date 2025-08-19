@@ -21,14 +21,31 @@ np.random.seed(RANDOM_SEED)
 class LSTMEstimator:
     """
     LSTM-based regression model for radar signal analysis.
+
+    Attributes:
+        kfold_splits (int):     Number of splits for K-fold cross-validation.
+        model (keras.Model):    The Keras regression model (LSTM-based).
+        history (History):      Training history from Keras fit().
+        scaler (MinMaxScaler):  Scaler used for feature normalization.
+        epochs (int):           Number of training epochs.
+        batch_size (int):       Batch size for model training and inference.
+        verbose (int):          Verbosity level for training.
+        X_raw (np.ndarray):     Raw complex radar data.
+        y (np.ndarray):         Target regression values.
     """
     
-    def __init__(self, X, y, epochs=50, batch_size=16, verbose=0):
+    def __init__(self, X : np.ndarray, y : np.ndarray, 
+                 epochs : int = 50, batch_size : int =16, 
+                 verbose : bool =0):
         """
-        Initialize LSTM regressor.
+        Initialize LSTM regression model.
         
-        Parameters:
-            kfold_splits: Number of folds for cross-validation
+        Args:
+            X (np.ndarray):         Complex radar data of shape (samples, range_bins, slow_time).
+            y (np.ndarray):         Target regression values.
+            epochs (int):           Number of training epochs. Default is 50.
+            batch_size (int):       Batch size for training and inference. Default is 16.
+            verbose (bool):         Verbosity level for training. Default is 0.
         """
 
         self.kfold_splits = KFOLD_SPLITS
@@ -46,7 +63,11 @@ class LSTMEstimator:
 
     def full_monty(self):
         """
-        Complete LSTM evaluation pipeline: data processing + cross-validation.
+        Performs the entire feature regression process.
+
+        Returns:
+            model (keras.Model):        Trained Keras model.
+            metrics (dict):             Cross-validation metrics.
         """
 
         logger.info(f"Processing complex radar data for LSTM...")
@@ -60,9 +81,6 @@ class LSTMEstimator:
         return self.model, metrics
         
     def _process_complex_data(self, X):
-        """
-        Convert complex radar data to amplitude/phase features for LSTM.
-        """
 
         # Extract amplitude and phase
         X_amplitude = np.abs(X) 
@@ -79,17 +97,6 @@ class LSTMEstimator:
         return X_features
     
     def _normalize_data(self, X_train, X_val=None, fit_scaler=True):
-        """
-        Normalize training and validation data.
-        
-        Parameters:
-            X_train: Training data (samples, timesteps, features)
-            X_val: Validation data (optional)
-            fit_scaler: Whether to fit the scaler on training data
-            
-        Returns:
-            Normalized training data, and optionally normalized validation data
-        """
 
         # Flatten for normalization, then reshape back
         n_samples, n_timesteps, n_features = X_train.shape
@@ -112,9 +119,6 @@ class LSTMEstimator:
         return X_train_norm
     
     def build_model(self, input_shape):
-        """
-        Build LSTM architecture for radar
-        """
         
         timesteps, features = input_shape
         self.model = keras.Sequential([
@@ -133,9 +137,6 @@ class LSTMEstimator:
         return self.model
     
     def cross_validate(self):
-        """
-        Perform k-fold cross-validation with proper normalization to prevent data leakage.
-        """
 
         # Use raw processed data (before normalization) for cross-validation
         X_processed = self._process_complex_data(self.X_raw)
@@ -281,22 +282,22 @@ class LSTMEstimator:
         
         return self.model
     
-    def estimate(self, X_complex):
+    def estimate(self, X):
         """
-        Make predictions on new data.
-        
-        Parameters:
-            X_complex: Complex radar data
-            
+        Estimates target values for the given input features using the trained model.
+
+        Args:
+            X (np.ndarray): Input features for prediction.
+
         Returns:
-            Predictions
+            np.ndarray:     Predicted target values.
         """
 
         if self.model is None:
             raise ValueError("Model not trained. Call train_final_model first.")
         
         # Process and normalize data using the fitted scaler
-        X_features = self._process_complex_data(X_complex)
+        X_features = self._process_complex_data(X)
         
         # Use the same scaler fitted during training
         n_samples, n_timesteps, n_features = X_features.shape

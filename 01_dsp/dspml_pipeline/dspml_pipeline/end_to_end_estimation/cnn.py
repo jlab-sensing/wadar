@@ -1,3 +1,5 @@
+"""End-to-end regression using pretrained CNN."""
+
 import logging
 logger = logging.getLogger(__name__)
 logging.getLogger('absl').setLevel(logging.ERROR)
@@ -15,28 +17,42 @@ from PIL import Image
 
 from ..parameters import RANDOM_SEED, KFOLD_SPLITS, num2label
 
-# Set seeds for reproducibility
 tf.random.set_seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)
-
 
 class CNNEstimator:
     """
     CNN-based regression model for radar signal analysis using pretrained MobileNetV2.
+    
+    Attributes:
+        kfold_splits (int):         Number of splits for K-fold cross-validation.
+        model (keras.Model):        The Keras regression model (MobileNetV2-based).
+        base_model (keras.Model):   The pretrained MobileNetV2 base model.
+        history (History):          Training history from Keras fit().
+        img_size (tuple):           Target image size (height, width) for CNN input.
+        batch_size (int):           Batch size for model training and inference.
+        epochs (int):               Number of training epochs.
+        verbose (int):              Verbosity level for training.
+        X_raw (np.ndarray):         Raw complex radar data.
+        y (np.ndarray):             Target regression values.
+        output_dir (str):           Directory for saving temporary images.
     """
     
-    def __init__(self, X, y, output_dir=None, img_size=(160, 160), batch_size=32, epochs=50, verbose=0):
+    def __init__(self, X: np.ndarray, y: np.ndarray, 
+                 output_dir: str = None, img_size: tuple = (160, 160), 
+                 batch_size: int = 32, epochs: int = 50, 
+                 verbose: int = 0):
         """
-        Initialize CNN regressor.
-        
-        Parameters:
-            X: Complex radar data
-            y: Target values
-            output_dir: Directory to save temporary images (if None, creates temp dir)
-            img_size: Size to resize images to
-            batch_size: Batch size for training
-            epochs: Number of training epochs
-            verbose: Verbosity level
+        Initialize the CNN-based regression model.
+
+        Args:
+            X (np.ndarray):         Complex radar data of shape (samples, range_bins, slow_time).
+            y (np.ndarray):         Target regression values.
+            output_dir (str):       Directory to save temporary images (default: "/tmp/cnn_radar_images").
+            img_size (tuple):       Target image size (height, width) for CNN input (default: (160, 160)).
+            batch_size (int):       Batch size for model training and inference (default: 32).
+            epochs (int):           Number of training epochs (default: 50).
+            verbose (int):          Verbosity level for training (default: 0).
         """
         
         self.kfold_splits = KFOLD_SPLITS
@@ -61,7 +77,11 @@ class CNNEstimator:
 
     def full_monty(self):
         """
-        Complete CNN evaluation pipeline: data processing + cross-validation.
+        Performs the entire feature regression process.
+
+        Returns:
+            model (keras.Model):        Trained Keras model.
+            metrics (dict):             Cross-validation metrics.
         """
         
         logger.info(f"Processing complex radar data for CNN...")
@@ -75,15 +95,6 @@ class CNNEstimator:
         return self.model, metrics
 
     def _process_complex_data(self, X):
-        """
-        Convert complex radar data to images suitable for CNN.
-        
-        Parameters:
-            X: Complex radar data of shape (samples, range_bins, slow_time)
-            
-        Returns:
-            images: Array of images (samples, height, width, 3)
-        """
         
         images = []
         
@@ -104,9 +115,6 @@ class CNNEstimator:
         return np.stack(images)
 
     def build_model(self):
-        """
-        Build CNN architecture using pretrained MobileNetV2.
-        """
         
         # Rescale pixel values from [0, 255] to [-1, 1]
         rescale = keras.layers.Rescaling(1./127.5, offset=-1)
@@ -141,9 +149,6 @@ class CNNEstimator:
         return self.model
 
     def cross_validate(self):
-        """
-        Perform k-fold cross-validation.
-        """
         
         # Process complex data to images
         X_images = self._process_complex_data(self.X_raw)
@@ -277,9 +282,6 @@ class CNNEstimator:
         return metrics
 
     def train_final_model(self):
-        """
-        Train the final model on all data.
-        """
         
         # Process complex data to images
         X_images = self._process_complex_data(self.X_raw)
@@ -332,21 +334,21 @@ class CNNEstimator:
         
         return self.model
 
-    def estimate(self, X_complex):
+    def estimate(self, X : np.ndarray):
         """
-        Make predictions on new data.
-        
-        Parameters:
-            X_complex: Complex radar data
-            
+        Estimates target values for the given input features using the trained model.
+
+        Args:
+            X (np.ndarray): Input features for prediction.
+
         Returns:
-            Predictions
+            np.ndarray:     Predicted target values.
         """
         
         if self.model is None:
             raise ValueError("Model not trained. Call train_final_model first.")
         
         # Process complex data to images
-        X_images = self._process_complex_data(X_complex)
+        X_images = self._process_complex_data(X)
         
         return self.model.predict(X_images, verbose=0)

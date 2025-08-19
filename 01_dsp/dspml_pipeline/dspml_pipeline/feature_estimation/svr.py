@@ -1,3 +1,5 @@
+"""Feature regression using support vector regression."""
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -15,12 +17,39 @@ from sklearn.model_selection import GridSearchCV
 from ..parameters import KFOLD_SPLITS, RANDOM_SEED, num2label, GRID_SEARCH_SCORING
 
 class SVRRegression:
-    def __init__(self, tune_model_params: bool = True):
+    """
+    Class for feature regression using a support vector regression.
+
+    Attributes:
+        model (Pipeline):           The trained random forest regression pipeline.
+        metrics (dict):             Stores evaluation metrics after cross-validation or training.
+        tune_model_params (bool):   Whether to perform hyperparameter tuning using grid search.
+    """
+
+    def __init__(self, tune_model_params : bool = True):
+        """
+        Initalize the class for SVR-based feature regression.
+
+        tune_model_params (bool):   Whether to perform hyperparameter tuning using grid search.
+        """
+
         self.model = None
         self.metrics = None
         self.tune_model_params = tune_model_params
 
     def full_monty(self, feature_array, labels):
+        """
+        Performs the entire feature regression process.
+
+        Args:
+            feature_array (np.ndarray): Input features for regression.
+            labels (np.ndarray):        Target values for regression.
+
+        Returns:
+            model (Pipeline):           Trained Pipeline model.
+            metrics (dict):             Cross-validation metrics.
+        """
+
         metrics = self.cross_validate(feature_array=feature_array, labels=labels)
         C, gamma, epsilon = self.tune(feature_array, labels)
         logger.info(f"Final model trained: SVR with C={C}, gamma={gamma}, epsilon={epsilon}")
@@ -140,6 +169,16 @@ class SVRRegression:
         return self.model
 
     def estimate(self, X):
+        """
+        Estimates target values for the given input features using the trained model.
+
+        Args:
+            X (np.ndarray): Input features for prediction.
+
+        Returns:
+            np.ndarray: Predicted target values.
+        """
+
         if self.model is None:
             logger.error("Model has not been fitted yet. Call train() first.")
             sys.exit(1)

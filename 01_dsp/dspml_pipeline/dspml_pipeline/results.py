@@ -118,7 +118,16 @@ def load_results(dataset_dir: str, results_file_name: str = "results.csv"):
     results_df = pd.read_csv(file_path)
     return results_df
 
-def display_feature_results(feature_name, results_df, show_plot=False):
+def display_feature_results(feature_name, results_df : pd.DataFrame, 
+                            show_plot : bool =False):
+    """
+    Display results for a specific feature set from the results DataFrame.
+
+    Args:
+        feature_name (str): Name/description of the feature set to display.
+        results_df (pd.DataFrame): DataFrame containing results.
+        show_plot (bool, optional): Whether to display the accuracy/MAE plot. Defaults to False.
+    """
     handcrafted_results = results_df[results_df['Feature'] == feature_name]
 
     print(handcrafted_results)
