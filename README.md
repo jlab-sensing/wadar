@@ -5,7 +5,7 @@
 
 ## Overview
 
-**WaDAR** (Water Radar) is an open-source project that enables low-cost, high-accuracy soil moisture sensing using backscatter tags**. The system combines in-ground passive backscatter tags with above-ground radars to achieve wireless soil moisture monitoring with fine-grain resolution.
+**WaDAR** (Water Radar) is an open-source project that enables low-cost, high-accuracy soil moisture sensing using backscatter tags. The system combines in-ground passive backscatter tags with above-ground radars to achieve wireless soil moisture monitoring with fine-grain resolution.
 
 This project is based on the research published in [Low-cost In-ground Soil Moisture Sensing with Radar Backscatter Tags](https://doi.org/10.1145/3460112.3472326) and aims to make precision agriculture more affordable and scalable for farmers worldwide.
 

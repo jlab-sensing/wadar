@@ -1,28 +1,64 @@
 # MATLAB Code for Radar Interface
 
-Welcome to the MATLAB code repository for interfacing with radar(s). This codebase primarily interacts with FlatEarth libraries, demo code, and the WADAR scripts. If you are new here, I'd recommend looking at the *test*.m* functions first to get an idea of how to use this MATLAB codebase.
+> __Note:__  
+> README last updated August 2025
+
+Welcome to the MATLAB code repository for interfacing with captured radar data. If you are new here, we recommend starting with the `TestFrames.mlx` live script or other `Test*.m` functions to understand the DSP pipeline.
 
 ![DSP_pipline_viz](DSP_pipline_viz.png)
-*Visualization of DSP depedencies for an example run*
+*Visualization of DSP dependencies for an example run*
 
-## Directory Structure
+## Directory Organization
 
+### Core Directories
 ```
-├── data                        # Example data. More can be found in 
-                                  https://github.com/jlab-sensing/wadar/tree/master/04_data
-├── Examples                    # Unused Novelda example MATLAB code                         
-├── legacy                      # Contains obsolete MATLAB code
-├── sim                         # Simulation scripts
-├── Capture*.m                  # Functions to acquire radar frames by running commands on the radar
-├── ChipotleRadarTester.m       # WIP: Function to follow the V&V plan for newly fabricated radars
-├── demo.m                      # Automated script used in the seminar "Enabling Sustainable Sensor Networks with 
-                                  Microbe-powered RF Backscatter" by Dr. Colleen Josephson. Watch the seminar at 
-                                  https://www.youtube.com/watch?v=WrSQfxIoFWw
-├── demoDualTag.m               # Automated script used to demo dual tag system's robustness to erosion
-├── Novelda*.m                  # Files provided by Novelda to extract useful information and apply apply DDC processing
-├── Plot*.m                     # Visualization functions to plot useful information
-├── Run*.m                      # Functions to run DSP pipeline on specified files or folders
-├── Sense*.m                    # Functions to convert range bins to useful sensing metrics using LS calibrations
-├── Tag*.m                      # Functions to extract information about the backscatter tag
-├── Test*.m                     # Examples of DSP pipeline operations
+├── data/                       # Example data (more in /04_data)
+├── Examples/                   # Reference Novelda example code                         
+├── legacy/                     # Deprecated MATLAB code
+├── sim/                        # Simulation scripts
 ```
+
+### Main Function Groups
+
+#### Data Acquisition and Processing
+```
+├── Capture*.m                  # Data acquisition from radar hardware
+├── Process*.m                  # Core signal processing (FFT, frames)
+├── Preprocess*.m               # Data preparation and filtering
+├── Novelda*.m                  # Novelda-provided utilities for DDC processing
+```
+
+#### Dataset Management and Analysis
+```
+├── Dataset*.m                  # Dataset processing, calibration, and analysis tools
+├── Image*.m                    # Image processing and conversion utilities
+├── Frames2CSV.m                # Data export to CSV format
+```
+
+#### Tag Detection and Sensing
+```
+├── Tag*.m                      # Backscatter tag detection and analysis
+├── Sense*.m                    # Range bin to VWC conversion using calibrations
+├── Calibrate*.m                # Calibration tools for range bins and VWC
+```
+
+#### Visualization and Testing
+```
+├── Plot*.m                     # Data visualization functions
+├── Test*.m                     # Example scripts and test harnesses
+├── *.mlx                       # Live scripts for interactive analysis
+```
+
+#### Demo Applications
+```
+├── demo.m                      # Demo from "Enabling Sustainable Sensor Networks" seminar
+                                    (https://www.youtube.com/watch?v=WrSQfxIoFWw)
+├── demoDualTag.m               # Dual tag erosion robustness demo
+├── ChipotleRadarTester.m       # Validation suite for new radar hardware
+```
+
+### Key Live Scripts (.mlx)
+- `TestFrames.mlx`: Interactive exploration of radar frame processing
+- `SoilCompactionNotebook.mlx`: Analysis of soil compaction measurements
+- `CalibrateRangeBin2VWC.mlx`: Range bin to VWC calibration workflow
+- `rangebin2raw.mlx`: Range bin to raw data conversion utilities
