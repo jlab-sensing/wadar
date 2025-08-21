@@ -1,7 +1,7 @@
 # Water Radar (WaDAR)
 
 > __Note:__  
-> README last updated February 2025
+> README last updated August 2025
 
 ## Overview
 
@@ -54,10 +54,10 @@ For issues relating to software and hardware, please create an issue in this rep
 
 <!--Code in this repository is licensed under the MIT License unless specified in the file header. See @ref LICENSE for full document.-->
 
-## Maintainers
-
-- [Colleen Josephson](mailto:cjosephson@ucsc.edu)
-- [Eric Vetha](mailto:evetha@ucsc.edu)
+> __Maintainers:__
+> Eric Vetha, ericdvet at gmail dot com
+> Jake Lee, jlee211 at ucsc dot edu
+> Ava Darbonne, adarbonn at ucsc dot edu
 
 ## Citation
 If you use this project in your research, please cite:

@@ -3,10 +3,17 @@
 > __Note:__  
 > README last updated August 2025
 
-Welcome to the WaDAR project. This document serves to onboard you to the components of this project. This is a living document, and you are encouraged to update it as you navigate and improve this project.
-
 > __Principal Investigator:__
 > Colleen Josephson, cojoseph at ucsc dot edu
+
+> __Maintainers:__
+> Eric Vetha, ericdvet at gmail dot com
+> Jake Lee, jlee211 at ucsc dot edu
+> Ava Darbonne, adarbonn at ucsc dot edu
+
+Welcome to the WaDAR project. This document serves to onboard you to the components of this project. This is a living document, and you are encouraged to update it as you navigate and improve this project.
+
+
 
 ## Tutorial
 
