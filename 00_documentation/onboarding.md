@@ -25,13 +25,24 @@ This first step is to communicate with the radar using your personal laptop. You
 
 **IMPORTANT: DO NOT UNPLUG THE RADAR WITHOUT RUNNING *init 0* TO SHUT THE RADAR DOWN. ABRUPTLY REMOVING THE RADAR'S POWER CAN RESULT IN THE EMMC GETTING CORRUPTED.**
 
+#### Linux
+
 1. Connect your computer to the BeagleBone Black that the radar is mounted on. After approximately one minute has passed, run:
 ```bash
 ssh root@192.168.7.2
 ```
+, or on MacOS:
+```bash
+ssh root@192.168.6.2
+```
+
 You are now ssh'd into the radar. From the radar, attempt to ssh back into your personal computer:
 ```bash
 ssh insert_your_username@192.168.7.1
+```
+, or on MacOS:
+```bash
+ssh insert_your_username@192.168.6.1
 ```
 
 If this part worked correctly, it should have prompted you for your password. We would like to avoid that, since the data capture scripts would require the constant re-entry of passwords for each scan.
@@ -39,13 +50,16 @@ If this part worked correctly, it should have prompted you for your password. We
 2. In order to avoid the password requirement, you must set up SSH keys. The basic steps from https://www.strongdm.com/blog/ssh-passwordless-login can be followed for the most part.
 
 __Debugging Tips__
-- Adding `PubkeyAcceptedAlgorithms +ssh-rsa` to `/etc/ssh/ssh_config` when the SSH key isn't being accepted.
-- Call `sudo systemctl restart ssh` to restart the SSH server after the config file is changed.
 - Validate the setup by SSHing into the radar and SSHing back to our device without a password prompt.
+- If you see "`Permission denied (publickey).`" when trying to login to your machine from the BeagleBone, add `PubkeyAcceptedAlgorithms +ssh-rsa` to `/etc/ssh/ssh_config`.
 - If you are on an Apple product, you will likely need to manually start an SSH server. To do this:
     1. Open "System Settings" > "General" > "Sharing".
     2. If disabled, enable "Remote Login".
-    - Note that you will also need to use "192.168.6.1/2" rather than "192.168.7.1/2" with `ssh`.
+- Call `sudo systemctl restart ssh` to restart the SSH server after the config file is changed on Linux; on MacOS run:
+```bash
+sudo launchctl stop com.openssh.sshd
+sudo launchctl start com.openssh.sshd
+```
 
 ### First scan
 
@@ -79,11 +93,11 @@ cp stage1.json stage1-archive.json
 ```
 Now update the json with the correct parameters.
 
-2. With the settings confirmed to be correct, you are now ready to take your first scan. In MATLAB, navigate to the directory with the matlab scripts:
+2. With the settings confirmed to be correct, you are now ready to take your first scan. In MATLAB (on your local machine), navigate to the directory with the matlab scripts:
 ```bash
 cd '/your/path/to/wadar/01_dsp/matlab'
 ```
-You can also use the Open button as it will automatically take you to the correct directory. Make sure a data folder exists in the matlab directory.
+You can also use the Open button as it will automatically take you to the correct directory. Make sure a `data` folder exists in the matlab directory (`mkdir data`).
 
 Now, in the MATLAB terminal, run the CaptureData function:
 ```bash
