@@ -31,6 +31,7 @@ def compute_metrics(validation_labels:np.ndarray, val_predictions:np.ndarray):
     # Compute metrics
     mae = mean_absolute_error(validation_labels, val_predictions)
     rmse = np.sqrt(mean_squared_error(validation_labels, val_predictions))
+    r2 = 0.0
     val_true_labels = [num2label(label) for label in validation_labels]
     val_pred_labels = [num2label(pred) for pred in val_predictions]
     accuracy = np.mean([pred == true for pred, true in zip(val_pred_labels, val_true_labels)])
@@ -42,6 +43,7 @@ def compute_metrics(validation_labels:np.ndarray, val_predictions:np.ndarray):
     metrics = {
         "mae": mae,
         "rmse": rmse,
+        "r2": r2,
         "accuracy": accuracy,
         "inference_time": inference_time,
         "training_time": training_time

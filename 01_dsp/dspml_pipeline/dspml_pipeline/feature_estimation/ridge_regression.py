@@ -68,7 +68,7 @@ class RidgeRegression:
         kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=RANDOM_SEED)
 
         # Store metrics for each fold
-        metrics = {'mae': [], 'rmse': [], 'accuracy': [], 'inference_time': [], 'training_time': []}
+        metrics = {'mae': [], 'rmse': [], 'r2': [], 'accuracy': [], 'inference_time': [], 'training_time': []}
 
         # Cross-validation loop
         fold_num = 0
@@ -93,6 +93,7 @@ class RidgeRegression:
             # Calculate metrics
             mae = mean_absolute_error(y_test, y_pred)
             rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+            r2 = 0.0
             
             # Calculate accuracy using num2label
             y_test_labels = [num2label(label) for label in y_test]
@@ -102,11 +103,13 @@ class RidgeRegression:
             # Store metrics
             metrics['mae'].append(mae)
             metrics['rmse'].append(rmse)
+            metrics['r2'].append(r2)
             metrics['accuracy'].append(accuracy)
             metrics['inference_time'].append(inference_time)
             metrics['training_time'].append(training_time)
 
             logger.info(f"Fold {fold_num}/{KFOLD_SPLITS} - MAE: {mae:.2f}, RMSE: {rmse:.2f}, "
+                        f"R2: {r2:.2f}, "
                         f"Accuracy: {100*accuracy:.2f}%, Training time: {1000*training_time:.2f}ms, "
                         f"Inference time: {1000*inference_time:.2f}ms")
 
@@ -114,12 +117,14 @@ class RidgeRegression:
         metrics = {
             "mae": np.mean(metrics['mae']),
             "rmse": np.mean(metrics['rmse']),
+            "r2": np.mean(metrics['r2']),
             "accuracy": np.mean(metrics['accuracy']),
             "inference_time": np.mean(metrics['inference_time']),
             "training_time": np.mean(metrics['training_time'])
         }
 
         logger.info(f"Average metrics - MAE: {metrics['mae']:.2f}, RMSE: {metrics['rmse']:.2f}, "
+                    f"R2: {metrics['r2']:.2f}, "
                    f"Accuracy: {100*metrics['accuracy']:.2f}%, Training time: {1000*metrics['training_time']:.2f}ms, "
                    f"Inference time: {1000*metrics['inference_time']:.2f}ms")
 

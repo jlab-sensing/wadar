@@ -146,6 +146,7 @@ class LSTMEstimator:
         cv_mse_scores = []
         cv_mae_scores = []
         cv_rmse_scores = []
+        cv_r2_scores = []
         cv_accuracy_scores = []
         fold_times = []
         fold_training_times = []
@@ -218,6 +219,7 @@ class LSTMEstimator:
             mse = mean_squared_error(y_val_fold, y_pred_fold)
             mae = mean_absolute_error(y_val_fold, y_pred_fold)
             rmse = np.sqrt(mse)
+            r2 = 0.0
             
             # Calculate accuracy using num2label
             y_labels = [num2label(label) for label in y_val_fold]
@@ -227,12 +229,14 @@ class LSTMEstimator:
             cv_mse_scores.append(mse)
             cv_mae_scores.append(mae)
             cv_rmse_scores.append(rmse)
+            cv_r2_scores.append(r2)
             cv_accuracy_scores.append(accuracy)
             
             fold_time = time.time() - fold_start_time
             fold_times.append(fold_time)
             
             logger.info(f"Fold {fold+1}/{KFOLD_SPLITS} - MAE: {mae:.2f}, RMSE: {rmse:.2f}, "
+                        f"R2: {r2:.2f}, "
                         f"Accuracy: {100*accuracy:.2f}%, Training time: {1000*training_time:.2f}ms, "
                         f"Inference time: {1000*inference_time:.2f}ms")
             
@@ -241,6 +245,7 @@ class LSTMEstimator:
             'mae': np.mean(cv_mae_scores),
             'mse': np.mean(cv_mse_scores),
             'rmse': np.mean(cv_rmse_scores),
+            'r2': np.mean(cv_r2_scores),
             'accuracy': np.mean(cv_accuracy_scores),
             'training_time': np.mean(fold_training_times),
             'inference_time': np.mean(fold_inference_times),
@@ -248,6 +253,7 @@ class LSTMEstimator:
         }
 
         logger.info(f"Average metrics - MAE: {metrics['mae']:.2f}, RMSE: {metrics['rmse']:.2f}, "
+                    f"R2: {metrics['r2']:.2f, "
                    f"Accuracy: {100*metrics['accuracy']:.2f}%, Training time: {1000*metrics['training_time']:.2f}ms, "
                    f"Inference time: {1000*metrics['inference_time']:.2f}ms")
         
