@@ -11,7 +11,7 @@ from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
 
 from ..parameters import KFOLD_SPLITS, RANDOM_SEED, num2label, GRID_SEARCH_SCORING
@@ -92,7 +92,7 @@ class RandomForest:
             # Calculate metrics
             mae = mean_absolute_error(y_test, y_pred)
             rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-            r2 = 0.0
+            r2 = r2_score(y_val_fold, y_pref_fold)
             
             # Calculate accuracy using num2label
             y_test_labels = [num2label(label) for label in y_test]

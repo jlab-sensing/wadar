@@ -9,7 +9,7 @@ from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
 from dspml_pipeline.end_to_end_estimation.transformer import TransformerEstimator
 from dspml_pipeline.parameters import num2label
 
-from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score, r2_score
 import numpy as np
 import matplotlib.pyplot as plt
 from dspml_pipeline.results import load_results, display_feature_results
@@ -31,7 +31,7 @@ def compute_metrics(validation_labels:np.ndarray, val_predictions:np.ndarray):
     # Compute metrics
     mae = mean_absolute_error(validation_labels, val_predictions)
     rmse = np.sqrt(mean_squared_error(validation_labels, val_predictions))
-    r2 = 0.0
+    r2 = r2_score(y_val_fold, y_pref_fold)
     val_true_labels = [num2label(label) for label in validation_labels]
     val_pred_labels = [num2label(pred) for pred in val_predictions]
     accuracy = np.mean([pred == true for pred, true in zip(val_pred_labels, val_true_labels)])

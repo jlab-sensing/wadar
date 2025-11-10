@@ -8,7 +8,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import time
 
 from ..parameters import RANDOM_SEED, KFOLD_SPLITS, num2label
@@ -219,7 +219,7 @@ class LSTMEstimator:
             mse = mean_squared_error(y_val_fold, y_pred_fold)
             mae = mean_absolute_error(y_val_fold, y_pred_fold)
             rmse = np.sqrt(mse)
-            r2 = 0.0
+            r2 = r2_score(y_val_fold, y_pref_fold)
             
             # Calculate accuracy using num2label
             y_labels = [num2label(label) for label in y_val_fold]
@@ -253,7 +253,7 @@ class LSTMEstimator:
         }
 
         logger.info(f"Average metrics - MAE: {metrics['mae']:.2f}, RMSE: {metrics['rmse']:.2f}, "
-                    f"R2: {metrics['r2']:.2f, "
+                    f"R2: {metrics['r2']:.2f}, "
                    f"Accuracy: {100*metrics['accuracy']:.2f}%, Training time: {1000*metrics['training_time']:.2f}ms, "
                    f"Inference time: {1000*metrics['inference_time']:.2f}ms")
         
