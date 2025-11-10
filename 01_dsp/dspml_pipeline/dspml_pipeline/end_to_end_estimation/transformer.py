@@ -267,7 +267,7 @@ class TransformerEstimator(nn.Module):
             mse = mean_squared_error(y_val_fold, y_pred_fold)
             mae = mean_absolute_error(y_val_fold, y_pred_fold)
             rmse = np.sqrt(mse)
-            r2 = r2_score(y_val_fold, y_pref_fold)
+            r2 = r2_score(y_val_fold, y_pred_fold)
             
             # Calculate accuracy using num2label
             y_labels = [num2label(label) for label in y_val_fold]
