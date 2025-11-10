@@ -202,7 +202,10 @@ def load_dataset(dataset_dir:str):
     y_path = Path(dataset_dir) / "y.npy"
 
     if not X_path.exists() or not y_path.exists():
-        logger.error("X.npy and/or y.npy not found in the dataset directory")
+        logger.error(
+            f"X.npy and/or y.npy not found in the dataset directory: %s",
+            dataset_dir
+        )
         sys.exit(1)
 
     X = np.load(X_path)

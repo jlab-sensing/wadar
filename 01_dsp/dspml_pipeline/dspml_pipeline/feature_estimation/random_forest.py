@@ -92,7 +92,11 @@ class RandomForest:
             # Calculate metrics
             mae = mean_absolute_error(y_test, y_pred)
             rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-            r2 = r2_score(y_val_fold, y_pref_fold)
+            try:
+                r2 = r2_score(y_test, y_pred)
+            except Exception as e:
+                print(e)
+                r2 = -1.0
             
             # Calculate accuracy using num2label
             y_test_labels = [num2label(label) for label in y_test]
