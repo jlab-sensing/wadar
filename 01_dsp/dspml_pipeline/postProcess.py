@@ -23,8 +23,8 @@ def _read_csv(path: str) -> List[dict]:
     """
     """
     rows = []
-    with open(path) as csvp:
-        reader = csv.DictReader(path)
+    with open(path, "r") as csvp:
+        reader = csv.DictReader(csvp)
         for row in reader:
             rows.append(row)
     return rows
@@ -38,6 +38,35 @@ def process_input_file(path: str):
     else:
         print(f"Bummer!: {path}")
 
+def combine_results(paths: List[str]):
+    # Group results.
+    results = {}
+    for path in paths:
+        data = _read_csv(path)
+        for row in data:
+            try:
+                label = "-".join([row["Feature"], row["Model"]])
+            except KeyError as e:
+                print(f"WARNING! - Skipping {path}: {e}")
+                continue
+
+            if label not in results.keys():
+                results[label] = {
+                    "R2": [],
+                    "RMSE": [],
+                    "Accuracy": []
+                }
+
+            try:
+                results[label]["R2"].append(row["R2"])
+                results[label]["RMSE"].append(row["RMSE"])
+                results[label]["Accuracy"].append(row["Accuracy"])
+            except KeyError:
+                print(f"WARNING! - Skipping {path} since these results are bad!: {e}")
+                continue
+
+    print(results)
+
 def process_input_dir(path: str):
     """
     """
@@ -50,8 +79,12 @@ def process_input_dir(path: str):
 
     # Gather all CSV files from directory.
     contents = os.listdir(path)
-    csv_files = [f for f in contents if f.split(".")[-1] == "csv"]
-    print(csv_files)
+    csv_paths = [
+        os.path.join(path, f) for f in contents if f.split(".")[-1] == "csv"
+    ]
+
+    # Collect combined results.
+    results = combine_results([p for p in csv_paths if "results" in p])
 
 def post_process(path_input_file: str, path_input_dir: str):
     """
