@@ -19,6 +19,7 @@ import os
 import numpy as np
 
 from typing import Any, List
+from matplotlib import pyplot as plt
 
 
 def _read_csv(path: str) -> List[dict]:
@@ -102,6 +103,55 @@ def combine_results(paths: List[str]):
     process_results(results)
     return results
 
+def display_results(results: dict):
+    """
+    """
+    # Convert the results into a useful format for plotting.
+    results_list = [{
+        "Feature-Model": label,
+        "R2": results[label]["R2"]["Mean"],
+        "RMSE": results[label]["RMSE"]["Mean"],
+        "RMSE_std": results[label]["RMSE"]["STD"]
+    } for label in results.keys()]
+
+    # Sort this list by RMSE.
+    results_list_sorted = sorted(
+        results_list, key=lambda entry: entry["RMSE"], reverse=False
+    )
+
+    # Assign colors procedurally.
+    colormap = [
+        "tab:blue",
+        "tab:orange",
+        "tab:green",
+        "tab:red",
+        "tab:purple",
+        "tab:brown",
+        "tab:pink",
+        "tab:gray",
+        "tab:olive",
+        "tab:cyan"
+    ]
+
+    # Plot the best-performing X models.
+    num_points = 10 
+    labels = [
+        result["Feature-Model"] for result in results_list_sorted
+    ][0:num_points]
+    r2 = [result["R2"] for result in results_list_sorted][0:num_points]
+    rmse = [result["RMSE"] for result in results_list_sorted][0:num_points]
+    #size = [result["RMSE_std"] * 4000 for result in results_list_sorted][0:num_points]
+
+    plt.figure()
+    #scatter = plt.scatter(x=rmse, y=r2, s=size, c=colormap)
+    for i in range(num_points):
+        scatter = plt.scatter(x=rmse[i], y=r2[i], c=colormap[i], label=labels[i])
+    plt.xlabel("RMSE (mean)")
+    plt.ylabel("$R^2$ (mean)")
+    plt.legend(title="Feature-Model")
+
+    plt.show()
+
 def save_results(results: dict, base_path: str):
     """
     """
@@ -150,15 +200,9 @@ def process_input_dir(path: str):
     # Collect combined results.
     results = combine_results([p for p in csv_paths if "val_results" in p])
 
-    # Present or save results.
+    # Save and present results.
     save_results(results=results, base_path=path)
-    """
-    [print(f"{label} - {metric} = {results[label][metric]['Mean']}") for metric in [
-        #"R2", "RMSE", "Accuracy"
-            "R2", "RMSE"
-        ] for label in results.keys()
-    ]
-    """
+    display_results(results=results)
 
 
 def post_process(path_input_file: str, path_input_dir: str):
