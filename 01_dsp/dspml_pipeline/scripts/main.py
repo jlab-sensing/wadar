@@ -41,10 +41,12 @@ def main():
                               target_dir=params['data']['training']['target_dir'],
                               data_log="data-log.csv",
                               label_name=params['data']['label_name'])
+    print("Loaded training data.")
     validationFrameLoader = FrameLoader(dataset_dirs=params['data']['validation']['dataset_dirs'],
                               target_dir=params['data']['validation']['target_dir'],
                               data_log="data-log.csv",
                               label_name=params['data']['label_name'])
+    print("Loaded validation data.")
 
     # If new dataset, extract data. Otherwise, load from saved file.
     if params['data']['new_dataset']:

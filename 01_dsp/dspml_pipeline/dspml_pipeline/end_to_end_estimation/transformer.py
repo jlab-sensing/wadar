@@ -14,7 +14,11 @@ import os
 from PIL import Image
 
 from ..parameters import RANDOM_SEED, KFOLD_SPLITS, num2label
-from transformers import MobileViTFeatureExtractor, MobileViTForImageClassification
+try:
+    from transformers import MobileViTFeatureExtractor, MobileViTForImageClassification
+except ImportError:
+    from transformers import MobileViTImageProcessor, MobileViTForImageClassification
+
 
 # Set seeds for reproducibility
 torch.manual_seed(RANDOM_SEED)
@@ -129,7 +133,11 @@ class TransformerEstimator(nn.Module):
         # Move to device
         self.mobilevit.to(self.device)
 
-        self.feature_extractor = MobileViTFeatureExtractor.from_pretrained("apple/mobilevit-small")
+        try:
+            self.feature_extractor = MobileViTFeatureExtractor.from_pretrained("apple/mobilevit-small")
+        except:
+            self.feature_extractor = MobileViTImageProcessor.from_pretrained("apple/mobilevit-small")
+            
         
         # Freeze the backbone, only train the classifier
         for name, param in self.mobilevit.named_parameters():
