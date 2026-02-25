@@ -1,3 +1,21 @@
+"""
+File:
+    main.py
+
+Description:
+    Launch file for WADAR dspml_pipeline.
+
+Authors:
+    jLab
+    Eric Vetha
+    nubby
+
+Date:
+    24 Feb 2026
+
+Version:
+    1.0.9
+"""
 import logging
 logger = logging.getLogger(__name__)
 
@@ -53,8 +71,14 @@ def main():
         X_val, y_val = validationFrameLoader.extract_data()
         validationFrameLoader.save_dataset()
     else:
-        X_train, y_train = load_dataset(dataset_dir=params['data']['training']['target_dir'])
-        X_val, y_val = load_dataset(dataset_dir=params['data']['validation']['target_dir'])
+        X_train, y_train = load_dataset(
+                dataset_dir=params['data']['training']['target_dir'],
+                fl=trainingFrameLoader
+            )
+        X_val, y_val = load_dataset(
+                dataset_dir=params['data']['validation']['target_dir'],
+                fl=validationFrameLoader
+            )
 
     # ======== Handcrafted Features ========
     if params['handcrafted']['enabled']:

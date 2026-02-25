@@ -1,3 +1,21 @@
+"""
+File:
+    frame_loader.py
+
+Description:
+    Tools for loading datasets from the GOPHERS pipeline.
+
+Authors:
+    jLab
+    Eric Vetha
+    nubby
+
+Date:
+    24 Feb 2026
+
+Version:
+    1.0.9
+"""
 import logging
 logger = logging.getLogger(__name__)
 
@@ -5,11 +23,14 @@ import numpy as np
 from pathlib import Path
 from ..setup_logging import setup_logging
 import json
+import os
 import pandas as pd
 import sys
 from scipy import signal
 
+
 THRESHOLD = 50 # For anomoly removal
+
 
 class FrameLoader:
     """
@@ -38,10 +59,10 @@ class FrameLoader:
         y (np.ndarray):         Corresponding labels (targets).
     """
 
-    def __init__(self, dataset_dirs:list, target_dir:str,
-                 data_log:str = "data-log.csv", 
-                 folder_name:str = "Sample #", label_name:str = "Bulk Density (g/cm^3)", 
-                 verbose:bool = False):
+    def __init__(self, dataset_dirs: list, target_dir: str,
+                 data_log: str = "data-log.csv", 
+                 folder_name: str = "Sample #", label_name: str = "Bulk Density (g/cm^3)", 
+                 verbose: bool = False):
         """
         Initializes the FrameLoader instance based on the provided directories.
 
@@ -66,10 +87,36 @@ class FrameLoader:
         for i in self.dataset_dirs:
             if not Path(i).exists():
                 logger.error(f"Dataset {i} does not exist.")
+            if not os.path.isdir(i):
+                logger.error(f"Path {i} does not point to a dataset directory.")
             data_log_i = Path(i) / data_log
             if not data_log_i.exists():
-                logger.error(f"Data log file {data_log_i} does not exist.")
-                sys.exit(1)
+                logger.warning(f"Data log file {data_log_i} does not exist; "
+                               f"checking for preprocessed dataset...")
+                if not self._is_dataset_preprocessed(i):
+                    logger.warning(f"Dataset {i} is invalid.")
+                    sys.exit(1)
+                else:
+                    logger.info(f"Dataset {i} initialized.")
+
+    def _is_dataset_preprocessed(self, path: str):
+        """
+        is_dataset_preprocessed(path)
+
+        Check for the existence of X.npy, y.npy, features.csv, and results.csv files in the path provided.
+
+        Args:
+            path            (str)
+
+        Returns:
+            preprocessed?   (bool)
+        """
+        required_files = ["X.npy", "y.npy", "features.csv", "results.csv"]
+        current_files = os.listdir(path)
+        if not set(required_files) == set(current_files):
+            return False
+        # TODO: Extract data here?
+        return True
 
     def extract_data(self):
         """
@@ -185,13 +232,14 @@ class FrameLoader:
         logger.info(f"Raw dataset saved as X.npy and y.npy")
         logger.info(f"Saved shapes: X={self.X.shape}, y={self.y.shape}")
 
-def load_dataset(dataset_dir:str):
+def load_dataset(dataset_dir: str, fl: FrameLoader):
     """
     Loads data that has already been processed. Assumes the features are named X.npy and the 
     labels are named y.npy.
 
     Args:
         dataset_dir:        Directory containing the capture file.
+        fl:                 FrameLoader object for given dataset.
 
     Returns:
         X (np.ndarray):     Processed radar data (features).
@@ -202,11 +250,17 @@ def load_dataset(dataset_dir:str):
     y_path = Path(dataset_dir) / "y.npy"
 
     if not X_path.exists() or not y_path.exists():
-        logger.error("X.npy and/or y.npy not found in the dataset directory")
-        sys.exit(1)
-
-    X = np.load(X_path)
-    y = np.load(y_path)
+        logger.warning("X.npy and/or y.npy not found in the dataset directory; generating...")
+        X, y = fl.extract_data()
+        fl.save_dataset()
+        # If the dataset still does not exists, exit.
+        if not X_path.exists() or not y_path.exists():
+            logger.error("X.npy and/or y.npy could not be generated.")
+            sys.exit(1)
+    else:
+        # Load dataset if it has already been processed into .npy files.
+        X = np.load(X_path)
+        y = np.load(y_path)
     
     logger.info(f"Loaded from existing dataset: X={X.shape}, y={y.shape}")
 
