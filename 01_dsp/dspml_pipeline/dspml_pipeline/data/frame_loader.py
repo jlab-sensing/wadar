@@ -101,8 +101,6 @@ class FrameLoader:
 
     def _is_dataset_preprocessed(self, path: str):
         """
-        is_dataset_preprocessed(path)
-
         Check for the existence of X.npy, y.npy, features.csv, and results.csv files in the path provided.
 
         Args:
@@ -118,7 +116,45 @@ class FrameLoader:
         # TODO: Extract data here?
         return True
 
-    def extract_data(self):
+    def load(self, new: bool) -> tuple:
+        """
+        Loads and combines the specified datasets based on both existence of raw data and user specs.
+
+        Args:
+            new     (bool)  Load raw radar frames? If False, load .npy files if they exist.
+
+        Returns:
+            X, y    (tuple[np.array, np.array])
+        """
+        for dataset_path in self.dataset_dirs:
+            if new:
+            # Try to load preprocessed dataset if raw scans unavailable.
+            if not self._is_new_dataset_valid():
+                if not self._is_preprocessed_dataset_valid():
+                    logger.error(f"Neither existing radar scans nor valid preprocessed "
+                                 f"dataset were found for the following dataset:\r\n"
+                                 f"\t+ Target:\t\t{self.target_dir}\r\n"
+                                 f"\t+ Dataset dirs:\t{self.dataset_dirs}")
+                    sys.exit(1)
+                # Load preprocessed dataset if it exists and raw scans do not here.
+                X, y = self.load_preprocessed_dataset()
+            # Load raw radar scans into new dataset here.
+            else:
+                X, y = self.load_new_dataset()
+        else:
+            X, y = self.load_preprocessed_dataset()
+
+
+    def extract_single_dataset(self, dataset_path: Path) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Extracts the features (X) and labels (y) from a given directory.
+
+        Returns:
+            X (np.ndarray):         Processed radar data (features).
+            y (np.ndarray):         Corresponding labels (targets).
+        """
+
+    def extract_data(self) -> tuple:
         """
         Extracts the features (X) and labels (y) from the provided directries.
 
@@ -134,6 +170,7 @@ class FrameLoader:
 
         # Iterate through each dataset dir
         for i in self.dataset_dirs:
+            logging.info(f"Extracting data from {i}.")
             dataset_dir = Path(i)
             subdirs = [d for d in dataset_dir.iterdir() 
                     if d.is_dir() and not d.name.startswith('.')]
@@ -146,8 +183,9 @@ class FrameLoader:
                 df[self.label_name] = df[self.label_name].astype(float)
                 logger.info(f"Loaded data log with {len(df)} samples")
             except Exception as e:
-                logger.error(f"Expected CSV format: columns include '{self.folder_name}' and '{self.label_name}'")
-                sys.exit(1)
+                logger.warning(f"Expected CSV format: columns include '{self.folder_name}' and '{self.label_name}'; "
+                               f"attempting to load preprocessed {self.folder_name} dataset...")
+                return [], []
             
             # In each subdirectory
             for i, folder in enumerate(subdirs):
@@ -252,6 +290,9 @@ def load_dataset(dataset_dir: str, fl: FrameLoader):
     if not X_path.exists() or not y_path.exists():
         logger.warning("X.npy and/or y.npy not found in the dataset directory; generating...")
         X, y = fl.extract_data()
+        if len(X) == 0 or len(y) == 0:
+            logger.error("X.npy and/or y.npy could not be generated.")
+            sys.exit(1)
         fl.save_dataset()
         # If the dataset still does not exists, exit.
         if not X_path.exists() or not y_path.exists():
@@ -259,6 +300,8 @@ def load_dataset(dataset_dir: str, fl: FrameLoader):
             sys.exit(1)
     else:
         # Load dataset if it has already been processed into .npy files.
+        print(X_path)
+        print(y_path)
         X = np.load(X_path)
         y = np.load(y_path)
     

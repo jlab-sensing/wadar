@@ -19,6 +19,7 @@ Version:
 import logging
 logger = logging.getLogger(__name__)
 
+import argparse
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -42,19 +43,31 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import yaml
 
-def main():
 
-    if len(sys.argv) < 2:
-        raise RuntimeError("Usage: python main.py <config_file.yaml>")
-    config_file = sys.argv[1]
+def load_config(path: str) -> dict:
+    """
+    load_config(path)
 
-    # Load configuration
-    with open(config_file, "r") as f:
+    Load a configuration file into a return dictionary.
+
+    Args:
+        path    (str)
+
+    Returns:
+        params  (dict)
+    """
+    with open(path, "r") as f:
         params = yaml.safe_load(f)
+    return params
 
+def main(config_path: str):
+    # Load training parameters from config file.
+    params = load_config(path=config_path)
+
+    # Configure logging.
     setup_logging(verbose=params['advanced']['verbose'])
 
-    # Load data from training and validation datasets
+    # Load data from training and validation datasets.
     trainingFrameLoader = FrameLoader(dataset_dirs=params['data']['training']['dataset_dirs'],
                               target_dir=params['data']['training']['target_dir'],
                               data_log="data-log.csv",
@@ -63,13 +76,41 @@ def main():
                               target_dir=params['data']['validation']['target_dir'],
                               data_log="data-log.csv",
                               label_name=params['data']['label_name'])
+    X_train, y_train = trainingFrameLoader.load(params['data']['new_dataset'])
+    X_val, y_val = validationFrameLoader.load(params['data']['new_dataset'])
 
+    """
     # If new dataset, extract data. Otherwise, load from saved file.
     if params['data']['new_dataset']:
         X_train, y_train = trainingFrameLoader.extract_data()
-        trainingFrameLoader.save_dataset()
+        # Try to load previously-processed data if none found in raw form.
+        if len(X_train) > 0 and len(y_train) > 0:
+            trainingFrameLoader.save_dataset()
+        else:
+            print(f'Loading dataset from {params["data"]["training"]["target_dir"]}.')
+            X_train, y_train = load_dataset(
+                    dataset_dir=params['data']['training']['target_dir'],
+                    fl=trainingFrameLoader
+                )
+            # Exit if we still cannot find training data.
+            if len(X_train) == 0 or len(y_train) == 0:
+                logger.error(f'Cannot load training data for {params["data"]["training"]["target_dir"]}! Exiting.')
+                sys.exit()
+
+        # Try to load previously-processed data if none found in raw form.
         X_val, y_val = validationFrameLoader.extract_data()
-        validationFrameLoader.save_dataset()
+        if len(X_val) > 0 and len(y_val) > 0:
+            validationFrameLoader.save_dataset()
+        else:
+            print(f'Loading dataset from {params["data"]["validation"]["target_dir"]}.')
+            X_val, y_val = load_dataset(
+                    dataset_dir=params['data']['validation']['target_dir'],
+                    fl=validationFrameLoader
+                )
+            # Exit if we still cannot find validation data.
+            if len(X_val) == 0 or len(y_val) == 0:
+                logger.error(f'Cannot load training data for {params["data"]["validation"]["target_dir"]}! Exiting.')
+                sys.exit()
     else:
         X_train, y_train = load_dataset(
                 dataset_dir=params['data']['training']['target_dir'],
@@ -79,6 +120,7 @@ def main():
                 dataset_dir=params['data']['validation']['target_dir'],
                 fl=validationFrameLoader
             )
+    """
 
     # ======== Handcrafted Features ========
     if params['handcrafted']['enabled']:
@@ -547,4 +589,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Launch training/evaluation of GOPHERS datasets.")
+    parser.add_argument(
+            "--config",
+            "-c",
+            required=True,
+            type=str,
+            help="Path to desired config path."
+        )
+    args = parser.parse_args()
+    main(config_path=args.config)

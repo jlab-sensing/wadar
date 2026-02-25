@@ -1,3 +1,21 @@
+"""
+File:
+    eval_tools.py
+
+Description:
+    ???
+
+Authors:
+    jLab
+    Eric Vetha
+    nubby
+
+Date:
+    24 Feb 2026
+
+Version:
+    1.0.9
+"""
 from dspml_pipeline.feature_estimation.ridge_regression import RidgeRegression
 from dspml_pipeline.feature_estimation.random_forest import RandomForest
 from dspml_pipeline.feature_estimation.xgboost_tree import XGBoostTree
