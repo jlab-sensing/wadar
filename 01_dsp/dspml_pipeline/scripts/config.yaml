@@ -16,7 +16,7 @@ data:
   validation:
     # Raw validation datasets to combine
     dataset_dirs:
-      - "../data/field-pie-ranch-dataset"
+      - "../data/pie-ranch-dataset"
     # Target combined validation dataset directory
     target_dir: "../data/pie-ranch-dataset"
 
