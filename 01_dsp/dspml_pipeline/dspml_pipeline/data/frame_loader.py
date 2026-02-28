@@ -259,6 +259,22 @@ class FrameLoader:
 
         return new_frame_data, new_labels
 
+    def load_preprocessed_dataset(self, dataset_dir: str) -> tuple:
+        """
+        Load proprocessed datasets.
+        """
+        print(dataset_dir)
+        X_path = Path(dataset_dir) / "X.npy"
+        y_path = Path(dataset_dir) / "y.npy"
+
+        # Load dataset if it has already been processed into .npy files.
+        X = np.load(X_path)
+        y = np.load(y_path)
+        
+        logger.info(f"Loaded from existing dataset: X={X.shape}, y={y.shape}")
+
+        return X.tolist(), y.tolist()
+
     def load(self, new: bool) -> tuple:
         """
         Loads and combines the specified datasets based on both existence of raw data and user specs.
