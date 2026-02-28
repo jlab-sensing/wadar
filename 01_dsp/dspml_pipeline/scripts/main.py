@@ -79,6 +79,10 @@ def main(config_path: str):
     X_train, y_train = trainingFrameLoader.load(params['data']['new_dataset'])
     X_val, y_val = validationFrameLoader.load(params['data']['new_dataset'])
 
+    # TODO: Only save dataset conditionally.
+    trainingFrameLoader.save_dataset()
+    validationFrameLoader.save_dataset()
+
     """
     # If new dataset, extract data. Otherwise, load from saved file.
     if params['data']['new_dataset']:

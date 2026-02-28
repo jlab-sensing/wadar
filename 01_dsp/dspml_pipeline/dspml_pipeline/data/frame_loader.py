@@ -116,6 +116,149 @@ class FrameLoader:
         # TODO: Extract data here?
         return True
 
+    def _is_new_dataset_valid(self, dataset_dir: str) -> bool:
+        """
+        Confirm whether a dataset contains the required raw radar frames for processing.
+
+        Args:
+            dataset_dir     (str):  Relative path to dataset in question.
+
+        Returns:
+            valid           (bool): Is the dataset valid for extracting radar frame data?
+        """
+        required_file = "data-log.csv"
+        capture_files = []      # Keep track of the number of available radar captures.
+        
+        # First check that all required files are in the base directory.
+        current_files = set(os.listdir(dataset_dir))
+        if not required_file in current_files:
+            return False
+
+        # Next look for a number of raw radar scans greater than zero.
+        dataset_path = Path(dataset_dir)
+        subdirs = [d for d in dataset_path.iterdir() 
+                if d.is_dir() and not d.name.startswith('.')]
+        for i, folder in enumerate(subdirs):
+            capture_files.append(sorted(folder.glob("*.frames")))
+        if len(capture_files) == 0:
+            return False
+
+        return True
+
+    def _is_preprocessed_dataset_valid(self, dataset_dir: str) -> bool:
+        """
+        Confirm whether a dataset contains the required preprocessed radar scans.
+
+        Args:
+            dataset_dir     (str):  Relative path to dataset in question.
+
+        Returns:
+            valid           (bool): Is the dataset valid for use of preprocessed radar data?
+
+        Todo:
+            * Check the contents of the numpy files for validity.
+        """
+        required_files = ["X.npy", "y.npy"]
+        current_files = set(os.listdir(dataset_dir))
+        if not set(required_files).issubset(current_files):
+            return False
+        return True
+
+    def extract_single_dataset(self, dataset_dir: Path) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Extracts the features (X) and labels (y) from a given directory.
+
+        Args:
+            dataset_dir (str):          String of relative path to dataset source directory.
+
+        Returns:
+            frame_data  (np.ndarray):   Processed radar data (features) from one dataset source.
+            labels      (np.ndarray):   Corresponding labels (targets) from one dataset source.
+        """
+        new_frame_data = []
+        new_labels = []
+
+        logging.info(f"Extracting data from {dataset_dir}.")
+
+        dataset_dir = Path(dataset_dir)
+        subdirs = [d for d in dataset_dir.iterdir() 
+                if d.is_dir() and not d.name.startswith('.')]
+        data_log = dataset_dir / self.data_log
+        
+        # Get the labels from the data log.
+        try:
+            df = pd.read_csv(data_log)
+            df[self.folder_name] = df[self.folder_name].astype(str)
+            df[self.label_name] = df[self.label_name].astype(float)
+            logger.info(f"Loaded data log with {len(df)} samples")
+        except Exception as e:
+            logger.warning(f"Expected CSV format: columns include '{self.folder_name}' and '{self.label_name}'; "
+                           f"attempting to load preprocessed {self.folder_name} dataset...")
+            return [], []
+        
+        # In each subdirectory.
+        for i, folder in enumerate(subdirs):
+
+            capture_files = sorted(folder.glob("*.frames"))
+
+            logger.info(f"Processing {len(capture_files)} files in {folder.name}")
+
+            if not capture_files:
+                logger.warning(f"No .frames files found in {folder.name}")
+                continue
+
+            # Find the row in df corresponding to this folder name
+            sample_row = df[df['Sample #'] == folder.name]
+            if sample_row.empty:
+                logger.error(f"No matching sample for folder {folder.name} in data log")
+                sys.exit(1)
+            else:
+                bulk_density = sample_row.iloc[0][self.label_name]
+            
+            # Process each capture file
+            params = None
+            for capture_file in capture_files:
+                try:
+                    frame_data, params = process_frames(folder, capture_file.name)
+
+                    if frame_data is None:
+                        logger.warning(f"Failed to process: {capture_file.name}")
+                        continue
+
+                    # Anomoly removal. Replaces values that deviate from the median by more
+                    # than a threshold with the median. This has been done since the beginning 
+                    # of the project because of odd spikes in the raw DAC output that causes
+                    # large deviations in the data.
+                    median = np.median(frame_data, axis=1, keepdims=True)
+                    mask = np.abs(frame_data - median) > THRESHOLD
+                    frame_data_clean = frame_data.copy()
+                    frame_data_clean[mask] = np.broadcast_to(median, frame_data.shape)[mask]
+                    
+                    # DDC
+                    ddc_frame_data = np.zeros_like(frame_data_clean, dtype=np.complex64)
+                    for i in range(frame_data_clean.shape[1]):
+                        ddc_frame_data[:, i] = novelda_digital_downconvert(frame_data_clean[:, i])
+                    
+                    try:
+                        new_frame_data.append(ddc_frame_data)
+                        new_labels.append(bulk_density)
+                    except:
+                        logger.error(f"Failed to stack radar data from {capture_file.name}")
+                        sys.exit(1)
+
+                # Outputs warning when problem occurs while processing, but continues processing other radar data.
+                except Exception as e:
+                    logger.warning(f"Error processing {capture_file.name}: {e}")
+
+        # Save radar parameters
+        if params and len(capture_files) > 0:
+            params_file = folder / "radar_params.json"
+            with open(params_file, 'w') as f:
+                json.dump(params, f)
+            logger.info(f"Saved parameters: {params_file.name}")
+
+        return new_frame_data, new_labels
+
     def load(self, new: bool) -> tuple:
         """
         Loads and combines the specified datasets based on both existence of raw data and user specs.
@@ -124,35 +267,34 @@ class FrameLoader:
             new     (bool)  Load raw radar frames? If False, load .npy files if they exist.
 
         Returns:
-            X, y    (tuple[np.array, np.array])
+            X, y    (tuple[np.ndarray, np.ndarray])
         """
-        for dataset_path in self.dataset_dirs:
-            if new:
-            # Try to load preprocessed dataset if raw scans unavailable.
-            if not self._is_new_dataset_valid():
-                if not self._is_preprocessed_dataset_valid():
-                    logger.error(f"Neither existing radar scans nor valid preprocessed "
-                                 f"dataset were found for the following dataset:\r\n"
-                                 f"\t+ Target:\t\t{self.target_dir}\r\n"
-                                 f"\t+ Dataset dirs:\t{self.dataset_dirs}")
-                    sys.exit(1)
-                # Load preprocessed dataset if it exists and raw scans do not here.
-                X, y = self.load_preprocessed_dataset()
+        X = []
+        y = []
+
+        logger.info("Starting frame processing")
+
+        for dataset_dir in self.dataset_dirs:
             # Load raw radar scans into new dataset here.
+            if new and self._is_new_dataset_valid(dataset_dir=dataset_dir):
+                X_new, y_new = self.extract_single_dataset(dataset_dir=dataset_dir)
+            # Try to load preprocessed dataset if raw scans unavailable.
+            elif self._is_preprocessed_dataset_valid(dataset_dir):
+                X_new, y_new = self.load_preprocessed_dataset(dataset_dir)
             else:
-                X, y = self.load_new_dataset()
-        else:
-            X, y = self.load_preprocessed_dataset()
+                logger.error(f"Neither existing radar scans nor valid preprocessed "
+                             f"dataset were found for the following dataset:\r\n"
+                             f"\t+ Target:\t\t{self.target_dir}\r\n"
+                             f"\t+ Dataset dir:\t{dataset_dir}")
+                sys.exit(1)
+            # Append the new radar scans and labels to the broader dataset.
+            X += X_new
+            y += y_new
 
+        self.X = np.stack(X)
+        self.y = np.stack(y)
 
-    def extract_single_dataset(self, dataset_path: Path) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Extracts the features (X) and labels (y) from a given directory.
-
-        Returns:
-            X (np.ndarray):         Processed radar data (features).
-            y (np.ndarray):         Corresponding labels (targets).
-        """
+        return self.X, self.y
 
     def extract_data(self) -> tuple:
         """
