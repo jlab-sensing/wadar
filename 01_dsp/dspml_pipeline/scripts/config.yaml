@@ -1,4 +1,7 @@
-# Data configuration
+# Data configuration - Sensys first submission configs.
+# 
+# This configuration file trains on all controlled data as well as field (1), then
+# validates on field-2. Pie Ranch dataset is excluded.
 data:       
   label_name: "Bulk Density (g/cm^3)"     # Name of label used data_log.csv
   new_dataset: true                      # Set to true if this is a new dataset
@@ -10,14 +13,13 @@ data:
       - "../data/wet-1-soil-compaction-dataset" 
       - "../data/wet-2-soil-compaction-dataset"
       - "../data/field-soil-compaction-dataset"
-      - "../data/field-2-soil-compaction-dataset"
     # Target combined training dataset directory
     target_dir: "../data/sensys-training-dataset"
   # Validation dataset
   validation:
     # Raw validation datasets to combine
     dataset_dirs:
-      - "../data/pie-ranch-dataset"
+      - "../data/field-2-soil-compaction-dataset"
     # Target combined validation dataset directory
     target_dir: "../data/sensys-val-dataset"
 
