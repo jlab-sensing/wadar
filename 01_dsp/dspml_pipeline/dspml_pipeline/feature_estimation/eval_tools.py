@@ -11,10 +11,10 @@ Authors:
     nubby
 
 Date:
-    24 Feb 2026
+    1 Mar 2026
 
 Version:
-    1.0.9
+    1.1.1
 """
 from dspml_pipeline.feature_estimation.ridge_regression import RidgeRegression
 from dspml_pipeline.feature_estimation.random_forest import RandomForest
@@ -27,7 +27,7 @@ from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
 from dspml_pipeline.end_to_end_estimation.transformer import TransformerEstimator
 from dspml_pipeline.parameters import num2label
 
-from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score, r2_score
 import numpy as np
 import matplotlib.pyplot as plt
 from dspml_pipeline.results import load_results, display_feature_results
@@ -49,6 +49,11 @@ def compute_metrics(validation_labels:np.ndarray, val_predictions:np.ndarray):
     # Compute metrics
     mae = mean_absolute_error(validation_labels, val_predictions)
     rmse = np.sqrt(mean_squared_error(validation_labels, val_predictions))
+    try:
+        r2 = r2_score(validation_labels, val_predictions)
+    except Exception as e:  # TODO: See if this ever triggers.
+        print(e)
+        r2 = -1.0
     val_true_labels = [num2label(label) for label in validation_labels]
     val_pred_labels = [num2label(pred) for pred in val_predictions]
     accuracy = np.mean([pred == true for pred, true in zip(val_pred_labels, val_true_labels)])
@@ -60,6 +65,7 @@ def compute_metrics(validation_labels:np.ndarray, val_predictions:np.ndarray):
     metrics = {
         "mae": mae,
         "rmse": rmse,
+        "r2": r2,
         "accuracy": accuracy,
         "inference_time": inference_time,
         "training_time": training_time
