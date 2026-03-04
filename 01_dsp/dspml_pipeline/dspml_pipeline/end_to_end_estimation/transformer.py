@@ -8,7 +8,7 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 import time
 import os
 from PIL import Image
