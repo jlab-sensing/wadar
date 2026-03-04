@@ -1,4 +1,14 @@
-# Data configuration - Sensys first submission configs.
+# il-f1-config.yaml
+#
+# Dataset labels:
+#   il = In-lab, "wet*" datasets
+#   f1 = "field" dataset
+#   f2 = "field2" dataset
+#   pr = Dataset from Pie Ranch
+#
+#   '_' separates included datasets; '-' separates training from validation datasets.
+#
+# Data configuration.
 # 
 # This configuration file trains on all controlled data as well as field (1), then
 # validates on field-2. Pie Ranch dataset is excluded.
@@ -12,16 +22,15 @@ data:
       - "../data/wet-0-soil-compaction-dataset"
       - "../data/wet-1-soil-compaction-dataset" 
       - "../data/wet-2-soil-compaction-dataset"
-      - "../data/field-soil-compaction-dataset"
     # Target combined training dataset directory
-    target_dir: "../data/sensys-training-dataset"
+    target_dir: "../data/il-f1-training-dataset"
   # Validation dataset
   validation:
     # Raw validation datasets to combine
     dataset_dirs:
-      - "../data/field-2-soil-compaction-dataset"
+      - "../data/field-soil-compaction-dataset"
     # Target combined validation dataset directory
-    target_dir: "../data/sensys-val-dataset"
+    target_dir: "../data/il-f1-val-dataset"
 
 # For handcrafted features
 handcrafted:

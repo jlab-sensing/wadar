@@ -60,6 +60,31 @@ def load_config(path: str) -> dict:
         params = yaml.safe_load(f)
     return params
 
+def are_duplicate_examples_present(ds1: tuple, ds2: tuple) -> bool:
+    """
+    are_duplicate_examples_present(ds1, ds2)
+
+    Confirm that there are no duplicated examples both within and between each dataset.
+
+    Args:
+        ds1 (tuple) First dataset.
+        ds2 (tuple) Second dataset.
+
+    Returns:
+            (bool)  Are duplicates present?
+    """
+    dups = False
+    # The dimension of each scan is (512x160), and there are many scans.
+    for i, line1 in enumerate(ds1):
+        for j, line2 in enumerate(ds2):
+            if (len(line1) == len(line2)):
+                for scan1, scan2 in zip(line1, line2):
+                    if (len(scan1) == len(scan2)):
+                        if tuple(scan1) == tuple(scan2):
+                            print(f"Found duplicate at [{i},{j}]!")
+                            dups = True
+    return dups
+
 def main(config_path: str):
     # Load training parameters from config file.
     params = load_config(path=config_path)
@@ -78,6 +103,11 @@ def main(config_path: str):
                               label_name=params['data']['label_name'])
     X_train, y_train = trainingFrameLoader.load(params['data']['new_dataset'])
     X_val, y_val = validationFrameLoader.load(params['data']['new_dataset'])
+
+    # Verify that there are no duplicate examples in dataset.
+    if (are_duplicate_examples_present(X_train, X_val)):
+        print("Found duplicates! Exiting.")
+        sys.exit(1)
 
     # TODO: Only save dataset conditionally.
     trainingFrameLoader.save_dataset()

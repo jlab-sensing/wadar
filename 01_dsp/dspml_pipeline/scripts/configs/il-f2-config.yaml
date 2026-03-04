@@ -1,0 +1,95 @@
+# il-f2-config.yaml
+#
+# Dataset labels:
+#   il = In-lab, "wet*" datasets
+#   f1 = "field" dataset
+#   f2 = "field2" dataset
+#   pr = Dataset from Pie Ranch
+#
+#   '_' separates included datasets; '-' separates training from validation datasets.
+#
+# Data configuration.
+# 
+# This configuration file trains on all controlled data as well as field (1), then
+# validates on field-2. Pie Ranch dataset is excluded.
+data:       
+  label_name: "Bulk Density (g/cm^3)"     # Name of label used data_log.csv
+  new_dataset: true                      # Set to true if this is a new dataset
+  # Training dataset 
+  training:       
+    # Raw datasets to combine (list of directories)
+    dataset_dirs: 
+      - "../data/wet-0-soil-compaction-dataset"
+      - "../data/wet-1-soil-compaction-dataset" 
+      - "../data/wet-2-soil-compaction-dataset"
+    # Target combined training dataset directory
+    target_dir: "../data/il-f2-training-dataset"
+  # Validation dataset
+  validation:
+    # Raw validation datasets to combine
+    dataset_dirs:
+      - "../data/field-2-soil-compaction-dataset"
+    # Target combined validation dataset directory
+    target_dir: "../data/il-f2-val-dataset"
+
+# For handcrafted features
+handcrafted:
+  enabled: true               # Enable or disable handcrafted features
+  new_features: true         # Set to true if this is a new dataset or if features have not been generated yet
+  pruning_method: all      # Options: corr, mi, lasso, none
+  top_n: 16             # Only used if pruning_method is not none
+
+# For learned features
+learned:
+  n_features: 8               # Desired number of features
+  # PCA-based feature extraction
+  pca:
+    enabled: true             # Enable or disable PCA features
+  # Kernel-PCA-based feature extraction
+  kpca:
+    enabled: true             # Enable or disable kPCA features
+  # Autoencoder-based feature extraction
+  autoencoder:
+    enabled: true
+    epochs: 1000
+    batch_size: 256
+    verbose: true
+  # CNN-based feature extraction
+  cnn:
+    enabled: false
+    epochs: 20
+    batch_size: 32
+    verbose: true
+    
+# Classical model configuration for feature regression
+classical:
+  enabled: true               # Enable or disable the evaluation and validation of classical models (on all features)
+  tune_model_params: true    # Set to true to tune the models, or false to save time
+
+# Deep learning model configuration for feature regression
+deep_learning:
+  enabled: true
+
+# End-to-end model configurations for raw data regression
+end-to-end:
+  # LSTM-based end-to-end regression
+  lstm:
+    enabled: false
+    epochs: 50
+    batch_size: 32
+    verbose: false
+  # CNN-based end-to-end regression
+  cnn:
+    enabled: false
+    epochs: 20
+    batch_size: 32
+    verbose: false
+  # Transformer-based end-to-end regression
+  transformer:
+    enabled: true
+    batch_size: 4
+    epochs: 10
+    verbose: false
+
+advanced:
+  verbose: true               # Set to false to reduce logging output  
