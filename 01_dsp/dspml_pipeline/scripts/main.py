@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 
 import argparse
 import os
+import random
 import sys
+import torch
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
@@ -60,6 +62,48 @@ def load_config(path: str) -> dict:
         params = yaml.safe_load(f)
     return params
 
+def plant_seeds(seed: int = 42):
+    """
+    plant_seeds(seed)
+
+    Configure "consistent randomness" in system settings.
+
+    Args:
+        seed    (int)   Random seed.
+    """
+    logging.info(f"Configuring random seed of {seed}...")
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    logging.info("DONE.")
+
+def split_dataset(ds: tuple,
+                  train_split: float = 0.8,
+                  test_split: float = 0.2,
+                  random_seed: int = 42) -> tuple[tuple, tuple]:
+    """
+    split_dataset(ds, train_split, test_split, random_seed)
+
+    Divide a given dataset into a training set and testing set. In the event of an
+    imperfect split, the number of training data entries will be rounded up, while the
+    testing entries will be rounded down.
+    
+    Args:
+        ds              (tuple) Dataset to split
+        train_split     (float) Percentage of dataset to put into the new training dataset.
+        test_split      (float) Percentage of dataset to put into the new testing dataset.
+        random_seed     (int)   Random seed for assigning dataset splits.
+
+    Returns:
+        training_ds     (tuple) New training dataset.
+        testing_ds      (tuple) New testing dataset.
+    """
+    training_ds = []
+    testing_ds = []
+
 def are_duplicate_examples_present(ds1: tuple, ds2: tuple) -> bool:
     """
     are_duplicate_examples_present(ds1, ds2)
@@ -91,6 +135,10 @@ def main(config_path: str):
 
     # Configure logging.
     setup_logging(verbose=params['advanced']['verbose'])
+
+    # Configure environment for consistent training/results.
+    seed = 42   # TODO: Import as config.
+    plant_seeds(seed=seed)
 
     # Load data from training and validation datasets.
     trainingFrameLoader = FrameLoader(dataset_dirs=params['data']['training']['dataset_dirs'],
