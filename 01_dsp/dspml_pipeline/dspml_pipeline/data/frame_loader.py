@@ -62,11 +62,11 @@ class FrameLoader:
     def __init__(self,
                  target_dir: str,
                  data_log: str = "data-log.csv", 
-                 dataset: tuple = (),
+                 dataset: np.ndarray = None,
                  dataset_dirs: list = [],
                  folder_name: str = "Sample #",
                  label_name: str = "Bulk Density (g/cm^3)", 
-                 labels: tuple = (),
+                 labels: np.ndarray = None,
                  verbose: bool = False):
         """
         Initializes the FrameLoader instance based on the provided directories.

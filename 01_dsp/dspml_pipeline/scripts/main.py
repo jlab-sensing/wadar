@@ -80,11 +80,11 @@ def plant_seeds(seed: int = 42):
     torch.backends.cudnn.benchmark = False
     logging.info("DONE.")
 
-def split_dataset(ds: tuple,
-                  labels: tuple,
+def split_dataset(ds: np.ndarray,
+                  labels: np.ndarray,
                   train_split: float = 0.8,
                   test_split: float = 0.2,
-                  random_seed: int = 42) -> tuple[tuple, tuple, tuple, tuple]:
+                  random_seed: int = 42) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     split_dataset(ds, train_split, test_split, random_seed)
 
@@ -106,19 +106,25 @@ def split_dataset(ds: tuple,
         testing_labels  (tuple) New testing labels.
     """
     full_ds_size = len(ds)
-    training_ds_size = np.ceil(train_split * full_ds_size)
-    testing_ds_size = np.floor(test_split * full_ds_size)
+    training_ds_size = int(np.ceil(train_split * full_ds_size))
+    testing_ds_size = int(np.floor(test_split * full_ds_size))
 
     # Verify proper dataset split sizes.
     assert (training_ds_size + testing_ds_size == full_ds_size), f"Splits of {training_ds_size} and {test_ds_size} are not of total size {full_ds_size}"
 
     # Split the dataset and labels into training and testing sets based on indices.
-    training_indices = random.sample(range(full_ds_size), training_ds_size)
+    training_indices = np.random.choice(full_ds_size, training_ds_size, replace=False)
     testing_indices = [index for index in range(full_ds_size) if index not in training_indices]
-    training_ds = [ds[index] for index in training_indices]
-    training_labels = [labels[index] for index in training_indices]
-    testing_ds = [ds[index] for index in testing_indices]
-    testing_labels = [labels[index] for index in testing_indices]
+    """
+    training_ds = np.ndarray([ds[index] for index in training_indices])
+    training_labels = np.ndarray([labels[index] for index in training_indices])
+    testing_ds = np.ndarray([ds[index] for index in testing_indices])
+    testing_labels = np.ndarray([labels[index] for index in testing_indices])
+    """
+    training_ds = ds[training_indices]
+    training_labels = labels[training_indices]
+    testing_ds = ds[testing_indices]
+    testing_labels = labels[testing_indices]
     return training_ds, training_labels, testing_ds, testing_labels
 
 def are_duplicate_examples_present(ds1: tuple, ds2: tuple) -> bool:
@@ -173,7 +179,7 @@ def main(config_path: str, cross_val: bool = False):
                                   target_dir=params['data']['training']['target_dir'],
                                   data_log="data-log.csv",
                                   label_name=params['data']['label_name'])
-        X_full, y_full = trainingFrameLoader.load(params['data']['new_dataset'])
+        X_full, y_full = fullFrameLoader.load(params['data']['new_dataset'])
 
         # Divide the full dataset into training/testing splits.
         X_train, y_train, X_val, y_val = split_dataset(ds=X_full, labels=y_full, random_seed=seed)
