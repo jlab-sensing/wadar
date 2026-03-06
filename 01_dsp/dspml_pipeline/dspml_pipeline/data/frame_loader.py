@@ -59,9 +59,14 @@ class FrameLoader:
         y (np.ndarray):         Corresponding labels (targets).
     """
 
-    def __init__(self, dataset_dirs: list, target_dir: str,
+    def __init__(self,
+                 target_dir: str,
                  data_log: str = "data-log.csv", 
-                 folder_name: str = "Sample #", label_name: str = "Bulk Density (g/cm^3)", 
+                 dataset: tuple = (),
+                 dataset_dirs: list = [],
+                 folder_name: str = "Sample #",
+                 label_name: str = "Bulk Density (g/cm^3)", 
+                 labels: tuple = (),
                  verbose: bool = False):
         """
         Initializes the FrameLoader instance based on the provided directories.
@@ -78,26 +83,37 @@ class FrameLoader:
         self.dataset_dirs = dataset_dirs
         self.target_dir = target_dir
         self.data_log = data_log
-        self.X = None
-        self.y = None
         self.label_name = label_name
         self.folder_name = folder_name
 
-        # Validate dataset directory
-        for i in self.dataset_dirs:
-            if not Path(i).exists():
-                logger.error(f"Dataset {i} does not exist.")
-            if not os.path.isdir(i):
-                logger.error(f"Path {i} does not point to a dataset directory.")
-            data_log_i = Path(i) / data_log
-            if not data_log_i.exists():
-                logger.warning(f"Data log file {data_log_i} does not exist; "
-                               f"checking for preprocessed dataset...")
-                if not self._is_dataset_preprocessed(i):
-                    logger.warning(f"Dataset {i} is invalid.")
-                    sys.exit(1)
-                else:
-                    logger.info(f"Dataset {i} initialized.")
+        # Import data from the dataset directories if provided.
+        if dataset_dirs:
+            # No input datastreams given.
+            self.X = None
+            self.y = None
+
+            # Validate dataset directory
+            for i in self.dataset_dirs:
+                if not Path(i).exists():
+                    logger.error(f"Dataset {i} does not exist.")
+                if not os.path.isdir(i):
+                    logger.error(f"Path {i} does not point to a dataset directory.")
+                data_log_i = Path(i) / data_log
+                if not data_log_i.exists():
+                    logger.warning(f"Data log file {data_log_i} does not exist; "
+                                   f"checking for preprocessed dataset...")
+                    if not self._is_dataset_preprocessed(i):
+                        logger.warning(f"Dataset {i} is invalid.")
+                        sys.exit(1)
+                    else:
+                        logger.info(f"Dataset {i} initialized.")
+        # Directly import tuples of dataset and labels if given.
+        elif ((len(dataset) > 0 and len(labels) > 0) and (len(labels) == len(dataset))):
+            self.X = dataset
+            self.y = labels
+        else:
+            print(f"Cannot load dataset.")
+            sys.exit(1)
 
     def _is_dataset_preprocessed(self, path: str):
         """
