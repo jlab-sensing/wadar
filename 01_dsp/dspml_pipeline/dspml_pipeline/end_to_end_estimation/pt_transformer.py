@@ -1,5 +1,19 @@
-# TODO: update docstrings
+"""
+pt_transformer.py
 
+Pretrained, lightweight visual Transformer architecture (MobileViT) repurposed to explore
+its ability at using transfer learning to detect soil compaction through radargrams.
+
+Authors:
+    jLab
+    Eric Vetha
+    
+Date:
+    7 Mar 2026
+
+Version:
+    1.0.0
+"""
 import logging
 logger = logging.getLogger(__name__)
 
