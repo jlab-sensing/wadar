@@ -38,7 +38,7 @@ from dspml_pipeline.feature_extraction.learned.kpca import kPCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.autoencoder import AutoencoderLearnedFeatures
 from dspml_pipeline.feature_extraction.learned.cnn import CNNLearnedFeatures
 from dspml_pipeline.end_to_end_estimation.cnn import CNNEstimator
-from dspml_pipeline.end_to_end_estimation.transformer import TransformerEstimator
+from dspml_pipeline.end_to_end_estimation.pt_transformer import TransformerEstimator
 from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
 
 from scipy import stats

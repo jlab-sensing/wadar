@@ -13,7 +13,7 @@ from dspml_pipeline.results import load_results, display_feature_results
 from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
 from dspml_pipeline.results import update_results
 from dspml_pipeline.end_to_end_estimation.cnn import CNNEstimator
-from dspml_pipeline.end_to_end_estimation.transformer import TransformerEstimator
+from dspml_pipeline.end_to_end_estimation.pt_transformer import TransformerEstimator
 
 from scipy import stats
 
