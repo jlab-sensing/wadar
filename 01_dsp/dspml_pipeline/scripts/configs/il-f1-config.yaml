@@ -1,28 +1,40 @@
-# Data configuration
+# il-f1-config.yaml
+#
+# Dataset labels:
+#   il = In-lab, "wet*" datasets
+#   f1 = "field" dataset
+#   f2 = "field2" dataset
+#   pr = Dataset from Pie Ranch
+#
+#   '_' separates included datasets; '-' separates training from validation datasets.
+#
+# Data configuration.
+# 
+# This configuration file trains on all controlled data as well as field (1), then
+# validates on field-2. Pie Ranch dataset is excluded.
 data:       
   label_name: "Bulk Density (g/cm^3)"     # Name of label used data_log.csv
-  new_dataset: false                      # Set to true if this is a new dataset
+  new_dataset: true                      # Set to true if this is a new dataset
   # Training dataset 
   training:       
     # Raw datasets to combine (list of directories)
-    dataset_dirs:       
+    dataset_dirs: 
       - "../data/wet-0-soil-compaction-dataset"
       - "../data/wet-1-soil-compaction-dataset" 
       - "../data/wet-2-soil-compaction-dataset"
-      - "../data/field-soil-compaction-dataset"
     # Target combined training dataset directory
-    target_dir: "../data/combined-training-dataset"
+    target_dir: "../data/il-f1-training-dataset"
   # Validation dataset
   validation:
     # Raw validation datasets to combine
     dataset_dirs:
-      - "../data/field-pie-ranch-dataset"
+      - "../data/field-soil-compaction-dataset"
     # Target combined validation dataset directory
-    target_dir: "../data/pie-ranch-dataset"
+    target_dir: "../data/il-f1-val-dataset"
 
 # For handcrafted features
 handcrafted:
-  enabled: false               # Enable or disable handcrafted features
+  enabled: true               # Enable or disable handcrafted features
   new_features: true         # Set to true if this is a new dataset or if features have not been generated yet
   pruning_method: all      # Options: corr, mi, lasso, none
   top_n: 16             # Only used if pruning_method is not none
@@ -32,10 +44,10 @@ learned:
   n_features: 8               # Desired number of features
   # PCA-based feature extraction
   pca:
-    enabled: false             # Enable or disable PCA features
+    enabled: true             # Enable or disable PCA features
   # Kernel-PCA-based feature extraction
   kpca:
-    enabled: false             # Enable or disable kPCA features
+    enabled: true             # Enable or disable kPCA features
   # Autoencoder-based feature extraction
   autoencoder:
     enabled: true
@@ -44,7 +56,7 @@ learned:
     verbose: true
   # CNN-based feature extraction
   cnn:
-    enabled: true
+    enabled: false
     epochs: 20
     batch_size: 32
     verbose: true
@@ -62,13 +74,13 @@ deep_learning:
 end-to-end:
   # LSTM-based end-to-end regression
   lstm:
-    enabled: true
+    enabled: false
     epochs: 50
     batch_size: 32
     verbose: false
   # CNN-based end-to-end regression
   cnn:
-    enabled: true
+    enabled: false
     epochs: 20
     batch_size: 32
     verbose: false

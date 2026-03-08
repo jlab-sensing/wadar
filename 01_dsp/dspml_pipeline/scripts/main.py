@@ -1,8 +1,29 @@
+"""
+File:
+    main.py
+
+Description:
+    Launch file for WADAR dspml_pipeline.
+
+Authors:
+    jLab
+    Eric Vetha
+    nubby
+
+Date:
+    6 Mar 2026
+
+Version:
+    1.0.11
+"""
 import logging
 logger = logging.getLogger(__name__)
 
+import argparse
 import os
+import random
 import sys
+import torch
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
@@ -17,44 +38,186 @@ from dspml_pipeline.feature_extraction.learned.kpca import kPCALearnedFeatures
 from dspml_pipeline.feature_extraction.learned.autoencoder import AutoencoderLearnedFeatures
 from dspml_pipeline.feature_extraction.learned.cnn import CNNLearnedFeatures
 from dspml_pipeline.end_to_end_estimation.cnn import CNNEstimator
-from dspml_pipeline.end_to_end_estimation.transformer import TransformerEstimator
+from dspml_pipeline.end_to_end_estimation.pt_transformer import TransformerEstimator
 from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
 
 from scipy import stats
 import matplotlib.pyplot as plt
 import yaml
 
-def main():
 
-    if len(sys.argv) < 2:
-        raise RuntimeError("Usage: python main.py <config_file.yaml>")
-    config_file = sys.argv[1]
+def load_config(path: str) -> dict:
+    """
+    load_config(path)
 
-    # Load configuration
-    with open(config_file, "r") as f:
+    Load a configuration file into a return dictionary.
+
+    Args:
+        path    (str)
+
+    Returns:
+        params  (dict)
+    """
+    with open(path, "r") as f:
         params = yaml.safe_load(f)
+    return params
 
+def plant_seeds(seed: int = 42):
+    """
+    plant_seeds(seed)
+
+    Configure "consistent randomness" in system settings.
+
+    Args:
+        seed    (int)   Random seed.
+    """
+    logging.info(f"Configuring random seed of {seed}...")
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    logging.info("DONE.")
+
+def split_dataset(ds: np.ndarray,
+                  labels: np.ndarray,
+                  train_split: float = 0.8,
+                  test_split: float = 0.2,
+                  random_seed: int = 42) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    split_dataset(ds, train_split, test_split, random_seed)
+
+    Divide a given dataset into a training set and testing set. In the event of an
+    imperfect split, the number of training data entries will be rounded up, while the
+    testing entries will be rounded down.
+    
+    Args:
+        ds              (tuple) Dataset to split.
+        labels          (tuple) Labels to split.
+        train_split     (float) Percentage of dataset to put into the new training dataset.
+        test_split      (float) Percentage of dataset to put into the new testing dataset.
+        random_seed     (int)   Random seed for assigning dataset splits.
+
+    Returns:
+        training_ds     (tuple) New training dataset.
+        training_labels (tuple) New training labels.
+        testing_ds      (tuple) New testing dataset.
+        testing_labels  (tuple) New testing labels.
+    """
+    full_ds_size = len(ds)
+    training_ds_size = int(np.ceil(train_split * full_ds_size))
+    testing_ds_size = int(np.floor(test_split * full_ds_size))
+
+    # Verify proper dataset split sizes.
+    assert (training_ds_size + testing_ds_size == full_ds_size), f"Splits of {training_ds_size} and {test_ds_size} are not of total size {full_ds_size}"
+
+    # Split the dataset and labels into training and testing sets based on indices.
+    training_indices = np.random.choice(full_ds_size, training_ds_size, replace=False)
+    testing_indices = [index for index in range(full_ds_size) if index not in training_indices]
+    """
+    training_ds = np.ndarray([ds[index] for index in training_indices])
+    training_labels = np.ndarray([labels[index] for index in training_indices])
+    testing_ds = np.ndarray([ds[index] for index in testing_indices])
+    testing_labels = np.ndarray([labels[index] for index in testing_indices])
+    """
+    training_ds = ds[training_indices]
+    training_labels = labels[training_indices]
+    testing_ds = ds[testing_indices]
+    testing_labels = labels[testing_indices]
+    return training_ds, training_labels, testing_ds, testing_labels
+
+def are_duplicate_examples_present(ds1: tuple, ds2: tuple) -> bool:
+    """
+    are_duplicate_examples_present(ds1, ds2)
+
+    Confirm that there are no duplicated examples both within and between each dataset.
+
+    Args:
+        ds1 (tuple) First dataset.
+        ds2 (tuple) Second dataset.
+
+    Returns:
+            (bool)  Are duplicates present?
+    """
+    dups = False
+    # The dimension of each scan is (512x160), and there are many scans.
+    for i, line1 in enumerate(ds1):
+        for j, line2 in enumerate(ds2):
+            if (len(line1) == len(line2)):
+                for scan1, scan2 in zip(line1, line2):
+                    if (len(scan1) == len(scan2)):
+                        if tuple(scan1) == tuple(scan2):
+                            print(f"Found duplicate at [{i},{j}]!")
+                            dups = True
+    return dups
+
+def main(config_path: str, cross_val: bool = False):
+    """
+    main(config_path, cross_val)
+
+    Run the main training/validation pipeline.
+
+    Args:
+        config_path (str)   Path to selected configuration .yaml file.
+        cross_val   (bool)  Perform cross-validation on training dataset specified.
+    """
+    # Load training parameters from config file.
+    params = load_config(path=config_path)
+
+    # Configure logging.
     setup_logging(verbose=params['advanced']['verbose'])
 
-    # Load data from training and validation datasets
-    trainingFrameLoader = FrameLoader(dataset_dirs=params['data']['training']['dataset_dirs'],
-                              target_dir=params['data']['training']['target_dir'],
-                              data_log="data-log.csv",
-                              label_name=params['data']['label_name'])
-    validationFrameLoader = FrameLoader(dataset_dirs=params['data']['validation']['dataset_dirs'],
-                              target_dir=params['data']['validation']['target_dir'],
-                              data_log="data-log.csv",
-                              label_name=params['data']['label_name'])
+    # Configure environment for consistent training/results.
+    seed = 42   # TODO: Import as config.
+    plant_seeds(seed=seed)
 
-    # If new dataset, extract data. Otherwise, load from saved file.
-    if params['data']['new_dataset']:
-        X_train, y_train = trainingFrameLoader.extract_data()
-        trainingFrameLoader.save_dataset()
-        X_val, y_val = validationFrameLoader.extract_data()
-        validationFrameLoader.save_dataset()
+    # Determine whether to split a single dataset into parts or validate on held-out datasets.
+    # Load only the training "dataset_dirs"  for cross validation testing.
+    if cross_val:
+        fullFrameLoader = FrameLoader(dataset_dirs=params['data']['training']['dataset_dirs'],
+                                  target_dir=params['data']['training']['target_dir'],
+                                  data_log="data-log.csv",
+                                  label_name=params['data']['label_name'])
+        X_full, y_full = fullFrameLoader.load(params['data']['new_dataset'])
+
+        # Divide the full dataset into training/testing splits.
+        X_train, y_train, X_val, y_val = split_dataset(ds=X_full, labels=y_full, random_seed=seed)
+
+        # NOTE: Currently, these frame loaders can only write/save each split.
+        trainingFrameLoader = FrameLoader(dataset=X_train,
+                                          data_log="data-log.csv",
+                                          label_name=params['data']['label_name'],
+                                          labels=y_train,
+                                          target_dir=params['data']['training']['target_dir'])
+        validationFrameLoader = FrameLoader(dataset=X_val,
+                                            data_log="data-log.csv",
+                                            label_name=params['data']['label_name'],
+                                            labels=y_val,
+                                            target_dir=params['data']['validation']['target_dir'])
+    # Load all datasets if not doing strict cross-validation.
     else:
-        X_train, y_train = load_dataset(dataset_dir=params['data']['training']['target_dir'])
-        X_val, y_val = load_dataset(dataset_dir=params['data']['validation']['target_dir'])
+        # Load data from training and validation datasets.
+        trainingFrameLoader = FrameLoader(dataset_dirs=params['data']['training']['dataset_dirs'],
+                                  target_dir=params['data']['training']['target_dir'],
+                                  data_log="data-log.csv",
+                                  label_name=params['data']['label_name'])
+        validationFrameLoader = FrameLoader(dataset_dirs=params['data']['validation']['dataset_dirs'],
+                                  target_dir=params['data']['validation']['target_dir'],
+                                  data_log="data-log.csv",
+                                  label_name=params['data']['label_name'])
+        X_train, y_train = trainingFrameLoader.load(params['data']['new_dataset'])
+        X_val, y_val = validationFrameLoader.load(params['data']['new_dataset'])
+
+    # Verify that there are no duplicate examples in dataset.
+    if (are_duplicate_examples_present(X_train, X_val)):
+        print("Found duplicates! Exiting.")
+        sys.exit(1)
+
+    # TODO: Only save dataset conditionally.
+    trainingFrameLoader.save_dataset()
+    validationFrameLoader.save_dataset()
+
 
     # ======== Handcrafted Features ========
     if params['handcrafted']['enabled']:
@@ -523,4 +686,19 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Launch training/evaluation of GOPHERS datasets.")
+    parser.add_argument(
+            "--config",
+            "-c",
+            required=True,
+            type=str,
+            help="Path to desired config path."
+        )
+    parser.add_argument(
+            "--cross-validation",
+            "-x",
+            action="store_true",
+            help="Run cross-validation on the specified dataset (specified as the 'training' dataset in the config)?"
+        )
+    args = parser.parse_args()
+    main(config_path=args.config, cross_val=args.cross_validation)

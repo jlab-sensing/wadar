@@ -1,3 +1,21 @@
+"""
+File:
+    eval_tools.py
+
+Description:
+    ???
+
+Authors:
+    jLab
+    Eric Vetha
+    nubby
+
+Date:
+    24 Feb 2026
+
+Version:
+    1.0.9
+"""
 from dspml_pipeline.feature_estimation.ridge_regression import RidgeRegression
 from dspml_pipeline.feature_estimation.random_forest import RandomForest
 from dspml_pipeline.feature_estimation.xgboost_tree import XGBoostTree
@@ -6,7 +24,7 @@ from dspml_pipeline.results import update_results
 from dspml_pipeline.feature_estimation.mlp import MLPRegression
 from dspml_pipeline.end_to_end_estimation.cnn import CNNEstimator
 from dspml_pipeline.end_to_end_estimation.lstm import LSTMEstimator
-from dspml_pipeline.end_to_end_estimation.transformer import TransformerEstimator
+from dspml_pipeline.end_to_end_estimation.pt_transformer import TransformerEstimator
 from dspml_pipeline.parameters import num2label
 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score
