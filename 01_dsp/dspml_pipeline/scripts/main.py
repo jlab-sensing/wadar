@@ -152,7 +152,7 @@ def are_duplicate_examples_present(ds1: tuple, ds2: tuple) -> bool:
                             dups = True
     return dups
 
-def main(config_path: str, cross_val: bool = False):
+def main(config_path: str, cross_val: bool = False, seed: int = 42):
     """
     main(config_path, cross_val)
 
@@ -169,7 +169,8 @@ def main(config_path: str, cross_val: bool = False):
     setup_logging(verbose=params['advanced']['verbose'])
 
     # Configure environment for consistent training/results.
-    seed = 42   # TODO: Import as config.
+    print(seed)
+    exit(1)
     plant_seeds(seed=seed)
 
     # Determine whether to split a single dataset into parts or validate on held-out datasets.
@@ -700,5 +701,12 @@ if __name__ == "__main__":
             action="store_true",
             help="Run cross-validation on the specified dataset (specified as the 'training' dataset in the config)?"
         )
+    parser.add_argument(
+            "--seed",
+            "-s",
+            default=42,
+            type=int,
+            help="Seed to set randomness."
+        )
     args = parser.parse_args()
-    main(config_path=args.config, cross_val=args.cross_validation)
+    main(config_path=args.config, cross_val=args.cross_validation, seed=args.seed)
