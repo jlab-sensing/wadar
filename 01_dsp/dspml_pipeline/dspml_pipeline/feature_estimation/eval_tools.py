@@ -130,7 +130,7 @@ def validate_classical_models(validation_dir: str, validation_features: np.ndarr
             update_results(validation_dir, feature_name, model_name, metrics)
 
 def classical_models_full_monty(training_dir: str, training_labels: np.ndarray, validation_dir: str, validation_labels: np.ndarray,
-                                tune_model_params: bool, training_features: np.ndarray, validation_features: np.ndarray, feature_name: str, seed: int = seed):
+                                tune_model_params: bool, training_features: np.ndarray, validation_features: np.ndarray, feature_name: str, seed: int = 42):
     """
     Train, evaluate, and validate all classical models, and display results.
 

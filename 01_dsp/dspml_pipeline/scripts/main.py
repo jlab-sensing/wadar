@@ -521,7 +521,7 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
                 validation_labels=y_val,
                 training_features=encoded_train_pha,
                 validation_features=encoded_val_pha,
-                feature_name="Autoencoder Phase"
+                feature_name="Autoencoder Phase",
                 seed=seed
             )
         show_results_summary("Autoencoder Phase", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
