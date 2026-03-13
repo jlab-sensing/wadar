@@ -67,7 +67,7 @@ def compute_metrics(validation_labels:np.ndarray, val_predictions:np.ndarray):
 
     return metrics
 
-def evaluate_classic_models(training_dir:str, training_features:np.ndarray, training_labels:np.ndarray, tune_model_params:bool, feature_name:str):
+def evaluate_classic_models(training_dir:str, training_features:np.ndarray, training_labels:np.ndarray, tune_model_params:bool, feature_name:str, seed: int = 42):
     """
     Train and evaluate all classical models using training data.
     
@@ -85,25 +85,25 @@ def evaluate_classic_models(training_dir:str, training_features:np.ndarray, trai
         svr (SVRRegression)                 Trained SVRRegression class
     """
     
-    ridgeRegressor = RidgeRegression()
+    ridgeRegressor = RidgeRegression(seed=seed)
     ridgeModel, metrics = ridgeRegressor.full_monty(training_features, training_labels)
     update_results(training_dir, feature_name, f"Ridge Regression Degree", metrics)
 
     # ==
 
-    randomForest = RandomForest(tune_model_params=tune_model_params)
+    randomForest = RandomForest(tune_model_params=tune_model_params, seed=seed)
     model, metrics = randomForest.full_monty(training_features, training_labels)
     update_results(training_dir, feature_name, "Random Forest", metrics)
 
     # ==
 
-    gbTree = XGBoostTree(tune_model_params)
+    gbTree = XGBoostTree(tune_model_params, seed=seed)
     model, metrics = gbTree.full_monty(training_features, training_labels)
     update_results(training_dir, feature_name, "Gradient Boosted Tree", metrics)
 
     # ==
 
-    svr = SVRRegression(tune_model_params)
+    svr = SVRRegression(tune_model_params, seed=seed)
     model, metrics = svr.full_monty(training_features, training_labels)
     update_results(training_dir, feature_name, "SVR", metrics)
 
@@ -130,7 +130,7 @@ def validate_classical_models(validation_dir: str, validation_features: np.ndarr
             update_results(validation_dir, feature_name, model_name, metrics)
 
 def classical_models_full_monty(training_dir: str, training_labels: np.ndarray, validation_dir: str, validation_labels: np.ndarray,
-                                tune_model_params: bool, training_features: np.ndarray, validation_features: np.ndarray, feature_name: str):
+                                tune_model_params: bool, training_features: np.ndarray, validation_features: np.ndarray, feature_name: str, seed: int = seed):
     """
     Train, evaluate, and validate all classical models, and display results.
 
@@ -147,7 +147,7 @@ def classical_models_full_monty(training_dir: str, training_labels: np.ndarray, 
 
     # Train all the classical models
     ridgeRegressor, randomForest, gbTree, svr = evaluate_classic_models(
-        training_dir, training_features, training_labels, tune_model_params, feature_name
+        training_dir, training_features, training_labels, tune_model_params, feature_name, seed=seed
     )
 
     # Predict on the validation dataset using all trained models
@@ -165,7 +165,7 @@ def classical_models_full_monty(training_dir: str, training_labels: np.ndarray, 
         models=models_amp
     )
 
-def evaluate_deep_models(training_dir: str, training_features: np.ndarray, training_labels: np.ndarray, feature_name: str):
+def evaluate_deep_models(training_dir: str, training_features: np.ndarray, training_labels: np.ndarray, feature_name: str, seed: int = 42):
     """
     Train and evaluate all deep learning models using training data.
     
@@ -180,7 +180,7 @@ def evaluate_deep_models(training_dir: str, training_features: np.ndarray, train
     """
     
     # MLP on features
-    mlp = MLPRegression()
+    mlp = MLPRegression(seed=seed)
     _, metrics = mlp.full_monty(training_features, training_labels)
     update_results(training_dir, feature_name, "Multi Layer Perceptron", metrics)
 
@@ -208,7 +208,7 @@ def validate_deep_models(validation_dir: str, validation_features: np.ndarray, v
 
 
 def deep_full_monty(training_dir: str, training_labels: np.ndarray, validation_dir: str, validation_labels: np.ndarray,
-                   training_features: np.ndarray, validation_features: np.ndarray, feature_name: str):
+                    training_features: np.ndarray, validation_features: np.ndarray, feature_name: str, seed: int = 42):
     """
     Train, evaluate, and validate all deep learning models, and display results.
 
@@ -224,7 +224,7 @@ def deep_full_monty(training_dir: str, training_labels: np.ndarray, validation_d
 
     # Train all the deep learning models
     mlp = evaluate_deep_models(
-        training_dir, training_features, training_labels, feature_name
+        training_dir, training_features, training_labels, feature_name, seed=seed
     )
 
     # Predict on the validation dataset using all trained models

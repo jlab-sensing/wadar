@@ -26,7 +26,7 @@ class SVRRegression:
         tune_model_params (bool):   Whether to perform hyperparameter tuning using grid search.
     """
 
-    def __init__(self, tune_model_params : bool = True):
+    def __init__(self, tune_model_params : bool = True, seed: int = 42):
         """
         Initalize the class for SVR-based feature regression.
 
@@ -36,6 +36,7 @@ class SVRRegression:
         self.model = None
         self.metrics = None
         self.tune_model_params = tune_model_params
+        self.seed = seed
 
     def full_monty(self, feature_array, labels):
         """
@@ -64,7 +65,7 @@ class SVRRegression:
 
     def cross_validate(self, feature_array, labels):
         X, y = feature_array, labels
-        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=RANDOM_SEED)
+        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=self.seed)
 
         # Store metrics for each fold
         metrics = {'mae': [], 'rmse': [], 'accuracy': [], 'inference_time': [], 'training_time': []}

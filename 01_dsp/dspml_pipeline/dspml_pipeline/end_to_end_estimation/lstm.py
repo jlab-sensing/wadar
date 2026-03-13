@@ -13,9 +13,9 @@ import time
 
 from ..parameters import RANDOM_SEED, KFOLD_SPLITS, num2label
 
-# Set seeds for reproducibility
-tf.random.set_seed(RANDOM_SEED)
-np.random.seed(RANDOM_SEED)
+# Handled in main. 
+#tf.random.set_seed(RANDOM_SEED)
+#np.random.seed(RANDOM_SEED)
 
 
 class LSTMEstimator:
@@ -36,7 +36,7 @@ class LSTMEstimator:
     
     def __init__(self, X : np.ndarray, y : np.ndarray, 
                  epochs : int = 50, batch_size : int =16, 
-                 verbose : bool =0):
+                 verbose : bool =0, seed: int = 42):
         """
         Initialize LSTM regression model.
         
@@ -47,6 +47,8 @@ class LSTMEstimator:
             batch_size (int):       Batch size for training and inference. Default is 16.
             verbose (bool):         Verbosity level for training. Default is 0.
         """
+
+        self.seed = seed
 
         self.kfold_splits = KFOLD_SPLITS
         self.model = None
@@ -141,7 +143,7 @@ class LSTMEstimator:
         # Use raw processed data (before normalization) for cross-validation
         X_processed = self._process_complex_data(self.X_raw)
         
-        kfold = KFold(n_splits=self.kfold_splits, shuffle=True, random_state=RANDOM_SEED)
+        kfold = KFold(n_splits=self.kfold_splits, shuffle=True, random_state=self.seed)
         
         cv_mse_scores = []
         cv_mae_scores = []

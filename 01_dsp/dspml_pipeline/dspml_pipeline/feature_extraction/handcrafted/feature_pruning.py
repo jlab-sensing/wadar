@@ -93,7 +93,7 @@ def correlation_minimize_features(feature_table: pd.DataFrame, top_n: int = FEAT
 
     return df_best, corr_scores_df
 
-def lasso_minimize_features(feature_table:pd.DataFrame, top_n:int = FEATURE_COUNT, alpha:float = None):
+def lasso_minimize_features(feature_table:pd.DataFrame, top_n:int = FEATURE_COUNT, alpha:float = None, seed: int = 42):
     """
     Select features using Lasso regression with L1 regularization.
 
@@ -123,13 +123,13 @@ def lasso_minimize_features(feature_table:pd.DataFrame, top_n:int = FEATURE_COUN
     
     # Use cross-validation to find optimal alpha if not provided
     if alpha is None:
-        lasso_cv = LassoCV(cv=5, random_state=RANDOM_SEED, max_iter=20000)
+        lasso_cv = LassoCV(cv=5, random_state=seed, max_iter=20000)
         lasso_cv.fit(feature_array_scaled, labels)
         alpha = lasso_cv.alpha_
         print(f"[INFO] Optimal Lasso alpha found: {alpha:.6f}")
     
     # Fit Lasso with the selected alpha
-    lasso = Lasso(alpha=alpha, random_state=RANDOM_SEED, max_iter=20000)
+    lasso = Lasso(alpha=alpha, random_state=seed, max_iter=20000)
     lasso.fit(feature_array_scaled, labels)
     
     # Get feature coefficients and select top features by absolute coefficient value

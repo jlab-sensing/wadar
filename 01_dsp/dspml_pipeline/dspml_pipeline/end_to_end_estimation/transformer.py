@@ -1,18 +1,20 @@
 """
-pt_transformer.py
+transformer.py
 
-Pretrained, lightweight visual Transformer architecture (MobileViT) repurposed to explore
-its ability at using transfer learning to detect soil compaction through radargrams.
+Lightweight Transformer architecture built to explore using DL for predicting soil
+compaction levels from radar data..
 
 Authors:
     jLab
+    nubby
     Eric Vetha
+    Taylor Kergan
     
 Date:
-    7 Mar 2026
+    8 Mar 2026
 
 Version:
-    1.0.0
+    0.0.10
 """
 import logging
 logger = logging.getLogger(__name__)
@@ -33,10 +35,6 @@ try:
 except ImportError:
     from transformers import MobileViTImageProcessor, MobileViTForImageClassification
 
-
-# Handled in main.
-#torch.manual_seed(RANDOM_SEED)
-#np.random.seed(RANDOM_SEED)
 
 class RadarData2Image(Dataset):
     """
@@ -114,13 +112,12 @@ class TransformerEstimator(nn.Module):
     Transformer-based regression model for radar signal analysis using MobileViT.
     """
     
-    def __init__(self, X, y, epochs=10, batch_size=4, verbose=False, seed: int = 42):
+    def __init__(self, X, y, epochs=10, batch_size=4, verbose=False):
 
         super().__init__()
 
         # Set device to GPU if available, otherwise CPU
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.seed = seed
 
         self.kfold_splits = KFOLD_SPLITS
         self.epochs = epochs
@@ -234,7 +231,7 @@ class TransformerEstimator(nn.Module):
         Perform k-fold cross-validation with proper normalization to prevent data leakage.
         """
 
-        kfold = KFold(n_splits=self.kfold_splits, shuffle=True, random_state=self.seed)
+        kfold = KFold(n_splits=self.kfold_splits, shuffle=True, random_state=RANDOM_SEED)
         
         cv_mse_scores = []
         cv_mae_scores = []
@@ -437,3 +434,44 @@ def evaluate(model, dataloader, loss_fn, device):
             preds.extend(outputs.cpu().numpy())
             trues.extend(targets.cpu().numpy())
     return total_loss / len(dataloader), preds, trues
+
+
+class TransformerClassifier(nn.Module):
+    """Compact Transformer encoder classifier."""
+
+    def __init__(
+        self,
+        input_dim: int,
+        d_model: int = 128,
+        num_heads: int = 4,
+        num_layers: int = 2,
+        dim_feedforward: int = 256,
+        dropout: float = 0.1,
+        num_classes: int = 6,
+    ) -> None:
+        super().__init__()
+        self.input_projection = nn.Linear(input_dim, d_model)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model,
+            nhead=num_heads,
+            dim_feedforward=dim_feedforward,
+            batch_first=True,
+            dropout=dropout,
+            activation="gelu",
+        )
+        self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.positional_encoding = PositionalEncoding(d_model=d_model, dropout=dropout)
+        self.head = nn.Sequential(
+            nn.LayerNorm(d_model),
+            nn.Dropout(dropout),
+            nn.Linear(d_model, num_classes),
+        )
+
+    def forward(self, inputs: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+        mask = torch.arange(inputs.size(1), device=inputs.device).expand(inputs.size(0), inputs.size(1))
+        mask = mask >= lengths.unsqueeze(1)
+        projected = self.input_projection(inputs)
+        encoded = self.positional_encoding(projected)
+        encoded = self.encoder(encoded, src_key_padding_mask=mask)
+        pooled = masked_mean(encoded, lengths)
+        return self.head(pooled)

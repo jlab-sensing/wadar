@@ -23,6 +23,7 @@ import argparse
 import os
 import random
 import sys
+import tensorflow as tf
 import torch
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -74,6 +75,7 @@ def plant_seeds(seed: int = 42):
     logging.info(f"Configuring random seed of {seed}...")
     random.seed(seed)
     np.random.seed(seed)
+    tf.random.set_seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
@@ -169,8 +171,6 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
     setup_logging(verbose=params['advanced']['verbose'])
 
     # Configure environment for consistent training/results.
-    print(seed)
-    exit(1)
     plant_seeds(seed=seed)
 
     # Determine whether to split a single dataset into parts or validate on held-out datasets.
@@ -245,7 +245,7 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             training_corr_feature_table, training_corr_features = mutual_info_minimize_features(feature_table=training_feature_table, top_n=params['deep_learning']['enabled']['top_n'])
             training_feature_array, training_feature_names, training_labels = process_feature_table(training_corr_feature_table)
         elif params['handcrafted']['pruning_method'] == "lasso":
-            training_corr_feature_table, training_corr_features = lasso_minimize_features(feature_table=training_feature_table, top_n=params['deep_learning']['enabled']['top_n'])
+            training_corr_feature_table, training_corr_features = lasso_minimize_features(feature_table=training_feature_table, top_n=params['deep_learning']['enabled']['top_n'], seed=seed)
             training_feature_array, training_feature_names, training_labels = process_feature_table(training_corr_feature_table)
 
         # Use the selected features from the pruning method in the validation feature array.
@@ -262,7 +262,8 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
                 tune_model_params = params['classical']['tune_model_params'],
                 training_features = training_feature_array,
                 validation_features = validation_feature_array,
-                feature_name = "Handcrafted"
+                feature_name = "Handcrafted",
+                seed=seed
             )
 
         # Train and evaluate classical models
@@ -274,7 +275,8 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
                 validation_labels=validation_labels,
                 training_features=training_feature_array,
                 validation_features=validation_feature_array,
-                feature_name="Handcrafted"
+                feature_name="Handcrafted",
+                seed=seed
             )
 
         show_results_summary("Handcrafted", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
@@ -298,7 +300,8 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params = params['classical']['tune_model_params'],
             training_features = pca_train_amplitude,
             validation_features = pca_val_amplitude,
-            feature_name = "PCA Amplitude"
+            feature_name = "PCA Amplitude",
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
@@ -309,7 +312,8 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
                 validation_labels=y_val,
                 training_features=pca_train_amplitude,
                 validation_features=pca_val_amplitude,
-                feature_name="PCA Amplitude"
+                feature_name="PCA Amplitude",
+                seed=seed
             )
         show_results_summary("PCA Amplitude", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -322,7 +326,8 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params = params['classical']['tune_model_params'],
             training_features = pca_train_phase,
             validation_features = pca_val_phase,
-            feature_name = "PCA Phase"
+            feature_name = "PCA Phase",
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
@@ -333,7 +338,8 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
                 validation_labels=y_val,
                 training_features=pca_train_phase,
                 validation_features=pca_val_phase,
-                feature_name="PCA Phase"
+                feature_name="PCA Phase",
+                seed=seed
             )
         show_results_summary("PCA Phase", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -346,7 +352,8 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params = params['classical']['tune_model_params'],
             training_features = pca_train_combined,
             validation_features = pca_val_combined,
-            feature_name = "PCA Combined"
+            feature_name = "PCA Combined",
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
@@ -357,7 +364,8 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
                 validation_labels=y_val,
                 training_features=pca_train_combined,
                 validation_features=pca_val_combined,
-                feature_name="PCA Combined"
+                feature_name="PCA Combined",
+                seed=seed
             )
         show_results_summary("PCA Combined", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -378,18 +386,20 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params = params['classical']['tune_model_params'],
             training_features = kpca_train_amplitude,
             validation_features = kpca_val_amplitude,
-            feature_name = "kPCA Amplitude"
+            feature_name = "kPCA Amplitude",
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
             deep_full_monty(
-            training_dir=params['data']['training']['target_dir'],
-            training_labels=y_train,
-            validation_dir=params['data']['validation']['target_dir'],
-            validation_labels=y_val,
-            training_features=kpca_train_amplitude,
-            validation_features=kpca_val_amplitude,
-            feature_name="kPCA Amplitude"
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=kpca_train_amplitude,
+                validation_features=kpca_val_amplitude,
+                feature_name="kPCA Amplitude",
+                seed=seed
             )
         show_results_summary("kPCA Amplitude", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -402,18 +412,20 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params = params['classical']['tune_model_params'],
             training_features = kpca_train_phase,
             validation_features = kpca_val_phase,
-            feature_name = "kPCA Phase"
+            feature_name = "kPCA Phase",
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
             deep_full_monty(
-            training_dir=params['data']['training']['target_dir'],
-            training_labels=y_train,
-            validation_dir=params['data']['validation']['target_dir'],
-            validation_labels=y_val,
-            training_features=kpca_train_phase,
-            validation_features=kpca_val_phase,
-            feature_name="kPCA Phase"
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=kpca_train_phase,
+                validation_features=kpca_val_phase,
+                feature_name="kPCA Phase",
+                seed=seed
             )
         show_results_summary("kPCA Phase", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -426,18 +438,20 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params = params['classical']['tune_model_params'],
             training_features = kpca_train_combined,
             validation_features = kpca_val_combined,
-            feature_name = "kPCA Combined"
+            feature_name = "kPCA Combined",
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
             deep_full_monty(
-            training_dir=params['data']['training']['target_dir'],
-            training_labels=y_train,
-            validation_dir=params['data']['validation']['target_dir'],
-            validation_labels=y_val,
-            training_features=kpca_train_combined,
-            validation_features=kpca_val_combined,
-            feature_name="kPCA Combined"
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=kpca_train_combined,
+                validation_features=kpca_val_combined,
+                feature_name="kPCA Combined",
+                seed=seed
             )
         show_results_summary("kPCA Combined", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -463,18 +477,20 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params=params['classical']['tune_model_params'],
             training_features=encoded_train_amp,
             validation_features=encoded_val_amp,
-            feature_name="Autoencoder Amplitude"
+            feature_name="Autoencoder Amplitude",
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
             deep_full_monty(
-            training_dir=params['data']['training']['target_dir'],
-            training_labels=y_train,
-            validation_dir=params['data']['validation']['target_dir'],
-            validation_labels=y_val,
-            training_features=encoded_train_amp,
-            validation_features=encoded_val_amp,
-            feature_name="Autoencoder Amplitude"
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=encoded_train_amp,
+                validation_features=encoded_val_amp,
+                feature_name="Autoencoder Amplitude",
+                seed=seed
             )
         show_results_summary("Autoencoder Amplitude", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -493,18 +509,20 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params=params['classical']['tune_model_params'],
             training_features=encoded_train_pha,
             validation_features=encoded_val_pha,
-            feature_name="Autoencoder Phase"
+            feature_name="Autoencoder Phase",
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
             deep_full_monty(
-            training_dir=params['data']['training']['target_dir'],
-            training_labels=y_train,
-            validation_dir=params['data']['validation']['target_dir'],
-            validation_labels=y_val,
-            training_features=encoded_train_pha,
-            validation_features=encoded_val_pha,
-            feature_name="Autoencoder Phase"
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=encoded_train_pha,
+                validation_features=encoded_val_pha,
+                feature_name="Autoencoder Phase"
+                seed=seed
             )
         show_results_summary("Autoencoder Phase", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -523,18 +541,20 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params=params['classical']['tune_model_params'],
             training_features=encoded_train_com,
             validation_features=encoded_val_com,
-            feature_name="Autoencoder Combined"
+            feature_name="Autoencoder Combined",
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
             deep_full_monty(
-            training_dir=params['data']['training']['target_dir'],
-            training_labels=y_train,
-            validation_dir=params['data']['validation']['target_dir'],
-            validation_labels=y_val,
-            training_features=encoded_train_com,
-            validation_features=encoded_val_com,
-            feature_name="Autoencoder Combined"
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=encoded_train_com,
+                validation_features=encoded_val_com,
+                feature_name="Autoencoder Combined",
+                seed=seed
             )
         show_results_summary("Autoencoder Combined", params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -559,18 +579,20 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params=params['classical']['tune_model_params'],
             training_features=features_train_amp,
             validation_features=features_val_amp,
-            feature_name=feature_name_amp
+            feature_name=feature_name_amp,
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
             deep_full_monty(
-            training_dir=params['data']['training']['target_dir'],
-            training_labels=y_train,
-            validation_dir=params['data']['validation']['target_dir'],
-            validation_labels=y_val,
-            training_features=features_train_amp,
-            validation_features=features_val_amp,
-            feature_name=feature_name_amp
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=features_train_amp,
+                validation_features=features_val_amp,
+                feature_name=feature_name_amp,
+                seed=seed
             )
         show_results_summary(feature_name_amp, params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -589,18 +611,20 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params=params['classical']['tune_model_params'],
             training_features=features_train_pha,
             validation_features=features_val_pha,
-            feature_name=feature_name_pha
+            feature_name=feature_name_pha,
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
             deep_full_monty(
-            training_dir=params['data']['training']['target_dir'],
-            training_labels=y_train,
-            validation_dir=params['data']['validation']['target_dir'],
-            validation_labels=y_val,
-            training_features=features_train_pha,
-            validation_features=features_val_pha,
-            feature_name=feature_name_pha
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=features_train_pha,
+                validation_features=features_val_pha,
+                feature_name=feature_name_pha,
+                seed=seed
             )
         show_results_summary(feature_name_pha, params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -619,18 +643,20 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
             tune_model_params=params['classical']['tune_model_params'],
             training_features=features_train_com,
             validation_features=features_val_com,
-            feature_name=feature_name_com
+            feature_name=feature_name_com,
+            seed=seed
         )
         # Train and evaluate deep learning models
         if params['deep_learning']['enabled']:
             deep_full_monty(
-            training_dir=params['data']['training']['target_dir'],
-            training_labels=y_train,
-            validation_dir=params['data']['validation']['target_dir'],
-            validation_labels=y_val,
-            training_features=features_train_com,
-            validation_features=features_val_com,
-            feature_name=feature_name_com
+                training_dir=params['data']['training']['target_dir'],
+                training_labels=y_train,
+                validation_dir=params['data']['validation']['target_dir'],
+                validation_labels=y_val,
+                training_features=features_train_com,
+                validation_features=features_val_com,
+                feature_name=feature_name_com,
+                seed=seed
             )
         show_results_summary(feature_name_com, params['data']['training']['target_dir'], params['data']['validation']['target_dir'])
 
@@ -638,7 +664,7 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
     model_config = params['end-to-end']['lstm']
     if model_config['enabled']:
         lstm_model = LSTMEstimator(X_train, y_train, epochs=model_config['epochs'], 
-                                   batch_size=model_config['batch_size'], verbose=model_config['verbose'])
+                                   batch_size=model_config['batch_size'], verbose=model_config['verbose'], seed=seed)
         end_to_end_model_validation(
             training_dir=params['data']['training']['target_dir'],
             validation_features=X_val,
@@ -652,7 +678,7 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
     model_config = params['end-to-end']['cnn']
     if model_config['enabled']:
         cnn = CNNEstimator(X_train, y_train, epochs=model_config['epochs'], 
-                           batch_size=model_config['batch_size'], verbose=model_config['verbose'])
+                           batch_size=model_config['batch_size'], verbose=model_config['verbose'], seed=seed)
         end_to_end_model_validation(
             training_dir=params['data']['training']['target_dir'],
             validation_features=X_val,
@@ -668,7 +694,8 @@ def main(config_path: str, cross_val: bool = False, seed: int = 42):
         transformer = TransformerEstimator(X_train, y_train, 
                                            epochs=model_config['epochs'],
                                            batch_size=model_config['batch_size'],
-                                           verbose=model_config['verbose'])
+                                           verbose=model_config['verbose'],
+                                           seed=seed)
         end_to_end_model_validation(
             training_dir=params['data']['training']['target_dir'],
             validation_features=X_val,

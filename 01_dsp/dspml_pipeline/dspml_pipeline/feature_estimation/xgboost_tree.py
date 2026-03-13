@@ -26,7 +26,7 @@ class XGBoostTree:
         tune_model_params (bool):   Whether to perform hyperparameter tuning using grid search.
     """
 
-    def __init__(self, tune_model_params:bool = True):
+    def __init__(self, tune_model_params:bool = True, seed: int = 42):
         """
         Initalize the class for XGBoost-decision-tree-based feature regression.
 
@@ -36,6 +36,7 @@ class XGBoostTree:
         self.model = None
         self.metrics = None
         self.tune_model_params = tune_model_params
+        self.seed = seed
 
     def full_monty(self, feature_array, labels):
         """
@@ -59,12 +60,12 @@ class XGBoostTree:
     def build_model(self, n_estimators, max_depth):
         return Pipeline([
             ('scaler', StandardScaler()),
-            ('xgb', XGBRegressor(n_estimators=n_estimators, max_depth=max_depth, random_state=RANDOM_SEED, verbosity=0))
+            ('xgb', XGBRegressor(n_estimators=n_estimators, max_depth=max_depth, random_state=self.seed, verbosity=0))
         ])
 
     def cross_validate(self, feature_array, labels):
         X, y = feature_array, labels
-        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=RANDOM_SEED)
+        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=self.seed)
 
         # Store metrics for each fold
         metrics = {'mae': [], 'rmse': [], 'accuracy': [], 'inference_time': [], 'training_time': []}
@@ -136,7 +137,7 @@ class XGBoostTree:
 
             pipe = Pipeline([
                 ('scaler', StandardScaler()),
-                ('xgb', XGBRegressor(random_state=RANDOM_SEED, verbosity=0))
+                ('xgb', XGBRegressor(random_state=self.seed, verbosity=0))
             ])
 
             n_estimators_values = [50, 100, 200, 300]

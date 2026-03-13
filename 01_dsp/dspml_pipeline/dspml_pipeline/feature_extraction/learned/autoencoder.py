@@ -184,7 +184,7 @@ class AutoencoderLearnedFeatures:
                 
                 return decoded
             
-        torch.manual_seed(RANDOM_SEED)
+        #torch.manual_seed(RANDOM_SEED) // Handled in main.
         self.model = Autoencoder(num_features=self.num_features)
         self.model = self.model.to(self.device)
 

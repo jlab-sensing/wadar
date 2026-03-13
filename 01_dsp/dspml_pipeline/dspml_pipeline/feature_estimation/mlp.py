@@ -28,13 +28,14 @@ class MLPRegression:
         scaler (StandardScaler):    StandardScaler instance for input normalization.
     """
     
-    def __init__(self):
+    def __init__(self, seed: int = 42):
         """
         Initalize the class for MLP-based feature regression.
         """
 
         self.model = None
         self.metrics = None
+        self.seed = seed
 
     def full_monty(self, feature_array : np.ndarray, labels : np.ndarray):
         """
@@ -97,7 +98,7 @@ class MLPRegression:
 
     def cross_validate(self, feature_array, labels):
         X, y = feature_array, labels
-        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=RANDOM_SEED)
+        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=self.seed)
 
         # Store metrics for each fold
         metrics = {'mae': [], 'rmse': [], 'accuracy': [], 'inference_time': [], 'training_time': []}

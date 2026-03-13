@@ -26,7 +26,7 @@ class RidgeRegression:
         tune_model_params (bool):   Whether to perform hyperparameter tuning using grid search.
     """
 
-    def __init__(self, tune_model_params:bool = True):
+    def __init__(self, tune_model_params:bool = True, seed: int = 42):
         """
         Initalize the class for ridge-regression-based feature regression.
 
@@ -36,6 +36,7 @@ class RidgeRegression:
         self.model = None
         self.metrics = None
         self.tune_model_params = tune_model_params
+        self.seed = seed
 
     def full_monty(self, feature_array, labels):
         """
@@ -60,12 +61,12 @@ class RidgeRegression:
         return Pipeline([
             ('poly', PolynomialFeatures(degree=degree, include_bias=False)),
             ('scaler', StandardScaler()),
-            ('ridge', Ridge(alpha=alpha, random_state=RANDOM_SEED))
+            ('ridge', Ridge(alpha=alpha, random_state=self.seed))
         ])
 
     def cross_validate(self, feature_array, labels):
         X, y = feature_array, labels
-        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=RANDOM_SEED)
+        kf = KFold(n_splits=KFOLD_SPLITS, shuffle=True, random_state=self.seed)
 
         # Store metrics for each fold
         metrics = {'mae': [], 'rmse': [], 'accuracy': [], 'inference_time': [], 'training_time': []}
@@ -138,7 +139,7 @@ class RidgeRegression:
             pipe = Pipeline([
                 ('poly', PolynomialFeatures(include_bias=False)),
                 ('scaler', StandardScaler()),
-                ('ridge', Ridge(random_state=RANDOM_SEED))
+                ('ridge', Ridge(random_state=self.seed))
             ])
 
             alpha_values = [0.1, 1, 10, 100, 1000]

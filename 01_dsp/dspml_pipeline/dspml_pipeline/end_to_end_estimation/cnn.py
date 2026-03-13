@@ -17,8 +17,9 @@ from PIL import Image
 
 from ..parameters import RANDOM_SEED, KFOLD_SPLITS, num2label
 
-tf.random.set_seed(RANDOM_SEED)
-np.random.seed(RANDOM_SEED)
+# Handled in main.
+#tf.random.set_seed(RANDOM_SEED)
+#np.random.seed(RANDOM_SEED)
 
 class CNNEstimator:
     """
@@ -41,7 +42,7 @@ class CNNEstimator:
     def __init__(self, X: np.ndarray, y: np.ndarray, 
                  output_dir: str = None, img_size: tuple = (160, 160), 
                  batch_size: int = 32, epochs: int = 50, 
-                 verbose: int = 0):
+                 verbose: int = 0, seed: int = 42):
         """
         Initialize the CNN-based regression model.
 
@@ -153,7 +154,7 @@ class CNNEstimator:
         # Process complex data to images
         X_images = self._process_complex_data(self.X_raw)
         
-        kfold = KFold(n_splits=self.kfold_splits, shuffle=True, random_state=RANDOM_SEED)
+        kfold = KFold(n_splits=self.kfold_splits, shuffle=True, random_state=self.seed)
         
         cv_mse_scores = []
         cv_mae_scores = []
