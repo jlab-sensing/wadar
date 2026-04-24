@@ -34,7 +34,11 @@ end
 % Data path generation
 [~, hostname] = system('whoami');
 hostname(end) = '';
-fullDataPath = sprintf("%s@192.168.7.1:%s/%s", hostname, pwd, localDataPath);
+if ismac
+    fullDataPath = sprintf("%s@192.168.6.1:%s/%s", hostname, pwd, localDataPath);
+else
+    fullDataPath = sprintf("%s@192.168.7.1:%s/%s", hostname, pwd, localDataPath);
+end
 
 % Check for existing files with the same name to prevent overwrite
 existingFiles = dir(localDataPath);
@@ -50,8 +54,13 @@ end
 % Send Frame Logger command with appropriate parameters
 frameLoggerOptions = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s', ...
     captureName, frameCount, captureCount, frameRate, radarType, fullDataPath);
-frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', ...
-    frameLoggerOptions);
+if ismac
+    frameLoggerCommand = sprintf('ssh root@192.168.6.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', ...
+        frameLoggerOptions);
+else
+    frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', ...
+        frameLoggerOptions);
+end
 [status,~] = system(frameLoggerCommand);
 
 for i = 1:captureCount
