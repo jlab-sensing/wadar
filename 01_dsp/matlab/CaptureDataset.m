@@ -34,9 +34,8 @@ end
 % Data path generation
 [~, hostname] = system('whoami');
 hostname(end) = '';
-% MacOS uses the 6.2 address, PC uses 7.2, Linux may use either.
 if ismac
-    fullDataPath = sprintf("%s@192.168.6.1:%s/%s", hostname, pwd, localDataPath);
+    fullDataPath = sprintf("%s@192.168.6.1:%s/%s", hostname, pwd, localDataPath)
 else
     fullDataPath = sprintf("%s@192.168.7.1:%s/%s", hostname, pwd, localDataPath);
 end
@@ -55,15 +54,14 @@ end
 % Send Frame Logger command with appropriate parameters
 frameLoggerOptions = sprintf('-s ../data/captureSettings -l ../data/%s -n %d -r %d -f %d -t %s -c %s', ...
     captureName, frameCount, captureCount, frameRate, radarType, fullDataPath);
-% MacOS uses the 6.2 address, PC uses 7.2, Linux may use either.
 if ismac
-    frameLoggerCommand = sprintf('ssh root@192.168.6.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', ...
+    frameLoggerCommand = sprintf('ssh root@192.168.6.2 -v "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', ...
         frameLoggerOptions);
 else
     frameLoggerCommand = sprintf('ssh root@192.168.7.2 "screen -dmS radar -m bash -c && cd FlatEarth/Demos/Common/FrameLogger && nice -n -20 ./frameLogger %s " &', ...
-        frameLoggerOptions);
+        frameLoggerOptions)
 end
-[status,~] = system(frameLoggerCommand);
+[status,~] = system(frameLoggerCommand, '-echo')
 
 for i = 1:captureCount
 
@@ -79,7 +77,7 @@ for i = 1:captureCount
     while (length(checkFile) ~= 1) || (length(checkmd5File) ~= 1)
         checkFile = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.frames')));
         checkmd5File = dir(fullfile(localDataPath, strcat(captureName, num2str(i), '.md5')));
-        if (toc > 20)
+        if (toc > 200)
             error('ERROR: There is a data transfer issue. Please verify your capture settings and scp directory.')
         end
     end
