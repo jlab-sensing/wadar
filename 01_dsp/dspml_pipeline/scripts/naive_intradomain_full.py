@@ -3,7 +3,7 @@ File:
     naive_intradomain_full.py
 
 Description:
-    Run LOOCV on each individual run (including between compaction levels).
+    Run K-folds validation.
 
 Authors:
     jLab
