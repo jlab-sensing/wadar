@@ -10,15 +10,17 @@ data:
       - "../data/wet-1-soil-compaction-dataset" 
       - "../data/wet-2-soil-compaction-dataset"
       - "../data/field-soil-compaction-dataset"
+#      - "../data/combined-training-dataset"
     # Target combined training dataset directory
     target_dir: "../data/combined-training-dataset"
   # Validation dataset
   validation:
     # Raw validation datasets to combine
     dataset_dirs:
-      - "../data/field-pie-ranch-dataset"
+      #- "../data/field-pie-ranch-dataset"
+      - "../data/field-soil-compaction-dataset"
     # Target combined validation dataset directory
-    target_dir: "../data/pie-ranch-dataset"
+    target_dir: "../data/field-validation-dataset"
 
 # For handcrafted features
 handcrafted:

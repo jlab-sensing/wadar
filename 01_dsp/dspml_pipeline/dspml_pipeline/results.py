@@ -28,6 +28,7 @@ def update_results(target_dir: str, feature_name: str, model_name: str,
         metrics: Dictionary containing performance metrics with keys:
                 - 'mae': Mean Absolute Error
                 - 'rmse': Root Mean Square Error  
+                - 'r2': R^2 model fit
                 - 'accuracy': Model accuracy
                 - 'inference_time': Time taken for inference (seconds)
                 - 'training_time': Time taken for training (seconds)
@@ -38,7 +39,7 @@ def update_results(target_dir: str, feature_name: str, model_name: str,
         logger.error(f"Dataset directory does not exist: {target_dir}")
         sys.exit(1)
     
-    required_metrics = ['mae', 'rmse', 'accuracy', 'inference_time', 'training_time']
+    required_metrics = ['mae', 'rmse', 'r2', 'accuracy', 'inference_time', 'training_time']
     missing_metrics = [metric for metric in required_metrics if metric not in metrics]
     if missing_metrics:
         logger.error(f"Missing required metrics: {missing_metrics}")
@@ -47,6 +48,11 @@ def update_results(target_dir: str, feature_name: str, model_name: str,
     # Extract metrics 
     mae = float(metrics["mae"])
     rmse = float(metrics["rmse"])
+    # TODO(nubby)
+    try:
+        r2 = float(metrics["r2"])
+    except KeyError:
+        r2 = 0.0
     accuracy = float(metrics["accuracy"])
     inference_time = float(metrics["inference_time"])
     training_time = float(metrics["training_time"])
@@ -72,6 +78,7 @@ def update_results(target_dir: str, feature_name: str, model_name: str,
         "Accuracy": accuracy,
         "MAE": mae,
         "RMSE": rmse,
+        "R2": r2,
         "Training Time": training_time,
         "Inference Time": inference_time,
         "Last Updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),

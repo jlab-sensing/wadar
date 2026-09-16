@@ -10,7 +10,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.data import Dataset
 from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import time
 import os
 from PIL import Image
@@ -158,6 +158,7 @@ class CNNEstimator:
         cv_mse_scores = []
         cv_mae_scores = []
         cv_rmse_scores = []
+        cv_r2_scores = []
         cv_accuracy_scores = []
         fold_times = []
         fold_training_times = []
@@ -246,6 +247,7 @@ class CNNEstimator:
             mse = mean_squared_error(y_val_fold, y_pred_fold)
             mae = mean_absolute_error(y_val_fold, y_pred_fold)
             rmse = np.sqrt(mse)
+            r2 = r2_score(y_val_fold, y_pred_fold)
             
             # Calculate accuracy using num2label
             y_labels = [num2label(label) for label in y_val_fold]
@@ -255,12 +257,14 @@ class CNNEstimator:
             cv_mse_scores.append(mse)
             cv_mae_scores.append(mae)
             cv_rmse_scores.append(rmse)
+            cv_r2_scores.append(r2)
             cv_accuracy_scores.append(accuracy)
             
             fold_time = time.time() - fold_start_time
             fold_times.append(fold_time)
             
             logger.info(f"Fold {fold+1}/{KFOLD_SPLITS} - MAE: {mae:.2f}, RMSE: {rmse:.2f}, "
+                        f"R2: {r2:.2f}, "
                         f"Accuracy: {100*accuracy:.2f}%, Training time: {1000*training_time:.2f}ms, "
                         f"Inference time: {1000*inference_time:.2f}ms")
         
@@ -276,6 +280,7 @@ class CNNEstimator:
         }
         
         logger.info(f"Average metrics - MAE: {metrics['mae']:.2f}, RMSE: {metrics['rmse']:.2f}, "
+                    f"R2: {metrics['r2']:.2f}, "
                    f"Accuracy: {100*metrics['accuracy']:.2f}%, Training time: {1000*metrics['training_time']:.2f}ms, "
                    f"Inference time: {1000*metrics['inference_time']:.2f}ms")
         
