@@ -11,17 +11,21 @@ Author:
     David Glover
 
 Date:
-    14 Sep 2026
+    15 Sep 2026
 
 Version:
-    0.0.1
+    0.0.2
 """
 import argparse
 import logging
+import numpy as np
 import os
 import pandas as pd
 
+
+# Configs.
 logger = logging.getLogger("baseline")
+
 
 def load_data(path: str) -> pd.DataFrame:
     """
@@ -48,13 +52,39 @@ def do_loocv(df: pd.DataFrame):
     """
     do_loocv(df)
     """
-    # Data entered into this dict are in format of (idxW, idxC), where:
-    #   idxW == "wetness index" and
-    #   idxC == "compaction index"
+    # NOTE: This currently only works with custom exported list.
+    #       See "load_data()" for further clarification.
+    # TODO: Extract formatting of "groups" to another function to allow for
+    #       more modular inclusion of other input data formats.
     groups = {}
 
+    # First get identifiers for each scenario.
+    for scene in df["Tin Label"].unique():
+        # Set labels as the average of all GT measurements.
+        groups[scene] = {
+                "sbd": np.mean(df.loc[
+                    df["Tin Label"] == scene,
+                    "Bulk Density (g/cm^3)"].values),
+                "vwc": np.mean(df.loc[
+                    df["Tin Label"] == scene,
+                    "VWC (%)"].values)
+            }
+
+    # Iteratively work through each scene:
+    se = 0.0                # Squared-error is easy to track incrementally.
+    n = len(groups.keys())  # Number of unique labels.
+    for scene in groups.keys():
+        # Calculate fold residual by difference between held-out label and
+        # average of all others.
+        y_hat = np.mean([groups[s]["sbd"] for s in groups.keys() if s != scene])
+        y = groups[scene]["sbd"]
+        res = (y - y_hat)   # Residual for scene.
+        se += res**2        # Square the error.
+    mse = se / n            # Take the mean of the incrementally-squared error.
+    rmse = np.sqrt(mse)     # And here is the RMSE.
+
     # Gather data into groups.
-    logger.info("Hi nub.")
+    logger.info(f"LOOCV (in lab):\t{rmse}")
     
 
 def baseline(path_input: str):
@@ -65,7 +95,6 @@ def baseline(path_input: str):
     """
     # Load all relevant data.
     df = load_data(path=path_input)
-    print(df)
 
     # Report on inter-fold RMSE for mean predictor.
     do_loocv(df=df)
