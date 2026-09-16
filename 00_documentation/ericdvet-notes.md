@@ -37,8 +37,10 @@ This chapter compiles information regarding communication with the Chipotle Rada
 **Laptop password:** _kattilab_
 
 ```bash
-# SSH into the BeagleBone.
+# SSH into the BeagleBone (from Windows/Linux).
 ssh root@192.168.7.2
+# SSH into the BeagleBone (from Mac/Linux).
+ssh root@192.168.6.2
 ```
 
 ```bash
@@ -50,7 +52,8 @@ sudo shutdown -h now
 In order to correctly set up communication between a device and the radar, the SSH communication must work without requiring passwords. This is essential to allow the WADAR scripts to capture and transmit data automatically without repeatedly prompting for a password. Both devices must have each other's SSH keys. Some solutions to issues are listed below from my experience.
 
 - The basic steps from https://www.strongdm.com/blog/ssh-passwordless-login can be followed for the most part.
-- Adding `PubkeyAcceptedAlgorithms +ssh-rsa` to `/etc/ssh/ssh_config` when the SSH key isn't being accepted.
+    - Instead of using RSA, using `ed25519` will eliminate the need to allow the less secure RSA on Mac systems. In the instructions, replace rsa with `ed25519`, e.g. `ssh-keygen -t ed25519`.
+- If you are using RSA, you may need to explicitly permit RSA keys on your system. Adding `PubkeyAcceptedAlgorithms +ssh-rsa` to `/etc/ssh/ssh_config` when the SSH key isn't being accepted.
 - Call `sudo systemctl restart ssh` to restart the SSH server after the config file is changed.
 - Validate the setup by SSHing into the radar and SSHing back to our device without a password prompt.
 - If you are on an Apple product, you will likely need to manually start an SSH server. To do this:

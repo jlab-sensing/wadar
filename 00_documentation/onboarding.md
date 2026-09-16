@@ -48,10 +48,11 @@ ssh insert_your_username@192.168.6.1
 If this part worked correctly, it should have prompted you for your password. We would like to avoid that, since the data capture scripts would require the constant re-entry of passwords for each scan.
 
 2. In order to avoid the password requirement, you must set up SSH keys. The basic steps from https://www.strongdm.com/blog/ssh-passwordless-login can be followed for the most part.
+    - It is recommended to use `ed25519` instead of `rsa`, as MacOS systems may require additional configuration to permit the use of RSA keys. In the instructions, replace `rsa` with `ed25519` in the commands.
 
 __Debugging Tips__
 - Validate the setup by SSHing into the radar and SSHing back to our device without a password prompt.
-- If you see "`Permission denied (publickey).`" when trying to login to your machine from the BeagleBone, add `PubkeyAcceptedAlgorithms +ssh-rsa` to `/etc/ssh/ssh_config`.
+- (If you used RSA keys:) If you see "`Permission denied (publickey).`" when trying to login to your machine from the BeagleBone, add `PubkeyAcceptedAlgorithms +ssh-rsa` to `/etc/ssh/ssh_config`.
 - If you are on an Apple product, you will likely need to manually start an SSH server. To do this:
     1. Open "System Settings" > "General" > "Sharing".
     2. If disabled, enable "Remote Login".
