@@ -6,7 +6,8 @@ PyQt6
 PyWavelets
 scikit-learn
 xgboost
-torch
+torch==2.13.0
+#torch==1.13.0
 tqdm
 tensorflow
 transformers
