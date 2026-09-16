@@ -119,7 +119,7 @@ class FrameLoader:
                     logger.error(f"No matching sample for folder {folder.name} in data log")
                     sys.exit(1)
                 else:
-                    bulk_density = sample_row.iloc[0][self.label_name]
+                    bulk_density = sample_row[self.label_name].mean()
                 
                 # Process each capture file
                 params = None
