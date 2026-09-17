@@ -14,8 +14,9 @@ Date:
     16 Sep 2026
 
 Version:
-    0.0.1
+    0.0.2
 """
+import argparse
 import sys, time, warnings, numpy as np, pandas as pd
 sys.path.insert(0, '.'); warnings.filterwarnings("ignore")
 
@@ -35,7 +36,7 @@ import pandas as pd
 
 TAU = 1.4
 
-def load(label_mode):
+def load(use_vwc: bool):
     """label_mode: 'avg' = mean of all tins per run, 'top' = first tin only"""
     from pathlib import Path
     from dspml_pipeline.data.frame_loader import process_frames, novelda_digital_downconvert
@@ -152,19 +153,58 @@ def run_all(X, y, groups, group_name, label_mode):
                 print(f"{mn:<8}{fn:<13}  FAILED: {type(e).__name__}: {e}")
     return pd.DataFrame(rows, columns=["Model","FE","RMSE","MAE","acc","TrainMs","InferMs"])
 
-def full_grid_grouped_timing():
+def full_grid_grouped_timing(
+        path_input: str,
+        seed: int,
+        use_vwc: bool
+    ):
+    """
+    full_grid_grouped_timing(path_input, seed, use_vwc)
+    """
     all_results = []
-    for label_mode in ["avg", "top"]:
-        X, y, run_group, moist_group = load(label_mode)
-        print(f"\n########## LABEL MODE: {label_mode}  (n={len(y)}, range {y.min():.2f}-{y.max():.2f}) ##########")
-        df1 = run_all(X, y, run_group, "Leave-one-run-out (13 groups)", label_mode)
-        df1["Grouping"] = "run"; df1["Labels"] = label_mode
-        df2 = run_all(X, y, moist_group, "Leave-one-moisture-out (3 groups)", label_mode)
-        df2["Grouping"] = "moisture"; df2["Labels"] = label_mode
-        all_results += [df1, df2]
+
+    # TODO: Finish injecting VWC arg.
+    X, y, run_group, moist_group = load(use_vwc=use_vwc)
+    print(f"\n########## LABEL MODE: avg  (n={len(y)}, range {y.min():.2f}-{y.max():.2f}) ##########")
+    df1 = run_all(X, y, run_group, "Leave-one-run-out (13 groups)", "avg")
+    df1["Grouping"] = "run"; df1["Labels"] = "avg"
+    df2 = run_all(X, y, moist_group, "Leave-one-moisture-out (3 groups)", "avg")
+    df2["Grouping"] = "moisture"; df2["Labels"] = "avg"
+    all_results += [df1, df2]
 
     pd.concat(all_results).to_csv("full_grid_grouped_results_timing.csv", index=False)
     print("\nsaved full_grid_grouped_results_timing.csv")
 
 if __name__ == "__main__":
-    full_grid_grouped_timing()
+    # Logger setup.
+    logging.basicConfig(level=logging.INFO)
+
+    # Parse args for later triage.
+    parser = argparse.ArgumentParser(
+        description=("Run preprocessing specifically related to finding step"
+                     " events.")
+    )
+    parser.add_argument(
+            "--input-path",
+            type=str,
+            default="processed",
+            help="Path to input file or directory."
+        )
+    parser.add_argument(
+            "--seed",
+            type=int,
+            default=42,
+            help="Random seed for process."
+        )
+    parser.add_argument(
+            "--vwc",
+            action="store_true",
+            help="Include VWC as an element of input tensors?"
+        )
+    args = parser.parse_args()
+
+    full_grid_grouped_timing(
+            path_input=args.input_path,
+            seed=args.seed,
+            use_vwc=args.vwc
+        )
