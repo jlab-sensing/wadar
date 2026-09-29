@@ -26,6 +26,7 @@ class FrameLoader:
     The data_log.csv file should contain:
         - A column with folder names (specified by folder_name)
         - A column with target labels (specified by label_name)
+        - A VWC column (specified by vwc_name) when include_vwc is enabled
 
     Attributes:
         dataset_dirs (list):    List of dataset directory paths.
@@ -36,12 +37,14 @@ class FrameLoader:
         verbose (bool):         Verbosity flag for logging.
         X (np.ndarray):         Processed radar data (features).
         y (np.ndarray):         Corresponding labels (targets).
+        vwc (np.ndarray):       VWC per capture, or None when disabled.
     """
 
     def __init__(self, dataset_dirs:list, target_dir:str,
                  data_log:str = "data-log.csv", 
                  folder_name:str = "Sample #", label_name:str = "Bulk Density (g/cm^3)", 
-                 verbose:bool = False):
+                 verbose:bool = False, include_vwc:bool = False,
+                 vwc_name:str = "VWC (%)"):
         """
         Initializes the FrameLoader instance based on the provided directories.
 
@@ -52,6 +55,8 @@ class FrameLoader:
             folder_name (str):      Column name in data_log for folder/sample names.
             label_name (str):       Column name in data_log for target labels.
             verbose (bool):         Verbosity flag for logging.
+            include_vwc (bool):     Load and save VWC alongside radar data.
+            vwc_name (str):         Column name in data_log for VWC values.
         """
         self.verbose = verbose
         self.dataset_dirs = dataset_dirs
@@ -59,8 +64,11 @@ class FrameLoader:
         self.data_log = data_log
         self.X = None
         self.y = None
+        self.vwc = None
         self.label_name = label_name
         self.folder_name = folder_name
+        self.include_vwc = include_vwc
+        self.vwc_name = vwc_name
 
         # Validate dataset directory
         for i in self.dataset_dirs:
@@ -74,6 +82,7 @@ class FrameLoader:
     def extract_data(self):
         """
         Extracts the features (X) and labels (y) from the provided directries.
+        When enabled, aligned VWC values are available as self.vwc.
 
         Returns:
             X (np.ndarray):         Processed radar data (features).
@@ -84,6 +93,7 @@ class FrameLoader:
 
         all_frame_data = []
         all_labels = []
+        all_vwc = []
 
         # Iterate through each dataset dir
         for i in self.dataset_dirs:
@@ -97,9 +107,14 @@ class FrameLoader:
                 df = pd.read_csv(data_log)
                 df[self.folder_name] = df[self.folder_name].astype(str)
                 df[self.label_name] = df[self.label_name].astype(float)
+                if self.include_vwc:
+                    df[self.vwc_name] = df[self.vwc_name].astype(float)
                 logger.info(f"Loaded data log with {len(df)} samples")
             except Exception as e:
-                logger.error(f"Expected CSV format: columns include '{self.folder_name}' and '{self.label_name}'")
+                required_columns = [self.folder_name, self.label_name]
+                if self.include_vwc:
+                    required_columns.append(self.vwc_name)
+                logger.error(f"Expected CSV columns {required_columns}: {e}")
                 sys.exit(1)
             
             # In each subdirectory
@@ -114,12 +129,18 @@ class FrameLoader:
                     continue
 
                 # Find the row in df corresponding to this folder name
-                sample_row = df[df['Sample #'] == folder.name]
+                sample_row = df[df[self.folder_name] == folder.name]
                 if sample_row.empty:
                     logger.error(f"No matching sample for folder {folder.name} in data log")
                     sys.exit(1)
                 else:
-                    bulk_density = sample_row.iloc[0][self.label_name]
+                    bulk_density = sample_row[self.label_name].mean()
+                if self.include_vwc:
+                    vwc_value = sample_row[self.vwc_name].mean()
+                    if not np.isfinite(vwc_value):
+                        raise ValueError(
+                            f"Invalid {self.vwc_name} for {folder.name}: {vwc_value}"
+                        )
                 
                 # Process each capture file
                 params = None
@@ -148,6 +169,8 @@ class FrameLoader:
                         try:
                             all_frame_data.append(ddc_frame_data)
                             all_labels.append(bulk_density)
+                            if self.include_vwc:
+                                all_vwc.append(vwc_value)
                         except:
                             logger.error(f"Failed to stack radar data from {capture_file.name}")
                             sys.exit(1)
@@ -165,12 +188,14 @@ class FrameLoader:
 
         self.X = np.stack(all_frame_data)
         self.y = np.stack(all_labels)
+        self.vwc = np.asarray(all_vwc, dtype=float) if self.include_vwc else None
 
         return self.X, self.y
     
     def save_dataset(self):
         """
-        Saves dataset for future processing. Data is automatically stored as X.npy and y.npy.
+        Saves X.npy and y.npy, plus vwc.npy when VWC is enabled.
+        Removes any stale vwc.npy when saving without VWC.
         """
 
         if not Path(self.target_dir).exists():
@@ -178,24 +203,35 @@ class FrameLoader:
 
         X_path = Path(self.target_dir) / "X.npy"
         y_path = Path(self.target_dir) / "y.npy"
+        vwc_path = Path(self.target_dir) / "vwc.npy"
+
+        if self.include_vwc and self.vwc is None:
+            raise RuntimeError("VWC has not been extracted. Call extract_data() first.")
 
         np.save(X_path, self.X)
         np.save(y_path, self.y)
+        if self.include_vwc:
+            np.save(vwc_path, self.vwc)
+            logger.info(f"Saved VWC: {self.vwc.shape}")
+        elif vwc_path.exists():
+            vwc_path.unlink()
 
         logger.info(f"Raw dataset saved as X.npy and y.npy")
         logger.info(f"Saved shapes: X={self.X.shape}, y={self.y.shape}")
 
-def load_dataset(dataset_dir:str):
+def load_dataset(dataset_dir:str, include_vwc:bool = False):
     """
     Loads data that has already been processed. Assumes the features are named X.npy and the 
-    labels are named y.npy.
+    labels are named y.npy. VWC is loaded from vwc.npy when requested.
 
     Args:
         dataset_dir:        Directory containing the capture file.
+        include_vwc:        Include VWC as a third return value.
 
     Returns:
         X (np.ndarray):     Processed radar data (features).
         y (np.ndarray):     Corresponding labels (targets).
+        vwc (np.ndarray):   Aligned VWC values, returned only when enabled.
     """
 
     X_path = Path(dataset_dir) / "X.npy"
@@ -207,6 +243,27 @@ def load_dataset(dataset_dir:str):
 
     X = np.load(X_path)
     y = np.load(y_path)
+
+    if len(X) != len(y):
+        raise ValueError(f"Cached dataset is misaligned: X={len(X)}, y={len(y)}")
+
+    if include_vwc:
+        vwc_path = Path(dataset_dir) / "vwc.npy"
+        if not vwc_path.exists():
+            raise FileNotFoundError(
+                f"VWC cache not found: {vwc_path}. "
+                "Regenerate the dataset from raw data with include_vwc=True."
+            )
+        vwc = np.load(vwc_path)
+        if len(vwc) != len(X):
+            raise ValueError(
+                f"Cached dataset is misaligned: "
+                f"X={len(X)}, y={len(y)}, vwc={len(vwc)}"
+            )
+        logger.info(
+            f"Loaded from existing dataset: X={X.shape}, y={y.shape}, vwc={vwc.shape}"
+        )
+        return X, y, vwc
     
     logger.info(f"Loaded from existing dataset: X={X.shape}, y={y.shape}")
 
