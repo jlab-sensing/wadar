@@ -135,12 +135,15 @@ class FrameLoader:
                     sys.exit(1)
                 else:
                     bulk_density = sample_row[self.label_name].mean()
+<<<<<<< HEAD
                 if self.include_vwc:
                     vwc_value = sample_row[self.vwc_name].mean()
                     if not np.isfinite(vwc_value):
                         raise ValueError(
                             f"Invalid {self.vwc_name} for {folder.name}: {vwc_value}"
                         )
+=======
+>>>>>>> 97086b7d996fa9f45fe1456de12d054a169463e1
                 
                 # Process each capture file
                 params = None
