@@ -2,10 +2,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 import os
+# Limit native thread pools before importing NumPy, PyTorch, or TensorFlow.
+# Their OpenMP runtimes can crash together on Apple Silicon during batching.
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
+import torch
+
+torch.set_num_threads(1)
+torch.set_num_interop_threads(1)
 
 from dspml_pipeline.data.frame_loader import FrameLoader, load_dataset
 from dspml_pipeline.setup_logging import setup_logging
@@ -24,6 +33,12 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import yaml
 
+def append_vwc(features, vwc):
+    """Append one VWC column, or keep the radar features when VWC is disabled."""
+    if vwc is None:
+        return features
+    return np.column_stack((features, vwc))
+
 def main():
 
     if len(sys.argv) < 2:
@@ -34,24 +49,47 @@ def main():
     with open(config_file, "r") as f:
         params = yaml.safe_load(f)
 
+    use_vwc = params['data'].get('use_vwc', False)
+    vwc_name = params['data'].get('vwc_name', 'VWC (%)')
+
     setup_logging(verbose=params['advanced']['verbose'])
 
-    # Load data from training and validation datasets
-    trainingFrameLoader = FrameLoader(dataset_dirs=params['data']['training']['dataset_dirs'],
-                              target_dir=params['data']['training']['target_dir'],
-                              data_log="data-log.csv",
-                              label_name=params['data']['label_name'])
-    validationFrameLoader = FrameLoader(dataset_dirs=params['data']['validation']['dataset_dirs'],
-                              target_dir=params['data']['validation']['target_dir'],
-                              data_log="data-log.csv",
-                              label_name=params['data']['label_name'])
+    vwc_train = None
+    vwc_val = None
 
     # If new dataset, extract data. Otherwise, load from saved file.
     if params['data']['new_dataset']:
+        trainingFrameLoader = FrameLoader(
+            dataset_dirs=params['data']['training']['dataset_dirs'],
+            target_dir=params['data']['training']['target_dir'],
+            data_log="data-log.csv",
+            label_name=params['data']['label_name'],
+            include_vwc=use_vwc,
+            vwc_name=vwc_name,
+        )
+        validationFrameLoader = FrameLoader(
+            dataset_dirs=params['data']['validation']['dataset_dirs'],
+            target_dir=params['data']['validation']['target_dir'],
+            data_log="data-log.csv",
+            label_name=params['data']['label_name'],
+            include_vwc=use_vwc,
+            vwc_name=vwc_name,
+        )
         X_train, y_train = trainingFrameLoader.extract_data()
+        vwc_train = trainingFrameLoader.vwc
         trainingFrameLoader.save_dataset()
         X_val, y_val = validationFrameLoader.extract_data()
+        vwc_val = validationFrameLoader.vwc
         validationFrameLoader.save_dataset()
+    elif use_vwc:
+        X_train, y_train, vwc_train = load_dataset(
+            dataset_dir=params['data']['training']['target_dir'],
+            include_vwc=True,
+        )
+        X_val, y_val, vwc_val = load_dataset(
+            dataset_dir=params['data']['validation']['target_dir'],
+            include_vwc=True,
+        )
     else:
         X_train, y_train = load_dataset(dataset_dir=params['data']['training']['target_dir'])
         X_val, y_val = load_dataset(dataset_dir=params['data']['validation']['target_dir'])
@@ -87,6 +125,10 @@ def main():
         # Use the selected features from the pruning method in the validation feature array.
         selected_feature_indices = [validation_feature_names.index(name) for name in training_feature_names]
         validation_feature_array = validation_feature_array[:, selected_feature_indices]
+
+        # Keep VWC as an extra input after selecting the radar features.
+        training_feature_array = append_vwc(training_feature_array, vwc_train)
+        validation_feature_array = append_vwc(validation_feature_array, vwc_val)
     
         # Train and evaluate classical models
         if params['classical']['enabled']:
@@ -124,6 +166,13 @@ def main():
         pca_train_tool = PCALearnedFeatures(X_train, n_components=n_components)
         pca_train_amplitude, pca_train_phase, pca_train_combined = pca_train_tool.full_monty()
         pca_val_amplitude, pca_val_phase, pca_val_combined = pca_train_tool.transform(X_val)
+
+        pca_train_amplitude = append_vwc(pca_train_amplitude, vwc_train)
+        pca_val_amplitude = append_vwc(pca_val_amplitude, vwc_val)
+        pca_train_phase = append_vwc(pca_train_phase, vwc_train)
+        pca_val_phase = append_vwc(pca_val_phase, vwc_val)
+        pca_train_combined = append_vwc(pca_train_combined, vwc_train)
+        pca_val_combined = append_vwc(pca_val_combined, vwc_val)
 
         # Evaluate classical models on amplitude-based PCA features
         classical_models_full_monty(
@@ -205,6 +254,14 @@ def main():
         kpca_train_tool = kPCALearnedFeatures(X_train, y_train, n_components=n_components)
         kpca_train_amplitude, kpca_train_phase, kpca_train_combined = kpca_train_tool.full_monty()
         kpca_val_amplitude, kpca_val_phase, kpca_val_combined = kpca_train_tool.transform(X_val)
+
+        kpca_train_amplitude = append_vwc(kpca_train_amplitude, vwc_train)
+        kpca_val_amplitude = append_vwc(kpca_val_amplitude, vwc_val)
+        kpca_train_phase = append_vwc(kpca_train_phase, vwc_train)
+        kpca_val_phase = append_vwc(kpca_val_phase, vwc_val)
+        kpca_train_combined = append_vwc(kpca_train_combined, vwc_train)
+        kpca_val_combined = append_vwc(kpca_val_combined, vwc_val)
+
         # Evaluate classical models on amplitude-based kPCA features
         classical_models_full_monty(
             training_dir = params['data']['training']['target_dir'],
@@ -291,6 +348,9 @@ def main():
         encoded_train_amp = autoencoder_amp.full_monty(X_train_amp)
         encoded_val_amp = autoencoder_amp.transform(X_val_amp)
 
+        encoded_train_amp = append_vwc(encoded_train_amp, vwc_train)
+        encoded_val_amp = append_vwc(encoded_val_amp, vwc_val)
+
         classical_models_full_monty(
             training_dir=params['data']['training']['target_dir'],
             training_labels=y_train,
@@ -321,6 +381,9 @@ def main():
         encoded_train_pha = autoencoder_pha.full_monty(X_train_pha)
         encoded_val_pha = autoencoder_pha.transform(X_val_pha)
 
+        encoded_train_pha = append_vwc(encoded_train_pha, vwc_train)
+        encoded_val_pha = append_vwc(encoded_val_pha, vwc_val)
+
         classical_models_full_monty(
             training_dir=params['data']['training']['target_dir'],
             training_labels=y_train,
@@ -350,6 +413,9 @@ def main():
         autoencoder_com = AutoencoderLearnedFeatures(X_train_com, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
         encoded_train_com = autoencoder_com.full_monty(X_train_com)
         encoded_val_com = autoencoder_com.transform(X_val_com)
+
+        encoded_train_com = append_vwc(encoded_train_com, vwc_train)
+        encoded_val_com = append_vwc(encoded_val_com, vwc_val)
 
         classical_models_full_monty(
             training_dir=params['data']['training']['target_dir'],
@@ -386,6 +452,8 @@ def main():
         cnn_amp = CNNLearnedFeatures(X_train_amp, y_train, batch_size=batch_size, epochs=epochs, verbose=verbose)
         features_train_amp = cnn_amp.full_monty(X_train_amp)
         features_val_amp = cnn_amp.transform(X_val_amp)
+        features_train_amp = append_vwc(features_train_amp, vwc_train)
+        features_val_amp = append_vwc(features_val_amp, vwc_val)
         feature_name_amp = "CNN Amplitude"
         classical_models_full_monty(
             training_dir=params['data']['training']['target_dir'],
@@ -416,6 +484,8 @@ def main():
         cnn_pha = CNNLearnedFeatures(X_train_pha, y_train, batch_size=batch_size, epochs=epochs, verbose=verbose)
         features_train_pha = cnn_pha.full_monty(X_train_pha)
         features_val_pha = cnn_pha.transform(X_val_pha)
+        features_train_pha = append_vwc(features_train_pha, vwc_train)
+        features_val_pha = append_vwc(features_val_pha, vwc_val)
         feature_name_pha = "CNN Phase"
         classical_models_full_monty(
             training_dir=params['data']['training']['target_dir'],
@@ -446,6 +516,8 @@ def main():
         cnn_com = CNNLearnedFeatures(X_train_com, y_train, batch_size=batch_size, epochs=epochs, verbose=verbose)
         features_train_com = cnn_com.full_monty(X_train_com)
         features_val_com = cnn_com.transform(X_val_com)
+        features_train_com = append_vwc(features_train_com, vwc_train)
+        features_val_com = append_vwc(features_val_com, vwc_val)
         feature_name_com = "CNN Combined"
         classical_models_full_monty(
             training_dir=params['data']['training']['target_dir'],

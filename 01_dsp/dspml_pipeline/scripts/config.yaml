@@ -1,7 +1,11 @@
 # Data configuration
 data:       
   label_name: "Bulk Density (g/cm^3)"     # Name of label used data_log.csv
-  new_dataset: false                      # Set to true if this is a new dataset
+  use_vwc: true                         # Append VWC to extracted radar features when true
+  vwc_name: "VWC (%)"                   # VWC column in data-log.csv
+  # First VWC run: set new_dataset and handcrafted.new_features to true
+  # to generate aligned X.npy, y.npy, vwc.npy, and handcrafted features.
+  new_dataset: true                      # Set to true if this is a new dataset
   # Training dataset 
   training:       
     # Raw datasets to combine (list of directories)
@@ -16,9 +20,9 @@ data:
   validation:
     # Raw validation datasets to combine
     dataset_dirs:
-      - "../data/field-pie-ranch-dataset"
+      - "../data/field-soil-compaction-dataset"
     # Target combined validation dataset directory
-    target_dir: "../data/pie-ranch-dataset"
+    target_dir: "../data/field-soil-compaction-dataset-results"
 
 # For handcrafted features
 handcrafted:
@@ -58,7 +62,7 @@ classical:
 deep_learning:
   enabled: true
 
-# End-to-end model configurations for raw data regression
+# End-to-end model configurations for raw data regression (radar only; use_vwc does not apply)
 end-to-end:
   # LSTM-based end-to-end regression
   lstm:
@@ -80,4 +84,4 @@ end-to-end:
     verbose: false
 
 advanced:
-  verbose: true               # Set to false to reduce logging output  
+  verbose: true               # Set to false to reduce logging output
