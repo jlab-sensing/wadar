@@ -1,5 +1,6 @@
 function results = RunDualTagDataset(localDataPath, tag1Hz, tag2Hz, viz)
-% results = RunDualTagDataset(localDataPath, tag1Hz, tag2Hz)
+% results = RunDualTagDataset(localDataPath, tag1Hz(top), tag2Hz(middle),
+% tag3Hz(bottom))
 %
 % Function to run the dual tag test on Novelda radar data captures and
 % visualize the results.
@@ -16,18 +17,30 @@ d = strcat(pwd, localDataPath);
 files = dir(fullfile(d, '*.frames'));
 listOfCaptures = {files.name};
 
-peakBin1 = zeros(1, length(listOfCaptures));
-SNRdB1 = zeros(1, length(listOfCaptures));
-peakBin2 = zeros(1, length(listOfCaptures));
-SNRdB2 = zeros(1, length(listOfCaptures));
-peakDifference = zeros(1, length(listOfCaptures));
+peakBin1 = nan(1, length(listOfCaptures));
+SNRdB1 = nan(1, length(listOfCaptures));
+peakBin2 = nan(1, length(listOfCaptures));
+SNRdB2 = nan(1, length(listOfCaptures));
+peakDifference = nan(1, length(listOfCaptures));
 for i = 1:length(listOfCaptures)
     captureName = string(listOfCaptures(i));
 
     [frameTot, framesBB, frameRate] = ProcessFrames(localDataPath, captureName);
-    
-    [captureFT, tag1FT] = ProcessFFT(framesBB, frameRate, tag1Hz);
-    [~, tag2FT] = ProcessFFT(framesBB, frameRate, tag2Hz);
+    try    
+        [captureFT, tag1FT] = ProcessFFT(framesBB, frameRate, tag1Hz);
+        [~, tag2FT] = ProcessFFT(framesBB, frameRate, tag2Hz);
+    catch ME
+        if strcmp(ME.identifier, 'MATLAB:badsubscript') && ...
+                any(strcmp({ME.stack.name}, 'TagIndex'))
+
+            warning('RunDualTagDataset:SkippedCapture', ...
+                'Skipping %s: TagIndex out of bounds; frameRate=%g, tags=%g/%g Hz.', ...
+                char(captureName), frameRate, tag1Hz, tag2Hz);
+            continue
+        else
+            rethrow(ME)
+        end
+    end
     
     peakBin1(i) = TagLocateCWT(tag1FT, false);
     peakBin2(i) = TagLocateCWT(tag2FT, false);
